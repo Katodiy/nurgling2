@@ -188,8 +188,9 @@ public class NCore extends Widget
             synchronized (dbLock) {
                 if (databaseManager == null) {  // Double-check inside lock
                     databaseManager = new nurgling.db.DatabaseManager(1);
-                    // Start area sync after database is initialized
+                    // Start area and route sync after database is initialized
                     startAreaSync();
+                    startRouteSync();
                 }
             }
         }
@@ -522,6 +523,7 @@ public class NCore extends Widget
     }
 
     private static volatile boolean areaSyncStarted = false;
+    private static volatile boolean routeSyncStarted = false;
 
     /**
      * Start periodic area sync from database
@@ -676,5 +678,79 @@ public class NCore extends Widget
             databaseManager.getAreaService().stopSync();
         }
         areaSyncStarted = false;
+    }
+
+    /**
+     * Start periodic route sync from database
+     */
+    private void startRouteSync() {
+        if (routeSyncStarted || databaseManager == null || !databaseManager.isReady()) {
+            return;
+        }
+
+        // Get current profile dynamically in sync, not at startup
+        String syncProfile = "global"; // placeholder, will be obtained dynamically
+
+        databaseManager.getRouteService().startSync(syncProfile, 4,
+            new nurgling.db.service.RouteService.RouteSyncCallback() {
+                @Override
+                public void onRoutesUpdated(java.util.List<nurgling.routes.Route> updatedRoutes) {
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+                        nurgling.NMapView map = (nurgling.NMapView) NUtils.getGameUI().map;
+                        long now = System.currentTimeMillis();
+                        int updated = 0;
+                        for (nurgling.routes.Route newRoute : updatedRoutes) {
+                            nurgling.routes.Route localRoute = map.routeGraphManager.getRoutes().get(newRoute.id);
+                            if (localRoute != null && (now - localRoute.lastLocalChange) < 5000) {
+                                continue; // Skip - local changes pending
+                            }
+                            if (localRoute != null) {
+                                localRoute.updateFrom(newRoute);
+                            } else {
+                                map.routeGraphManager.getRoutes().put(newRoute.id, newRoute);
+                            }
+                            updated++;
+                        }
+                        if (updated > 0) {
+                            map.routeGraphManager.updateGraph();
+                            System.out.println("Updated " + updated + " routes from database");
+                        }
+                    }
+                }
+
+                @Override
+                public void onRouteDeleted(int routeId) {
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+                        nurgling.NMapView map = (nurgling.NMapView) NUtils.getGameUI().map;
+                        map.routeGraphManager.getRoutes().remove(routeId);
+                        map.routeGraphManager.updateGraph();
+                        System.out.println("Deleted route " + routeId + " from database sync");
+                    }
+                }
+
+                @Override
+                public void onFullSync(java.util.Map<Integer, nurgling.routes.Route> allRoutes) {
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+                        nurgling.NMapView map = (nurgling.NMapView) NUtils.getGameUI().map;
+                        map.routeGraphManager.getRoutes().clear();
+                        map.routeGraphManager.getRoutes().putAll(allRoutes);
+                        map.routeGraphManager.updateGraph();
+                        System.out.println("Full sync: loaded " + allRoutes.size() + " routes from database");
+                    }
+                }
+            });
+
+        routeSyncStarted = true;
+        System.out.println("Route sync started");
+    }
+
+    /**
+     * Stop periodic route sync
+     */
+    private void stopRouteSync() {
+        if (databaseManager != null && databaseManager.getRouteService() != null) {
+            databaseManager.getRouteService().stopSync();
+        }
+        routeSyncStarted = false;
     }
 }

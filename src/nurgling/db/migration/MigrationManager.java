@@ -245,6 +245,30 @@ public class MigrationManager {
             }
         });
 
+        migrations.add(new Migration(5, "Create routes table for shared route storage") {
+            @Override
+            public void run(DatabaseAdapter adapter) throws SQLException {
+                if (!adapter.tableExists("routes")) {
+                    String createRoutesSql = "CREATE TABLE routes (" +
+                            "id INTEGER NOT NULL, " +
+                            "name VARCHAR(255) NOT NULL, " +
+                            "path VARCHAR(512) DEFAULT '', " +
+                            "data TEXT NOT NULL, " +  // JSON data for waypoints, spec
+                            "profile VARCHAR(255) NOT NULL, " +
+                            "version INTEGER DEFAULT 1, " +
+                            "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                            "PRIMARY KEY (id, profile)" +
+                            ")";
+                    adapter.executeUpdate(createRoutesSql);
+                    System.out.println("Created routes table");
+
+                    String createIndexSql = "CREATE INDEX idx_routes_profile ON routes (profile)";
+                    adapter.executeUpdate(createIndexSql);
+                    System.out.println("Created index on routes.profile");
+                }
+            }
+        });
+
         return migrations;
     }
 

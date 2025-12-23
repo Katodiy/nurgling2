@@ -1197,25 +1197,64 @@ public class NConfig
     {
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
-            JSONObject main = new JSONObject();
-            JSONArray jroutes = new JSONArray();
-            for(Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values())
-            {
-                jroutes.put(route.toJson());
+            // If customPath is provided, write to file (for manual export only)
+            if (customPath != null) {
+                writeRoutesToFile(customPath);
+                return;
             }
-            main.put("routes",jroutes);
 
-            try
-            {
-                FileWriter f = new FileWriter(customPath==null?getRoutesPath():customPath,StandardCharsets.UTF_8);
-                main.write(f);
-                f.close();
-                this.isRoutesUpd = false;
+            // If DB is enabled - ONLY use DB, never fallback to file
+            if ((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+                current.isRoutesUpd = false;
+                
+                if (NCore.databaseManager != null && NCore.databaseManager.isReady()) {
+                    try {
+                        String profile = NUtils.getGameUI().getGenus();
+                        if (profile == null || profile.isEmpty()) {
+                            profile = "global";
+                        }
+                        java.util.Map<Integer, Route> routes = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getRoutes();
+                        NCore.databaseManager.getRouteService().exportRoutesToDatabaseAsync(routes, profile)
+                            .exceptionally(e -> {
+                                System.err.println("Failed to save routes to database: " + e.getMessage());
+                                if (e.getCause() != null) {
+                                    e.getCause().printStackTrace();
+                                }
+                                current.isRoutesUpd = true;
+                                return null;
+                            });
+                    } catch (Exception e) {
+                        System.err.println("Failed to save routes to database: " + e.getMessage());
+                        current.isRoutesUpd = true;
+                    }
+                }
+                return;
             }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
+
+            // DB not enabled - write to file
+            writeRoutesToFile(getRoutesPath());
+        }
+    }
+
+    private void writeRoutesToFile(String path) {
+        JSONObject main = new JSONObject();
+        JSONArray jroutes = new JSONArray();
+        for(Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values())
+        {
+            jroutes.put(route.toJson());
+        }
+        main.put("routes",jroutes);
+
+        try
+        {
+            FileWriter f = new FileWriter(path, StandardCharsets.UTF_8);
+            main.write(f);
+            f.close();
+            this.isRoutesUpd = false;
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 

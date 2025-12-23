@@ -18,6 +18,8 @@ public class Route {
     public int id;
     public String name;
     public String path = "";
+    public int version = 1;  // Version for sync
+    public long lastLocalChange = 0;  // Timestamp of last local change
     public final ArrayList<RoutePoint> waypoints = new ArrayList<>();
     public ArrayList<RouteSpecialization> spec = new ArrayList<>();
     public NCore.LastActions lastAction = null;
@@ -42,6 +44,22 @@ public class Route {
 
     public Route(String name) {
         this.name = name;
+    }
+
+    /**
+     * Update this route's fields from another route (for sync without replacing object reference)
+     */
+    public void updateFrom(Route other) {
+        this.name = other.name;
+        this.path = other.path;
+        this.version = other.version;
+        synchronized (this.waypoints) {
+            this.waypoints.clear();
+            this.waypoints.addAll(other.waypoints);
+        }
+        this.spec.clear();
+        this.spec.addAll(other.spec);
+        // Don't copy lastLocalChange - keep our own timestamp
     }
 
     public void addHearthFireWaypoint(String name) {

@@ -96,6 +96,34 @@ public class RouteGraphManager implements ProfileAwareService {
     }
 
     public void loadRoutes() {
+        // If DB is enabled - ONLY use DB
+        if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable)) {
+            if (nurgling.NCore.databaseManager != null && nurgling.NCore.databaseManager.isReady()) {
+                try {
+                    String profile = genus;
+                    if (profile == null || profile.isEmpty()) {
+                        if (nurgling.NUtils.getGameUI() != null) {
+                            profile = nurgling.NUtils.getGameUI().getGenus();
+                        }
+                    }
+                    if (profile == null || profile.isEmpty()) {
+                        profile = "global";
+                    }
+                    java.util.Map<Integer, Route> dbRoutes = nurgling.NCore.databaseManager.getRouteService().loadRoutes(profile);
+                    if (dbRoutes != null) {
+                        routes.putAll(dbRoutes);
+                        System.out.println("Loaded " + dbRoutes.size() + " routes from database");
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to load routes from database: " + e.getMessage());
+                }
+            }
+            needsUpdate = true;
+            updateGraph();
+            return;
+        }
+
+        // DB not enabled - load from file
         if (new File(configPath).exists()) {
             StringBuilder contentBuilder = new StringBuilder();
             try (Stream<String> stream = Files.lines(Paths.get(configPath), StandardCharsets.UTF_8)) {
@@ -110,12 +138,11 @@ public class RouteGraphManager implements ProfileAwareService {
                     Route route = new Route((JSONObject) array.get(i), this.routePointMap);
                     routes.put(route.id, route);
                 }
-
-                // Update the graph after loading routes
-                needsUpdate = true;
-                updateGraph();
+                System.out.println("Loaded " + routes.size() + " routes from file");
             }
         }
+        needsUpdate = true;
+        updateGraph();
     }
 
     public Map<Integer, Route> getRoutes() {
