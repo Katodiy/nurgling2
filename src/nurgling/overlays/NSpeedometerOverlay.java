@@ -205,6 +205,9 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
     /**
      * Checks if the gob should display a speedometer.
      * Shows for: players, creatures (kritters), and vehicles (excluding carts).
+     * Checks if the gob is a player or kritter (creature) that should display speedometer.
+     * Only players and creatures should show speedometer, not vehicles or other objects.
+     * Excludes earthworms from showing speedometer.
      */
     private boolean shouldShowSpeedometerFor(Gob gob) {
         try {
@@ -217,6 +220,9 @@ public class NSpeedometerOverlay extends Sprite implements RenderTree.Node, PVie
             // Check resource name for kritters and vehicles
             if (gob.ngob != null && gob.ngob.name != null) {
                 String name = gob.ngob.name;
+                if (name.contains("earthworm")) {
+                    return false;
+                }
 
                 // Check if it's a creature (kritter)
                 if (name.contains("kritter")) {

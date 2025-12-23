@@ -47,6 +47,7 @@ public class NConfig
         nextshowCSprite,
         showCSprite,
         hideNature,
+        hideEarthworm,
         invert_hor,
         invert_ver,
         kinprop,
@@ -214,6 +215,7 @@ public class NConfig
         conf.put(Key.nextshowCSprite, false);
         conf.put(Key.showCSprite, true);
         conf.put(Key.hideNature, false);
+        conf.put(Key.hideEarthworm, true);  // true = show earthworms (checkbox unchecked by default)
         conf.put(Key.invert_hor, false);
         conf.put(Key.invert_ver, false);
         conf.put(Key.show_drag_menu, true);
