@@ -66,6 +66,7 @@ public class NGob
     private static final NAlias WALL_TRELLIS_ALIAS = new NAlias("wall", "trellis");
     private static final NAlias BORKA_ALIAS = new NAlias("borka");
     private static final NAlias PLANTS_ALIAS = new NAlias("plants");
+    private static final NAlias GARDEN_POT_ALIAS = new NAlias("gardenpot");
     private static final NAlias MINEBEAM_ALIAS = new NAlias(new ArrayList<>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<>(Arrays.asList("stump", "wrack", "log")));
     private static final NAlias MOUNDBED_ALIAS = new NAlias("gfx/terobjs/moundbed");
     private static final NAlias KRITTER_ALIAS = new NAlias("kritter");
@@ -84,6 +85,8 @@ public class NGob
     
     // Flag to track if crop marker was already added
     private boolean cropMarkerAdded = false;
+    // Flag to track if garden pot marker was already added
+    private boolean gardenPotMarkerAdded = false;
 
     public void changedPose(String currentPose)
     {
@@ -642,9 +645,15 @@ public class NGob
                     {
                         parent.addcustomol(new NCropMarker(parent));
                         cropMarkerAdded = true;
-                    } else
+                    }
+
+                    if (NParser.checkName(name, GARDEN_POT_ALIAS) && cachedShowCropStage && !gardenPotMarkerAdded)
                     {
-                        if (NParser.checkName(name, MINEBEAM_ALIAS))
+                        parent.addcustomol(new NGardenPotMarker(parent));
+                        gardenPotMarkerAdded = true;
+                    }
+
+                    if (NParser.checkName(name, MINEBEAM_ALIAS))
                         {
                             switch (name)
                             {
@@ -698,8 +707,6 @@ public class NGob
                             hitBox = custom;
                         }
                     }
-
-                }
                 if (hitBox != null)
                 {
                     if (NParser.checkName(name, MOUNDBED_ALIAS))
