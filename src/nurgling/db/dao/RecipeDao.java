@@ -91,8 +91,8 @@ public class RecipeDao {
      * Save a recipe with its ingredients and feps
      */
     public void saveRecipe(DatabaseAdapter adapter, Recipe recipe) throws SQLException {
-        // Save main recipe data - use adapter-specific upsert
-        java.util.Map<String, Object> insertData = new java.util.HashMap<>();
+        // Save main recipe data - use LinkedHashMap to preserve column order
+        java.util.LinkedHashMap<String, Object> insertData = new java.util.LinkedHashMap<>();
         insertData.put("recipe_hash", recipe.getHash());
         insertData.put("item_name", recipe.getName());
         insertData.put("resource_name", recipe.getResourceName());
@@ -119,12 +119,10 @@ public class RecipeDao {
     }
 
     private void saveIngredients(DatabaseAdapter adapter, Recipe recipe) throws SQLException {
-        // Delete existing ingredients
-        adapter.executeUpdate("DELETE FROM ingredients WHERE recipe_hash = ?", recipe.getHash());
-
-        // Insert new ingredients
         if (!recipe.getIngredients().isEmpty()) {
+            // Upsert ingredients (handles concurrent updates)
             List<Object[]> ingredientParams = new ArrayList<>();
+            List<String> ingredientNames = new ArrayList<>();
             for (java.util.Map.Entry<String, Recipe.IngredientInfo> entry : recipe.getIngredients().entrySet()) {
                 ingredientParams.add(new Object[]{
                     recipe.getHash(),
@@ -132,21 +130,29 @@ public class RecipeDao {
                     entry.getValue().percentage,
                     entry.getValue().resourceName
                 });
+                ingredientNames.add(entry.getKey());
             }
 
-            String insertIngredientSql = "INSERT INTO ingredients (recipe_hash, name, percentage, resource_name) " +
-                                       "VALUES (?, ?, ?, ?)";
-            adapter.executeBatch(insertIngredientSql, ingredientParams);
+            List<String> columns = java.util.Arrays.asList("recipe_hash", "name", "percentage", "resource_name");
+            List<String> conflictColumns = java.util.Arrays.asList("recipe_hash", "name");
+            List<String> updateColumns = java.util.Arrays.asList("percentage", "resource_name");
+            
+            String upsertSql = adapter.getBatchUpsertSql("ingredients", columns, conflictColumns, updateColumns);
+            adapter.executeBatch(upsertSql, ingredientParams);
+
+            // Delete ingredients no longer in the recipe
+            deleteRemovedItems(adapter, "ingredients", recipe.getHash(), ingredientNames);
+        } else {
+            // No ingredients, delete all
+            adapter.executeUpdate("DELETE FROM ingredients WHERE recipe_hash = ?", recipe.getHash());
         }
     }
 
     private void saveFeps(DatabaseAdapter adapter, Recipe recipe) throws SQLException {
-        // Delete existing feps
-        adapter.executeUpdate("DELETE FROM feps WHERE recipe_hash = ?", recipe.getHash());
-
-        // Insert new feps
         if (!recipe.getFeps().isEmpty()) {
+            // Upsert feps (handles concurrent updates)
             List<Object[]> fepParams = new ArrayList<>();
+            List<String> fepNames = new ArrayList<>();
             for (java.util.Map.Entry<String, Recipe.Fep> entry : recipe.getFeps().entrySet()) {
                 fepParams.add(new Object[]{
                     recipe.getHash(),
@@ -154,11 +160,46 @@ public class RecipeDao {
                     entry.getValue().val,
                     entry.getValue().weigth
                 });
+                fepNames.add(entry.getKey());
             }
 
-            String insertFepSql = "INSERT INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
-            adapter.executeBatch(insertFepSql, fepParams);
+            List<String> columns = java.util.Arrays.asList("recipe_hash", "name", "value", "weight");
+            List<String> conflictColumns = java.util.Arrays.asList("recipe_hash", "name");
+            List<String> updateColumns = java.util.Arrays.asList("value", "weight");
+            
+            String upsertSql = adapter.getBatchUpsertSql("feps", columns, conflictColumns, updateColumns);
+            adapter.executeBatch(upsertSql, fepParams);
+
+            // Delete feps no longer in the recipe
+            deleteRemovedItems(adapter, "feps", recipe.getHash(), fepNames);
+        } else {
+            // No feps, delete all
+            adapter.executeUpdate("DELETE FROM feps WHERE recipe_hash = ?", recipe.getHash());
         }
+    }
+
+    private void deleteRemovedItems(DatabaseAdapter adapter, String table, String recipeHash, 
+                                    List<String> currentNames) throws SQLException {
+        if (currentNames.isEmpty()) {
+            adapter.executeUpdate("DELETE FROM " + table + " WHERE recipe_hash = ?", recipeHash);
+            return;
+        }
+
+        // Build placeholders for NOT IN clause
+        String placeholders = String.join(",", currentNames.stream()
+                .map(n -> "?")
+                .toArray(String[]::new));
+        
+        String deleteSql = "DELETE FROM " + table + " WHERE recipe_hash = ? AND name NOT IN (" + placeholders + ")";
+        
+        // Build params array: recipe_hash followed by all names
+        Object[] params = new Object[1 + currentNames.size()];
+        params[0] = recipeHash;
+        for (int i = 0; i < currentNames.size(); i++) {
+            params[i + 1] = currentNames.get(i);
+        }
+        
+        adapter.executeUpdate(deleteSql, params);
     }
 
     /**

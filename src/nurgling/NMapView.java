@@ -1468,15 +1468,27 @@ public class NMapView extends MapView
             if(area.name.equals(name))
             {
                 area.inWork = true;
-                glob.map.areas.remove(area.id);
+                final int areaId = area.id;
+                glob.map.areas.remove(areaId);
                 Gob dummy = dummys.get(area.gid);
                 if(dummy != null) {
                     glob.oc.remove(dummy);
                     dummys.remove(area.gid);
                 }
-                NUtils.getGameUI().areas.removeArea(area.id);
+                NUtils.getGameUI().areas.removeArea(areaId);
 
-                routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
+                routeGraphManager.getGraph().deleteAreaFromRoutePoints(areaId);
+
+                // Delete from database if enabled
+                if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable) &&
+                    nurgling.NCore.databaseManager != null && 
+                    nurgling.NCore.databaseManager.isReady()) {
+                    String profile = NUtils.getGameUI().getGenus();
+                    if (profile == null || profile.isEmpty()) {
+                        profile = "global";
+                    }
+                    nurgling.NCore.databaseManager.getAreaService().deleteAreaAsync(areaId, profile);
+                }
 
                 break;
             }

@@ -91,4 +91,25 @@ public class SqliteAdapter extends DatabaseAdapter {
 
         return sql.toString();
     }
+
+    @Override
+    public String getBatchUpsertSql(String table, List<String> columns, 
+                                    List<String> conflictColumns, List<String> updateColumns) {
+        // SQLite uses INSERT OR REPLACE for upsert behavior
+        StringBuilder sql = new StringBuilder("INSERT OR REPLACE INTO ").append(table).append(" (");
+
+        // Columns
+        sql.append(String.join(", ", columns));
+
+        sql.append(") VALUES (");
+
+        // Placeholders
+        sql.append(String.join(", ", columns.stream()
+                .map(k -> "?")
+                .toArray(String[]::new)));
+
+        sql.append(")");
+
+        return sql.toString();
+    }
 }

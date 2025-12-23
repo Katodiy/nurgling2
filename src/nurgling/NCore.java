@@ -401,7 +401,11 @@ public class NCore extends Widget
                 );
 
                 // Save recipe using service (handles duplicates gracefully)
-                databaseManager.getRecipeService().saveRecipeAsync(recipe);
+                databaseManager.getRecipeService().saveRecipeAsync(recipe)
+                    .exceptionally(ex -> {
+                        System.err.println("Failed to save recipe: " + ex.getMessage());
+                        return null;
+                    });
 
             } catch (Exception e) {
                 // Log error but don't crash - recipe import should be resilient

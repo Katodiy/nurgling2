@@ -89,4 +89,31 @@ public class PostgresAdapter extends DatabaseAdapter {
 
         return sql.toString();
     }
+
+    @Override
+    public String getBatchUpsertSql(String table, List<String> columns, 
+                                    List<String> conflictColumns, List<String> updateColumns) {
+        StringBuilder sql = new StringBuilder("INSERT INTO ").append(table).append(" (");
+
+        // Columns
+        sql.append(String.join(", ", columns));
+
+        sql.append(") VALUES (");
+
+        // Placeholders
+        sql.append(String.join(", ", columns.stream()
+                .map(k -> "?")
+                .toArray(String[]::new)));
+
+        sql.append(") ON CONFLICT (");
+        sql.append(String.join(", ", conflictColumns));
+        sql.append(") DO UPDATE SET ");
+
+        // Update clause
+        sql.append(String.join(", ", updateColumns.stream()
+                .map(col -> col + " = EXCLUDED." + col)
+                .toArray(String[]::new)));
+
+        return sql.toString();
+    }
 }

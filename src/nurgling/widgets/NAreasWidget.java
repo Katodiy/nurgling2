@@ -590,7 +590,17 @@ public class NAreasWidget extends Window
                                                 ((NMapView) NUtils.getGameUI().map).dummys.remove(dummy.id);
                                             }
                                             ((NMapView) NUtils.getGameUI().map).glob.map.areas.remove(key);
-
+                                            
+                                            // Delete from database if enabled
+                                            if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable) &&
+                                                nurgling.NCore.databaseManager != null && 
+                                                nurgling.NCore.databaseManager.isReady()) {
+                                                String profile = NUtils.getGameUI().getGenus();
+                                                if (profile == null || profile.isEmpty()) {
+                                                    profile = "global";
+                                                }
+                                                nurgling.NCore.databaseManager.getAreaService().deleteAreaAsync(key, profile);
+                                            }
                                         }
                                     }
                                     NConfig.needAreasUpdate();

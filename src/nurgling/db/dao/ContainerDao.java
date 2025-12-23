@@ -35,11 +35,13 @@ public class ContainerDao {
      * Save or update container
      */
     public void saveContainer(DatabaseAdapter adapter, String hash, long gridId, String coord) throws SQLException {
-        String sql = adapter.getUpsertSql("containers",
-                                         java.util.Map.of("hash", hash,
-                                                         "grid_id", gridId,
-                                                         "coord", coord),
-                                         java.util.List.of("hash"));
+        // Use LinkedHashMap to preserve column order
+        java.util.LinkedHashMap<String, Object> columns = new java.util.LinkedHashMap<>();
+        columns.put("hash", hash);
+        columns.put("grid_id", gridId);
+        columns.put("coord", coord);
+        
+        String sql = adapter.getUpsertSql("containers", columns, java.util.List.of("hash"));
         adapter.executeUpdate(sql, hash, gridId, coord);
     }
 

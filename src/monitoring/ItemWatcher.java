@@ -70,13 +70,15 @@ public class ItemWatcher implements Runnable {
     }
 
     private void insertItems(nurgling.db.DatabaseAdapter adapter) throws SQLException {
-        String insertSql = adapter.getUpsertSql("storageitems",
-            java.util.Map.of("item_hash", "?",
-                           "name", "?",
-                           "quality", "?",
-                           "coordinates", "?",
-                           "container", "?"),
-            java.util.List.of("item_hash"));
+        // Use LinkedHashMap to preserve column order
+        java.util.LinkedHashMap<String, Object> columns = new java.util.LinkedHashMap<>();
+        columns.put("item_hash", "?");
+        columns.put("name", "?");
+        columns.put("quality", "?");
+        columns.put("coordinates", "?");
+        columns.put("container", "?");
+        
+        String insertSql = adapter.getUpsertSql("storageitems", columns, java.util.List.of("item_hash"));
 
         // For simplicity, insert items one by one since batch operations are complex with different SQL syntax
         for (ItemInfo item : iis) {

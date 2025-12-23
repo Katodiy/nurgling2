@@ -14,10 +14,12 @@ import java.util.concurrent.Future;
  * Manages connection pool, database adapters, and service layer.
  */
 public class DatabaseManager {
-    private final ExecutorService executorService;
+    private ExecutorService executorService;
+    private final int threadPoolSize;
     private ConnectionPoolManager connectionPoolManager;
     private DatabaseAdapter adapter;
     private volatile boolean initialized = false;
+    private volatile boolean shutdown = false;
 
     // Service layer
     private RecipeService recipeService;
@@ -28,6 +30,7 @@ public class DatabaseManager {
     private RouteService routeService;
 
     public DatabaseManager(int threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
         this.executorService = Executors.newFixedThreadPool(threadPoolSize);
         initialize();
     }
@@ -112,7 +115,15 @@ public class DatabaseManager {
      * Execute task asynchronously
      */
     public Future<?> submitTask(Runnable task) {
-        return executorService.submit(task);
+        if (shutdown || executorService == null || executorService.isShutdown()) {
+            return null;
+        }
+        try {
+            return executorService.submit(task);
+        } catch (java.util.concurrent.RejectedExecutionException e) {
+            // Executor was shut down between check and submit
+            return null;
+        }
     }
 
     /**
@@ -149,7 +160,7 @@ public class DatabaseManager {
      * Check if database is ready
      */
     public boolean isReady() {
-        return initialized && connectionPoolManager != null && connectionPoolManager.isReady();
+        return initialized && !shutdown && connectionPoolManager != null && connectionPoolManager.isReady();
     }
 
     /**
@@ -198,8 +209,20 @@ public class DatabaseManager {
      * Reconnect to database
      */
     public synchronized void reconnect() {
-        shutdown();
+        // Shutdown existing resources but don't mark as permanently shut down
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
+        }
+        if (connectionPoolManager != null) {
+            connectionPoolManager.shutdown();
+            connectionPoolManager = null;
+        }
+        adapter = null;
         initialized = false;
+        
+        // Create new executor and reinitialize
+        this.executorService = Executors.newFixedThreadPool(threadPoolSize);
+        this.shutdown = false;
         initialize();
     }
 
@@ -207,7 +230,10 @@ public class DatabaseManager {
      * Shutdown database manager and release all resources
      */
     public synchronized void shutdown() {
-        executorService.shutdown();
+        shutdown = true;
+        if (executorService != null) {
+            executorService.shutdown();
+        }
         if (connectionPoolManager != null) {
             connectionPoolManager.shutdown();
             connectionPoolManager = null;

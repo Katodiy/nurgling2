@@ -63,6 +63,17 @@ public abstract class DatabaseAdapter {
     public abstract String getUpsertSql(String table, Map<String, Object> insertData, List<String> conflictColumns);
 
     /**
+     * Get batch upsert SQL (INSERT ... ON CONFLICT DO UPDATE)
+     * @param table Table name
+     * @param columns Column names for insert
+     * @param conflictColumns Columns that form the unique constraint
+     * @param updateColumns Columns to update on conflict
+     * @return SQL string with placeholders
+     */
+    public abstract String getBatchUpsertSql(String table, List<String> columns, 
+                                             List<String> conflictColumns, List<String> updateColumns);
+
+    /**
      * Create prepared statement with parameters
      */
     protected PreparedStatement prepareStatement(String sql, Object... params) throws SQLException {
@@ -76,7 +87,24 @@ public abstract class DatabaseAdapter {
      */
     protected void setParameters(PreparedStatement stmt, Object... params) throws SQLException {
         for (int i = 0; i < params.length; i++) {
-            stmt.setObject(i + 1, params[i]);
+            Object param = params[i];
+            if (param == null) {
+                stmt.setNull(i + 1, java.sql.Types.NULL);
+            } else if (param instanceof Double) {
+                stmt.setDouble(i + 1, (Double) param);
+            } else if (param instanceof Float) {
+                stmt.setFloat(i + 1, (Float) param);
+            } else if (param instanceof Integer) {
+                stmt.setInt(i + 1, (Integer) param);
+            } else if (param instanceof Long) {
+                stmt.setLong(i + 1, (Long) param);
+            } else if (param instanceof Boolean) {
+                stmt.setBoolean(i + 1, (Boolean) param);
+            } else if (param instanceof String) {
+                stmt.setString(i + 1, (String) param);
+            } else {
+                stmt.setObject(i + 1, param);
+            }
         }
     }
 

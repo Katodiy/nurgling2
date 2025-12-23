@@ -26,6 +26,7 @@ public class RecipeHashFetcher implements Runnable {
         try {
             databaseManager.executeOperation(adapter -> {
 
+                String whereClause = extractWhereClause(sql);
                 String query = "SELECT " +
                         "r.recipe_hash, r.item_name, r.resource_name, r.hunger, r.energy, " +
                         "f.name as fep_name, f.value as fep_value, f.weight as fep_weight, " +
@@ -38,7 +39,7 @@ public class RecipeHashFetcher implements Runnable {
                         "LEFT JOIN feps f ON r.recipe_hash = f.recipe_hash " +
                         "LEFT JOIN ingredients i ON r.recipe_hash = i.recipe_hash " +
                         "LEFT JOIN favorite_recipes fav ON r.recipe_hash = fav.recipe_hash " +
-                        "WHERE " + extractWhereClause(sql);
+                        (whereClause.isEmpty() ? "" : "WHERE " + whereClause);
 
                 try (ResultSet rs = adapter.executeQuery(query)) {
 

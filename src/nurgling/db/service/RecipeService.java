@@ -48,6 +48,7 @@ public class RecipeService {
             try {
                 saveRecipe(recipe);
             } catch (SQLException e) {
+                e.printStackTrace();
                 throw new RuntimeException("Failed to save recipe", e);
             }
         });

@@ -42,13 +42,15 @@ public class StorageItemDao {
      */
     public void saveStorageItem(DatabaseAdapter adapter, String itemHash, String name, Double quality,
                                String coordinates, String container) throws SQLException {
-        String sql = adapter.getUpsertSql("storageitems",
-                                         java.util.Map.of("item_hash", itemHash,
-                                                         "name", name,
-                                                         "quality", quality,
-                                                         "coordinates", coordinates,
-                                                         "container", container),
-                                         java.util.List.of("item_hash"));
+        // Use LinkedHashMap to preserve column order
+        java.util.LinkedHashMap<String, Object> columns = new java.util.LinkedHashMap<>();
+        columns.put("item_hash", itemHash);
+        columns.put("name", name);
+        columns.put("quality", quality);
+        columns.put("coordinates", coordinates);
+        columns.put("container", container);
+        
+        String sql = adapter.getUpsertSql("storageitems", columns, java.util.List.of("item_hash"));
         adapter.executeUpdate(sql, itemHash, name, quality, coordinates, container);
     }
 
