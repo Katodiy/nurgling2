@@ -214,10 +214,8 @@ public class DatabaseSettings extends Panel {
             NConfig.set(NConfig.Key.dbFilePath, filePathEntry.text());
         }
 
-        if (ui != null) {
-            if (ui.core.databaseManager == null)
-                ui.core.databaseManager = new nurgling.db.DatabaseManager(1);
-            ui.core.databaseManager.reconnect();
+        if (ui != null && nurgling.NCore.databaseManager != null) {
+            nurgling.NCore.databaseManager.reconnect();
         }
 
         NConfig.needUpdate();
@@ -240,12 +238,7 @@ public class DatabaseSettings extends Panel {
             fileLabel.visible = isSQLite;
             filePathEntry.visible = isSQLite;
             initDbButton.visible = isSQLite;
-
-            if (ui != null) {
-                if (ui.core.databaseManager == null)
-                    ui.core.databaseManager = new nurgling.db.DatabaseManager(1);
-                ui.core.databaseManager.reconnect();
-            }
+            // Don't reconnect here - it's just visibility update, not settings change
         }
 
         // Переупаковываем виджет

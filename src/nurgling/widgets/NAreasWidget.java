@@ -127,7 +127,18 @@ public class NAreasWidget extends Window
                 });
             }
         },importbt.pos("ur").adds(UI.scale(5,0)));
-        exportbt.settip("Export");
+        exportbt.settip("Export to file");
+
+        // Export to Database button
+        haven.Button exportDbBtn;
+        add(exportDbBtn = new haven.Button(UI.scale(80), "Export to DB") {
+            @Override
+            public void click() {
+                super.click();
+                exportAreasToDatabase();
+            }
+        }, exportbt.pos("ur").adds(UI.scale(10, 0)));
+        exportDbBtn.settip("Export all areas to database for sharing");
 
         TextEntry searchField;
         prev = add(searchField = new TextEntry(UI.scale(580), "") {
@@ -525,6 +536,7 @@ public class NAreasWidget extends Window
                                             @Override
                                             public void actionPerformed(ActionEvent e) {
                                                 area.color = colorChooser.getColor();
+                                                area.lastLocalChange = System.currentTimeMillis();
                                                 if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
                                                 {
                                                     NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
@@ -866,5 +878,84 @@ public class NAreasWidget extends Window
             ((NMapView)NUtils.getGameUI().map).initDummys();
         }
         return super.show(show);
+    }
+
+    /**
+     * Export all areas to database for sharing with other clients.
+     * Reads from the old areas file and imports into database.
+     */
+    private void exportAreasToDatabase() {
+        if (nurgling.NCore.databaseManager == null) {
+            NUtils.getGameUI().msg("Database is not connected");
+            return;
+        }
+
+        if (!nurgling.NCore.databaseManager.isReady()) {
+            NUtils.getGameUI().msg("Database is not ready");
+            return;
+        }
+
+        // Get current profile/genus
+        String profile = "global";
+        if (NUtils.getGameUI() != null) {
+            String genus = NUtils.getGameUI().getGenus();
+            if (genus != null && !genus.isEmpty()) {
+                profile = genus;
+            }
+        }
+
+        final String finalProfile = profile;
+
+        // First try to load areas from the old file
+        java.util.Map<Integer, NArea> areasToExport = new java.util.HashMap<>();
+        
+        // Read from file
+        String areasPath = NUtils.getUI().core.config.getAreasPath();
+        java.io.File areasFile = new java.io.File(areasPath);
+        
+        if (areasFile.exists()) {
+            try {
+                StringBuilder contentBuilder = new StringBuilder();
+                java.nio.file.Files.lines(java.nio.file.Paths.get(areasPath), java.nio.charset.StandardCharsets.UTF_8)
+                    .forEach(s -> contentBuilder.append(s).append("\n"));
+                
+                String content = contentBuilder.toString().trim();
+                if (!content.isEmpty() && content.startsWith("{")) {
+                    org.json.JSONObject main = new org.json.JSONObject(content);
+                    org.json.JSONArray array = main.getJSONArray("areas");
+                    for (int i = 0; i < array.length(); i++) {
+                        NArea area = new NArea(array.getJSONObject(i));
+                        areasToExport.put(area.id, area);
+                    }
+                }
+            } catch (Exception e) {
+                NUtils.getGameUI().error("Failed to read areas file: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        // If no areas from file, use current cache
+        if (areasToExport.isEmpty()) {
+            areasToExport = NUtils.getGameUI().map.glob.map.areas;
+        }
+
+        if (areasToExport == null || areasToExport.isEmpty()) {
+            NUtils.getGameUI().msg("No areas to export");
+            return;
+        }
+
+        final java.util.Map<Integer, NArea> finalAreas = areasToExport;
+        NUtils.getGameUI().msg("Exporting " + finalAreas.size() + " areas to database...");
+
+        // Export asynchronously
+        nurgling.NCore.databaseManager.getAreaService().exportAreasToDatabaseAsync(finalAreas, finalProfile)
+            .thenAccept(count -> {
+                NUtils.getGameUI().msg("Exported " + count + " areas to database");
+            })
+            .exceptionally(e -> {
+                NUtils.getGameUI().error("Failed to export areas: " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            });
     }
 }

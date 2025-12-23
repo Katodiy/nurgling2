@@ -30,6 +30,7 @@ public class MigrationManager {
         }
 
         List<Migration> migrations = getMigrations();
+        System.out.println("Current schema version: " + currentVersion + ", available migrations: " + migrations.size());
         for (Migration migration : migrations) {
             if (migration.version > currentVersion) {
                 System.out.println("Running migration version " + migration.version + ": " + migration.description);
@@ -160,6 +161,50 @@ public class MigrationManager {
                 } catch (SQLException e) {
                     adapter.executeUpdate("ALTER TABLE ingredients ADD COLUMN resource_name VARCHAR(512)");
                     System.out.println("Added resource_name column to ingredients table");
+                }
+            }
+        });
+
+        migrations.add(new Migration(3, "Create areas table for shared area storage") {
+            @Override
+            public void run(DatabaseAdapter adapter) throws SQLException {
+                // Create areas table if it doesn't exist
+                if (!adapter.tableExists("areas")) {
+                    String createAreasSql = "CREATE TABLE areas (" +
+                            "id INTEGER PRIMARY KEY, " +
+                            "name VARCHAR(255) NOT NULL, " +
+                            "path VARCHAR(512) DEFAULT '', " +
+                            "hide " + (adapter instanceof nurgling.db.PostgresAdapter ? "BOOLEAN" : "INTEGER") + " DEFAULT " + 
+                                (adapter instanceof nurgling.db.PostgresAdapter ? "FALSE" : "0") + ", " +
+                            "color_r INTEGER DEFAULT 194, " +
+                            "color_g INTEGER DEFAULT 194, " +
+                            "color_b INTEGER DEFAULT 65, " +
+                            "color_a INTEGER DEFAULT 56, " +
+                            "data TEXT NOT NULL, " +  // JSON data for space, in, out, spec
+                            "profile VARCHAR(255) DEFAULT 'global', " +  // profile/genus for filtering
+                            "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                            ")";
+                    adapter.executeUpdate(createAreasSql);
+                    System.out.println("Created areas table");
+
+                    // Create index for faster profile-based queries
+                    String createIndexSql = "CREATE INDEX idx_areas_profile ON areas (profile)";
+                    adapter.executeUpdate(createIndexSql);
+                    System.out.println("Created index on areas.profile");
+                }
+            }
+        });
+
+        migrations.add(new Migration(4, "Add version column to areas table") {
+            @Override
+            public void run(DatabaseAdapter adapter) throws SQLException {
+                // Check if column already exists
+                try {
+                    adapter.executeQuery("SELECT version FROM areas LIMIT 1").close();
+                    System.out.println("version column already exists in areas table");
+                } catch (SQLException e) {
+                    adapter.executeUpdate("ALTER TABLE areas ADD COLUMN version INTEGER DEFAULT 1");
+                    System.out.println("Added version column to areas table");
                 }
             }
         });

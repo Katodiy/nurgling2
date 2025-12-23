@@ -24,6 +24,7 @@ public class DatabaseManager {
     private FavoriteRecipeService favoriteRecipeService;
     private ContainerService containerService;
     private StorageItemService storageItemService;
+    private AreaService areaService;
 
     public DatabaseManager(int threadPoolSize) {
         this.executorService = Executors.newFixedThreadPool(threadPoolSize);
@@ -46,16 +47,16 @@ public class DatabaseManager {
             // Initialize connection pool manager
             this.connectionPoolManager = new ConnectionPoolManager();
 
-            // Get a connection to create adapter
+            // Get a connection to create adapter and run migrations
             Connection conn = connectionPoolManager.getConnection();
             if (conn != null) {
                 this.adapter = DatabaseAdapterFactory.createAdapter(conn);
 
-                // Initialize services
-                initializeServices();
+                // Run migrations FIRST using this connection
+                runMigrations(conn);
 
-                // Run migrations
-                runMigrations();
+                // Initialize services after migrations
+                initializeServices();
 
                 connectionPoolManager.returnConnection(conn);
                 initialized = true;
@@ -79,32 +80,28 @@ public class DatabaseManager {
         this.favoriteRecipeService = new FavoriteRecipeService(this);
         this.containerService = new ContainerService(this);
         this.storageItemService = new StorageItemService(this);
+        this.areaService = new AreaService(this);
     }
 
     /**
-     * Run database migrations
+     * Run database migrations using the provided connection
      */
-    private void runMigrations() {
-        Connection conn = null;
+    private void runMigrations(Connection conn) {
+        System.out.println("DatabaseManager: Starting migration check...");
         try {
-            conn = connectionPoolManager.getConnection();
-            if (conn != null) {
-                nurgling.db.migration.MigrationManager migrationManager = new nurgling.db.migration.MigrationManager(conn, adapter);
-                migrationManager.runMigrations();
-                conn.commit();
-            }
+            // Create adapter for this specific connection
+            DatabaseAdapter migrationAdapter = DatabaseAdapterFactory.createAdapter(conn);
+            System.out.println("DatabaseManager: Running migrations...");
+            nurgling.db.migration.MigrationManager migrationManager = new nurgling.db.migration.MigrationManager(conn, migrationAdapter);
+            migrationManager.runMigrations();
+            conn.commit();
+            System.out.println("DatabaseManager: Migrations completed");
         } catch (SQLException e) {
             System.err.println("Failed to run database migrations: " + e.getMessage());
             e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ignore) {
-                }
-            }
-        } finally {
-            if (conn != null) {
-                connectionPoolManager.returnConnection(conn);
+            try {
+                conn.rollback();
+            } catch (SQLException ignore) {
             }
         }
     }
@@ -179,6 +176,13 @@ public class DatabaseManager {
      */
     public StorageItemService getStorageItemService() {
         return storageItemService;
+    }
+
+    /**
+     * Get area service
+     */
+    public AreaService getAreaService() {
+        return areaService;
     }
 
     /**

@@ -705,6 +705,7 @@ public class NMapView extends MapView
             NArea newArea = new NArea(key);
             newArea.id = id;
             newArea.space = result;
+            newArea.lastLocalChange = System.currentTimeMillis();
             newArea.grids_id.addAll(newArea.space.space.keySet());
             newArea.path = NUtils.getGameUI().areas.currentPath;
             
@@ -1488,6 +1489,7 @@ public class NMapView extends MapView
             if(area.name.equals(name) && area.path.equals(path))
             {
                 area.hide = val;
+                area.lastLocalChange = System.currentTimeMillis();
                 NConfig.needAreasUpdate();
                 return;
             }
@@ -1531,7 +1533,9 @@ public class NMapView extends MapView
 
     public void changeAreaName(Integer id, String new_name)
     {
-        glob.map.areas.get(id).name = new_name;
+        NArea area = glob.map.areas.get(id);
+        area.name = new_name;
+        area.lastLocalChange = System.currentTimeMillis();
         NConfig.needAreasUpdate();
     }
 

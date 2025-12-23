@@ -121,7 +121,28 @@ public class MCache implements MapSource {
 	public void loadAreasIfNeeded() {
 		if (areasLoaded) return;
 
-		// Get the appropriate areas path based on current profile
+		// Try to load from database first if enabled
+		if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable) && 
+			nurgling.NCore.databaseManager != null && 
+			nurgling.NCore.databaseManager.isReady()) {
+			try {
+				String profile = getCurrentGenus();
+				if (profile == null || profile.isEmpty()) {
+					profile = "global";
+				}
+				java.util.Map<Integer, NArea> dbAreas = nurgling.NCore.databaseManager.getAreaService().loadAreas(profile);
+				if (dbAreas != null && !dbAreas.isEmpty()) {
+					areas.putAll(dbAreas);
+					System.out.println("Loaded " + dbAreas.size() + " areas from database");
+					areasLoaded = true;
+					return;
+				}
+			} catch (Exception e) {
+				System.err.println("Failed to load areas from database, falling back to file: " + e.getMessage());
+			}
+		}
+
+		// Fallback: load from file (legacy support)
 		String areasPath = getAreasPath();
 
 		if(new File(areasPath).exists())
@@ -146,6 +167,7 @@ public class MCache implements MapSource {
 						NArea a = new NArea((JSONObject) array.get(i));
 						areas.put(a.id, a);
 					}
+					System.out.println("Loaded " + areas.size() + " areas from file (legacy)");
 				} catch (org.json.JSONException e) {
 					// Ignore invalid JSON files
 				}

@@ -31,7 +31,7 @@ public class NCore extends Widget
     public AutoSaveTableware autoSaveTableware = null;
     public ScenarioManager scenarioManager = new ScenarioManager();
 
-    public nurgling.db.DatabaseManager databaseManager = null;
+    public static volatile nurgling.db.DatabaseManager databaseManager = null;
     public boolean isInspectMode()
     {
         if(debug)
@@ -178,18 +178,31 @@ public class NCore extends Widget
         }
     }
 
+    private static final Object dbLock = new Object();
+
     @Override
     public void tick(double dt)
     {
         if((Boolean) NConfig.get(NConfig.Key.ndbenable) && databaseManager == null)
         {
-            databaseManager = new nurgling.db.DatabaseManager(1);
+            synchronized (dbLock) {
+                if (databaseManager == null) {  // Double-check inside lock
+                    databaseManager = new nurgling.db.DatabaseManager(1);
+                    // Start area sync after database is initialized
+                    startAreaSync();
+                }
+            }
         }
 
         if(!(Boolean) NConfig.get(NConfig.Key.ndbenable) && databaseManager != null)
         {
-            databaseManager.shutdown();
-            databaseManager = null;
+            synchronized (dbLock) {
+                if (databaseManager != null) {
+                    stopAreaSync();
+                    databaseManager.shutdown();
+                    databaseManager = null;
+                }
+            }
         }
 
         if(autoDrink == null && (Boolean)NConfig.get(NConfig.Key.autoDrink))
@@ -325,11 +338,8 @@ public class NCore extends Widget
     @Override
     public void dispose() {
         mappingClient.done.set(true);
-        if(databaseManager!=null)
-        {
-            databaseManager.shutdown();
-            databaseManager = null;
-        }
+        // Don't shutdown databaseManager here - it's static and should persist across UI/session changes
+        // It will be shutdown only when the application exits or database is disabled
         super.dispose();
     }
 
@@ -509,5 +519,103 @@ public class NCore extends Widget
         }
         NGlobalSearchItems gsi = new NGlobalSearchItems(item, databaseManager);
         databaseManager.submitTask(gsi);
+    }
+
+    private static volatile boolean areaSyncStarted = false;
+
+    /**
+     * Start periodic area sync from database
+     */
+    private void startAreaSync() {
+        if (areaSyncStarted || databaseManager == null || !databaseManager.isReady()) {
+            return;
+        }
+
+        // Get current profile
+        String profile = "global";
+        try {
+            if (NUtils.getGameUI() != null) {
+                String genus = NUtils.getGameUI().getGenus();
+                if (genus != null && !genus.isEmpty()) {
+                    profile = genus;
+                }
+            }
+        } catch (Exception e) {
+            // Use default profile
+        }
+
+        final String syncProfile = profile;
+
+        // Start sync with 4 second interval
+        databaseManager.getAreaService().startSync(syncProfile, 4,
+            new nurgling.db.service.AreaService.AreaSyncCallback() {
+                @Override
+                public void onAreasUpdated(java.util.List<nurgling.areas.NArea> updatedAreas) {
+                    // Update areas in map cache
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null &&
+                        NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
+                        long now = System.currentTimeMillis();
+                        int skipped = 0;
+                        int updated = 0;
+                        for (nurgling.areas.NArea newArea : updatedAreas) {
+                            // Check if this area was modified locally recently (within 5 seconds)
+                            nurgling.areas.NArea localArea = NUtils.getGameUI().map.glob.map.areas.get(newArea.id);
+                            if (localArea != null && (now - localArea.lastLocalChange) < 5000) {
+                                // Skip - local changes are still pending
+                                skipped++;
+                                continue;
+                            }
+                            NUtils.getGameUI().map.glob.map.areas.put(newArea.id, newArea);
+                            // Force overlay to redraw
+                            try {
+                                nurgling.overlays.map.NOverlay overlay = NUtils.getGameUI().map.nols.get(newArea.id);
+                                if (overlay != null) {
+                                    overlay.requpdate2 = true;
+                                }
+                            } catch (Exception e) {
+                                // Ignore overlay refresh errors
+                            }
+                            updated++;
+                        }
+                        if (updated > 0) {
+                            System.out.println("Updated " + updated + " areas from database" + (skipped > 0 ? " (skipped " + skipped + " with pending local changes)" : ""));
+                        }
+                    }
+                }
+
+                @Override
+                public void onAreaDeleted(int areaId) {
+                    // Remove area from map cache
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null &&
+                        NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
+                        NUtils.getGameUI().map.glob.map.areas.remove(areaId);
+                        System.out.println("Deleted area " + areaId + " from database sync");
+                    }
+                }
+
+                @Override
+                public void onFullSync(java.util.Map<Integer, nurgling.areas.NArea> allAreas) {
+                    // Replace all areas in map cache
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null &&
+                        NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
+                        NUtils.getGameUI().map.glob.map.areas.clear();
+                        NUtils.getGameUI().map.glob.map.areas.putAll(allAreas);
+                        System.out.println("Full sync: loaded " + allAreas.size() + " areas from database");
+                    }
+                }
+            });
+
+        areaSyncStarted = true;
+        System.out.println("Area sync started for profile: " + syncProfile);
+    }
+
+    /**
+     * Stop periodic area sync
+     */
+    private void stopAreaSync() {
+        if (databaseManager != null && databaseManager.getAreaService() != null) {
+            databaseManager.getAreaService().stopSync();
+        }
+        areaSyncStarted = false;
     }
 }

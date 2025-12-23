@@ -967,24 +967,63 @@ public class NConfig
     {
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
-            JSONObject main = new JSONObject();
-            JSONArray jareas = new JSONArray();
-            for(NArea area : ((NMapView)NUtils.getGameUI().map).glob.map.areas.values())
-            {
-                jareas.put(area.toJson());
+            // If customPath is provided, write to file (for manual export)
+            if (customPath != null) {
+                writeAreasToFile(customPath);
+                return;
             }
-            main.put("areas",jareas);
-            try
-            {
-                FileWriter f = new FileWriter(customPath==null?getAreasPath():customPath,StandardCharsets.UTF_8);
-                main.write(f);
-                f.close();
-                current.isAreasUpd = false;
+
+            // Try to save to database if enabled
+            if ((Boolean) NConfig.get(NConfig.Key.ndbenable) && 
+                NCore.databaseManager != null && 
+                NCore.databaseManager.isReady()) {
+                try {
+                    String profile = NUtils.getGameUI().getGenus();
+                    if (profile == null || profile.isEmpty()) {
+                        profile = "global";
+                    }
+                    java.util.Map<Integer, NArea> areas = ((NMapView)NUtils.getGameUI().map).glob.map.areas;
+                    // Reset flag BEFORE async operation to prevent spam
+                    current.isAreasUpd = false;
+                    NCore.databaseManager.getAreaService().exportAreasToDatabaseAsync(areas, profile)
+                        .thenAccept(count -> {
+                            // Silent save - no spam
+                        })
+                        .exceptionally(e -> {
+                            System.err.println("Failed to save areas to database: " + e.getMessage());
+                            // Set flag back to retry later
+                            current.isAreasUpd = true;
+                            return null;
+                        });
+                    return;
+                } catch (Exception e) {
+                    System.err.println("Failed to save areas to database, falling back to file: " + e.getMessage());
+                }
             }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
+
+            // Fallback: write to file
+            writeAreasToFile(getAreasPath());
+        }
+    }
+
+    private void writeAreasToFile(String path) {
+        JSONObject main = new JSONObject();
+        JSONArray jareas = new JSONArray();
+        for(NArea area : ((NMapView)NUtils.getGameUI().map).glob.map.areas.values())
+        {
+            jareas.put(area.toJson());
+        }
+        main.put("areas",jareas);
+        try
+        {
+            FileWriter f = new FileWriter(path, StandardCharsets.UTF_8);
+            main.write(f);
+            f.close();
+            current.isAreasUpd = false;
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 

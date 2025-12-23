@@ -65,6 +65,7 @@ public class NAreaSelector implements Runnable
                         else if(mode == Mode.CHANGE)
                         {
                             area.space = result;
+                            area.lastLocalChange = System.currentTimeMillis();
                             area.grids_id.clear();
                             area.grids_id.addAll(area.space.space.keySet());
                             for(NArea.VArea space: area.space.space.values())
