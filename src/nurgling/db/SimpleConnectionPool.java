@@ -73,7 +73,6 @@ public class SimpleConnectionPool {
         if (conn != null) {
             // Validate existing connection
             if (isValid(conn)) {
-                logPoolStatus("borrow (reused)");
                 return conn;
             } else {
                 // Connection is stale, close it and decrement counter
@@ -83,21 +82,24 @@ public class SimpleConnectionPool {
         }
 
         // Try to create a new connection if below max size
-        if (currentSize.get() < maxSize) {
+        // Use atomic increment-then-check to prevent race condition
+        int newSize = currentSize.incrementAndGet();
+        if (newSize <= maxSize) {
             conn = createConnection();
             if (conn != null) {
-                currentSize.incrementAndGet();
-                logPoolStatus("borrow (new)");
                 return conn;
             }
+            // Failed to create connection, decrement counter
+            currentSize.decrementAndGet();
+        } else {
+            // Over limit, decrement and wait for available connection
+            currentSize.decrementAndGet();
         }
 
         // Pool is at max capacity, wait for a connection to be returned
         try {
-            System.out.println("[ConnectionPool] Pool exhausted, waiting for connection (pool=" + pool.size() + ", total=" + currentSize.get() + "/" + maxSize + ")");
             conn = pool.poll(BORROW_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             if (conn != null && isValid(conn)) {
-                logPoolStatus("borrow (waited)");
                 return conn;
             } else if (conn != null) {
                 closeQuietly(conn);
@@ -107,15 +109,8 @@ public class SimpleConnectionPool {
             Thread.currentThread().interrupt();
         }
 
-        System.err.println("[ConnectionPool] Failed to borrow connection!");
+        System.err.println("[ConnectionPool] Failed to borrow connection after " + BORROW_TIMEOUT_MS + "ms wait");
         return null;
-    }
-    
-    private void logPoolStatus(String action) {
-        // Only log occasionally to avoid spam
-        if (currentSize.get() > maxSize / 2) {
-            System.out.println("[ConnectionPool] " + action + ": pool=" + pool.size() + ", total=" + currentSize.get() + "/" + maxSize);
-        }
     }
 
     /**
@@ -208,6 +203,20 @@ public class SimpleConnectionPool {
                 conn.close();
             } catch (SQLException ignore) {
             }
+        }
+    }
+    
+    /**
+     * Close a broken connection and decrement the counter.
+     * Use this when a connection has experienced an I/O error during use.
+     *
+     * @param conn The broken connection to close
+     */
+    public void closeBrokenConnection(Connection conn) {
+        if (conn != null) {
+            closeQuietly(conn);
+            currentSize.decrementAndGet();
+            System.out.println("[ConnectionPool] Closed broken connection, total now: " + currentSize.get() + "/" + maxSize);
         }
     }
 

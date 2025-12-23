@@ -590,10 +590,17 @@ public class NCore extends Widget
                         int updated = 0;
                         boolean needsWidgetRefresh = false;
                         for (nurgling.areas.NArea newArea : updatedAreas) {
-                            // Check if this area was modified locally recently (within 5 seconds)
+                            // Check if this area was modified locally recently
+                            // Window = debounce(3s) + save time(2s) + buffer(5s) = 10s
                             nurgling.areas.NArea localArea = NUtils.getGameUI().map.glob.map.areas.get(newArea.id);
-                            if (localArea != null && (now - localArea.lastLocalChange) < 5000) {
-                                // Skip - local changes are still pending
+                            if (localArea != null && (now - localArea.lastLocalChange) < 10000) {
+                                // Skip - local changes are still pending save
+                                skipped++;
+                                continue;
+                            }
+                            
+                            // Also skip if local version >= DB version (we just saved it)
+                            if (localArea != null && localArea.version >= newArea.version) {
                                 skipped++;
                                 continue;
                             }

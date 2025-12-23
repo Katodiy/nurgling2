@@ -59,6 +59,18 @@ public class ConnectionPoolManager {
             connectionPool.returnConnection(conn);
         }
     }
+    
+    /**
+     * Close a broken connection and update pool counter.
+     * Use this when a connection has experienced an I/O error.
+     *
+     * @param conn The broken connection to close
+     */
+    public void closeBrokenConnection(Connection conn) {
+        if (connectionPool != null && conn != null) {
+            connectionPool.closeBrokenConnection(conn);
+        }
+    }
 
     /**
      * Check if the database is ready to accept connections.

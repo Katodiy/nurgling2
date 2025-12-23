@@ -160,11 +160,8 @@ public class DatabaseManager {
         } finally {
             if (conn != null) {
                 if (connectionBroken) {
-                    // Close broken connection instead of returning to pool
-                    try {
-                        conn.close();
-                    } catch (SQLException ignore) {
-                    }
+                    // Close broken connection and notify pool
+                    connectionPoolManager.closeBrokenConnection(conn);
                 } else {
                     connectionPoolManager.returnConnection(conn);
                 }

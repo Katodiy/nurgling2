@@ -481,6 +481,8 @@ public class NConfig
     HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
     private boolean isAreasUpd = false;
+    private long lastAreasChangeTime = 0;
+    private static final long AREAS_DEBOUNCE_MS = 3000; // 3 seconds debounce for area changes
     private boolean isExploredUpd = false;
     private boolean isRoutesUpd = false;
     private boolean isScenariosUpd = false;
@@ -493,7 +495,13 @@ public class NConfig
 
     public boolean isAreasUpdated()
     {
-        return isAreasUpd;
+        // Only return true if areas changed AND debounce period has passed
+        // This batches multiple rapid changes into a single DB update
+        if (isAreasUpd && lastAreasChangeTime > 0) {
+            long elapsed = System.currentTimeMillis() - lastAreasChangeTime;
+            return elapsed >= AREAS_DEBOUNCE_MS;
+        }
+        return false;
     }
 
     public boolean isRoutesUpdated() {
@@ -534,15 +542,19 @@ public class NConfig
     public static void needAreasUpdate()
     {
         // Only update profile-specific config (areas are per-world)
+        // Record timestamp for debouncing - actual save happens after AREAS_DEBOUNCE_MS of inactivity
+        long now = System.currentTimeMillis();
         try {
             if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
                 nurgling.NUtils.getUI().core.config.isAreasUpd = true;
+                nurgling.NUtils.getUI().core.config.lastAreasChangeTime = now;
             }
         } catch (Exception e) {
             // Fallback to global config if profile config not available
             if (current != null)
             {
                 current.isAreasUpd = true;
+                current.lastAreasChangeTime = now;
             }
         }
     }
@@ -977,8 +989,9 @@ public class NConfig
 
             // If DB is enabled - ONLY use DB, never fallback to file
             if ((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
-                // Reset flag to prevent repeated calls
-                current.isAreasUpd = false;
+                // Reset flags to prevent repeated calls (use 'this' not 'current' - they may be different instances)
+                this.isAreasUpd = false;
+                this.lastAreasChangeTime = 0;
                 
                 if (NCore.databaseManager != null && NCore.databaseManager.isReady()) {
                     try {
@@ -987,6 +1000,8 @@ public class NConfig
                             profile = "global";
                         }
                         java.util.Map<Integer, NArea> areas = ((NMapView)NUtils.getGameUI().map).glob.map.areas;
+                        // Capture 'this' for use in async callback
+                        final NConfig self = this;
                         NCore.databaseManager.getAreaService().exportAreasToDatabaseAsync(areas, profile)
                             .thenAccept(count -> {
                                 // Silent save - no spam
@@ -996,13 +1011,15 @@ public class NConfig
                                 if (e.getCause() != null) {
                                     e.getCause().printStackTrace();
                                 }
-                                // Set flag back to retry later
-                                current.isAreasUpd = true;
+                                // Set flag back to retry later (with timestamp for debounce)
+                                self.isAreasUpd = true;
+                                self.lastAreasChangeTime = System.currentTimeMillis();
                                 return null;
                             });
                     } catch (Exception e) {
                         System.err.println("Failed to save areas to database: " + e.getMessage());
-                        current.isAreasUpd = true; // Retry later
+                        this.isAreasUpd = true;
+                        this.lastAreasChangeTime = System.currentTimeMillis();
                     }
                 }
                 // DB enabled but not ready - just skip, will retry on next tick
@@ -1027,7 +1044,8 @@ public class NConfig
             FileWriter f = new FileWriter(path, StandardCharsets.UTF_8);
             main.write(f);
             f.close();
-            current.isAreasUpd = false;
+            this.isAreasUpd = false;
+            this.lastAreasChangeTime = 0;
         }
         catch (IOException e)
         {
