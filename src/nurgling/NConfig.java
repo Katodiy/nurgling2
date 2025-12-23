@@ -967,41 +967,47 @@ public class NConfig
     {
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
-            // If customPath is provided, write to file (for manual export)
+            // If customPath is provided, write to file (for manual export only)
             if (customPath != null) {
                 writeAreasToFile(customPath);
                 return;
             }
 
-            // Try to save to database if enabled
-            if ((Boolean) NConfig.get(NConfig.Key.ndbenable) && 
-                NCore.databaseManager != null && 
-                NCore.databaseManager.isReady()) {
-                try {
-                    String profile = NUtils.getGameUI().getGenus();
-                    if (profile == null || profile.isEmpty()) {
-                        profile = "global";
+            // If DB is enabled - ONLY use DB, never fallback to file
+            if ((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+                // Reset flag to prevent repeated calls
+                current.isAreasUpd = false;
+                
+                if (NCore.databaseManager != null && NCore.databaseManager.isReady()) {
+                    try {
+                        String profile = NUtils.getGameUI().getGenus();
+                        if (profile == null || profile.isEmpty()) {
+                            profile = "global";
+                        }
+                        java.util.Map<Integer, NArea> areas = ((NMapView)NUtils.getGameUI().map).glob.map.areas;
+                        NCore.databaseManager.getAreaService().exportAreasToDatabaseAsync(areas, profile)
+                            .thenAccept(count -> {
+                                // Silent save - no spam
+                            })
+                            .exceptionally(e -> {
+                                System.err.println("Failed to save areas to database: " + e.getMessage());
+                                if (e.getCause() != null) {
+                                    e.getCause().printStackTrace();
+                                }
+                                // Set flag back to retry later
+                                current.isAreasUpd = true;
+                                return null;
+                            });
+                    } catch (Exception e) {
+                        System.err.println("Failed to save areas to database: " + e.getMessage());
+                        current.isAreasUpd = true; // Retry later
                     }
-                    java.util.Map<Integer, NArea> areas = ((NMapView)NUtils.getGameUI().map).glob.map.areas;
-                    // Reset flag BEFORE async operation to prevent spam
-                    current.isAreasUpd = false;
-                    NCore.databaseManager.getAreaService().exportAreasToDatabaseAsync(areas, profile)
-                        .thenAccept(count -> {
-                            // Silent save - no spam
-                        })
-                        .exceptionally(e -> {
-                            System.err.println("Failed to save areas to database: " + e.getMessage());
-                            // Set flag back to retry later
-                            current.isAreasUpd = true;
-                            return null;
-                        });
-                    return;
-                } catch (Exception e) {
-                    System.err.println("Failed to save areas to database, falling back to file: " + e.getMessage());
                 }
+                // DB enabled but not ready - just skip, will retry on next tick
+                return;
             }
 
-            // Fallback: write to file
+            // DB not enabled - write to file
             writeAreasToFile(getAreasPath());
         }
     }

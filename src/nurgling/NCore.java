@@ -557,6 +557,7 @@ public class NCore extends Widget
                         long now = System.currentTimeMillis();
                         int skipped = 0;
                         int updated = 0;
+                        boolean needsWidgetRefresh = false;
                         for (nurgling.areas.NArea newArea : updatedAreas) {
                             // Check if this area was modified locally recently (within 5 seconds)
                             nurgling.areas.NArea localArea = NUtils.getGameUI().map.glob.map.areas.get(newArea.id);
@@ -565,7 +566,16 @@ public class NCore extends Widget
                                 skipped++;
                                 continue;
                             }
-                            NUtils.getGameUI().map.glob.map.areas.put(newArea.id, newArea);
+                            
+                            if (localArea != null) {
+                                // Update existing area object (preserves references in labels/lists)
+                                localArea.updateFrom(newArea);
+                            } else {
+                                // New area - add it
+                                NUtils.getGameUI().map.glob.map.areas.put(newArea.id, newArea);
+                            }
+                            needsWidgetRefresh = true;
+                            
                             // Force overlay to redraw
                             try {
                                 nurgling.overlays.map.NOverlay overlay = NUtils.getGameUI().map.nols.get(newArea.id);
@@ -577,6 +587,12 @@ public class NCore extends Widget
                             }
                             updated++;
                         }
+                        
+                        // Refresh area labels and widget
+                        if (needsWidgetRefresh) {
+                            refreshAreaLabelsAndWidget();
+                        }
+                        
                         if (updated > 0) {
                             System.out.println("Updated " + updated + " areas from database" + (skipped > 0 ? " (skipped " + skipped + " with pending local changes)" : ""));
                         }
@@ -589,6 +605,7 @@ public class NCore extends Widget
                     if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null &&
                         NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
                         NUtils.getGameUI().map.glob.map.areas.remove(areaId);
+                        refreshAreaLabelsAndWidget();
                         System.out.println("Deleted area " + areaId + " from database sync");
                     }
                 }
@@ -600,6 +617,7 @@ public class NCore extends Widget
                         NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
                         NUtils.getGameUI().map.glob.map.areas.clear();
                         NUtils.getGameUI().map.glob.map.areas.putAll(allAreas);
+                        refreshAreaLabelsAndWidget();
                         System.out.println("Full sync: loaded " + allAreas.size() + " areas from database");
                     }
                 }
@@ -607,6 +625,47 @@ public class NCore extends Widget
 
         areaSyncStarted = true;
         System.out.println("Area sync started for profile: " + syncProfile);
+    }
+
+    /**
+     * Refresh area labels on map and NAreasWidget after sync update
+     */
+    private static void refreshAreaLabelsAndWidget() {
+        try {
+            if (NUtils.getGameUI() == null || NUtils.getGameUI().map == null) return;
+            
+            nurgling.NMapView map = (nurgling.NMapView) NUtils.getGameUI().map;
+            
+            // Refresh area overlays on map
+            if (map.nols != null) {
+                for (nurgling.overlays.map.NOverlay overlay : map.nols.values()) {
+                    if (overlay != null) {
+                        overlay.requpdate2 = true;
+                    }
+                }
+            }
+            
+            // Update area labels (NAreaLabel sprites on dummy gobs)
+            if (map.dummys != null) {
+                for (haven.Gob dummy : map.dummys.values()) {
+                    if (dummy != null) {
+                        for (haven.Gob.Overlay ol : dummy.ols) {
+                            if (ol != null && ol.spr instanceof nurgling.overlays.NAreaLabel) {
+                                ((nurgling.overlays.NAreaLabel) ol.spr).update();
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Refresh NAreasWidget if open
+            if (NUtils.getGameUI().areas != null && NUtils.getGameUI().areas.al != null) {
+                // Trigger list refresh by re-showing current path
+                NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath);
+            }
+        } catch (Exception e) {
+            // Ignore refresh errors
+        }
     }
 
     /**

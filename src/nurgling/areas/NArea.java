@@ -189,6 +189,26 @@ public class NArea
         this.name = name;
     }
 
+    /**
+     * Update this area's fields from another area (for sync without replacing object reference)
+     */
+    public void updateFrom(NArea other) {
+        this.name = other.name;
+        this.path = other.path;
+        this.hide = other.hide;
+        this.color = other.color;
+        this.space = other.space;
+        this.version = other.version;
+        this.grids_id.clear();
+        this.grids_id.addAll(other.grids_id);
+        this.jin = other.jin;
+        this.jout = other.jout;
+        this.jspec = other.jspec;
+        this.spec.clear();
+        this.spec.addAll(other.spec);
+        // Don't copy lastLocalChange - keep our own timestamp
+    }
+
     public NArea(JSONObject obj)
     {
         this.name = (String) obj.get("name");

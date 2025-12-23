@@ -154,11 +154,29 @@ public class MigrationManager {
         migrations.add(new Migration(2, "Add resource_name column to ingredients table for layered sprites") {
             @Override
             public void run(DatabaseAdapter adapter) throws SQLException {
-                // Check if column already exists
-                try {
-                    adapter.executeQuery("SELECT resource_name FROM ingredients LIMIT 1").close();
+                // Check if column already exists using proper metadata query
+                boolean columnExists = false;
+                if (adapter instanceof nurgling.db.PostgresAdapter) {
+                    // PostgreSQL: use information_schema
+                    try (ResultSet rs = adapter.executeQuery(
+                            "SELECT 1 FROM information_schema.columns WHERE table_name = 'ingredients' AND column_name = 'resource_name'")) {
+                        columnExists = rs.next();
+                    }
+                } else {
+                    // SQLite: use pragma
+                    try (ResultSet rs = adapter.executeQuery("PRAGMA table_info(ingredients)")) {
+                        while (rs.next()) {
+                            if ("resource_name".equals(rs.getString("name"))) {
+                                columnExists = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (columnExists) {
                     System.out.println("resource_name column already exists in ingredients table");
-                } catch (SQLException e) {
+                } else {
                     adapter.executeUpdate("ALTER TABLE ingredients ADD COLUMN resource_name VARCHAR(512)");
                     System.out.println("Added resource_name column to ingredients table");
                 }
@@ -198,11 +216,29 @@ public class MigrationManager {
         migrations.add(new Migration(4, "Add version column to areas table") {
             @Override
             public void run(DatabaseAdapter adapter) throws SQLException {
-                // Check if column already exists
-                try {
-                    adapter.executeQuery("SELECT version FROM areas LIMIT 1").close();
+                // Check if column already exists using proper metadata query
+                boolean columnExists = false;
+                if (adapter instanceof nurgling.db.PostgresAdapter) {
+                    // PostgreSQL: use information_schema
+                    try (ResultSet rs = adapter.executeQuery(
+                            "SELECT 1 FROM information_schema.columns WHERE table_name = 'areas' AND column_name = 'version'")) {
+                        columnExists = rs.next();
+                    }
+                } else {
+                    // SQLite: use pragma
+                    try (ResultSet rs = adapter.executeQuery("PRAGMA table_info(areas)")) {
+                        while (rs.next()) {
+                            if ("version".equals(rs.getString("name"))) {
+                                columnExists = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (columnExists) {
                     System.out.println("version column already exists in areas table");
-                } catch (SQLException e) {
+                } else {
                     adapter.executeUpdate("ALTER TABLE areas ADD COLUMN version INTEGER DEFAULT 1");
                     System.out.println("Added version column to areas table");
                 }

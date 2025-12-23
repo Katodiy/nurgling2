@@ -134,6 +134,10 @@ public class NUtils
 
     public static NArea getArea(int id)
     {
+        if (getGameUI() == null || getGameUI().map == null || 
+            getGameUI().map.glob == null || getGameUI().map.glob.map == null) {
+            return null;
+        }
         return getGameUI().map.glob.map.areas.get(id);
     }
 
