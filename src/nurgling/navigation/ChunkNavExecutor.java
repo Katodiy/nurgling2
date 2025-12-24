@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static nurgling.navigation.ChunkNavConfig.*;
-import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * Executes a ChunkPath using PathFinder for local navigation.
@@ -81,38 +80,27 @@ public class ChunkNavExecutor implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        log("Executor.run() called, path=%s, targetArea=%s",
-            path != null ? path.size() + " waypoints, " + path.segments.size() + " segments" : "null",
-            targetArea != null ? targetArea.name : "null");
-
         if (gui == null || gui.map == null || path == null) {
-            log("Executor.run() FAIL - gui/map/path null");
             return Results.FAIL();
         }
 
         Gob player = gui.map.player();
         if (player == null) {
-            log("Executor.run() FAIL - player null");
             return Results.FAIL();
         }
 
         if (path.hasDetailedPath()) {
-            log("Following detailed path with %d segments, %d tile steps",
-                path.segments.size(), path.getTotalTileSteps());
             return followDetailedPath(gui);
         }
 
         if (!path.isEmpty()) {
-            log("No detailed path, falling back to waypoint navigation");
             return followWaypointPath(gui);
         }
 
         if (path.isEmpty() && targetArea != null) {
-            log("Empty path with target area, navigating directly");
             return navigateToTargetArea(gui);
         }
 
-        log("Executor.run() FAIL - path empty and no targetArea");
         return Results.FAIL();
     }
 
@@ -127,63 +115,42 @@ public class ChunkNavExecutor implements Action {
             Layer segmentLayer = segmentChunk != null ? Layer.fromString(segmentChunk.layer) : Layer.SURFACE;
             boolean sameLayer = segmentLayer == currentLayer;
 
-            log("Following segment %d/%d with %d steps, type=%s, currentLayer=%s, segmentLayer=%s, sameLayer=%s",
-                segmentIndex, path.segments.size(), segment.steps.size(), segment.type,
-                currentLayer, segmentLayer, sameLayer);
-
-            // DEBUG: Log worldTileOrigin comparison
-            if (segmentChunk != null) {
-                log("DEBUG worldTileOrigin: segment=%s, chunk=%s, match=%s",
-                    segment.worldTileOrigin, segmentChunk.worldTileOrigin,
-                    segment.worldTileOrigin != null && segment.worldTileOrigin.equals(segmentChunk.worldTileOrigin));
-            }
-
             if (sameLayer) {
                 Results segResult = followSegmentTiles(segment, gui);
                 if (!segResult.IsSuccess()) {
-                    log("Segment %d failed", segmentIndex);
                     return Results.FAIL();
                 }
             } else if (segment.type == ChunkPath.SegmentType.PORTAL) {
                 // Cross-layer segment that leads to a portal - skip the walk, we'll traverse portal next
-                log("Cross-layer PORTAL segment - skipping walk, will traverse portal");
             } else {
                 // Cross-layer WALK segment - we likely just traversed a portal and are already in target layer
-                // The getCurrentPlayerLayer() might not know about the new grid yet, so try walking anyway
-                log("Cross-layer WALK segment - attempting walk (may already be in target layer)");
                 Results segResult = followSegmentTiles(segment, gui);
                 if (!segResult.IsSuccess()) {
-                    log("Segment %d failed (cross-layer walk)", segmentIndex);
                     return Results.FAIL();
                 }
             }
 
             if (segment.type == ChunkPath.SegmentType.PORTAL) {
-                log("Looking for portal to traverse after segment %d", segmentIndex);
                 tickPortalTracker();
 
                 long targetGridId = -1;
                 if (segmentIndex < path.segments.size()) {
                     ChunkPath.PathSegment nextSegment = path.segments.get(segmentIndex);
                     targetGridId = nextSegment.gridId;
-                    log("Need portal connecting to grid %d", targetGridId);
                 }
 
                 Results portalResult = findAndTraversePortalToGrid(gui, segment, targetGridId);
                 if (!portalResult.IsSuccess()) {
-                    log("Portal traversal failed - trying to continue anyway");
+                    // Portal traversal failed - try to continue anyway
                 }
 
                 currentLayer = getCurrentPlayerLayer();
-                log("After portal, current layer is now: %s", currentLayer);
-
                 tickPortalTracker();
             }
 
             tickPortalTracker();
         }
 
-        log("Detailed path completed successfully");
         return Results.SUCCESS();
     }
 
@@ -215,14 +182,10 @@ public class ChunkNavExecutor implements Action {
         Layer targetLayer = targetChunk != null ? Layer.fromString(targetChunk.layer) : Layer.UNKNOWN;
 
         String expectedPortalType = getExpectedPortalType(sourceLayer, targetLayer);
-        log("Layer transition %s -> %s, expected portal type: %s",
-            sourceLayer, targetLayer, expectedPortalType != null ? expectedPortalType : "any");
 
         ChunkNavData chunk = graph.getChunk(segment.gridId);
         if (chunk != null && !chunk.portals.isEmpty()) {
             List<ChunkPortal> portalsCopy = new ArrayList<>(chunk.portals);
-            log("Checking %d recorded portals in chunk %d for connection to %d",
-                portalsCopy.size(), segment.gridId, targetGridId);
 
             // Rank all portals by priority score
             List<ScoredPortal> rankedPortals = rankPortalCandidates(
@@ -230,7 +193,6 @@ public class ChunkNavExecutor implements Action {
 
             // Try portals in priority order
             for (ScoredPortal scored : rankedPortals) {
-                log("Trying portal %s (score=%d)", scored.portal.gobName, scored.score);
                 Results result = tryTraversePortal(gui, player, scored.portal);
                 if (result != null) return result;
             }
@@ -239,12 +201,9 @@ public class ChunkNavExecutor implements Action {
         // Fallback: Look for common portal gob patterns
         Gob nearestPortal = findNearestPortalGob(gui, player);
         if (nearestPortal != null) {
-            String portalName = nearestPortal.ngob != null ? nearestPortal.ngob.name : "unknown";
-            log("Found nearby portal (fallback): %s", portalName);
             return traversePortalGob(gui, nearestPortal);
         }
 
-        log("No portal found nearby");
         return Results.FAIL();
     }
 
@@ -364,20 +323,13 @@ public class ChunkNavExecutor implements Action {
     private Results tryTraversePortal(NGameUI gui, Gob player, ChunkPortal recordedPortal) throws InterruptedException {
         Gob portalGob = findGobByName(gui, recordedPortal.gobName, player.rc, MCache.tilesz.x * 30);
         if (portalGob == null) {
-            log("Portal gob not found: %s", recordedPortal.gobName);
             return null;
         }
 
-        double dist = player.rc.dist(portalGob.rc);
-        log("Portal %s at dist=%.1f", recordedPortal.gobName, dist);
-
         // Always walk to the portal gob - cellar doors and other portals require being close
-        // PathFinder to a gob walks right up to it
-        log("Walking to portal gob...");
         PathFinder pf = new PathFinder(portalGob);
         Results walkResult = pf.run(gui);
         if (!walkResult.IsSuccess()) {
-            log("Failed to walk to portal via PathFinder");
             return null;
         }
 
@@ -407,7 +359,6 @@ public class ChunkNavExecutor implements Action {
 
     private Results traversePortalGob(NGameUI gui, Gob portalGob) throws InterruptedException {
         String portalName = portalGob.ngob != null ? portalGob.ngob.name : "unknown";
-        log("traversePortalGob(%s) starting...", portalName);
 
         if (manager != null && manager.getPortalTracker() != null) {
             manager.getPortalTracker().setClickedPortal(portalGob);
@@ -420,37 +371,26 @@ public class ChunkNavExecutor implements Action {
                                    portalName.contains("ladder") ||
                                    portalName.contains("minehole");
 
-        log("Interacting with portal at %s (loading=%s)...", portalGob.rc, isLoadingPortal);
-        try {
-            if (isLoadingPortal) {
-                // Cellar doors, stairs, ladders, mines - use simple right-click to enter
-                NUtils.rclickGob(portalGob);
-            } else {
-                // Regular doors (building entrances) - use openDoorOnAGob
-                NUtils.openDoorOnAGob(gui, portalGob);
-            }
-        } catch (Exception e) {
-            error("Portal interaction threw exception: " + e.getMessage(), e);
-            return Results.FAIL();
+        if (isLoadingPortal) {
+            // Cellar doors, stairs, ladders, mines - use simple right-click to enter
+            NUtils.rclickGob(portalGob);
+        } else {
+            // Regular doors (building entrances) - use openDoorOnAGob
+            NUtils.openDoorOnAGob(gui, portalGob);
         }
 
-        log("Waiting for map load...");
         NUtils.getUI().core.addTask(new WaitForMapLoad());
         NUtils.getUI().core.addTask(new WaitForGobStability());
 
-        log("Portal traversal completed");
         return Results.SUCCESS();
     }
 
     private Results followSegmentTiles(ChunkPath.PathSegment segment, NGameUI gui) throws InterruptedException {
         if (segment.isEmpty()) {
-            log("Segment is empty, returning success");
             return Results.SUCCESS();
         }
 
         ChunkNavData segmentChunk = graph.getChunk(segment.gridId);
-        String layer = segmentChunk != null ? segmentChunk.layer : "unknown";
-        log("followSegmentTiles: grid=%d layer=%s steps=%d", segment.gridId, layer, segment.steps.size());
 
         // Get LIVE worldTileOrigin from MCache
         Coord liveWorldTileOrigin = null;
@@ -477,7 +417,6 @@ public class ChunkNavExecutor implements Action {
         }
 
         if (currentWorldTileOrigin == null) {
-            log("FAIL: No worldTileOrigin available for segment");
             return Results.FAIL();
         }
 
@@ -553,12 +492,10 @@ public class ChunkNavExecutor implements Action {
             }
 
             if (!madeProgress) {
-                log("FAILED: Could not make progress on segment path");
                 return Results.FAIL();
             }
         }
 
-        log("Segment completed successfully");
         return Results.SUCCESS();
     }
 
@@ -570,9 +507,6 @@ public class ChunkNavExecutor implements Action {
         double tileSize = MCache.tilesz.x;
         double stepDistance = tileSize * config.stepDistanceTiles;
 
-        log("walkTowardTarget to %s (maxSteps=%d, stepDist=%.0f, closeEnough=%.0f)",
-            target, config.maxSteps, config.stepDistanceTiles, config.closeEnoughTiles);
-
         for (int step = 0; step < config.maxSteps; step++) {
             Gob player = gui.map.player();
             if (player == null) return Results.FAIL();
@@ -581,24 +515,15 @@ public class ChunkNavExecutor implements Action {
 
             // Close enough - we're done
             if (distToTarget < tileSize * config.closeEnoughTiles) {
-                log("Reached target at distance %.1f", distToTarget);
                 return Results.SUCCESS();
             }
 
             // Try direct path first if configured
             if (config.tryDirectFirst) {
-                log("  Trying direct PathFinder to: %s", target);
-                Coord targetPfGrid = nurgling.pf.Utils.toPfGrid(target);
-                Coord targetTile = target.floor(MCache.tilesz);
-                log("    Target tile: %s, PF grid: %s", targetTile, targetPfGrid);
-
                 PathFinder directPf = new PathFinder(target);
                 Results directResult = directPf.run(gui);
                 if (directResult.IsSuccess()) {
-                    log("Direct path succeeded");
                     return Results.SUCCESS();
-                } else {
-                    log("  Direct path FAILED - PathFinder couldn't find route");
                 }
             }
 
@@ -607,8 +532,6 @@ public class ChunkNavExecutor implements Action {
             double walkDist = Math.min(stepDistance, distToTarget * 0.5);
             Coord2d intermediateTarget = player.rc.add(direction.mul(walkDist));
 
-            log("Step %d, distance=%.1f, walking toward %s", step, distToTarget, intermediateTarget);
-
             PathFinder stepPf = new PathFinder(intermediateTarget);
             Results stepResult = stepPf.run(gui);
 
@@ -616,7 +539,6 @@ public class ChunkNavExecutor implements Action {
                 // Try shorter step
                 walkDist = walkDist / 2;
                 if (walkDist < tileSize * 2) {
-                    log("Step too short, giving up");
                     return Results.FAIL();
                 }
                 intermediateTarget = player.rc.add(direction.mul(walkDist));
@@ -624,7 +546,6 @@ public class ChunkNavExecutor implements Action {
                 stepResult = stepPf.run(gui);
 
                 if (!stepResult.IsSuccess()) {
-                    log("Cannot make progress toward target");
                     return Results.FAIL();
                 }
             }
@@ -632,7 +553,6 @@ public class ChunkNavExecutor implements Action {
             Thread.sleep(100);
         }
 
-        log("Max steps reached");
         return Results.FAIL();
     }
 
@@ -695,21 +615,16 @@ public class ChunkNavExecutor implements Action {
             return Results.FAIL();
         }
 
-        log("Navigating to target area: %s", targetArea.name);
-
         Pair<Coord2d, Coord2d> areaBounds = targetArea.getRCArea();
         Coord2d areaCenter = targetArea.getCenter2d();
 
         if (areaBounds == null && areaCenter == null) {
-            log("Area not visible and no stored center");
             return Results.FAIL();
         }
 
         if (areaBounds == null && areaCenter != null) {
-            log("Area not visible, walking toward center: %s", areaCenter);
             Results walkResult = walkTowardTarget(areaCenter, gui, WalkConfig.DEFAULT);
             if (!walkResult.IsSuccess()) {
-                log("Could not reach area center");
                 return Results.FAIL();
             }
 
@@ -735,7 +650,6 @@ public class ChunkNavExecutor implements Action {
         }
 
         if (areaBounds == null) {
-            log("Area still not visible after waiting");
             return Results.FAIL();
         }
 
@@ -748,18 +662,13 @@ public class ChunkNavExecutor implements Action {
         List<Coord2d> edgePoints = getAllAreaEdgePoints(areaBounds);
         edgePoints.sort(Comparator.comparingDouble(p -> p.dist(playerPos)));
 
-        log("Trying %d edge points", edgePoints.size());
-
         for (Coord2d edgePoint : edgePoints) {
-            log("Trying edge point: %s", edgePoint);
             Results edgeResult = walkTowardTarget(edgePoint, gui, WalkConfig.DEFAULT);
             if (edgeResult.IsSuccess()) {
-                log("Reached area edge");
                 return Results.SUCCESS();
             }
         }
 
-        log("Could not reach any area edge");
         return Results.FAIL();
     }
 
@@ -829,7 +738,6 @@ public class ChunkNavExecutor implements Action {
                 ChunkNavIntraPathfinder.IntraPath intraPath = ChunkNavIntraPathfinder.findPath(playerLocal, targetLocal, chunk);
 
                 if (!intraPath.reachable) {
-                    error("Target unreachable via walkability grid at (" + targetLocal + ")");
                     return Results.FAIL();
                 }
 
@@ -870,30 +778,17 @@ public class ChunkNavExecutor implements Action {
     }
 
     private Results traversePortal(ChunkPortal portal, long gridId, NGameUI gui) throws InterruptedException {
-        log("traversePortal(%s) in grid %d", portal.gobName, gridId);
-
         Coord2d accessPoint = getPortalAccessPoint(portal, gridId, gui);
         if (accessPoint != null) {
-            log("Navigating to access point %s", accessPoint);
-
-            Results navResult = walkTowardTarget(accessPoint, gui, WalkConfig.DEFAULT);
-
-            if (!navResult.IsSuccess()) {
-                log("Could not reach exact access point, continuing anyway");
-            }
-
+            walkTowardTarget(accessPoint, gui, WalkConfig.DEFAULT);
             Thread.sleep(200);
-        } else {
-            log("No access point available for portal %s", portal.gobName);
         }
 
         Gob portalGob = findPortalGobByPosition(portal, gridId, gui);
         if (portalGob == null) {
-            log("Portal not found by position, trying hash: %s", portal.gobHash);
             portalGob = Finder.findGob(portal.gobHash);
         }
         if (portalGob == null) {
-            log("Portal not found by hash, trying closest by name: %s", portal.gobName);
             Collection<Gob> candidates = Finder.findGobs(new NAlias(portal.gobName));
             if (candidates != null && !candidates.isEmpty()) {
                 Gob player = NUtils.player();
@@ -913,7 +808,6 @@ public class ChunkNavExecutor implements Action {
             gui.error("ChunkNav: Portal gob not found: " + portal.gobName + " at position " + portal.localCoord);
             return Results.FAIL();
         }
-        log("Found portal gob: %s at %s", portalGob.ngob.name, portalGob.rc);
 
         if (portal.requiresInteraction) {
             if (manager != null && manager.getPortalTracker() != null) {
@@ -952,11 +846,8 @@ public class ChunkNavExecutor implements Action {
 
         Collection<Gob> candidates = Finder.findGobs(new NAlias(portal.gobName));
         if (candidates == null || candidates.isEmpty()) {
-            log("No gobs found with name: %s", portal.gobName);
             return null;
         }
-
-        log("Found %d candidates for %s, looking near %s", candidates.size(), portal.gobName, expectedPos);
 
         Gob closest = null;
         double closestDist = Double.MAX_VALUE;
@@ -964,15 +855,10 @@ public class ChunkNavExecutor implements Action {
 
         for (Gob gob : candidates) {
             double dist = gob.rc.dist(expectedPos);
-            log("  Candidate at %s dist=%.1f", gob.rc, dist);
             if (dist < closestDist && dist < maxDistance) {
                 closestDist = dist;
                 closest = gob;
             }
-        }
-
-        if (closest != null) {
-            log("Best match at %s dist=%.1f", closest.rc, closestDist);
         }
 
         return closest;

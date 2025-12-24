@@ -1,17 +1,14 @@
 package nurgling.navigation;
 
 import haven.*;
-import nurgling.NGob;
 import nurgling.NHitBox;
 import nurgling.NUtils;
-import nurgling.pf.CellsArray;
 import nurgling.tasks.GateDetector;
 
 import java.util.*;
 
 import static nurgling.navigation.ChunkNavConfig.*;
 import static nurgling.navigation.ChunkNavData.Direction;
-import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * Records navigation data as the player explores the world.
@@ -51,9 +48,6 @@ public class ChunkNavRecorder {
             ChunkNavData existing = graph.getChunk(grid.id);
             ChunkNavData chunk;
 
-            log("recordGrid: id=" + grid.id + " ul=" + grid.ul +
-                " existing=" + (existing != null ? "YES" : "NO"));
-
             if (existing != null) {
                 // Merge new observations with existing data
                 chunk = existing;
@@ -79,8 +73,6 @@ public class ChunkNavRecorder {
             dumpWalkabilityGrid(chunk, grid.id);
 
         } catch (Exception e) {
-            // Grid may have become invalid during recording
-            error("Recorder: Error recording grid " + grid.id + ": " + e.getMessage(), e);
         }
     }
 
@@ -141,10 +133,6 @@ public class ChunkNavRecorder {
                 }
             }
         }
-
-        log("DEBUG mergeWalkability grid.id=" + grid.id +
-            " terrain=" + terrainBlockedCount + " gob=" + gobBlockedCount +
-            " walkable=" + walkableCount + " skipped=" + skippedCount);
     }
 
     /**
@@ -241,12 +229,6 @@ public class ChunkNavRecorder {
         // DEBUG: Track floor tile bounds (non-nil tiles)
         int floorMinX = CELLS_PER_EDGE, floorMaxX = 0, floorMinY = CELLS_PER_EDGE, floorMaxY = 0;
 
-        // DEBUG: Log key info
-        log("DEBUG sampleWalkability:");
-        log("  grid.ul=" + grid.ul + " grid.id=" + grid.id);
-        log("  playerTile=" + playerTile);
-        log("  gobBlockedTiles.size=" + gobBlockedTiles.size());
-
         for (int tx = 0; tx < CELLS_PER_EDGE; tx++) {
             for (int ty = 0; ty < CELLS_PER_EDGE; ty++) {
                 // Calculate world tile coordinate
@@ -292,11 +274,7 @@ public class ChunkNavRecorder {
             }
         }
 
-        log("  Results: terrainBlocked=" + terrainBlockedCount +
-            " gobBlocked=" + gobBlockedCount + " walkable=" + walkableCount + " skipped=" + skippedCount);
         int floorTileCount = gobBlockedCount + walkableCount;
-        log("  Floor tiles (non-nil): " + floorTileCount +
-            " bounds=(" + floorMinX + "," + floorMinY + ")-(" + floorMaxX + "," + floorMaxY + ")");
     }
 
     // Track unique tile types seen for debugging
@@ -310,13 +288,6 @@ public class ChunkNavRecorder {
         try {
             String tileName = mcache.tilesetname(mcache.gettile(tileCoord));
             if (tileName == null) return false;
-
-            // Debug: track unique tile types
-            if (!debugTileTypesLogged && debugSeenTileTypes.add(tileName)) {
-                if (debugSeenTileTypes.size() <= 10) {
-                    log("DEBUG tile type: " + tileName);
-                }
-            }
 
             for (String blocked : BLOCKED_TILES) {
                 if (tileName.startsWith(blocked) || tileName.equals(blocked)) {
@@ -484,7 +455,6 @@ public class ChunkNavRecorder {
                 }
             }
         } catch (Exception e) {
-            error("Recorder: Error detecting portals: " + e.getMessage());
         }
     }
 
@@ -886,10 +856,7 @@ public class ChunkNavRecorder {
                     writer.println("No floor tiles found!");
                 }
             }
-
-            log("DEBUG: Dumped walkability grid to " + debugFile.getAbsolutePath());
         } catch (Exception e) {
-            error("DEBUG: Failed to dump walkability grid: " + e.getMessage());
         }
     }
 }

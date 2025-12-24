@@ -4,7 +4,6 @@ import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
 import haven.MCache;
-import haven.Pair;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
@@ -12,7 +11,6 @@ import nurgling.areas.NArea;
 import java.util.*;
 
 import static nurgling.navigation.ChunkNavConfig.*;
-import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * A* pathfinding on the chunk graph.
@@ -38,23 +36,17 @@ public class ChunkNavPlanner {
         // This is more reliable than ngob.grid_id which can be stale
         PlayerLocation playerLoc = getPlayerLocation();
         if (playerLoc == null) {
-            log("Cannot get player's current location");
             return null;
         }
 
         long startChunkId = playerLoc.gridId;
         Coord playerLocal = playerLoc.localCoord;
 
-        log("Planning path to area '%s' from chunk %d playerLocal=%s", area.name, startChunkId, playerLocal);
-
         // Find target chunk and local coord using STORED data (not live visibility)
         TargetLocation target = findTargetLocation(area);
         if (target == null) {
-            log("Cannot determine target location for area '%s'", area.name);
             return null;
         }
-
-        log("Target location: chunk=%d local=%s", target.chunkId, target.localCoord);
 
         // Use unified pathfinder to get complete tile-level path
         UnifiedTilePathfinder.UnifiedPath unifiedPath = unifiedPathfinder.findPath(
@@ -63,17 +55,12 @@ public class ChunkNavPlanner {
         );
 
         if (unifiedPath == null || !unifiedPath.reachable) {
-            log("Unified pathfinder found no path");
             return null;
         }
-
-        log("Unified path found with %d tile steps, cost=%.1f", unifiedPath.size(), unifiedPath.cost);
 
         // Convert to ChunkPath with segments
         ChunkPath path = new ChunkPath();
         unifiedPath.populateChunkPath(path, graph);
-
-        log("Built %d segments with %d total steps", path.segments.size(), path.getTotalTileSteps());
 
         return path;
     }
@@ -337,7 +324,6 @@ public class ChunkNavPlanner {
 
             return null;
         } catch (Exception e) {
-            error("Error getting player location: " + e.getMessage());
             return null;
         }
     }
@@ -379,11 +365,8 @@ public class ChunkNavPlanner {
             iterations++;
             AStarNode current = openSet.poll();
 
-            log("A* iteration %d expanding %d (g=%.1f, f=%.1f)", iterations, current.gridId, current.g, current.f);
-
             // Check if we reached a target
             if (targetChunkIds.contains(current.gridId)) {
-                log("A* reached target %d", current.gridId);
                 return reconstructPath(current, targetArea);
             }
 
@@ -412,18 +395,12 @@ public class ChunkNavPlanner {
                     neighbor.crossingPoint = edge.crossingPoint;
                     neighbor.portal = edge.portal;
 
-                    log("A* adding neighbor %d (g=%.1f, h=%.1f, f=%.1f)", edge.toGridId, neighbor.g, neighbor.h, neighbor.f);
-
                     // Remove and re-add to update priority
                     openSet.remove(neighbor);
                     openSet.add(neighbor);
                 }
             }
         }
-
-        // No path found
-        error("A* found no path. iterations=" + iterations + " edges=" + edgesExpanded +
-            " start=" + startChunkId + " targets=" + targetChunkIds);
         return null;
     }
 
@@ -681,13 +658,10 @@ public class ChunkNavPlanner {
                             localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
                             return localCoord;
                         } else {
-                            // Player is NOT in this grid - the grid ID is wrong
-                            log("Player tile %s not in grid %d (ul=%s, local=%s)", playerTile, chunkGridId, grid.ul, localCoord);
                             // Try to find the correct grid
                             MCache.Grid correctGrid = mcache.getgridt(playerTile);
                             if (correctGrid != null) {
                                 Coord correctLocal = playerTile.sub(correctGrid.ul);
-                                log("Player is actually in grid %d at local %s", correctGrid.id, correctLocal);
                             }
                             return null;
                         }
@@ -705,16 +679,10 @@ public class ChunkNavPlanner {
                     localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
                     return localCoord;
                 } else {
-                    log("Player tile %s not in stored chunk %d (worldTileOrigin=%s, local=%s)",
-                        playerTile, chunkGridId, chunk.worldTileOrigin, localCoord);
                     return null;
                 }
             }
-
-            log("Grid %d not found in MCache or stored data", chunkGridId);
-
         } catch (Exception e) {
-            error("Error getting player local coord: " + e.getMessage());
         }
         return null;
     }
@@ -764,7 +732,6 @@ public class ChunkNavPlanner {
             }
 
         } catch (Exception e) {
-            error("Error getting area local coord: " + e.getMessage());
         }
         return null;
     }

@@ -7,7 +7,6 @@ import haven.MCache;
 import java.util.*;
 
 import static nurgling.navigation.ChunkNavConfig.*;
-import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * Unified A* pathfinder that operates on an implicit tile graph spanning all recorded chunks.
@@ -45,13 +44,7 @@ public class UnifiedTilePathfinder {
         ChunkNavData targetChunk = graph.getChunk(targetChunkId);
 
         if (startChunk == null || targetChunk == null) {
-            log("UnifiedPathfinder: Missing chunk data - start=" + (startChunk != null) + ", target=" + (targetChunk != null));
             return null;
-        }
-
-        // Debug: Check layer difference (only log if different layers - requires portal)
-        if (!startChunk.layer.equals(targetChunk.layer)) {
-            log("UnifiedPathfinder: Cross-layer path - " + startChunk.layer + " -> " + targetChunk.layer);
         }
 
         // A* data structures
@@ -85,7 +78,6 @@ public class UnifiedTilePathfinder {
 
             if (current.tile.equals(targetTile)) {
                 // Found path - reconstruct it
-                log("UnifiedPathfinder: Found path in " + iterations + " iterations, explored " + chunksExplored.size() + " chunks");
                 return reconstructPath(current);
             }
 
@@ -123,7 +115,6 @@ public class UnifiedTilePathfinder {
             }
         }
 
-        log("UnifiedPathfinder: No path found after " + iterations + " iterations, explored " + chunksExplored.size() + " chunks, openSet=" + openSet.size());
         return null;
     }
 
@@ -631,43 +622,6 @@ public class UnifiedTilePathfinder {
         public void populateChunkPath(ChunkPath chunkPath, ChunkNavGraph graph) {
             if (steps.isEmpty()) return;
 
-            // Debug: log path summary with first and last steps
-            TileNode firstStep = steps.get(0);
-            TileNode lastStep = steps.get(steps.size() - 1);
-            ChunkNavData firstChunk = graph.getChunk(firstStep.chunkId);
-            ChunkNavData lastChunk = graph.getChunk(lastStep.chunkId);
-
-            System.out.println("=== populateChunkPath - " + steps.size() + " steps ===");
-            System.out.println("  FIRST step: chunk=" + firstStep.chunkId + " local=" + firstStep.localCoord +
-                (firstChunk != null ? " worldOrigin=" + firstChunk.worldTileOrigin : ""));
-            System.out.println("  LAST step: chunk=" + lastStep.chunkId + " local=" + lastStep.localCoord +
-                (lastChunk != null ? " worldOrigin=" + lastChunk.worldTileOrigin : ""));
-
-            // If last chunk has worldTileOrigin, compute world tile for destination
-            if (lastChunk != null && lastChunk.worldTileOrigin != null) {
-                Coord worldTile = lastChunk.worldTileOrigin.add(lastStep.localCoord);
-                double tileStartX = worldTile.x * 11.0;
-                double tileEndX = (worldTile.x + 1) * 11.0;
-                System.out.println("  DESTINATION worldTile=" + worldTile + " X range: [" + tileStartX + ", " + tileEndX + ")");
-            }
-
-            // Log all chunk transitions (always print, not just debug)
-            System.out.println("  Chunk transitions:");
-            long prevChunkId = -1;
-            for (int i = 0; i < steps.size(); i++) {
-                TileNode step = steps.get(i);
-                if (step.chunkId != prevChunkId) {
-                    ChunkNavData stepChunk = graph.getChunk(step.chunkId);
-                    String layer = stepChunk != null ? stepChunk.layer : "NULL CHUNK";
-                    String origin = stepChunk != null && stepChunk.worldTileOrigin != null ?
-                        stepChunk.worldTileOrigin.toString() : "null";
-                    System.out.println("    Step " + i + ": chunk=" + step.chunkId + " layer=" + layer +
-                        " origin=" + origin + " local=" + step.localCoord + " viaPortal=" + step.viaPortal);
-                    prevChunkId = step.chunkId;
-                }
-            }
-            System.out.println("=== END populateChunkPath ===");
-
             long currentChunkId = steps.get(0).chunkId;
             ChunkNavData currentChunk = graph.getChunk(currentChunkId);
             ChunkPath.PathSegment currentSegment = null;
@@ -697,10 +651,6 @@ public class UnifiedTilePathfinder {
 
                 if (currentSegment != null && currentChunk != null) {
                     currentSegment.steps.add(new ChunkPath.TileStep(step.localCoord, currentChunk.worldTileOrigin));
-                } else {
-                    System.out.println("  WARNING: Skipping step at local=" + step.localCoord +
-                        " in chunk " + step.chunkId + " (segment=" + (currentSegment != null) +
-                        ", chunk=" + (currentChunk != null) + ")");
                 }
             }
 
@@ -708,14 +658,6 @@ public class UnifiedTilePathfinder {
             if (currentSegment != null && !currentSegment.isEmpty()) {
                 currentSegment.type = ChunkPath.SegmentType.WALK;
                 chunkPath.segments.add(currentSegment);
-            }
-
-            // Log created segments
-            System.out.println("  Created " + chunkPath.segments.size() + " segments:");
-            for (int i = 0; i < chunkPath.segments.size(); i++) {
-                ChunkPath.PathSegment seg = chunkPath.segments.get(i);
-                System.out.println("    Segment " + i + ": grid=" + seg.gridId + " type=" + seg.type +
-                    " steps=" + seg.steps.size() + " origin=" + seg.worldTileOrigin);
             }
 
             chunkPath.totalCost = (float) cost;

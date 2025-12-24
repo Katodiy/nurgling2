@@ -1,7 +1,6 @@
 package nurgling.navigation;
 
 import haven.*;
-import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
@@ -9,14 +8,12 @@ import nurgling.profiles.ProfileManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 
 import static nurgling.navigation.ChunkNavConfig.*;
-import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * Manages the chunk navigation system lifecycle.
@@ -253,7 +250,6 @@ public class ChunkNavManager {
 
             // Check if this chunk is already recorded
             if (!graph.hasChunk(playerGrid.id)) {
-                log("Recording player's current unrecorded chunk " + playerGrid.id);
                 recorder.recordGrid(playerGrid);
             }
         } catch (Exception e) {
@@ -291,10 +287,8 @@ public class ChunkNavManager {
     private void exportPathVisualization(ChunkPath path, NArea area) {
         if (path == null) return;
 
-        log("Exporting path visualization - segments=" + path.segments.size() + " waypoints=" + path.waypoints.size());
         for (int i = 0; i < path.segments.size(); i++) {
             ChunkPath.PathSegment seg = path.segments.get(i);
-            log("  Segment " + i + ": gridId=" + seg.gridId + " steps=" + seg.steps.size());
         }
 
         try {
