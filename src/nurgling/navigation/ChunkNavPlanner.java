@@ -12,6 +12,7 @@ import nurgling.areas.NArea;
 import java.util.*;
 
 import static nurgling.navigation.ChunkNavConfig.*;
+import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * A* pathfinding on the chunk graph.
@@ -37,23 +38,23 @@ public class ChunkNavPlanner {
         // This is more reliable than ngob.grid_id which can be stale
         PlayerLocation playerLoc = getPlayerLocation();
         if (playerLoc == null) {
-            System.out.println("ChunkNav: Cannot get player's current location");
+            log("Cannot get player's current location");
             return null;
         }
 
         long startChunkId = playerLoc.gridId;
         Coord playerLocal = playerLoc.localCoord;
 
-        System.out.println("ChunkNav: Planning path to area '" + area.name + "' from chunk " + startChunkId + " playerLocal=" + playerLocal);
+        log("Planning path to area '%s' from chunk %d playerLocal=%s", area.name, startChunkId, playerLocal);
 
         // Find target chunk and local coord using STORED data (not live visibility)
         TargetLocation target = findTargetLocation(area);
         if (target == null) {
-            System.out.println("ChunkNav: Cannot determine target location for area '" + area.name + "'");
+            log("Cannot determine target location for area '%s'", area.name);
             return null;
         }
 
-        System.out.println("ChunkNav: Target location: chunk=" + target.chunkId + " local=" + target.localCoord);
+        log("Target location: chunk=%d local=%s", target.chunkId, target.localCoord);
 
         // Use unified pathfinder to get complete tile-level path
         UnifiedTilePathfinder.UnifiedPath unifiedPath = unifiedPathfinder.findPath(
@@ -62,17 +63,17 @@ public class ChunkNavPlanner {
         );
 
         if (unifiedPath == null || !unifiedPath.reachable) {
-            System.out.println("ChunkNav: Unified pathfinder found no path");
+            log("Unified pathfinder found no path");
             return null;
         }
 
-        System.out.println("ChunkNav: Unified path found with " + unifiedPath.size() + " tile steps, cost=" + unifiedPath.cost);
+        log("Unified path found with %d tile steps, cost=%.1f", unifiedPath.size(), unifiedPath.cost);
 
         // Convert to ChunkPath with segments
         ChunkPath path = new ChunkPath();
         unifiedPath.populateChunkPath(path, graph);
 
-        System.out.println("ChunkNav: Built " + path.segments.size() + " segments with " + path.getTotalTileSteps() + " total steps");
+        log("Built %d segments with %d total steps", path.segments.size(), path.getTotalTileSteps());
 
         return path;
     }
@@ -336,7 +337,7 @@ public class ChunkNavPlanner {
 
             return null;
         } catch (Exception e) {
-            System.err.println("ChunkNav: Error getting player location: " + e.getMessage());
+            error("Error getting player location: " + e.getMessage());
             return null;
         }
     }
@@ -378,11 +379,11 @@ public class ChunkNavPlanner {
             iterations++;
             AStarNode current = openSet.poll();
 
-            System.out.println("ChunkNav: A* iteration " + iterations + " expanding " + current.gridId + " (g=" + current.g + ", f=" + current.f + ")");
+            log("A* iteration %d expanding %d (g=%.1f, f=%.1f)", iterations, current.gridId, current.g, current.f);
 
             // Check if we reached a target
             if (targetChunkIds.contains(current.gridId)) {
-                System.out.println("ChunkNav: A* reached target " + current.gridId);
+                log("A* reached target %d", current.gridId);
                 return reconstructPath(current, targetArea);
             }
 
@@ -411,7 +412,7 @@ public class ChunkNavPlanner {
                     neighbor.crossingPoint = edge.crossingPoint;
                     neighbor.portal = edge.portal;
 
-                    System.out.println("ChunkNav: A* adding neighbor " + edge.toGridId + " (g=" + neighbor.g + ", h=" + neighbor.h + ", f=" + neighbor.f + ")");
+                    log("A* adding neighbor %d (g=%.1f, h=%.1f, f=%.1f)", edge.toGridId, neighbor.g, neighbor.h, neighbor.f);
 
                     // Remove and re-add to update priority
                     openSet.remove(neighbor);
@@ -421,7 +422,7 @@ public class ChunkNavPlanner {
         }
 
         // No path found
-        System.err.println("ChunkNav: A* found no path. iterations=" + iterations + " edges=" + edgesExpanded +
+        error("A* found no path. iterations=" + iterations + " edges=" + edgesExpanded +
             " start=" + startChunkId + " targets=" + targetChunkIds);
         return null;
     }
@@ -681,13 +682,12 @@ public class ChunkNavPlanner {
                             return localCoord;
                         } else {
                             // Player is NOT in this grid - the grid ID is wrong
-                            System.out.println("ChunkNav: Player tile " + playerTile + " not in grid " + chunkGridId +
-                                " (ul=" + grid.ul + ", local=" + localCoord + ")");
+                            log("Player tile %s not in grid %d (ul=%s, local=%s)", playerTile, chunkGridId, grid.ul, localCoord);
                             // Try to find the correct grid
                             MCache.Grid correctGrid = mcache.getgridt(playerTile);
                             if (correctGrid != null) {
                                 Coord correctLocal = playerTile.sub(correctGrid.ul);
-                                System.out.println("ChunkNav: Player is actually in grid " + correctGrid.id + " at local " + correctLocal);
+                                log("Player is actually in grid %d at local %s", correctGrid.id, correctLocal);
                             }
                             return null;
                         }
@@ -705,16 +705,16 @@ public class ChunkNavPlanner {
                     localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
                     return localCoord;
                 } else {
-                    System.out.println("ChunkNav: Player tile " + playerTile + " not in stored chunk " + chunkGridId +
-                        " (worldTileOrigin=" + chunk.worldTileOrigin + ", local=" + localCoord + ")");
+                    log("Player tile %s not in stored chunk %d (worldTileOrigin=%s, local=%s)",
+                        playerTile, chunkGridId, chunk.worldTileOrigin, localCoord);
                     return null;
                 }
             }
 
-            System.out.println("ChunkNav: Grid " + chunkGridId + " not found in MCache or stored data");
+            log("Grid %d not found in MCache or stored data", chunkGridId);
 
         } catch (Exception e) {
-            System.err.println("ChunkNav: Error getting player local coord: " + e.getMessage());
+            error("Error getting player local coord: " + e.getMessage());
         }
         return null;
     }
@@ -764,7 +764,7 @@ public class ChunkNavPlanner {
             }
 
         } catch (Exception e) {
-            System.err.println("ChunkNav: Error getting area local coord: " + e.getMessage());
+            error("Error getting area local coord: " + e.getMessage());
         }
         return null;
     }

@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static nurgling.navigation.ChunkNavConfig.*;
+import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * Manages the chunk navigation system lifecycle.
@@ -48,7 +49,9 @@ public class ChunkNavManager {
     private ExecutorService recordingExecutor;
     private volatile boolean recordingInProgress = false;
 
-    // Singleton instance
+    // Instance reference - managed by NMapView, not a traditional singleton
+    // This static reference exists for backward compatibility with code that
+    // cannot easily access gui.map.getChunkNavManager()
     private static ChunkNavManager instance;
 
     public ChunkNavManager() {
@@ -67,12 +70,20 @@ public class ChunkNavManager {
 
         // Register shutdown hook to save on exit
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+
+        // Set static reference for backward compatibility
+        instance = this;
     }
 
+    /**
+     * Get the ChunkNavManager instance.
+     *
+     * @deprecated Prefer using gui.map.getChunkNavManager() when you have access
+     *             to the game UI. This static accessor exists for code paths that
+     *             don't have easy access to the UI (e.g., MCache callbacks).
+     */
+    @Deprecated
     public static ChunkNavManager getInstance() {
-        if (instance == null) {
-            instance = new ChunkNavManager();
-        }
         return instance;
     }
 
@@ -242,7 +253,7 @@ public class ChunkNavManager {
 
             // Check if this chunk is already recorded
             if (!graph.hasChunk(playerGrid.id)) {
-                System.out.println("ChunkNav: Recording player's current unrecorded chunk " + playerGrid.id);
+                log("Recording player's current unrecorded chunk " + playerGrid.id);
                 recorder.recordGrid(playerGrid);
             }
         } catch (Exception e) {
@@ -280,10 +291,10 @@ public class ChunkNavManager {
     private void exportPathVisualization(ChunkPath path, NArea area) {
         if (path == null) return;
 
-        System.out.println("ChunkNav: Exporting path visualization - segments=" + path.segments.size() + " waypoints=" + path.waypoints.size());
+        log("Exporting path visualization - segments=" + path.segments.size() + " waypoints=" + path.waypoints.size());
         for (int i = 0; i < path.segments.size(); i++) {
             ChunkPath.PathSegment seg = path.segments.get(i);
-            System.out.println("  Segment " + i + ": gridId=" + seg.gridId + " steps=" + seg.steps.size());
+            log("  Segment " + i + ": gridId=" + seg.gridId + " steps=" + seg.steps.size());
         }
 
         try {

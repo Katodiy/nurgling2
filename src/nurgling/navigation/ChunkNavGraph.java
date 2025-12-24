@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static nurgling.navigation.ChunkNavConfig.*;
 import static nurgling.navigation.ChunkNavData.Direction;
+import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * The main navigation graph structure containing all known chunks.
@@ -188,7 +189,7 @@ public class ChunkNavGraph {
         List<ChunkEdge> edges = new ArrayList<>();
         ChunkNavData fromChunk = chunks.get(fromGridId);
         if (fromChunk == null) {
-            System.out.println("ChunkNav: getEdges(" + fromGridId + ") - chunk not found");
+            log("getEdges(" + fromGridId + ") - chunk not found");
             return edges;
         }
 
@@ -220,13 +221,13 @@ public class ChunkNavGraph {
                 edge.portal = portal;
                 edge.cost = calculateEdgeCost(fromChunk, toChunk, portal);
                 edges.add(edge);
-                System.out.println("ChunkNav: getEdges(" + fromGridId + ") - portal edge to " + portal.connectsToGridId + " via " + portal.gobName);
+                log("getEdges(" + fromGridId + ") - portal edge to " + portal.connectsToGridId + " via " + portal.gobName);
             } else if (portal.connectsToGridId == -1) {
-                System.out.println("ChunkNav: getEdges(" + fromGridId + ") - portal " + portal.gobName + " has no connectsToGridId");
+                log("getEdges(" + fromGridId + ") - portal " + portal.gobName + " has no connectsToGridId");
             }
         }
 
-        System.out.println("ChunkNav: getEdges(" + fromGridId + ") - " + fromChunk.connectedChunks.size() + " adjacent + " +
+        log("getEdges(" + fromGridId + ") - " + fromChunk.connectedChunks.size() + " adjacent + " +
             fromChunk.portals.size() + " portals = " + edges.size() + " edges");
 
         return edges;

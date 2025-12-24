@@ -1,6 +1,8 @@
 package nurgling.navigation;
 
 import haven.Coord;
+import haven.Coord2d;
+import haven.MCache;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -499,6 +501,75 @@ public class ChunkNavData {
                 default: return new Coord(0, 0);
             }
         }
+    }
+
+    // ========== Utility Methods ==========
+
+    /**
+     * Check if coordinates are within the chunk bounds.
+     */
+    public boolean isValidCoord(int x, int y) {
+        return x >= 0 && x < CELLS_PER_EDGE && y >= 0 && y < CELLS_PER_EDGE;
+    }
+
+    /**
+     * Check if a tile is fully walkable (no obstacles).
+     */
+    public boolean isWalkable(int x, int y) {
+        return isValidCoord(x, y) && walkability[x][y] == 0;
+    }
+
+    /**
+     * Check if a tile is passable (walkable or partially blocked).
+     * Returns false only for fully blocked tiles.
+     */
+    public boolean isPassable(int x, int y) {
+        return isValidCoord(x, y) && walkability[x][y] <= 1;
+    }
+
+    /**
+     * Convert local chunk coordinates to world coordinates.
+     * Returns null if worldTileOrigin is not set (chunk not visible in this session).
+     */
+    public Coord2d localToWorld(Coord localCoord) {
+        if (worldTileOrigin == null || localCoord == null) {
+            return null;
+        }
+        Coord worldTile = worldTileOrigin.add(localCoord);
+        return worldTile.mul(MCache.tilesz).add(MCache.tilehsz);
+    }
+
+    /**
+     * Get the world tile coordinate for a local coordinate.
+     * Returns null if worldTileOrigin is not set.
+     */
+    public Coord localToWorldTile(Coord localCoord) {
+        if (worldTileOrigin == null || localCoord == null) {
+            return null;
+        }
+        return worldTileOrigin.add(localCoord);
+    }
+
+    /**
+     * Check if a specific edge position is walkable.
+     * This can be used instead of the edge arrays for simpler cases.
+     */
+    public boolean isEdgeWalkable(Direction dir, int index) {
+        if (index < 0 || index >= CELLS_PER_EDGE) return false;
+        switch (dir) {
+            case NORTH: return walkability[index][0] == 0;
+            case SOUTH: return walkability[index][CHUNK_SIZE - 1] == 0;
+            case EAST: return walkability[CHUNK_SIZE - 1][index] == 0;
+            case WEST: return walkability[0][index] == 0;
+            default: return false;
+        }
+    }
+
+    /**
+     * Get the Layer enum for this chunk's layer string.
+     */
+    public Layer getLayer() {
+        return Layer.fromString(layer);
     }
 
     @Override

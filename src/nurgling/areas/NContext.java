@@ -617,9 +617,10 @@ public class NContext {
         }
 
         // Try ChunkNav first if it has data for the area
-        ChunkNavManager chunkNav = ChunkNavManager.getInstance();
-        System.out.println("NContext: ChunkNav initialized=" + chunkNav.isInitialized());
-        if (chunkNav.isInitialized()) {
+        ChunkNavManager chunkNav = (gui.map != null && gui.map instanceof NMapView)
+            ? ((NMapView)gui.map).getChunkNavManager() : null;
+        System.out.println("NContext: ChunkNav initialized=" + (chunkNav != null && chunkNav.isInitialized()));
+        if (chunkNav != null && chunkNav.isInitialized()) {
             ChunkPath path = chunkNav.planToArea(area);
             System.out.println("NContext: ChunkNav path=" + (path != null ? path.size() + " waypoints" : "null"));
             if (path != null) {

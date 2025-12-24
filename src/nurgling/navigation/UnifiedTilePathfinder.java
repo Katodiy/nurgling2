@@ -7,6 +7,7 @@ import haven.MCache;
 import java.util.*;
 
 import static nurgling.navigation.ChunkNavConfig.*;
+import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * Unified A* pathfinder that operates on an implicit tile graph spanning all recorded chunks.
@@ -44,13 +45,13 @@ public class UnifiedTilePathfinder {
         ChunkNavData targetChunk = graph.getChunk(targetChunkId);
 
         if (startChunk == null || targetChunk == null) {
-            System.out.println("UnifiedPathfinder: Missing chunk data - start=" + (startChunk != null) + ", target=" + (targetChunk != null));
+            log("UnifiedPathfinder: Missing chunk data - start=" + (startChunk != null) + ", target=" + (targetChunk != null));
             return null;
         }
 
         // Debug: Check layer difference (only log if different layers - requires portal)
         if (!startChunk.layer.equals(targetChunk.layer)) {
-            System.out.println("UnifiedPathfinder: Cross-layer path - " + startChunk.layer + " -> " + targetChunk.layer);
+            log("UnifiedPathfinder: Cross-layer path - " + startChunk.layer + " -> " + targetChunk.layer);
         }
 
         // A* data structures
@@ -84,7 +85,7 @@ public class UnifiedTilePathfinder {
 
             if (current.tile.equals(targetTile)) {
                 // Found path - reconstruct it
-                System.out.println("UnifiedPathfinder: Found path in " + iterations + " iterations, explored " + chunksExplored.size() + " chunks");
+                log("UnifiedPathfinder: Found path in " + iterations + " iterations, explored " + chunksExplored.size() + " chunks");
                 return reconstructPath(current);
             }
 
@@ -121,7 +122,7 @@ public class UnifiedTilePathfinder {
             }
         }
 
-        System.out.println("UnifiedPathfinder: No path found after " + iterations + " iterations, explored " + chunksExplored.size() + " chunks, openSet=" + openSet.size());
+        log("UnifiedPathfinder: No path found after " + iterations + " iterations, explored " + chunksExplored.size() + " chunks, openSet=" + openSet.size());
         return null;
     }
 
@@ -615,14 +616,14 @@ public class UnifiedTilePathfinder {
             if (steps.isEmpty()) return;
 
             // Debug: log all steps with their chunk info
-            System.out.println("ChunkNav: populateChunkPath - " + steps.size() + " steps:");
+            log("populateChunkPath - " + steps.size() + " steps:");
             long prevChunkId = -1;
             for (int i = 0; i < steps.size(); i++) {
                 TileNode step = steps.get(i);
                 if (step.chunkId != prevChunkId) {
                     ChunkNavData stepChunk = graph.getChunk(step.chunkId);
                     String layer = stepChunk != null ? stepChunk.layer : "unknown";
-                    System.out.println("  Step " + i + ": chunk=" + step.chunkId + " layer=" + layer + " local=" + step.localCoord);
+                    log("  Step " + i + ": chunk=" + step.chunkId + " layer=" + layer + " local=" + step.localCoord);
                     prevChunkId = step.chunkId;
                 }
             }

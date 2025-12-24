@@ -30,6 +30,16 @@ public class ChunkNavTestBot implements Action {
     private int testsRun = 0;
     private int testsPassed = 0;
 
+    /**
+     * Get the ChunkNavManager from the GUI.
+     */
+    private ChunkNavManager getManager(NGameUI gui) {
+        if (gui != null && gui.map != null && gui.map instanceof NMapView) {
+            return ((NMapView)gui.map).getChunkNavManager();
+        }
+        return null;
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         report.append("=== ChunkNav Test Bot ===\n\n");
@@ -68,14 +78,14 @@ public class ChunkNavTestBot implements Action {
     private void testInitialization(NGameUI gui) throws InterruptedException {
         report.append("--- Initialization Tests ---\n");
 
-        // Test 1: Manager singleton
+        // Test 1: Manager exists
         testsRun++;
-        ChunkNavManager manager = ChunkNavManager.getInstance();
+        ChunkNavManager manager = getManager(gui);
         if (manager != null) {
             testsPassed++;
-            report.append("[PASS] Manager singleton exists\n");
+            report.append("[PASS] Manager exists\n");
         } else {
-            report.append("[FAIL] Manager singleton is null\n");
+            report.append("[FAIL] Manager is null\n");
             return;
         }
 
@@ -141,7 +151,11 @@ public class ChunkNavTestBot implements Action {
     private void testRecording(NGameUI gui) throws InterruptedException {
         report.append("--- Recording Tests ---\n");
 
-        ChunkNavManager manager = ChunkNavManager.getInstance();
+        ChunkNavManager manager = getManager(gui);
+        if (manager == null) {
+            report.append("[SKIP] Cannot test recording - manager not available\n\n");
+            return;
+        }
         ChunkNavGraph graph = manager.getGraph();
         ChunkNavRecorder recorder = manager.getRecorder();
 
@@ -281,7 +295,11 @@ public class ChunkNavTestBot implements Action {
     private void testPlanning(NGameUI gui) throws InterruptedException {
         report.append("--- Planning Tests ---\n");
 
-        ChunkNavManager manager = ChunkNavManager.getInstance();
+        ChunkNavManager manager = getManager(gui);
+        if (manager == null) {
+            report.append("[SKIP] Cannot test planning - manager not available\n\n");
+            return;
+        }
         ChunkNavGraph graph = manager.getGraph();
         ChunkNavPlanner planner = manager.getPlanner();
 
@@ -363,7 +381,7 @@ public class ChunkNavTestBot implements Action {
     private void testExecution(NGameUI gui) throws InterruptedException {
         report.append("--- Execution Tests ---\n");
 
-        ChunkNavManager manager = ChunkNavManager.getInstance();
+        ChunkNavManager manager = getManager(gui);
 
         // Test 14: Verify executor can be created
         testsRun++;
@@ -419,7 +437,7 @@ public class ChunkNavTestBot implements Action {
         report.append("Pass rate: ").append(String.format("%.1f%%", (100.0 * testsPassed / testsRun))).append("\n\n");
 
         // Print stats
-        ChunkNavManager manager = ChunkNavManager.getInstance();
+        ChunkNavManager manager = getManager(gui);
         if (manager != null) {
             report.append("=== System Stats ===\n");
             report.append(manager.getStats()).append("\n");

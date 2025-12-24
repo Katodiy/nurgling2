@@ -11,6 +11,7 @@ import java.util.*;
 
 import static nurgling.navigation.ChunkNavConfig.*;
 import static nurgling.navigation.ChunkNavData.Direction;
+import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * Records navigation data as the player explores the world.
@@ -50,7 +51,7 @@ public class ChunkNavRecorder {
             ChunkNavData existing = graph.getChunk(grid.id);
             ChunkNavData chunk;
 
-            System.out.println("ChunkNav recordGrid: id=" + grid.id + " ul=" + grid.ul +
+            log("recordGrid: id=" + grid.id + " ul=" + grid.ul +
                 " existing=" + (existing != null ? "YES" : "NO"));
 
             if (existing != null) {
@@ -79,8 +80,7 @@ public class ChunkNavRecorder {
 
         } catch (Exception e) {
             // Grid may have become invalid during recording
-            System.err.println("ChunkNavRecorder: Error recording grid " + grid.id + ": " + e.getMessage());
-            e.printStackTrace();
+            error("Recorder: Error recording grid " + grid.id + ": " + e.getMessage(), e);
         }
     }
 
@@ -142,7 +142,7 @@ public class ChunkNavRecorder {
             }
         }
 
-        System.out.println("ChunkNav DEBUG mergeWalkability grid.id=" + grid.id +
+        log("DEBUG mergeWalkability grid.id=" + grid.id +
             " terrain=" + terrainBlockedCount + " gob=" + gobBlockedCount +
             " walkable=" + walkableCount + " skipped=" + skippedCount);
     }
@@ -242,10 +242,10 @@ public class ChunkNavRecorder {
         int floorMinX = CELLS_PER_EDGE, floorMaxX = 0, floorMinY = CELLS_PER_EDGE, floorMaxY = 0;
 
         // DEBUG: Log key info
-        System.out.println("ChunkNav DEBUG sampleWalkability:");
-        System.out.println("  grid.ul=" + grid.ul + " grid.id=" + grid.id);
-        System.out.println("  playerTile=" + playerTile);
-        System.out.println("  gobBlockedTiles.size=" + gobBlockedTiles.size());
+        log("DEBUG sampleWalkability:");
+        log("  grid.ul=" + grid.ul + " grid.id=" + grid.id);
+        log("  playerTile=" + playerTile);
+        log("  gobBlockedTiles.size=" + gobBlockedTiles.size());
 
         for (int tx = 0; tx < CELLS_PER_EDGE; tx++) {
             for (int ty = 0; ty < CELLS_PER_EDGE; ty++) {
@@ -292,10 +292,10 @@ public class ChunkNavRecorder {
             }
         }
 
-        System.out.println("  Results: terrainBlocked=" + terrainBlockedCount +
+        log("  Results: terrainBlocked=" + terrainBlockedCount +
             " gobBlocked=" + gobBlockedCount + " walkable=" + walkableCount + " skipped=" + skippedCount);
         int floorTileCount = gobBlockedCount + walkableCount;
-        System.out.println("  Floor tiles (non-nil): " + floorTileCount +
+        log("  Floor tiles (non-nil): " + floorTileCount +
             " bounds=(" + floorMinX + "," + floorMinY + ")-(" + floorMaxX + "," + floorMaxY + ")");
     }
 
@@ -314,7 +314,7 @@ public class ChunkNavRecorder {
             // Debug: track unique tile types
             if (!debugTileTypesLogged && debugSeenTileTypes.add(tileName)) {
                 if (debugSeenTileTypes.size() <= 10) {
-                    System.out.println("ChunkNav DEBUG tile type: " + tileName);
+                    log("DEBUG tile type: " + tileName);
                 }
             }
 
@@ -347,8 +347,8 @@ public class ChunkNavRecorder {
             Coord2d gridWorldUL = grid.ul.mul(MCache.tilesz);
             Coord2d gridWorldBR = grid.ul.add(CHUNK_SIZE, CHUNK_SIZE).mul(MCache.tilesz);
 
-            System.out.println("ChunkNav DEBUG getGobBlockedTiles:");
-            System.out.println("  gridWorldUL=" + gridWorldUL + " gridWorldBR=" + gridWorldBR);
+            log("DEBUG getGobBlockedTiles:");
+            log("  gridWorldUL=" + gridWorldUL + " gridWorldBR=" + gridWorldBR);
 
             int gobsTotal = 0;
             int gobsWithHitbox = 0;
@@ -399,7 +399,7 @@ public class ChunkNavRecorder {
                     if (gobsInBounds <= 5) {
                         Coord localUL = tileUL.sub(grid.ul);
                         Coord localBR = tileBR.sub(grid.ul);
-                        System.out.println("  gob: " + gobName + " rc=" + gob.rc +
+                        log("  gob: " + gobName + " rc=" + gob.rc +
                             " hitbox=(" + hitBox.begin + " to " + hitBox.end + ")" +
                             " worldHit=(" + hitUL + " to " + hitBR + ")" +
                             " tileUL=" + tileUL + " tileBR=" + tileBR +
@@ -424,12 +424,11 @@ public class ChunkNavRecorder {
                 }
             }
 
-            System.out.println("  gobsTotal=" + gobsTotal + " gobsWithHitbox=" + gobsWithHitbox +
+            log("  gobsTotal=" + gobsTotal + " gobsWithHitbox=" + gobsWithHitbox +
                 " gobsInBounds=" + gobsInBounds + " blockedTiles=" + blockedTiles.size());
 
         } catch (Exception e) {
-            System.out.println("ChunkNav DEBUG exception: " + e.getMessage());
-            e.printStackTrace();
+            log("DEBUG exception: " + e.getMessage());
         }
 
         return blockedTiles;
@@ -516,7 +515,7 @@ public class ChunkNavRecorder {
                 }
             }
         } catch (Exception e) {
-            System.err.println("ChunkNavRecorder: Error detecting portals: " + e.getMessage());
+            error("Recorder: Error detecting portals: " + e.getMessage());
         }
     }
 
@@ -919,9 +918,9 @@ public class ChunkNavRecorder {
                 }
             }
 
-            System.out.println("ChunkNav DEBUG: Dumped walkability grid to " + debugFile.getAbsolutePath());
+            log("DEBUG: Dumped walkability grid to " + debugFile.getAbsolutePath());
         } catch (Exception e) {
-            System.err.println("ChunkNav DEBUG: Failed to dump walkability grid: " + e.getMessage());
+            error("DEBUG: Failed to dump walkability grid: " + e.getMessage());
         }
     }
 }

@@ -5,6 +5,7 @@ import haven.Coord;
 import java.util.*;
 
 import static nurgling.navigation.ChunkNavConfig.*;
+import static nurgling.navigation.ChunkNavDebug.*;
 
 /**
  * Pathfinder for navigating within a single chunk using the walkability grid.
@@ -62,7 +63,7 @@ public class ChunkNavIntraPathfinder {
         if (finalLocal != null) {
             IntraPath toTargetPath = findPath(finalLocal, targetAreaLocal, finalChunk);
             if (!toTargetPath.reachable) {
-                System.err.println("ChunkNav: Cannot reach target from (" + finalLocal + ") to (" + targetAreaLocal + ")");
+                error("Cannot reach target from (" + finalLocal + ") to (" + targetAreaLocal + ")");
                 return false;
             }
         }
@@ -127,7 +128,7 @@ public class ChunkNavIntraPathfinder {
             if (currentLocal != null && waypoint.localCoord != null) {
                 IntraPath intraPath = findPath(currentLocal, waypoint.localCoord, chunk);
                 if (!intraPath.reachable) {
-                    System.err.println("ChunkNav: Path blocked in chunk " + currentGridId +
+                    error("Path blocked in chunk " + currentGridId +
                         " from (" + currentLocal + ") to (" + waypoint.localCoord + ")");
                     return false;
                 }

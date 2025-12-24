@@ -56,6 +56,8 @@ public class NMapView extends MapView
     private RouteLabel draggedRouteLabel = null;
     private boolean isDraggingRoutePoint = false;
     private UI.Grab dragGrab = null;
+    // Chunk navigation manager - owned by NMapView, not a singleton
+    private ChunkNavManager chunkNavManager;
     
     // Find RouteLabel at screen coordinate
     private RouteLabel getRouteLabeAt(Coord screenCoord) {
@@ -90,10 +92,21 @@ public class NMapView extends MapView
         }
         // Initialize ChunkNav system for this world
         try {
-            nurgling.navigation.ChunkNavManager.getInstance().initialize(genus);
+            if (chunkNavManager == null) {
+                chunkNavManager = new ChunkNavManager();
+            }
+            chunkNavManager.initialize(genus);
         } catch(Exception e) {
             System.err.println("NMapView: Error initializing ChunkNavManager: " + e.getMessage());
         }
+    }
+
+    /**
+     * Get the chunk navigation manager for this map view.
+     * @return The ChunkNavManager instance, or null if not initialized
+     */
+    public ChunkNavManager getChunkNavManager() {
+        return chunkNavManager;
     }
 
     final HashMap<String, String> ttip = new HashMap<>();
@@ -353,8 +366,8 @@ public class NMapView extends MapView
     public void createPortalLabels() {
         destroyPortalDummys();
 
-        ChunkNavManager manager = ChunkNavManager.getInstance();
-        if (!manager.isInitialized()) return;
+        ChunkNavManager manager = getChunkNavManager();
+        if (manager == null || !manager.isInitialized()) return;
 
         MCache mcache = glob.map;
         if (mcache == null) return;
@@ -866,7 +879,9 @@ public class NMapView extends MapView
 
         // Tick chunk navigation system for recording
         try {
-            nurgling.navigation.ChunkNavManager.getInstance().tick();
+            if (chunkNavManager != null) {
+                chunkNavManager.tick();
+            }
         } catch (Exception e) {
             // Ignore - system may not be ready
         }

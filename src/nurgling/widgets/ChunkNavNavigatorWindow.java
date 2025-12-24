@@ -86,13 +86,25 @@ public class ChunkNavNavigatorWindow extends Window {
     }
 
     private void updateStats() {
-        ChunkNavManager manager = ChunkNavManager.getInstance();
+        ChunkNavManager manager = getChunkNavManager();
         if (manager != null && manager.isInitialized()) {
             ChunkNavGraph graph = manager.getGraph();
             statusLabel.settext("Chunks: " + graph.getChunkCount() + ", Areas: " + areas.size());
         } else {
             statusLabel.settext("ChunkNav not initialized");
         }
+    }
+
+    private ChunkNavManager getChunkNavManager() {
+        try {
+            NGameUI gui = NUtils.getGameUI();
+            if (gui != null && gui.map != null && gui.map instanceof NMapView) {
+                return ((NMapView)gui.map).getChunkNavManager();
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return null;
     }
 
     private void startNavigation() {
@@ -102,7 +114,7 @@ public class ChunkNavNavigatorWindow extends Window {
             return;
         }
 
-        ChunkNavManager manager = ChunkNavManager.getInstance();
+        ChunkNavManager manager = getChunkNavManager();
         if (manager == null || !manager.isInitialized()) {
             statusLabel.settext("ChunkNav not initialized!");
             return;
@@ -233,7 +245,7 @@ public class ChunkNavNavigatorWindow extends Window {
             super.change(item);
             if (item != null) {
                 // Check if we have nav data for this area
-                ChunkNavManager manager = ChunkNavManager.getInstance();
+                ChunkNavManager manager = getChunkNavManager();
                 if (manager != null && manager.isInitialized()) {
                     boolean hasData = manager.hasDataForArea(item);
                     if (hasData) {
