@@ -41,7 +41,7 @@ public class PostgresAdapter extends DatabaseAdapter {
 
     @Override
     public boolean tableExists(String tableName) throws SQLException {
-        String sql = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ?)";
+        String sql = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?)";
         try (PreparedStatement stmt = prepareStatement(sql, tableName);
              ResultSet rs = stmt.executeQuery()) {
             return rs.next() && rs.getBoolean(1);

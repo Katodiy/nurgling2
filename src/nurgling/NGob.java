@@ -108,11 +108,14 @@ public class NGob
                     }
                     parent.addcustomol(new NTexMarker(parent, new TexI(Resource.loadsimg("nurgling/hud/taiming")), () ->
                     {
-                        for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel)
+                        if(NUtils.getGameUI().fv!=null)
                         {
-                            if (rel.gobid == parent.id)
+                            for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel)
                             {
-                                return true;
+                                if (rel.gobid == parent.id)
+                                {
+                                    return true;
+                                }
                             }
                         }
                         return false;

@@ -157,9 +157,9 @@ public class MigrationManager {
                 // Check if column already exists using proper metadata query
                 boolean columnExists = false;
                 if (adapter instanceof nurgling.db.PostgresAdapter) {
-                    // PostgreSQL: use information_schema
+                    // PostgreSQL: use information_schema with explicit schema
                     try (ResultSet rs = adapter.executeQuery(
-                            "SELECT 1 FROM information_schema.columns WHERE table_name = 'ingredients' AND column_name = 'resource_name'")) {
+                            "SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'ingredients' AND column_name = 'resource_name'")) {
                         columnExists = rs.next();
                     }
                 } else {
@@ -219,9 +219,9 @@ public class MigrationManager {
                 // Check if column already exists using proper metadata query
                 boolean columnExists = false;
                 if (adapter instanceof nurgling.db.PostgresAdapter) {
-                    // PostgreSQL: use information_schema
+                    // PostgreSQL: use information_schema with explicit schema
                     try (ResultSet rs = adapter.executeQuery(
-                            "SELECT 1 FROM information_schema.columns WHERE table_name = 'areas' AND column_name = 'version'")) {
+                            "SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'areas' AND column_name = 'version'")) {
                         columnExists = rs.next();
                     }
                 } else {
