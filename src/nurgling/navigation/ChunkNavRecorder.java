@@ -364,8 +364,8 @@ public class ChunkNavRecorder {
                     if (NUtils.player() != null && gob.id == NUtils.player().id) continue;
 
                     // Skip portals - doors, cellars, stairs should be passable
-                    String gobName = gob.ngob.name;
-                    if (gobName != null && isPassableGob(gobName)) continue;
+                    // Gates are only passable when open
+                    if (isPassableGob(gob)) continue;
 
                     gobsWithHitbox++;
 
@@ -399,7 +399,7 @@ public class ChunkNavRecorder {
                     if (gobsInBounds <= 5) {
                         Coord localUL = tileUL.sub(grid.ul);
                         Coord localBR = tileBR.sub(grid.ul);
-                        log("  gob: " + gobName + " rc=" + gob.rc +
+                        log("  gob: " + gob.ngob.name + " rc=" + gob.rc +
                             " hitbox=(" + hitBox.begin + " to " + hitBox.end + ")" +
                             " worldHit=(" + hitUL + " to " + hitBR + ")" +
                             " tileUL=" + tileUL + " tileBR=" + tileBR +
@@ -437,10 +437,11 @@ public class ChunkNavRecorder {
     /**
      * Check if a gob should be considered passable (not blocking).
      * Only includes specific portal gobs that are traversable, NOT buildings themselves.
+     * Gates are only passable when they are open.
      */
-    private boolean isPassableGob(String name) {
-        if (name == null) return false;
-        String lower = name.toLowerCase();
+    private boolean isPassableGob(Gob gob) {
+        if (gob == null || gob.ngob == null || gob.ngob.name == null) return false;
+        String lower = gob.ngob.name.toLowerCase();
 
         // Indoor wall decorations are thin (about 1/8th of a tile)
         // They don't block tile access - the room boundary is defined by nil tiles
@@ -459,12 +460,13 @@ public class ChunkNavRecorder {
         // Ladders
         if (lower.contains("/ladder")) return true;
 
-        // All types of gates - these are passable when open
+        // All types of gates - only passable when OPEN (modelAttribute == 1)
         // Includes: polegate, polebiggate, palisadegate, palisadebiggate, drystonewallgate, drystonewallbiggate
         if (lower.contains("/polegate") || lower.contains("/polebiggate") ||
             lower.contains("/palisadegate") || lower.contains("/palisadebiggate") ||
             lower.contains("/drystonewallgate") || lower.contains("/drystonewallbiggate")) {
-            return true;
+            // Check if gate is open using GateDetector logic
+            return GateDetector.isDoorOpen(gob);
         }
 
         // Mine holes
