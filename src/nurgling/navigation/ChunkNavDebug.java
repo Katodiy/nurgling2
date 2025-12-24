@@ -5,7 +5,7 @@ package nurgling.navigation;
  * Replace System.out.println("ChunkNav: ...") calls with ChunkNavDebug.log(...)
  */
 public class ChunkNavDebug {
-    private static boolean enabled = Boolean.getBoolean("chunknav.debug");
+    private static boolean enabled = true; // TODO: revert to Boolean.getBoolean("chunknav.debug");
 
     /**
      * Log a debug message if debug mode is enabled.

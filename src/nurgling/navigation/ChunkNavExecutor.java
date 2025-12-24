@@ -131,14 +131,31 @@ public class ChunkNavExecutor implements Action {
                 segmentIndex, path.segments.size(), segment.steps.size(), segment.type,
                 currentLayer, segmentLayer, sameLayer);
 
+            // DEBUG: Log worldTileOrigin comparison
+            if (segmentChunk != null) {
+                log("DEBUG worldTileOrigin: segment=%s, chunk=%s, match=%s",
+                    segment.worldTileOrigin, segmentChunk.worldTileOrigin,
+                    segment.worldTileOrigin != null && segment.worldTileOrigin.equals(segmentChunk.worldTileOrigin));
+            }
+
             if (sameLayer) {
                 Results segResult = followSegmentTiles(segment, gui);
                 if (!segResult.IsSuccess()) {
                     log("Segment %d failed", segmentIndex);
                     return Results.FAIL();
                 }
+            } else if (segment.type == ChunkPath.SegmentType.PORTAL) {
+                // Cross-layer segment that leads to a portal - skip the walk, we'll traverse portal next
+                log("Cross-layer PORTAL segment - skipping walk, will traverse portal");
             } else {
-                log("Cross-layer segment - skipping walk, will traverse portal");
+                // Cross-layer WALK segment - we likely just traversed a portal and are already in target layer
+                // The getCurrentPlayerLayer() might not know about the new grid yet, so try walking anyway
+                log("Cross-layer WALK segment - attempting walk (may already be in target layer)");
+                Results segResult = followSegmentTiles(segment, gui);
+                if (!segResult.IsSuccess()) {
+                    log("Segment %d failed (cross-layer walk)", segmentIndex);
+                    return Results.FAIL();
+                }
             }
 
             if (segment.type == ChunkPath.SegmentType.PORTAL) {
@@ -354,14 +371,14 @@ public class ChunkNavExecutor implements Action {
         double dist = player.rc.dist(portalGob.rc);
         log("Portal %s at dist=%.1f", recordedPortal.gobName, dist);
 
-        if (dist > MCache.tilesz.x * 5) {
-            log("Portal is far, walking toward it...");
-            PathFinder pf = new PathFinder(portalGob);
-            Results walkResult = pf.run(gui);
-            if (!walkResult.IsSuccess()) {
-                log("Failed to walk to portal via PathFinder");
-                return null;
-            }
+        // Always walk to the portal gob - cellar doors and other portals require being close
+        // PathFinder to a gob walks right up to it
+        log("Walking to portal gob...");
+        PathFinder pf = new PathFinder(portalGob);
+        Results walkResult = pf.run(gui);
+        if (!walkResult.IsSuccess()) {
+            log("Failed to walk to portal via PathFinder");
+            return null;
         }
 
         return traversePortalGob(gui, portalGob);
@@ -396,11 +413,24 @@ public class ChunkNavExecutor implements Action {
             manager.getPortalTracker().setClickedPortal(portalGob);
         }
 
-        log("Opening door on gob at %s...", portalGob.rc);
+        // Determine if this is a "loading" portal (cellar, stairs, mine) that needs rclickGob
+        // vs a regular door that uses openDoorOnAGob
+        boolean isLoadingPortal = portalName.contains("cellar") ||
+                                   portalName.contains("stairs") ||
+                                   portalName.contains("ladder") ||
+                                   portalName.contains("minehole");
+
+        log("Interacting with portal at %s (loading=%s)...", portalGob.rc, isLoadingPortal);
         try {
-            NUtils.openDoorOnAGob(gui, portalGob);
+            if (isLoadingPortal) {
+                // Cellar doors, stairs, ladders, mines - use simple right-click to enter
+                NUtils.rclickGob(portalGob);
+            } else {
+                // Regular doors (building entrances) - use openDoorOnAGob
+                NUtils.openDoorOnAGob(gui, portalGob);
+            }
         } catch (Exception e) {
-            error("openDoorOnAGob threw exception: " + e.getMessage(), e);
+            error("Portal interaction threw exception: " + e.getMessage(), e);
             return Results.FAIL();
         }
 
@@ -419,37 +449,117 @@ public class ChunkNavExecutor implements Action {
         }
 
         ChunkNavData segmentChunk = graph.getChunk(segment.gridId);
-        log("followSegmentTiles() - segment grid=%d, worldTileOrigin=%s, steps=%d, chunk=%s",
-            segment.gridId, segment.worldTileOrigin, segment.steps.size(),
-            segmentChunk != null ?
-                "exists(worldTileOrigin=" + segmentChunk.worldTileOrigin + ", layer=" + segmentChunk.layer + ")" :
-                "NOT FOUND");
+        String layer = segmentChunk != null ? segmentChunk.layer : "unknown";
+        log("followSegmentTiles: grid=%d layer=%s steps=%d", segment.gridId, layer, segment.steps.size());
 
-        if (segment.worldTileOrigin == null) {
-            warn("segment has null worldTileOrigin!");
-            ChunkNavData chunk = graph.getChunk(segment.gridId);
-            if (chunk != null && chunk.worldTileOrigin != null) {
-                log("Fixed worldTileOrigin from chunk data: %s", chunk.worldTileOrigin);
-                segment.worldTileOrigin = chunk.worldTileOrigin;
-                for (ChunkPath.TileStep step : segment.steps) {
-                    if (step.worldCoord == null && step.localCoord != null) {
-                        Coord worldTile = chunk.worldTileOrigin.add(step.localCoord);
-                        step.worldCoord = worldTile.mul(MCache.tilesz).add(MCache.tilehsz);
+        // Get LIVE worldTileOrigin from MCache
+        Coord liveWorldTileOrigin = null;
+        try {
+            MCache mcache = gui.map.glob.map;
+            synchronized (mcache.grids) {
+                for (MCache.Grid grid : mcache.grids.values()) {
+                    if (grid.id == segment.gridId) {
+                        liveWorldTileOrigin = grid.ul;
+                        break;
                     }
                 }
             }
+        } catch (Exception e) {
+            // Ignore
         }
 
-        ChunkPath.TileStep lastStep = segment.steps.get(segment.steps.size() - 1);
-        if (lastStep.worldCoord == null) {
-            log("Final step has no worldCoord, cannot follow segment");
+        // Determine which worldTileOrigin to use
+        Coord currentWorldTileOrigin = liveWorldTileOrigin;
+        if (currentWorldTileOrigin == null && segmentChunk != null && segmentChunk.worldTileOrigin != null) {
+            currentWorldTileOrigin = segmentChunk.worldTileOrigin;
+        } else if (currentWorldTileOrigin == null && segment.worldTileOrigin != null) {
+            currentWorldTileOrigin = segment.worldTileOrigin;
+        }
+
+        if (currentWorldTileOrigin == null) {
+            log("FAIL: No worldTileOrigin available for segment");
             return Results.FAIL();
         }
 
-        Coord2d destination = lastStep.worldCoord;
-        log("Segment destination: %s", destination);
+        // Navigate through tile-level waypoints instead of just jumping to the end
+        double tileSize = MCache.tilesz.x;
+        int waypointInterval = 20;
+        int currentStepIndex = 0;
 
-        return walkTowardTarget(destination, gui, WalkConfig.SEGMENT);
+        while (currentStepIndex < segment.steps.size()) {
+            Gob player = gui.map.player();
+            if (player == null) return Results.FAIL();
+
+            int targetIndex = Math.min(currentStepIndex + waypointInterval, segment.steps.size() - 1);
+            ChunkPath.TileStep targetStep = segment.steps.get(targetIndex);
+            Coord worldTile = currentWorldTileOrigin.add(targetStep.localCoord);
+            Coord2d waypoint = worldTile.mul(MCache.tilesz).add(MCache.tilehsz);
+
+            double distToWaypoint = player.rc.dist(waypoint);
+
+            // Skip if already close enough
+            if (distToWaypoint < tileSize * 1.5) {
+                currentStepIndex = targetIndex + 1;
+                continue;
+            }
+
+            // Try PathFinder first
+            PathFinder pf = new PathFinder(waypoint);
+            Results pfResult = pf.run(gui);
+
+            if (pfResult.IsSuccess()) {
+                currentStepIndex = targetIndex + 1;
+                continue;
+            }
+
+            // PathFinder failed - try smaller steps along the PATH
+            boolean madeProgress = false;
+            for (int midIndex = currentStepIndex + 5; midIndex < targetIndex; midIndex += 5) {
+                ChunkPath.TileStep midStep = segment.steps.get(midIndex);
+                Coord midWorldTile = currentWorldTileOrigin.add(midStep.localCoord);
+                Coord2d midWaypoint = midWorldTile.mul(MCache.tilesz).add(MCache.tilehsz);
+
+                double midDist = player.rc.dist(midWaypoint);
+                if (midDist < tileSize * 1.5) continue;
+
+                PathFinder midPf = new PathFinder(midWaypoint);
+                if (midPf.run(gui).IsSuccess()) {
+                    currentStepIndex = midIndex + 1;
+                    madeProgress = true;
+                    break;
+                }
+            }
+
+            if (!madeProgress) {
+                // Try single tile steps as last resort
+                for (int singleIndex = currentStepIndex + 1; singleIndex <= targetIndex; singleIndex++) {
+                    ChunkPath.TileStep singleStep = segment.steps.get(singleIndex);
+                    Coord singleWorldTile = currentWorldTileOrigin.add(singleStep.localCoord);
+                    Coord2d singleWaypoint = singleWorldTile.mul(MCache.tilesz).add(MCache.tilehsz);
+
+                    double singleDist = player.rc.dist(singleWaypoint);
+                    if (singleDist < tileSize * 1.5) {
+                        currentStepIndex = singleIndex + 1;
+                        madeProgress = true;
+                        break;
+                    }
+
+                    if (new PathFinder(singleWaypoint).run(gui).IsSuccess()) {
+                        currentStepIndex = singleIndex + 1;
+                        madeProgress = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!madeProgress) {
+                log("FAILED: Could not make progress on segment path");
+                return Results.FAIL();
+            }
+        }
+
+        log("Segment completed successfully");
+        return Results.SUCCESS();
     }
 
     /**
@@ -477,11 +587,18 @@ public class ChunkNavExecutor implements Action {
 
             // Try direct path first if configured
             if (config.tryDirectFirst) {
+                log("  Trying direct PathFinder to: %s", target);
+                Coord targetPfGrid = nurgling.pf.Utils.toPfGrid(target);
+                Coord targetTile = target.floor(MCache.tilesz);
+                log("    Target tile: %s, PF grid: %s", targetTile, targetPfGrid);
+
                 PathFinder directPf = new PathFinder(target);
                 Results directResult = directPf.run(gui);
                 if (directResult.IsSuccess()) {
                     log("Direct path succeeded");
                     return Results.SUCCESS();
+                } else {
+                    log("  Direct path FAILED - PathFinder couldn't find route");
                 }
             }
 

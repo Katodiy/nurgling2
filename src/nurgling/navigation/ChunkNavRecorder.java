@@ -347,18 +347,10 @@ public class ChunkNavRecorder {
             Coord2d gridWorldUL = grid.ul.mul(MCache.tilesz);
             Coord2d gridWorldBR = grid.ul.add(CHUNK_SIZE, CHUNK_SIZE).mul(MCache.tilesz);
 
-            log("DEBUG getGobBlockedTiles:");
-            log("  gridWorldUL=" + gridWorldUL + " gridWorldBR=" + gridWorldBR);
-
-            int gobsTotal = 0;
-            int gobsWithHitbox = 0;
-            int gobsInBounds = 0;
-
             synchronized (glob.oc) {
                 for (Gob gob : glob.oc) {
-                    gobsTotal++;
                     if (gob.ngob == null || gob.ngob.hitBox == null) continue;
-                    if (gob.getattr(Following.class) != null) continue; // Skip following
+                    if (gob.getattr(Following.class) != null) continue;
 
                     // Skip player
                     if (NUtils.player() != null && gob.id == NUtils.player().id) continue;
@@ -367,18 +359,13 @@ public class ChunkNavRecorder {
                     // Gates are only passable when open
                     if (isPassableGob(gob)) continue;
 
-                    gobsWithHitbox++;
-
                     // Quick bounds check - skip gobs clearly outside this grid
                     if (gob.rc.x < gridWorldUL.x - 50 || gob.rc.x > gridWorldBR.x + 50 ||
                         gob.rc.y < gridWorldUL.y - 50 || gob.rc.y > gridWorldBR.y + 50) {
                         continue;
                     }
 
-                    gobsInBounds++;
-
                     // Compute hitbox bounds directly from gob position
-                    // This uses current gob.rc and gob.a, not cached CellsArray coordinates
                     NHitBox hitBox = gob.ngob.hitBox;
                     nurgling.pf.NHitBoxD worldHitBox = new nurgling.pf.NHitBoxD(
                         hitBox.begin, hitBox.end, gob.rc, gob.a
@@ -389,31 +376,15 @@ public class ChunkNavRecorder {
                     Coord2d hitBR = worldHitBox.getCircumscribedBR();
 
                     // Convert to tile coordinates
-                    // Use floor for UL, but subtract epsilon from BR to avoid spanning
-                    // extra tiles when the hitbox edge is exactly on a tile boundary
                     Coord tileUL = hitUL.floor(MCache.tilesz);
-                    // Subtract small epsilon from BR before flooring to handle boundary cases
                     Coord tileBR = new Coord2d(hitBR.x - 0.01, hitBR.y - 0.01).floor(MCache.tilesz);
-
-                    // DEBUG: Log first few gobs
-                    if (gobsInBounds <= 5) {
-                        Coord localUL = tileUL.sub(grid.ul);
-                        Coord localBR = tileBR.sub(grid.ul);
-                        log("  gob: " + gob.ngob.name + " rc=" + gob.rc +
-                            " hitbox=(" + hitBox.begin + " to " + hitBox.end + ")" +
-                            " worldHit=(" + hitUL + " to " + hitBR + ")" +
-                            " tileUL=" + tileUL + " tileBR=" + tileBR +
-                            " localUL=" + localUL + " localBR=" + localBR);
-                    }
 
                     // Mark all tiles covered by the hitbox
                     for (int tx = tileUL.x; tx <= tileBR.x; tx++) {
                         for (int ty = tileUL.y; ty <= tileBR.y; ty++) {
-                            // Convert to local grid coordinates
                             int localX = tx - grid.ul.x;
                             int localY = ty - grid.ul.y;
 
-                            // Only add if within grid bounds (0 to CHUNK_SIZE-1)
                             if (localX >= 0 && localX < CHUNK_SIZE &&
                                 localY >= 0 && localY < CHUNK_SIZE) {
                                 long tileKey = ((long) localX << 32) | (localY & 0xFFFFFFFFL);
@@ -423,12 +394,8 @@ public class ChunkNavRecorder {
                     }
                 }
             }
-
-            log("  gobsTotal=" + gobsTotal + " gobsWithHitbox=" + gobsWithHitbox +
-                " gobsInBounds=" + gobsInBounds + " blockedTiles=" + blockedTiles.size());
-
         } catch (Exception e) {
-            log("DEBUG exception: " + e.getMessage());
+            // Silently handle exceptions during gob iteration
         }
 
         return blockedTiles;

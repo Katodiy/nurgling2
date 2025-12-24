@@ -111,6 +111,7 @@ public class UnifiedTilePathfinder {
 
                 if (tentativeG < neighborNode.g) {
                     neighborNode.parent = current;
+                    neighborNode.viaPortalFromParent = neighborTile.viaPortal;  // Store how we got here
                     neighborNode.g = tentativeG;
                     neighborNode.h = heuristic(neighborTile, targetTile);
                     neighborNode.f = neighborNode.g + neighborNode.h;
@@ -174,7 +175,8 @@ public class UnifiedTilePathfinder {
                         // Find the exit portal in the destination chunk
                         Coord exitCoord = findPortalExitCoord(destChunk, portal);
                         if (exitCoord != null) {
-                            neighbors.add(new TileNode(portal.connectsToGridId, exitCoord));
+                            // Mark as portal transition (viaPortal = true)
+                            neighbors.add(new TileNode(portal.connectsToGridId, exitCoord, true));
                         }
                     }
                 }
@@ -532,7 +534,13 @@ public class UnifiedTilePathfinder {
         AStarNode current = goalNode;
 
         while (current != null) {
-            reversePath.add(current.tile);
+            // Create TileNode with correct viaPortal based on how we got to this node
+            TileNode tileWithPortalInfo = new TileNode(
+                current.tile.chunkId,
+                current.tile.localCoord,
+                current.viaPortalFromParent
+            );
+            reversePath.add(tileWithPortalInfo);
             current = current.parent;
         }
 
@@ -550,10 +558,16 @@ public class UnifiedTilePathfinder {
     public static class TileNode {
         public final long chunkId;
         public final Coord localCoord;
+        public final boolean viaPortal;  // True if reached via portal (door/gate), false for edge crossing
 
         public TileNode(long chunkId, Coord localCoord) {
+            this(chunkId, localCoord, false);
+        }
+
+        public TileNode(long chunkId, Coord localCoord, boolean viaPortal) {
             this.chunkId = chunkId;
             this.localCoord = localCoord;
+            this.viaPortal = viaPortal;
         }
 
         @Override
@@ -581,6 +595,7 @@ public class UnifiedTilePathfinder {
     private static class AStarNode {
         TileNode tile;
         AStarNode parent;
+        boolean viaPortalFromParent;  // True if this node was reached via portal from parent
         double g; // Cost from start
         double h; // Heuristic to goal
         double f; // Total (g + h)
@@ -590,6 +605,7 @@ public class UnifiedTilePathfinder {
             this.g = Double.MAX_VALUE;
             this.h = 0;
             this.f = Double.MAX_VALUE;
+            this.viaPortalFromParent = false;
         }
     }
 
@@ -615,18 +631,42 @@ public class UnifiedTilePathfinder {
         public void populateChunkPath(ChunkPath chunkPath, ChunkNavGraph graph) {
             if (steps.isEmpty()) return;
 
-            // Debug: log all steps with their chunk info
-            log("populateChunkPath - " + steps.size() + " steps:");
+            // Debug: log path summary with first and last steps
+            TileNode firstStep = steps.get(0);
+            TileNode lastStep = steps.get(steps.size() - 1);
+            ChunkNavData firstChunk = graph.getChunk(firstStep.chunkId);
+            ChunkNavData lastChunk = graph.getChunk(lastStep.chunkId);
+
+            System.out.println("=== populateChunkPath - " + steps.size() + " steps ===");
+            System.out.println("  FIRST step: chunk=" + firstStep.chunkId + " local=" + firstStep.localCoord +
+                (firstChunk != null ? " worldOrigin=" + firstChunk.worldTileOrigin : ""));
+            System.out.println("  LAST step: chunk=" + lastStep.chunkId + " local=" + lastStep.localCoord +
+                (lastChunk != null ? " worldOrigin=" + lastChunk.worldTileOrigin : ""));
+
+            // If last chunk has worldTileOrigin, compute world tile for destination
+            if (lastChunk != null && lastChunk.worldTileOrigin != null) {
+                Coord worldTile = lastChunk.worldTileOrigin.add(lastStep.localCoord);
+                double tileStartX = worldTile.x * 11.0;
+                double tileEndX = (worldTile.x + 1) * 11.0;
+                System.out.println("  DESTINATION worldTile=" + worldTile + " X range: [" + tileStartX + ", " + tileEndX + ")");
+            }
+
+            // Log all chunk transitions (always print, not just debug)
+            System.out.println("  Chunk transitions:");
             long prevChunkId = -1;
             for (int i = 0; i < steps.size(); i++) {
                 TileNode step = steps.get(i);
                 if (step.chunkId != prevChunkId) {
                     ChunkNavData stepChunk = graph.getChunk(step.chunkId);
-                    String layer = stepChunk != null ? stepChunk.layer : "unknown";
-                    log("  Step " + i + ": chunk=" + step.chunkId + " layer=" + layer + " local=" + step.localCoord);
+                    String layer = stepChunk != null ? stepChunk.layer : "NULL CHUNK";
+                    String origin = stepChunk != null && stepChunk.worldTileOrigin != null ?
+                        stepChunk.worldTileOrigin.toString() : "null";
+                    System.out.println("    Step " + i + ": chunk=" + step.chunkId + " layer=" + layer +
+                        " origin=" + origin + " local=" + step.localCoord + " viaPortal=" + step.viaPortal);
                     prevChunkId = step.chunkId;
                 }
             }
+            System.out.println("=== END populateChunkPath ===");
 
             long currentChunkId = steps.get(0).chunkId;
             ChunkNavData currentChunk = graph.getChunk(currentChunkId);
@@ -640,8 +680,9 @@ public class UnifiedTilePathfinder {
                 if (step.chunkId != currentChunkId) {
                     // Chunk changed - finish current segment and start new one
                     if (currentSegment != null && !currentSegment.isEmpty()) {
-                        // Mark as portal if we're changing chunks
-                        currentSegment.type = ChunkPath.SegmentType.PORTAL;
+                        // Only mark as PORTAL if this step was reached via an actual portal (door/gate/mine)
+                        // Edge crossings between neighbor chunks are just WALK
+                        currentSegment.type = step.viaPortal ? ChunkPath.SegmentType.PORTAL : ChunkPath.SegmentType.WALK;
                         chunkPath.segments.add(currentSegment);
                     }
 
@@ -656,6 +697,10 @@ public class UnifiedTilePathfinder {
 
                 if (currentSegment != null && currentChunk != null) {
                     currentSegment.steps.add(new ChunkPath.TileStep(step.localCoord, currentChunk.worldTileOrigin));
+                } else {
+                    System.out.println("  WARNING: Skipping step at local=" + step.localCoord +
+                        " in chunk " + step.chunkId + " (segment=" + (currentSegment != null) +
+                        ", chunk=" + (currentChunk != null) + ")");
                 }
             }
 
@@ -663,6 +708,14 @@ public class UnifiedTilePathfinder {
             if (currentSegment != null && !currentSegment.isEmpty()) {
                 currentSegment.type = ChunkPath.SegmentType.WALK;
                 chunkPath.segments.add(currentSegment);
+            }
+
+            // Log created segments
+            System.out.println("  Created " + chunkPath.segments.size() + " segments:");
+            for (int i = 0; i < chunkPath.segments.size(); i++) {
+                ChunkPath.PathSegment seg = chunkPath.segments.get(i);
+                System.out.println("    Segment " + i + ": grid=" + seg.gridId + " type=" + seg.type +
+                    " steps=" + seg.steps.size() + " origin=" + seg.worldTileOrigin);
             }
 
             chunkPath.totalCost = (float) cost;
