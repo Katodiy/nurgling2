@@ -79,7 +79,9 @@ public class FuelToContainers implements Action
                     }
                     neededFuel.put(ftype, target_size);
                 }
-                new PathFinder(Finder.findGob(cont.gobHash)).run(gui);
+                PathFinder pf = new PathFinder(Finder.findGob(cont.gobHash));
+                pf.isHardMode = true;
+                pf.run(gui);
                 new OpenTargetContainer(cont).run(gui);
                 fuelLvl = cont.getattr(Container.FuelLvl.class);
                 ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(ftype);

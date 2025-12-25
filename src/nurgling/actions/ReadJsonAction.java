@@ -50,7 +50,7 @@ public class ReadJsonAction implements Action {
     private static final String INSERT_RECIPE_SQL =
             "INSERT OR IGNORE INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
     private static final String INSERT_INGREDIENT_SQL =
-            "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
+            "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage, resource_name) VALUES (?, ?, ?, ?)";
     private static final String INSERT_FEPS_SQL =
             "INSERT OR IGNORE INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
 
@@ -89,6 +89,12 @@ public class ReadJsonAction implements Action {
                     ingredientStmt.setString(1, recipeHash);
                     ingredientStmt.setString(2, ingredient.getString("name"));
                     ingredientStmt.setDouble(3, ingredient.getDouble("percentage"));
+                    // Set resource_name if present in JSON, otherwise null
+                    if (ingredient.has("resourceName")) {
+                        ingredientStmt.setString(4, ingredient.getString("resourceName"));
+                    } else {
+                        ingredientStmt.setNull(4, Types.VARCHAR);
+                    }
                     ingredientStmt.addBatch();
                 }
 
@@ -126,14 +132,22 @@ public class ReadJsonAction implements Action {
 
     private static String generateRecipeHash(JSONObject foodItem) {
         StringBuilder hashInput = new StringBuilder();
-        hashInput.append(foodItem.getString("resourceName"))
-                .append(foodItem.getInt("energy"));
+        // Match the format in NCore.buildRecipeHash: itemName + energy + resourceName
+        hashInput.append(foodItem.getString("itemName"))
+                .append(foodItem.getInt("energy"))
+                .append(foodItem.getString("resourceName"));
 
         JSONArray ingredients = foodItem.getJSONArray("ingredients");
         for (int i = 0; i < ingredients.length(); i++) {
             JSONObject ingredient = ingredients.getJSONObject(i);
-            hashInput.append(ingredient.getString("name"))
-                    .append(ingredient.getDouble("percentage"));
+            // Use resourceName if available, otherwise fall back to name (same as NCore)
+            if (ingredient.has("resourceName") && ingredient.get("resourceName") != null 
+                    && !ingredient.isNull("resourceName")) {
+                hashInput.append(ingredient.getString("resourceName"));
+            } else {
+                hashInput.append(ingredient.getString("name"));
+            }
+            hashInput.append((int) ingredient.getDouble("percentage"));
         }
 
         return NUtils.calculateSHA256(hashInput.toString());

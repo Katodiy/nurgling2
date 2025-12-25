@@ -383,7 +383,7 @@ public class NCore extends Widget
                 // Build recipe hash
                 String recipeHash = buildRecipeHash(fi, resourceName);
 
-                // Extract ingredients
+                // Extract ingredients (including smoking wood)
                 java.util.Map<String, nurgling.cookbook.Recipe.IngredientInfo> ingredients = extractIngredients();
 
                 // Extract food effects (FEPs)
@@ -466,6 +466,7 @@ public class NCore extends Widget
         private java.util.Map<String, nurgling.cookbook.Recipe.IngredientInfo> extractIngredients() {
             java.util.Map<String, nurgling.cookbook.Recipe.IngredientInfo> ingredients = new java.util.HashMap<>();
 
+            // Extract regular ingredients
             for (ItemInfo info : item.info) {
                 if (info instanceof Ingredient) {
                     Ingredient ing = (Ingredient) info;
@@ -473,6 +474,41 @@ public class NCore extends Widget
                     // Use pretty name as key, store resName in IngredientInfo for resource lookup
                     ingredients.put(ing.name, new nurgling.cookbook.Recipe.IngredientInfo(percentage, ing.resName));
                 }
+            }
+            
+            // Extract smoking wood information from Smoke ItemInfo
+            try {
+                for (ItemInfo info : item.info) {
+                    // Check if this is the Smoke info (dynamically loaded from resources)
+                    if (info.getClass().getName().contains("Smoke")) {
+                        // Try to get wood information via reflection
+                        try {
+                            java.lang.reflect.Field nameField = info.getClass().getDeclaredField("name");
+                            nameField.setAccessible(true);
+                            String woodName = (String) nameField.get(info);
+                            
+                            // Try to get resource name
+                            String woodResName = null;
+                            try {
+                                java.lang.reflect.Field resNameField = info.getClass().getDeclaredField("resName");
+                                resNameField.setAccessible(true);
+                                woodResName = (String) resNameField.get(info);
+                            } catch (NoSuchFieldException e) {
+                                // resName field doesn't exist, use name only
+                            }
+                            
+                            if (woodName != null && !woodName.isEmpty()) {
+                                // Add wood as ingredient with 100% (smoking wood is always 100%)
+                                ingredients.put(woodName, new nurgling.cookbook.Recipe.IngredientInfo(100.0, woodResName));
+                            }
+                        } catch (NoSuchFieldException | IllegalAccessException e) {
+                            System.err.println("Could not extract smoking wood info: " + e.getMessage());
+                        }
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore errors in smoking wood extraction - item might not be smoked
             }
 
             return ingredients;
