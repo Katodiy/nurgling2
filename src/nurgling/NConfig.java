@@ -367,6 +367,10 @@ public class NConfig
         arearadprop.add(new NAreaRad("gfx/kritter/goldeneagle/goldeneagle", 100));
         arearadprop.add(new NAreaRad("gfx/kritter/goat/goat", 100));
         arearadprop.add(new NAreaRad("gfx/kritter/troll/troll", 200));
+        arearadprop.add(new NAreaRad("gfx/kritter/rat/rat", 200));
+        arearadprop.add(new NAreaRad("gfx/kritter/eagle/eagle", 200));
+        arearadprop.add(new NAreaRad("gfx/kritter/cavelouse/cavelouse", 200));
+        arearadprop.add(new NAreaRad("gfx/kritter/boreworm/boreworm", 200));
         conf.put(Key.animalrad, arearadprop);
 
         // Movement speed setting (0=Crawl, 1=Walk, 2=Run, 3=Sprint)
