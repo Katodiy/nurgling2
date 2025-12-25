@@ -422,7 +422,12 @@ public class DatabaseManager {
     public synchronized void shutdown() {
         shutdown = true;
         
-        // Stop queue processor first
+        // Shutdown services first
+        if (recipeService != null) {
+            recipeService.shutdown();
+        }
+        
+        // Stop queue processor
         if (queueProcessor != null) {
             queueProcessor.shutdown();
             try {
