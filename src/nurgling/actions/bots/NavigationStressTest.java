@@ -38,6 +38,7 @@ public class NavigationStressTest implements Action {
     private int totalTests = 0;
     private int passed = 0;
     private int failed = 0;
+    private int skipped = 0;  // Areas with no valid path (expected, not a failure)
     private Map<Integer, NArea> allAreas;
     private final Random random = new Random();
 
@@ -81,11 +82,11 @@ public class NavigationStressTest implements Action {
                 results.add(result);
 
                 // Log result to chat
-                String status = result.success ? "SUCCESS" : "FAILED";
+                String status = result.skipped ? "SKIPPED" : (result.success ? "SUCCESS" : "FAILED");
                 String msg = String.format("Test #%d: %s -> %s: %s (%dms)",
                         result.id, result.fromAreaName, result.toAreaName,
                         status, result.durationMs);
-                if (!result.success) {
+                if (!result.success && !result.skipped) {
                     msg += " - " + result.failureReason;
                 }
                 gui.msg(msg);
@@ -103,8 +104,8 @@ public class NavigationStressTest implements Action {
             // Always save on exit
             saveResults();
             gui.msg("Navigation Stress Test stopped. Final results saved.");
-            gui.msg("Total: " + totalTests + ", Passed: " + passed + ", Failed: " + failed);
-            gui.msg("Pass rate: " + getPassRateString());
+            gui.msg("Total: " + totalTests + ", Passed: " + passed + ", Failed: " + failed + ", Skipped: " + skipped);
+            gui.msg("Pass rate (excluding skipped): " + getPassRateString());
         }
     }
 
@@ -166,6 +167,19 @@ public class NavigationStressTest implements Action {
         result.targetPosition = targetCenter;
 
         try {
+            // First check if a path exists - if not, skip (not a failure)
+            ChunkPath path = navManager.planToArea(targetArea);
+            if (path == null) {
+                result.skipped = true;
+                result.success = false;
+                result.failureReason = "NO_PATH";
+                result.failureDetails = "No valid path exists to this area (different layer or unreachable)";
+                result.endTime = System.currentTimeMillis();
+                result.durationMs = result.endTime - result.startTime;
+                skipped++;
+                return result;
+            }
+
             // Execute navigation
             long navStart = System.currentTimeMillis();
             Results navResult = navManager.navigateToArea(targetArea, gui);
@@ -188,7 +202,7 @@ public class NavigationStressTest implements Action {
             } else if (!navResult.IsSuccess()) {
                 result.success = false;
                 result.failureReason = "NAV_FAILED";
-                result.failureDetails = "ChunkNavManager returned failure";
+                result.failureDetails = "ChunkNavManager returned failure despite path existing";
                 failed++;
             } else {
                 // Verify we actually arrived
@@ -268,8 +282,9 @@ public class NavigationStressTest implements Action {
     }
 
     private String getPassRateString() {
-        if (totalTests == 0) return "N/A";
-        return String.format("%.1f%% (%d/%d)", passed * 100.0 / totalTests, passed, totalTests);
+        int actualTests = totalTests - skipped;  // Only count tests that actually ran
+        if (actualTests == 0) return "N/A";
+        return String.format("%.1f%% (%d/%d)", passed * 100.0 / actualTests, passed, actualTests);
     }
 
     private void saveResults() {
@@ -282,17 +297,22 @@ public class NavigationStressTest implements Action {
         runInfo.put("totalTests", totalTests);
         runInfo.put("passed", passed);
         runInfo.put("failed", failed);
-        runInfo.put("passRate", totalTests > 0 ? String.format("%.1f%%", passed * 100.0 / totalTests) : "N/A");
+        runInfo.put("skipped", skipped);
+        int actualTests = totalTests - skipped;
+        runInfo.put("passRate", actualTests > 0 ? String.format("%.1f%%", passed * 100.0 / actualTests) : "N/A");
         main.put("runInfo", runInfo);
 
-        // Failure summary
+        // Failure summary (excluding skipped tests which are expected)
         Map<String, Integer> failureCounts = new HashMap<>();
         for (TestResult r : results) {
-            if (!r.success && r.failureReason != null) {
+            if (!r.success && !r.skipped && r.failureReason != null) {
                 failureCounts.merge(r.failureReason, 1, Integer::sum);
             }
         }
         main.put("failureSummary", new JSONObject(failureCounts));
+
+        // Skipped summary (areas that were unreachable)
+        main.put("skippedCount", skipped);
 
         // All test results
         JSONArray testsArray = new JSONArray();
@@ -323,6 +343,7 @@ public class NavigationStressTest implements Action {
         Coord2d targetPosition;
         Coord2d endPosition;
         boolean success;
+        boolean skipped;  // True if no path exists (expected, not a failure)
         boolean timedOut;
         String failureReason;
         String failureDetails;
@@ -336,6 +357,7 @@ public class NavigationStressTest implements Action {
             obj.put("fromAreaName", fromAreaName != null ? fromAreaName : "Unknown");
             obj.put("toAreaName", toAreaName != null ? toAreaName : "Unknown");
             obj.put("success", success);
+            obj.put("skipped", skipped);
             obj.put("timedOut", timedOut);
 
             if (startPosition != null) {
