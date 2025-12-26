@@ -3,6 +3,7 @@ package nurgling.navigation;
 import haven.Coord;
 import haven.Coord2d;
 import haven.MCache;
+import nurgling.tasks.GateDetector;
 
 import java.util.*;
 
@@ -164,7 +165,8 @@ public class UnifiedTilePathfinder {
                     ChunkNavData destChunk = graph.getChunk(portal.connectsToGridId);
                     if (destChunk != null) {
                         // Find the exit portal in the destination chunk
-                        Coord exitCoord = findPortalExitCoord(destChunk, portal);
+                        // Pass source chunk ID so we can verify the exit portal connects back to us
+                        Coord exitCoord = findPortalExitCoord(destChunk, portal, tile.chunkId);
                         if (exitCoord != null) {
                             // Mark as portal transition (viaPortal = true)
                             neighbors.add(new TileNode(portal.connectsToGridId, exitCoord, true));
@@ -240,93 +242,68 @@ public class UnifiedTilePathfinder {
      * Returns a walkable tile near the matching exit portal.
      *
      * @param destChunk The destination chunk we're entering
-     * @param entryPortal The portal we're using to enter (contains source chunk's gridId)
+     * @param entryPortal The portal we're using to enter
+     * @param sourceChunkId The chunk we're coming FROM (to verify reverse connection)
      */
-    private Coord findPortalExitCoord(ChunkNavData destChunk, ChunkPortal entryPortal) {
-        // The entry portal is in the SOURCE chunk and connects to destChunk
-        // We need to find the matching exit portal in destChunk that connects back to source
-        long sourceChunkId = entryPortal.connectsToGridId;
-        // Actually, entryPortal.connectsToGridId points to destChunk, not source
-        // We need to find a portal in destChunk that connects back to where entryPortal came from
+    private Coord findPortalExitCoord(ChunkNavData destChunk, ChunkPortal entryPortal, long sourceChunkId) {
+        // BEST: Use stored exit coordinate if available (recorded during traversal)
+        // This handles all cases including multiple identical portals (e.g., 2 mineholes to same mine)
+        if (entryPortal.exitLocalCoord != null) {
+            Coord walkable = findWalkableTileNear(destChunk, entryPortal.exitLocalCoord);
+            return walkable != null ? walkable : entryPortal.exitLocalCoord;
+        }
 
-        // Find the chunk that contains entryPortal
-        // entryPortal is from the current expansion tile's chunk
-        // We want to find a portal in destChunk that connects back
-
+        // FALLBACK: Search for matching portal in destination chunk
+        // Requires: matching portal type AND connects back to our source chunk
         Coord bestExitCoord = null;
-        Coord matchingExitCoord = null;
 
         for (ChunkPortal portal : destChunk.portals) {
             if (portal.localCoord == null) continue;
 
-            // Check if this portal connects back to where we came from
-            // The entry portal came from a chunk, and this portal should connect back there
-            if (portal.connectsToGridId != -1) {
-                // This portal has a connection - it could be our exit point
-                // If it connects to the source chunk (where entryPortal is), it's the matching exit
-                // Since entryPortal.connectsToGridId == destChunk.gridId,
-                // we need portal.connectsToGridId to NOT be -1 and ideally match a related portal type
+            // Must connect back to the chunk we came from
+            if (portal.connectsToGridId != sourceChunkId) continue;
 
-                // For door pairs: stonemansion -> stonemansion-door
-                // For cellar pairs: cellardoor -> cellarstairs
-                if (isMatchingPortalPair(entryPortal.gobName, portal.gobName)) {
-                    Coord walkable = findWalkableTileNear(destChunk, portal.localCoord);
-                    if (walkable != null) {
-                        return walkable;
-                    }
-                    matchingExitCoord = portal.localCoord;
+            // Must be a matching portal pair (e.g., stonestead-door <-> stonestead)
+            if (isMatchingPortalPair(entryPortal.gobName, portal.gobName)) {
+                Coord walkable = findWalkableTileNear(destChunk, portal.localCoord);
+                if (walkable != null) {
+                    return walkable;
                 }
+                // Even if no walkable nearby, this is our exit
+                return portal.localCoord;
+            }
 
-                // Remember any portal with connection as fallback
-                if (bestExitCoord == null) {
-                    bestExitCoord = portal.localCoord;
-                }
+            // Same gob type is also valid (bidirectional portals like ladders)
+            if (entryPortal.gobName != null && entryPortal.gobName.equals(portal.gobName)) {
+                bestExitCoord = portal.localCoord;
             }
         }
 
-        // Use matching exit coord first, then best, then fallback
-        if (matchingExitCoord != null) {
-            Coord walkable = findWalkableTileNear(destChunk, matchingExitCoord);
-            return walkable != null ? walkable : matchingExitCoord;
-        }
-
+        // Use best match if found
         if (bestExitCoord != null) {
             Coord walkable = findWalkableTileNear(destChunk, bestExitCoord);
-            if (walkable != null) {
-                return walkable;
-            }
-            return bestExitCoord;
+            return walkable != null ? walkable : bestExitCoord;
         }
 
-        // Fallback: center of chunk
+        // Fallback: center of chunk (shouldn't happen if data is recorded correctly)
         return new Coord(CHUNK_SIZE / 2, CHUNK_SIZE / 2);
     }
 
     /**
      * Check if two portal types are a matching pair (entry/exit).
+     * Uses GateDetector.getDoorPair() for consistent door pair matching.
      */
     private boolean isMatchingPortalPair(String entryGobName, String exitGobName) {
         if (entryGobName == null || exitGobName == null) return false;
 
-        // Normalize names
-        String entry = entryGobName.toLowerCase();
-        String exit = exitGobName.toLowerCase();
-
-        // Door pairs
-        if ((entry.contains("stonemansion") && !entry.contains("-door")) &&
-            exit.contains("stonemansion-door")) return true;
-        if (entry.contains("stonemansion-door") &&
-            (exit.contains("stonemansion") && !exit.contains("-door"))) return true;
-
-        // Cellar pairs
-        if (entry.contains("cellardoor") && exit.contains("cellarstairs")) return true;
-        if (entry.contains("cellarstairs") && exit.contains("cellardoor")) return true;
-
-        // Generic door pairs
-        if (entry.contains("door") && exit.contains("door")) return true;
+        // Use GateDetector's door pair lookup (same as routes system)
+        String expectedPair = GateDetector.getDoorPair(entryGobName);
+        if (expectedPair != null && expectedPair.equals(exitGobName)) {
+            return true;
+        }
 
         // Same type (some portals are bidirectional with same gob)
-        if (entry.equals(exit)) return true;
+        if (entryGobName.equals(exitGobName)) return true;
 
         return false;
     }

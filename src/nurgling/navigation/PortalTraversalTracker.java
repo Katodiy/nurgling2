@@ -293,6 +293,12 @@ public class PortalTraversalTracker {
                 String exitName = exitPortal.ngob.name;
                 Coord exitLocalCoord = getGobLocalCoord(player);
                 recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
+
+                // Update entry portal with where we appear in destination
+                updatePortalExitCoord(portalHash, fromGridId, exitLocalCoord);
+
+                // Update exit portal with where we came from (enables reverse navigation)
+                updatePortalExitCoord(exitHash, toGridId, clickedPortalLocalCoord);
             }
 
             // Clear tracking
@@ -390,6 +396,12 @@ public class PortalTraversalTracker {
 
             if (entranceCoord != null && entranceHash != null) {
                 recordPortalConnection(entranceHash, entranceName, fromGridId, toGridId, entranceCoord);
+
+                // Update entry portal with where we appear in destination
+                updatePortalExitCoord(entranceHash, fromGridId, exitLocalCoord);
+
+                // Update exit portal with where we came from (enables reverse navigation)
+                updatePortalExitCoord(exitHash, toGridId, entranceCoord);
             }
         }
 
@@ -453,6 +465,22 @@ public class PortalTraversalTracker {
             ChunkNavManager.getInstance().saveThrottled();
         } catch (Exception e) {
             // Ignore save errors
+        }
+    }
+
+    /**
+     * Update a portal's exit coordinate (where you appear after using it).
+     * This is called after we've found the exit portal to record the exact exit position.
+     */
+    private void updatePortalExitCoord(String gobHash, long chunkId, Coord exitLocalCoord) {
+        if (exitLocalCoord == null) return;
+
+        ChunkNavData chunk = graph.getChunk(chunkId);
+        if (chunk == null) return;
+
+        ChunkPortal portal = chunk.findPortal(gobHash);
+        if (portal != null) {
+            portal.exitLocalCoord = exitLocalCoord;
         }
     }
 

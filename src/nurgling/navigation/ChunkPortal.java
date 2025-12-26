@@ -12,6 +12,7 @@ public class ChunkPortal {
     public PortalType type;        // Type of portal
     public Coord localCoord;       // Position within chunk (tile coordinates)
     public long connectsToGridId;  // Grid ID on the other side (if known, -1 otherwise)
+    public Coord exitLocalCoord;   // Where you appear in the destination chunk (recorded on traversal)
     public long lastTraversed;     // When we last went through (timestamp)
     public boolean requiresInteraction; // Need to click to open?
 
@@ -116,6 +117,10 @@ public class ChunkPortal {
         obj.put("localX", localCoord.x);
         obj.put("localY", localCoord.y);
         obj.put("connectsToGridId", connectsToGridId);
+        if (exitLocalCoord != null) {
+            obj.put("exitLocalX", exitLocalCoord.x);
+            obj.put("exitLocalY", exitLocalCoord.y);
+        }
         obj.put("lastTraversed", lastTraversed);
         obj.put("requiresInteraction", requiresInteraction);
         return obj;
@@ -128,6 +133,9 @@ public class ChunkPortal {
         portal.type = PortalType.fromString(obj.optString("type", "DOOR"));
         portal.localCoord = new Coord(obj.optInt("localX", 50), obj.optInt("localY", 50));
         portal.connectsToGridId = obj.optLong("connectsToGridId", -1);
+        if (obj.has("exitLocalX") && obj.has("exitLocalY")) {
+            portal.exitLocalCoord = new Coord(obj.getInt("exitLocalX"), obj.getInt("exitLocalY"));
+        }
         portal.lastTraversed = obj.optLong("lastTraversed", 0);
         portal.requiresInteraction = obj.optBoolean("requiresInteraction", true);
         return portal;
