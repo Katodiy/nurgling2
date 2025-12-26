@@ -343,20 +343,36 @@ public class PortalTraversalTracker {
 
         // LAYER CHECK: Verify this is actually a portal traversal, not just walking across a grid boundary
         // If we didn't click a portal and the layers are the same, we just walked across a boundary
-        // This prevents recording phantom portals when player walks past buildings near grid edges
-        String fromLayer = getLayerFromChunk(fromGridId);
-        String predictedToLayer = predictLayerFromPortal(exitName);
+        // This prevents recording phantom portals when player walks past buildings/portals near grid edges
+        //
+        // For mine portals: Check if we actually CLICKED a minehole/ladder (cachedLastActionsGob).
+        // If yes, we used a mine portal and should record regardless of layer.
+        // If no, we just walked past and should apply the normal layer check.
+        boolean usedMinePortal = false;
+        if (cachedLastActionsGob != null && cachedLastActionsGob.ngob != null) {
+            String cachedName = cachedLastActionsGob.ngob.name;
+            if (cachedName != null) {
+                String cachedLower = cachedName.toLowerCase();
+                usedMinePortal = cachedLower.contains("minehole") || cachedLower.contains("ladder");
+            }
+        }
 
-        if (isSameLayerType(fromLayer, predictedToLayer)) {
-            // Same layer type (surface→surface, mine1→mine1) - not a portal traversal
-            // Clear tracking state and return without recording
-            lastNearbyPortal = null;
-            lastNearbyPortalLocalCoord = null;
-            lastNearbyPortalGridId = -1;
-            cachedLastActionsGob = null;
-            cachedLastActionsGobLocalCoord = null;
-            cachedLastActionsGobGridId = -1;
-            return;
+        if (!usedMinePortal) {
+            String fromLayer = getLayerFromChunk(fromGridId);
+            String predictedToLayer = predictLayerFromPortal(exitName);
+
+            if (isSameLayerType(fromLayer, predictedToLayer)) {
+                // Same layer type (surface→surface, mine1→mine1) and no mine portal clicked
+                // This is not a portal traversal - just walking across a grid boundary
+                // Clear tracking state and return without recording
+                lastNearbyPortal = null;
+                lastNearbyPortalLocalCoord = null;
+                lastNearbyPortalGridId = -1;
+                cachedLastActionsGob = null;
+                cachedLastActionsGobLocalCoord = null;
+                cachedLastActionsGobGridId = -1;
+                return;
+            }
         }
 
         String exitHash = getPortalHash(exitPortal);
