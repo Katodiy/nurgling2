@@ -78,6 +78,10 @@ public class ChunkNavGraph {
     /**
      * Get the grid ID for the player's current chunk.
      * Returns -1 if the grid ID cannot be determined.
+     *
+     * IMPORTANT: Always uses fresh MCache lookup to avoid stale grid IDs.
+     * The ngob.grid_id cache can become stale when player moves between grids,
+     * causing portals to be recorded in the wrong grid.
      */
     public long getPlayerChunkId() {
         try {
@@ -86,14 +90,14 @@ public class ChunkNavGraph {
                 return -1;
             }
 
-            // Try NGob.grid_id first (cached and efficient)
-            if (player.ngob != null && player.ngob.grid_id != 0) {
-                return player.ngob.grid_id;
-            }
-
-            // Fallback: direct lookup via MCache
+            // Always use fresh MCache lookup - ngob.grid_id can become stale
+            // when player moves between grids, causing portal recording bugs
             NGameUI gui = NUtils.getGameUI();
             if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null) {
+                // Fallback to cached value only if MCache is unavailable
+                if (player.ngob != null && player.ngob.grid_id != 0) {
+                    return player.ngob.grid_id;
+                }
                 return -1;
             }
             MCache mcache = gui.map.glob.map;

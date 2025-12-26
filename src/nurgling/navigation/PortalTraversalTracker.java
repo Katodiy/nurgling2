@@ -44,6 +44,7 @@ public class PortalTraversalTracker {
     // Explicitly tracked portal (set when we know which portal was clicked)
     private Gob clickedPortal = null;
     private Coord clickedPortalLocalCoord = null;
+    private long clickedPortalGridId = -1;  // Grid ID cached when portal was clicked (fixes boundary bug)
 
     // Cached lastActions gob - captured before grid change to preserve the clicked portal info
     private Gob cachedLastActionsGob = null;
@@ -89,10 +90,10 @@ public class PortalTraversalTracker {
         PORTAL_TO_LAYER.put("stonetower", "surface");
         PORTAL_TO_LAYER.put("windmill", "surface");
 
-        // Stairs between floors
-        // When you see downstairs as exit -> you're on upper floor (floor2, floor3, etc.)
-        PORTAL_TO_LAYER.put("downstairs", "floor2");
-        // When you see upstairs as exit -> you're on the first floor inside building
+        // Stairs between floors - all floors inside a building are "inside" layer
+        // When you see downstairs as exit -> you're on an upper floor (still "inside")
+        PORTAL_TO_LAYER.put("downstairs", "inside");
+        // When you see upstairs as exit -> you're on a lower floor (still "inside")
         PORTAL_TO_LAYER.put("upstairs", "inside");
 
         // Mine and underground
@@ -120,6 +121,7 @@ public class PortalTraversalTracker {
      * Call this BEFORE clicking on a portal to explicitly track which portal was clicked.
      * This is more reliable than proximity-based tracking.
      * Uses the portal's position (with offset for buildings) for stable identification.
+     * Also caches the portal's grid ID to fix boundary bugs (portal in different grid than player).
      */
     public void setClickedPortal(Gob portal) {
         if (portal != null && portal.ngob != null) {
@@ -127,6 +129,9 @@ public class PortalTraversalTracker {
             // Use getPortalLocalCoord which handles building offsets
             Gob player = NUtils.player();
             this.clickedPortalLocalCoord = getPortalLocalCoord(portal, player);
+            // Cache the portal's actual grid ID NOW, while the grid is still loaded
+            // This is critical for portals near grid boundaries
+            this.clickedPortalGridId = getGobGridId(portal);
         }
     }
 
@@ -269,11 +274,15 @@ public class PortalTraversalTracker {
             String portalName = clickedPortal.ngob.name;
             String portalHash = getPortalHash(clickedPortal);
 
-            // Get the entry portal's ACTUAL grid ID (it might be in a different grid than the player was)
-            // This fixes the bug where portals near grid boundaries get recorded in the wrong grid
-            long entryPortalGridId = getGobGridId(clickedPortal);
+            // Get the entry portal's ACTUAL grid ID from the cache (captured in setClickedPortal)
+            // This is critical for portals near grid boundaries - the grid may be unloaded by now
+            long entryPortalGridId = clickedPortalGridId;
             if (entryPortalGridId == -1) {
-                entryPortalGridId = fromGridId; // Fallback to player's grid if we can't determine
+                // Try fresh lookup as fallback (grid might still be loaded)
+                entryPortalGridId = getGobGridId(clickedPortal);
+            }
+            if (entryPortalGridId == -1) {
+                entryPortalGridId = fromGridId; // Last resort: use player's grid
             }
 
             // Record the entrance connection (portal in its actual grid, connects to destination)
@@ -309,6 +318,7 @@ public class PortalTraversalTracker {
             // Clear tracking
             clickedPortal = null;
             clickedPortalLocalCoord = null;
+            clickedPortalGridId = -1;
             return;
         }
 
@@ -330,6 +340,25 @@ public class PortalTraversalTracker {
         }
 
         String exitName = exitPortal.ngob.name;
+
+        // LAYER CHECK: Verify this is actually a portal traversal, not just walking across a grid boundary
+        // If we didn't click a portal and the layers are the same, we just walked across a boundary
+        // This prevents recording phantom portals when player walks past buildings near grid edges
+        String fromLayer = getLayerFromChunk(fromGridId);
+        String predictedToLayer = predictLayerFromPortal(exitName);
+
+        if (isSameLayerType(fromLayer, predictedToLayer)) {
+            // Same layer type (surface→surface, mine1→mine1) - not a portal traversal
+            // Clear tracking state and return without recording
+            lastNearbyPortal = null;
+            lastNearbyPortalLocalCoord = null;
+            lastNearbyPortalGridId = -1;
+            cachedLastActionsGob = null;
+            cachedLastActionsGobLocalCoord = null;
+            cachedLastActionsGobGridId = -1;
+            return;
+        }
+
         String exitHash = getPortalHash(exitPortal);
         String entranceName = GateDetector.getDoorPair(exitName);
 
@@ -1049,6 +1078,9 @@ public class PortalTraversalTracker {
         lastProcessedTime = 0;
         currentMineLevel = 0;
         mineLevelInitialized = false;  // Will re-initialize on next tick
+        clickedPortal = null;
+        clickedPortalLocalCoord = null;
+        clickedPortalGridId = -1;
         cachedLastActionsGob = null;
         cachedLastActionsGobLocalCoord = null;
         cachedLastActionsGobGridId = -1;
@@ -1099,5 +1131,85 @@ public class PortalTraversalTracker {
     public void setCurrentMineLevel(int level) {
         this.currentMineLevel = Math.max(0, level);
         this.mineLevelInitialized = true;
+    }
+
+    /**
+     * Get the layer of a chunk from the graph.
+     * Returns null if chunk doesn't exist or has no layer set.
+     */
+    private String getLayerFromChunk(long gridId) {
+        ChunkNavData chunk = graph.getChunk(gridId);
+        return chunk != null ? chunk.layer : null;
+    }
+
+    /**
+     * Predict what layer we would be in based on a nearby portal, without modifying state.
+     * This is used to check if a grid transition was actually a portal traversal.
+     * Returns null if we can't determine the layer.
+     */
+    private String predictLayerFromPortal(String portalName) {
+        if (portalName == null) return null;
+        String lowerName = portalName.toLowerCase();
+
+        // Mine portals - we can tell it's mine-related
+        if (lowerName.contains("ladder")) {
+            // Seeing a ladder means we went DOWN (through minehole) - we're in a mine
+            return "mine";  // Generic mine indicator
+        }
+        if (lowerName.contains("minehole")) {
+            // Seeing a minehole means we went UP (through ladder)
+            // If we were in mine1, we're now on surface
+            // If we were in deeper mine, we're still in mine
+            return currentMineLevel > 1 ? "mine" : "surface";
+        }
+
+        // Check standard mappings (excluding mine-related which are handled above)
+        for (Map.Entry<String, String> entry : PORTAL_TO_LAYER.entrySet()) {
+            String key = entry.getKey().toLowerCase();
+            // Skip mine-related (handled above)
+            if (key.equals("minehole") || key.contains("ladder")) continue;
+            if (lowerName.contains(key)) {
+                return entry.getValue();
+            }
+        }
+
+        // Default for doors
+        if (lowerName.endsWith("-door") || lowerName.contains("-door")) {
+            return "inside";
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if two layers are the same "type" (meaning crossing between them does NOT require a portal).
+     * Returns true if they're the same type AND you can walk between grids without a portal.
+     * If either is null, returns false (can't determine, so assume portal was used).
+     *
+     * Layer types where same→same means NO portal:
+     * - surface: Can walk between surface grids without portal
+     * - mine, mine1, mine2: Can walk between mine grids at same level without portal
+     *
+     * Layer types where same→same DOES require a portal:
+     * - inside: All building floors are "inside" - stairs between floors are portals
+     * - cellar: Unlikely to span multiple grids, but if so, treat as portal
+     */
+    private boolean isSameLayerType(String layer1, String layer2) {
+        if (layer1 == null || layer2 == null) return false;
+
+        // "inside" layers ALWAYS require portals to move between grids
+        // (stairs between floors, doors between rooms in multi-grid buildings)
+        if ("inside".equals(layer1) || "inside".equals(layer2)) return false;
+
+        // "cellar" - treat transitions as portal-required to be safe
+        if ("cellar".equals(layer1) || "cellar".equals(layer2)) return false;
+
+        // Exact match for surface
+        if (layer1.equals(layer2)) return true;
+
+        // Both are mine types - can walk between grids in the same mine level without portals
+        if (layer1.startsWith("mine") && layer2.startsWith("mine")) return true;
+
+        return false;
     }
 }
