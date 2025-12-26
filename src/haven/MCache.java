@@ -1299,7 +1299,6 @@ public class MCache implements MapSource {
 
     public void mapdata2(Message msg) {
 	Coord c = msg.coord();
-	Grid loadedGrid = null;
 	synchronized(grids) {
 	    synchronized(req) {
 		if(req.containsKey(c)) {
@@ -1311,19 +1310,7 @@ public class MCache implements MapSource {
 		    olseq++;
 		    chseq++;
 		    gridwait.wnotify();
-		    loadedGrid = g;
 		}
-	    }
-	}
-	// Notify ChunkNav system of new grid (outside sync blocks)
-	if(loadedGrid != null) {
-	    try {
-		nurgling.navigation.ChunkNavManager manager = nurgling.navigation.ChunkNavManager.getInstance();
-		manager.onGridLoaded(loadedGrid);
-		// Also tick portal tracker to detect grid changes
-		manager.tick();
-	    } catch(Exception e) {
-		// Ignore ChunkNav errors - don't disrupt normal operation
 	    }
 	}
     }

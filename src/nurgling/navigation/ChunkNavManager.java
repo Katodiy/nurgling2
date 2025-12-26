@@ -115,31 +115,8 @@ public class ChunkNavManager {
     }
 
     /**
-     * Called when a grid becomes visible.
-     * Recording happens in background thread to avoid FPS drops.
-     */
-    public void onGridLoaded(MCache.Grid grid) {
-        if (grid == null) return;
-
-        if (!enabled || !initialized) {
-            return;
-        }
-
-        // Submit to background thread
-        recordingExecutor.submit(() -> {
-            try {
-                recorder.recordGrid(grid);
-                // Always save (throttled) since we now re-sample walkability each time
-                saveThrottled();
-            } catch (Exception e) {
-                // Ignore recording errors
-            }
-        });
-    }
-
-    /**
      * Called periodically to check for portal traversals and record visible grids.
-     * Should be called from game loop or a polling task.
+     * Should be called from game loop or a polling task (NMapView.tick).
      */
     public void tick() {
         if (!enabled || !initialized) return;

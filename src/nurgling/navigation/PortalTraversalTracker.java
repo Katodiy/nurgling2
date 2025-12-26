@@ -41,12 +41,8 @@ public class PortalTraversalTracker {
     private long lastProcessedTime = 0;
     private static final long DUPLICATE_PREVENTION_MS = 2000; // Ignore same transition within 2 seconds
 
-    // Explicitly tracked portal (set when we know which portal was clicked)
-    private Gob clickedPortal = null;
-    private Coord clickedPortalLocalCoord = null;
-    private long clickedPortalGridId = -1;  // Grid ID cached when portal was clicked (fixes boundary bug)
-
     // Cached lastActions gob - captured before grid change to preserve the clicked portal info
+    // This works for both manual and automated navigation since the game tracks all clicks
     private Gob cachedLastActionsGob = null;
     private Coord cachedLastActionsGobLocalCoord = null;
     private long cachedLastActionsGobGridId = -1;  // Grid ID of the cached portal (for boundary fix)
@@ -116,24 +112,6 @@ public class PortalTraversalTracker {
     public PortalTraversalTracker(ChunkNavGraph graph, ChunkNavRecorder recorder) {
         this.graph = graph;
         this.recorder = recorder;
-    }
-
-    /**
-     * Call this BEFORE clicking on a portal to explicitly track which portal was clicked.
-     * This is more reliable than proximity-based tracking.
-     * Uses the portal's position (with offset for buildings) for stable identification.
-     * Also caches the portal's grid ID to fix boundary bugs (portal in different grid than player).
-     */
-    public void setClickedPortal(Gob portal) {
-        if (portal != null && portal.ngob != null) {
-            this.clickedPortal = portal;
-            // Use getPortalLocalCoord which handles building offsets
-            Gob player = NUtils.player();
-            this.clickedPortalLocalCoord = getPortalLocalCoord(portal, player);
-            // Cache the portal's actual grid ID NOW, while the grid is still loaded
-            // This is critical for portals near grid boundaries
-            this.clickedPortalGridId = getGobGridId(portal);
-        }
     }
 
     /**
@@ -273,64 +251,28 @@ public class PortalTraversalTracker {
             return;
         }
 
-        // FIRST: Check if we have an explicitly clicked portal (from executor navigation)
-        if (clickedPortal != null && clickedPortal.ngob != null && clickedPortalLocalCoord != null) {
-            String portalName = clickedPortal.ngob.name;
-            String portalHash = getPortalHash(clickedPortal);
+        // Portal detection uses cachedLastActionsGob (captured from getLastActions() before grid change)
+        // This works for both manual and automated navigation since the game tracks all clicks
+        // If we know what portal was clicked, search for the SPECIFIC expected exit using getDoorPair()
+        // This prevents phantom portals from proximity matching the wrong portal type
+        Gob exitPortal = null;
+        String expectedExitName = null;
 
-            // Get the entry portal's ACTUAL grid ID from the cache (captured in setClickedPortal)
-            // This is critical for portals near grid boundaries - the grid may be unloaded by now
-            long entryPortalGridId = clickedPortalGridId;
-            if (entryPortalGridId == -1) {
-                // Try fresh lookup as fallback (grid might still be loaded)
-                entryPortalGridId = getGobGridId(clickedPortal);
-            }
-            if (entryPortalGridId == -1) {
-                entryPortalGridId = fromGridId; // Last resort: use player's grid
-            }
-
-            // Record the entrance connection (portal in its actual grid, connects to destination)
-            recordPortalConnection(portalHash, portalName, entryPortalGridId, toGridId, clickedPortalLocalCoord);
-
-            // Find and record exit portal (reverse connection) and detect layer
-            // Retry a few times for gobs to load
-            Gob exitPortal = null;
-            for (int i = 0; i < 5 && exitPortal == null; i++) {
-                exitPortal = findExitPortalAndUpdateLayer(player, portalName, toGridId);
-                if (exitPortal == null) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        break;
-                    }
-                }
-            }
-            if (exitPortal != null && exitPortal.ngob != null) {
-                String exitHash = getPortalHash(exitPortal);
-                String exitName = exitPortal.ngob.name;
-                Coord exitLocalCoord = getGobLocalCoord(player);
-                // Exit portal in destination grid connects back to entry portal's grid
-                recordPortalConnection(exitHash, exitName, toGridId, entryPortalGridId, exitLocalCoord);
-
-                // Update entry portal with where we appear in destination
-                updatePortalExitCoord(portalHash, entryPortalGridId, exitLocalCoord);
-
-                // Update exit portal with where we came from (enables reverse navigation)
-                updatePortalExitCoord(exitHash, toGridId, clickedPortalLocalCoord);
-            }
-
-            // Clear tracking
-            clickedPortal = null;
-            clickedPortalLocalCoord = null;
-            clickedPortalGridId = -1;
-            return;
+        // First, try to determine the expected exit from what we clicked
+        if (cachedLastActionsGob != null && cachedLastActionsGob.ngob != null) {
+            String clickedName = cachedLastActionsGob.ngob.name;
+            expectedExitName = GateDetector.getDoorPair(clickedName);
         }
 
-        // FALLBACK: For manual traversals, use exit portal to determine entrance
-        // Find the exit portal on the new side - retry a few times for gobs to load
-        Gob exitPortal = null;
+        // Search for the exit portal
         for (int i = 0; i < 5 && exitPortal == null; i++) {
-            exitPortal = findNearbyPortal(player);
+            if (expectedExitName != null) {
+                // We know exactly what exit to look for - search specifically for it
+                exitPortal = findSpecificPortalNearby(player, expectedExitName);
+            } else {
+                // No clicked portal info - fall back to generic search (less reliable)
+                exitPortal = findNearbyPortal(player);
+            }
             if (exitPortal == null) {
                 try {
                     Thread.sleep(100);
@@ -866,6 +808,52 @@ public class PortalTraversalTracker {
     }
 
     /**
+     * Find a specific portal type nearby.
+     * Unlike findNearbyPortal which searches all portal types, this searches for a specific expected exit.
+     * This is more precise and prevents phantom portals from proximity matching the wrong type.
+     */
+    private Gob findSpecificPortalNearby(Gob player, String expectedPortalName) {
+        if (expectedPortalName == null || player == null) {
+            return null;
+        }
+
+        try {
+            // First try using Finder which searches all visible gobs
+            Gob found = Finder.findGob(new NAlias(expectedPortalName));
+            if (found != null && found.ngob != null && found.ngob.hash != null) {
+                return found;
+            }
+
+            // Fallback: search by proximity for the specific portal
+            Glob glob = NUtils.getGameUI().ui.sess.glob;
+            double closestDist = PORTAL_PROXIMITY_THRESHOLD;
+            Gob closest = null;
+
+            synchronized (glob.oc) {
+                for (Gob gob : glob.oc) {
+                    if (gob.ngob == null || gob.ngob.name == null) continue;
+
+                    // Check if this gob matches the expected portal name
+                    String gobName = gob.ngob.name;
+                    if (gobName.equals(expectedPortalName) ||
+                        gobName.endsWith("/" + getSimpleName(expectedPortalName)) ||
+                        expectedPortalName.endsWith("/" + getSimpleName(gobName))) {
+                        double dist = player.rc.dist(gob.rc);
+                        if (dist < closestDist) {
+                            closestDist = dist;
+                            closest = gob;
+                        }
+                    }
+                }
+            }
+
+            return closest;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
      * Find an exit portal after traversing.
      * Uses Finder.findGob which searches more broadly than proximity check.
      */
@@ -1101,9 +1089,6 @@ public class PortalTraversalTracker {
         lastProcessedTime = 0;
         currentMineLevel = 0;
         mineLevelInitialized = false;  // Will re-initialize on next tick
-        clickedPortal = null;
-        clickedPortalLocalCoord = null;
-        clickedPortalGridId = -1;
         cachedLastActionsGob = null;
         cachedLastActionsGobLocalCoord = null;
         cachedLastActionsGobGridId = -1;

@@ -26,7 +26,6 @@ public class ChunkNavExecutor implements Action {
     private final ChunkPath path;
     private final NArea targetArea;
     private final ChunkNavGraph graph;
-    private final ChunkNavRecorder recorder;
     private final ChunkNavManager manager;
 
     private int replanAttempts = 0;
@@ -73,7 +72,6 @@ public class ChunkNavExecutor implements Action {
         this.path = path;
         this.targetArea = targetArea;
         this.graph = manager.getGraph();
-        this.recorder = manager.getRecorder();
         this.manager = manager;
     }
 
@@ -356,9 +354,8 @@ public class ChunkNavExecutor implements Action {
     private Results traversePortalGob(NGameUI gui, Gob portalGob) throws InterruptedException {
         String portalName = portalGob.ngob != null ? portalGob.ngob.name : "unknown";
 
-        if (manager != null && manager.getPortalTracker() != null) {
-            manager.getPortalTracker().setClickedPortal(portalGob);
-        }
+        // Portal recording is handled automatically by PortalTraversalTracker via getLastActions()
+        // No need to explicitly set the clicked portal - the tracker will detect it
 
         // Determine if this is a "loading" portal (cellar, stairs, mine) that needs rclickGob
         // vs a regular door that uses openDoorOnAGob
@@ -567,13 +564,6 @@ public class ChunkNavExecutor implements Action {
                 }
 
                 tickPortalTracker();
-
-                if (recorder != null && nextWaypoint != null) {
-                    recorder.recordPortalTraversal(
-                            waypoint.portal.gobHash,
-                            nextWaypoint.gridId
-                    );
-                }
             } else {
                 Coord2d targetCoord = getWaypointWorldCoord(waypoint, gui);
                 if (targetCoord == null) {
@@ -805,10 +795,7 @@ public class ChunkNavExecutor implements Action {
         }
 
         if (portal.requiresInteraction) {
-            if (manager != null && manager.getPortalTracker() != null) {
-                manager.getPortalTracker().setClickedPortal(portalGob);
-            }
-
+            // Portal recording is handled automatically by PortalTraversalTracker via getLastActions()
             NUtils.openDoorOnAGob(gui, portalGob);
 
             if (isLoadingPortal(portal.type)) {
@@ -880,26 +867,85 @@ public class ChunkNavExecutor implements Action {
 
         try {
             MCache mcache = gui.map.glob.map;
+            Coord2d basePosition = null;
 
             synchronized (mcache.grids) {
                 for (MCache.Grid grid : mcache.grids.values()) {
                     if (grid.id == gridId) {
                         Coord tileCoord = grid.ul.add(portal.localCoord);
-                        return tileCoord.mul(MCache.tilesz).add(MCache.tilehsz);
+                        basePosition = tileCoord.mul(MCache.tilesz).add(MCache.tilehsz);
+                        break;
                     }
                 }
             }
 
-            ChunkNavData chunk = graph.getChunk(gridId);
-            if (chunk != null && chunk.worldTileOrigin != null) {
-                Coord tileCoord = chunk.worldTileOrigin.add(portal.localCoord);
-                return tileCoord.mul(MCache.tilesz).add(MCache.tilehsz);
+            if (basePosition == null) {
+                ChunkNavData chunk = graph.getChunk(gridId);
+                if (chunk != null && chunk.worldTileOrigin != null) {
+                    Coord tileCoord = chunk.worldTileOrigin.add(portal.localCoord);
+                    basePosition = tileCoord.mul(MCache.tilesz).add(MCache.tilehsz);
+                }
             }
+
+            if (basePosition == null) {
+                return null;
+            }
+
+            // For building-type portals, calculate an access point in front of the door
+            // using the gob's facing angle (like the routes system does for mineholes)
+            double accessOffset = getBuildingAccessOffset(portal.gobName);
+            if (accessOffset > 0) {
+                // Find the actual portal gob to get its facing angle
+                Gob portalGob = findGobByName(gui, portal.gobName, basePosition, MCache.tilesz.x * 10);
+                if (portalGob == null) {
+                    portalGob = Finder.findGob(portal.gobHash);
+                }
+
+                if (portalGob != null) {
+                    // Use the gob's angle to calculate access point in front of the door
+                    // The angle 'a' is the direction the building faces
+                    double angle = portalGob.a;
+                    double offsetPixels = accessOffset * MCache.tilesz.x;
+                    Coord2d accessPoint = new Coord2d(
+                        basePosition.x + Math.cos(angle) * offsetPixels,
+                        basePosition.y + Math.sin(angle) * offsetPixels
+                    );
+                    return accessPoint;
+                }
+            }
+
+            return basePosition;
         } catch (Exception e) {
             // Ignore
         }
 
         return null;
+    }
+
+    /**
+     * Get the access offset for a building type.
+     * This is how many tiles in front of the door the player should stand.
+     * Returns 0 for non-building portals (use door position directly).
+     */
+    private double getBuildingAccessOffset(String gobName) {
+        if (gobName == null) return 0;
+        String lower = gobName.toLowerCase();
+
+        // For building doors and whole-building gobs, we need to stand OUTSIDE the door
+        // Offset by 2-3 tiles in the direction the building faces
+        if (lower.contains("stonemansion") || lower.contains("stonemansion-door")) return 3;
+        if (lower.contains("logcabin") || lower.contains("logcabin-door")) return 2;
+        if (lower.contains("timberhouse") || lower.contains("timberhouse-door")) return 2;
+        if (lower.contains("stonestead") || lower.contains("stonestead-door")) return 2;
+        if (lower.contains("greathall") || lower.contains("greathall-door")) return 3;
+        if (lower.contains("stonetower") || lower.contains("stonetower-door")) return 2;
+        if (lower.contains("windmill") || lower.contains("windmill-door")) return 2;
+        if (lower.contains("primitivetent") || lower.contains("primitivetent-door")) return 2;
+
+        // Mineholes also need an offset (like routes system does)
+        if (lower.contains("minehole")) return 2;
+
+        return 0;
     }
 
     private Results replanAndContinue(NGameUI gui) throws InterruptedException {
