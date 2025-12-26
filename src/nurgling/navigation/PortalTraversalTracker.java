@@ -50,6 +50,7 @@ public class PortalTraversalTracker {
     private Gob cachedLastActionsGob = null;
     private Coord cachedLastActionsGobLocalCoord = null;
     private long cachedLastActionsGobGridId = -1;  // Grid ID of the cached portal (for boundary fix)
+    private long lastProcessedPortalGobId = -1;  // Gob ID of last processed portal (prevents re-capture)
 
     // Cached grid ID for lastNearbyPortal (for boundary fix)
     private long lastNearbyPortalGridId = -1;
@@ -210,11 +211,14 @@ public class PortalTraversalTracker {
 
         // Capture lastActions gob BEFORE grid change (like routes system does)
         // This preserves the clicked portal info even after the grid changes
+        // Only capture if it's a NEW portal (different from the last one we processed)
+        // This prevents re-capturing stale actions after we've already recorded the portal
         try {
             NCore.LastActions lastActions = NUtils.getUI().core.getLastActions();
             if (lastActions != null && lastActions.gob != null && lastActions.gob.ngob != null) {
                 String gobName = lastActions.gob.ngob.name;
-                if (isPortalGob(gobName)) {
+                // Only capture if it's a portal AND it's not the same one we already processed
+                if (isPortalGob(gobName) && lastActions.gob.id != lastProcessedPortalGobId) {
                     cachedLastActionsGob = lastActions.gob;
                     // Use getPortalLocalCoord which offsets buildings toward player for stable door position
                     Coord portalCoord = getPortalLocalCoord(lastActions.gob, player);
@@ -342,28 +346,26 @@ public class PortalTraversalTracker {
         String exitName = exitPortal.ngob.name;
 
         // LAYER CHECK: Verify this is actually a portal traversal, not just walking across a grid boundary
-        // If we didn't click a portal and the layers are the same, we just walked across a boundary
+        // If we didn't click a portal and the layers are the same (or unknown), we just walked across a boundary
         // This prevents recording phantom portals when player walks past buildings/portals near grid edges
         //
-        // For mine portals: Check if we actually CLICKED a minehole/ladder (cachedLastActionsGob).
-        // If yes, we used a mine portal and should record regardless of layer.
-        // If no, we just walked past and should apply the normal layer check.
-        boolean usedMinePortal = false;
-        if (cachedLastActionsGob != null && cachedLastActionsGob.ngob != null) {
-            String cachedName = cachedLastActionsGob.ngob.name;
-            if (cachedName != null) {
-                String cachedLower = cachedName.toLowerCase();
-                usedMinePortal = cachedLower.contains("minehole") || cachedLower.contains("ladder");
-            }
-        }
+        // Check if we actually CLICKED any portal (cachedLastActionsGob).
+        // If yes, we intentionally used a portal and should record.
+        // If no, we just walked past and should apply strict layer checking.
+        boolean clickedAnyPortal = cachedLastActionsGob != null && cachedLastActionsGob.ngob != null;
 
-        if (!usedMinePortal) {
+        if (!clickedAnyPortal) {
+            // We didn't click any portal - be CONSERVATIVE about recording
             String fromLayer = getLayerFromChunk(fromGridId);
             String predictedToLayer = predictLayerFromPortal(exitName);
 
-            if (isSameLayerType(fromLayer, predictedToLayer)) {
-                // Same layer type (surface→surface, mine1→mine1) and no mine portal clicked
-                // This is not a portal traversal - just walking across a grid boundary
+            // If we can't determine layers, DON'T record - we can't verify this is a real portal traversal
+            // If layers are the same, DON'T record - this is just walking across a grid boundary
+            boolean layersUnknown = (fromLayer == null || predictedToLayer == null);
+            boolean layersSame = isSameLayerType(fromLayer, predictedToLayer);
+
+            if (layersUnknown || layersSame) {
+                // Either can't determine layers or same layer type - not a verified portal traversal
                 // Clear tracking state and return without recording
                 lastNearbyPortal = null;
                 lastNearbyPortalLocalCoord = null;
@@ -470,6 +472,11 @@ public class PortalTraversalTracker {
         // Record: exit portal on toGrid connects back to entrance portal's grid
         // This uses entranceGridId which was determined from the portal's actual location (fixes boundary bug)
         recordPortalConnection(exitHash, exitName, toGridId, entranceGridId, exitLocalCoord);
+
+        // Mark the cached portal as processed so tick() won't re-capture it
+        if (cachedLastActionsGob != null) {
+            lastProcessedPortalGobId = cachedLastActionsGob.id;
+        }
 
         // Clear tracking state after use
         lastNearbyPortal = null;
@@ -1100,6 +1107,7 @@ public class PortalTraversalTracker {
         cachedLastActionsGob = null;
         cachedLastActionsGobLocalCoord = null;
         cachedLastActionsGobGridId = -1;
+        lastProcessedPortalGobId = -1;
     }
 
     /**
