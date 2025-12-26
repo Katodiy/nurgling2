@@ -51,6 +51,10 @@ public class PortalTraversalTracker {
     // Cached lastActions gob - captured before grid change to preserve the clicked portal info
     private Gob cachedLastActionsGob = null;
     private Coord cachedLastActionsGobLocalCoord = null;
+    private long cachedLastActionsGobGridId = -1;  // Grid ID of the cached portal (for boundary fix)
+
+    // Cached grid ID for lastNearbyPortal (for boundary fix)
+    private long lastNearbyPortalGridId = -1;
 
     private static final long CHECK_INTERVAL_MS = 100;
     private static final double PORTAL_PROXIMITY_THRESHOLD = 15.0;
@@ -206,6 +210,8 @@ public class PortalTraversalTracker {
             lastNearbyPortal = nearbyPortal;
             // Use getPortalLocalCoord which offsets buildings toward player for stable door position
             lastNearbyPortalLocalCoord = getPortalLocalCoord(nearbyPortal, player);
+            // Cache the portal's actual grid ID while the grid is still loaded (fixes boundary bug)
+            lastNearbyPortalGridId = getGobGridId(nearbyPortal);
         }
 
         // Capture lastActions gob BEFORE grid change (like routes system does)
@@ -221,6 +227,8 @@ public class PortalTraversalTracker {
                     if (portalCoord != null) {
                         cachedLastActionsGobLocalCoord = portalCoord;
                     }
+                    // Cache the portal's actual grid ID while the grid is still loaded (fixes boundary bug)
+                    cachedLastActionsGobGridId = getGobGridId(lastActions.gob);
                 }
             }
         } catch (Exception e) {
@@ -272,8 +280,15 @@ public class PortalTraversalTracker {
             String portalName = clickedPortal.ngob.name;
             String portalHash = getPortalHash(clickedPortal);
 
-            // Record the entrance connection
-            recordPortalConnection(portalHash, portalName, fromGridId, toGridId, clickedPortalLocalCoord);
+            // Get the entry portal's ACTUAL grid ID (it might be in a different grid than the player was)
+            // This fixes the bug where portals near grid boundaries get recorded in the wrong grid
+            long entryPortalGridId = getGobGridId(clickedPortal);
+            if (entryPortalGridId == -1) {
+                entryPortalGridId = fromGridId; // Fallback to player's grid if we can't determine
+            }
+
+            // Record the entrance connection (portal in its actual grid, connects to destination)
+            recordPortalConnection(portalHash, portalName, entryPortalGridId, toGridId, clickedPortalLocalCoord);
 
             // Find and record exit portal (reverse connection) and detect layer
             // Retry a few times for gobs to load
@@ -292,10 +307,11 @@ public class PortalTraversalTracker {
                 String exitHash = getPortalHash(exitPortal);
                 String exitName = exitPortal.ngob.name;
                 Coord exitLocalCoord = getGobLocalCoord(player);
-                recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
+                // Exit portal in destination grid connects back to entry portal's grid
+                recordPortalConnection(exitHash, exitName, toGridId, entryPortalGridId, exitLocalCoord);
 
                 // Update entry portal with where we appear in destination
-                updatePortalExitCoord(portalHash, fromGridId, exitLocalCoord);
+                updatePortalExitCoord(portalHash, entryPortalGridId, exitLocalCoord);
 
                 // Update exit portal with where we came from (enables reverse navigation)
                 updatePortalExitCoord(exitHash, toGridId, clickedPortalLocalCoord);
@@ -334,11 +350,11 @@ public class PortalTraversalTracker {
         // Update the destination chunk's layer based on the exit portal
         updateChunkLayer(toGridId, exitName);
 
-        // Record: exit portal on toGrid connects back to fromGrid (using player's position as access point)
-        recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
-
-        // Record: entrance portal on fromGrid connects to toGrid
+        // Record: entrance portal on its actual grid connects to toGrid
         // Try multiple strategies to get the actual entrance portal position
+        // We determine entranceGridId first so we can use it for the exit portal's back-connection
+        long entranceGridId = fromGridId;  // Default to player's grid, but prefer portal's actual grid
+
         if (entranceName != null) {
             Coord entranceCoord = null;
             String entranceHash = null;
@@ -356,6 +372,10 @@ public class PortalTraversalTracker {
                      cachedName.endsWith("/" + getSimpleName(entranceName)))) {
                     entranceCoord = cachedLastActionsGobLocalCoord;
                     entranceHash = getPortalHash(cachedLastActionsGob);
+                    // Use the portal's actual grid ID (fixes boundary bug)
+                    if (cachedLastActionsGobGridId != -1) {
+                        entranceGridId = cachedLastActionsGobGridId;
+                    }
                 }
             }
 
@@ -369,6 +389,10 @@ public class PortalTraversalTracker {
                     // Use the actual portal position we were tracking
                     entranceCoord = lastNearbyPortalLocalCoord;
                     entranceHash = getPortalHash(lastNearbyPortal);
+                    // Use the portal's actual grid ID (fixes boundary bug)
+                    if (lastNearbyPortalGridId != -1) {
+                        entranceGridId = lastNearbyPortalGridId;
+                    }
                 }
             }
 
@@ -384,32 +408,42 @@ public class PortalTraversalTracker {
                     // If the cached action matches the expected entrance, use fallback
                     if (cachedName != null && cachedName.equals(entranceName)) {
                         canUseFallback = true;
+                        // Use cached portal's grid ID if available
+                        if (cachedLastActionsGobGridId != -1) {
+                            entranceGridId = cachedLastActionsGobGridId;
+                        }
                     }
                 }
 
                 if (canUseFallback) {
                     entranceCoord = lastPlayerLocalCoord;
                     // Include position in hash to distinguish different buildings of same type
-                    entranceHash = "entrance_" + fromGridId + "_" + entranceName.hashCode() + "_" + lastPlayerLocalCoord.x + "_" + lastPlayerLocalCoord.y;
+                    entranceHash = "entrance_" + entranceGridId + "_" + entranceName.hashCode() + "_" + lastPlayerLocalCoord.x + "_" + lastPlayerLocalCoord.y;
                 }
             }
 
             if (entranceCoord != null && entranceHash != null) {
-                recordPortalConnection(entranceHash, entranceName, fromGridId, toGridId, entranceCoord);
+                recordPortalConnection(entranceHash, entranceName, entranceGridId, toGridId, entranceCoord);
 
                 // Update entry portal with where we appear in destination
-                updatePortalExitCoord(entranceHash, fromGridId, exitLocalCoord);
+                updatePortalExitCoord(entranceHash, entranceGridId, exitLocalCoord);
 
                 // Update exit portal with where we came from (enables reverse navigation)
                 updatePortalExitCoord(exitHash, toGridId, entranceCoord);
             }
         }
 
+        // Record: exit portal on toGrid connects back to entrance portal's grid
+        // This uses entranceGridId which was determined from the portal's actual location (fixes boundary bug)
+        recordPortalConnection(exitHash, exitName, toGridId, entranceGridId, exitLocalCoord);
+
         // Clear tracking state after use
         lastNearbyPortal = null;
         lastNearbyPortalLocalCoord = null;
+        lastNearbyPortalGridId = -1;
         cachedLastActionsGob = null;
         cachedLastActionsGobLocalCoord = null;
+        cachedLastActionsGobGridId = -1;
     }
 
     /**
@@ -482,6 +516,24 @@ public class PortalTraversalTracker {
         if (portal != null) {
             portal.exitLocalCoord = exitLocalCoord;
         }
+    }
+
+    /**
+     * Get the grid ID of the grid containing a gob.
+     * Returns -1 if the grid cannot be determined.
+     */
+    private long getGobGridId(Gob gob) {
+        try {
+            MCache mcache = NUtils.getGameUI().map.glob.map;
+            Coord tileCoord = gob.rc.floor(MCache.tilesz);
+            MCache.Grid grid = mcache.getgridt(tileCoord);
+            if (grid != null) {
+                return grid.id;
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return -1;
     }
 
     /**
@@ -1000,6 +1052,7 @@ public class PortalTraversalTracker {
         lastGridId = -1;
         lastNearbyPortal = null;
         lastNearbyPortalLocalCoord = null;
+        lastNearbyPortalGridId = -1;
         lastPlayerLocalCoord = null;
         previousTickPlayerLocalCoord = null;
         lastProcessedFromGridId = -1;
@@ -1007,6 +1060,9 @@ public class PortalTraversalTracker {
         lastProcessedTime = 0;
         currentMineLevel = 0;
         mineLevelInitialized = false;  // Will re-initialize on next tick
+        cachedLastActionsGob = null;
+        cachedLastActionsGobLocalCoord = null;
+        cachedLastActionsGobGridId = -1;
     }
 
     /**
