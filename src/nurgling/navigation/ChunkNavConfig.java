@@ -12,7 +12,6 @@ public class ChunkNavConfig {
     // Confidence
     public static final float INITIAL_CONFIDENCE = 1.0f;
     public static final float CONFIDENCE_HALF_LIFE_HOURS = 48f;
-    public static final float MIN_CONFIDENCE_FOR_PLANNING = 0.1f;
 
     // Path planning costs
     public static final float BASE_CHUNK_COST = 100f;       // Base cost per chunk

@@ -26,13 +26,6 @@ public enum Layer {
     }
 
     /**
-     * Get the string representation used for serialization.
-     */
-    public String getStringValue() {
-        return stringValue;
-    }
-
-    /**
      * Check if this layer is a mine layer.
      */
     public boolean isMine() {
@@ -51,21 +44,6 @@ public enum Layer {
             return 1;
         }
     }
-
-    /**
-     * Check if this is an underground layer (mine or cellar).
-     */
-    public boolean isUnderground() {
-        return isMine() || this == CELLAR;
-    }
-
-    /**
-     * Check if this layer is indoors (inside or cellar).
-     */
-    public boolean isIndoors() {
-        return this == INSIDE || this == CELLAR;
-    }
-
     /**
      * Parse a string to a Layer enum value.
      * Handles legacy string formats like "mine1", "mine2", etc.

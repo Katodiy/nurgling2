@@ -68,7 +68,6 @@ public class ChunkNavPlanner {
     /**
      * Find the target chunk and local coordinate for an area using stored data.
      * Does NOT rely on live visibility - uses stored area data and chunk worldTileOrigins.
-     *
      * IMPORTANT: We find a WALKABLE tile near the area edge, not the center.
      * The area center might be blocked by objects inside the area.
      */
@@ -237,38 +236,6 @@ public class ChunkNavPlanner {
     }
 
     /**
-     * Get area's local coordinate within a chunk using stored data.
-     */
-    private Coord getAreaLocalCoordFromStored(NArea area, ChunkNavData chunk) {
-        if (chunk.worldTileOrigin == null) return null;
-
-        // Check if area has stored region in this chunk
-        if (area.space != null && area.space.space != null) {
-            NArea.VArea varea = area.space.space.get(chunk.gridId);
-            if (varea != null && varea.area != null) {
-                // Return center of the VArea region in this chunk
-                int centerX = (varea.area.ul.x + varea.area.br.x) / 2;
-                int centerY = (varea.area.ul.y + varea.area.br.y) / 2;
-                return new Coord(centerX, centerY);
-            }
-        }
-
-        // Fallback: calculate from area center
-        Coord2d areaCenter = getAreaCenterFromStored(area);
-        if (areaCenter == null) return null;
-
-        Coord areaTile = areaCenter.floor(MCache.tilesz);
-        Coord localCoord = areaTile.sub(chunk.worldTileOrigin);
-
-        if (localCoord.x >= 0 && localCoord.x < CHUNK_SIZE &&
-            localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
-            return localCoord;
-        }
-
-        return null;
-    }
-
-    /**
      * Target location result.
      */
     private static class TargetLocation {
@@ -360,7 +327,7 @@ public class ChunkNavPlanner {
         allNodes.put(startChunkId, startNode);
 
         int iterations = 0;
-        int edgesExpanded = 0;
+
         while (!openSet.isEmpty() && iterations < 1000) {
             iterations++;
             AStarNode current = openSet.poll();
@@ -374,7 +341,6 @@ public class ChunkNavPlanner {
 
             // Expand neighbors
             List<ChunkNavGraph.ChunkEdge> edges = graph.getEdges(current.gridId);
-            edgesExpanded += edges.size();
             for (ChunkNavGraph.ChunkEdge edge : edges) {
                 if (closedSet.contains(edge.toGridId)) continue;
 
@@ -611,80 +577,6 @@ public class ChunkNavPlanner {
         }
 
         return result;
-    }
-
-    /**
-     * Check if a path exists between two chunks.
-     */
-    public boolean pathExists(long startChunkId, long targetChunkId) {
-        ChunkPath path = planPath(startChunkId, targetChunkId);
-        return path != null && !path.isEmpty();
-    }
-
-    /**
-     * Get estimated travel cost between two chunks.
-     */
-    public float estimateCost(long startChunkId, long targetChunkId) {
-        ChunkPath path = planPath(startChunkId, targetChunkId);
-        return path != null ? path.totalCost : Float.MAX_VALUE;
-    }
-
-    /**
-     * Get the player's local coordinate within the specified chunk.
-     * Returns null if the player is not in that chunk or position cannot be determined.
-     */
-    private Coord getPlayerLocalCoord(long chunkGridId) {
-        try {
-            NGameUI gui = NUtils.getGameUI();
-            if (gui == null || gui.map == null) return null;
-
-            Gob player = NUtils.player();
-            if (player == null) return null;
-
-            MCache mcache = gui.map.glob.map;
-            if (mcache == null) return null;
-
-            Coord playerTile = player.rc.floor(MCache.tilesz);
-
-            // Try to find the grid in MCache
-            synchronized (mcache.grids) {
-                for (MCache.Grid grid : mcache.grids.values()) {
-                    if (grid.id == chunkGridId) {
-                        // Calculate local coord relative to grid origin
-                        Coord localCoord = playerTile.sub(grid.ul);
-
-                        // Check if local coord is valid (player actually in this grid)
-                        if (localCoord.x >= 0 && localCoord.x < CHUNK_SIZE &&
-                            localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
-                            return localCoord;
-                        } else {
-                            // Try to find the correct grid
-                            MCache.Grid correctGrid = mcache.getgridt(playerTile);
-                            if (correctGrid != null) {
-                                Coord correctLocal = playerTile.sub(correctGrid.ul);
-                            }
-                            return null;
-                        }
-                    }
-                }
-            }
-
-            // Grid not found in MCache - try stored worldTileOrigin
-            ChunkNavData chunk = graph.getChunk(chunkGridId);
-            if (chunk != null && chunk.worldTileOrigin != null) {
-                Coord localCoord = playerTile.sub(chunk.worldTileOrigin);
-
-                // Check if local coord is valid
-                if (localCoord.x >= 0 && localCoord.x < CHUNK_SIZE &&
-                    localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
-                    return localCoord;
-                } else {
-                    return null;
-                }
-            }
-        } catch (Exception e) {
-        }
-        return null;
     }
 
     /**

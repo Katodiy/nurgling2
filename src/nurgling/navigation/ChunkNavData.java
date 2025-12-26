@@ -1,8 +1,6 @@
 package nurgling.navigation;
 
 import haven.Coord;
-import haven.Coord2d;
-import haven.MCache;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -24,7 +22,7 @@ public class ChunkNavData {
     public Coord worldTileOrigin;   // Actual world tile origin (grid.ul) - SESSION-BASED, unreliable across sessions
 
     // Neighbor relationships (PERSISTENT - grid IDs never change)
-    // These are discovered when grids are loaded together and we can see their spatial relationship
+    // These are discovered when grids are loaded together, and we can see their spatial relationship
     public long neighborNorth = -1;  // Grid ID of neighbor to the north (gc.y - 1)
     public long neighborSouth = -1;  // Grid ID of neighbor to the south (gc.y + 1)
     public long neighborEast = -1;   // Grid ID of neighbor to the east (gc.x + 1)
@@ -142,15 +140,6 @@ public class ChunkNavData {
     }
 
     /**
-     * Set walkability at a specific coarse cell.
-     */
-    public void setWalkability(int cx, int cy, byte value) {
-        if (cx >= 0 && cx < CELLS_PER_EDGE && cy >= 0 && cy < CELLS_PER_EDGE) {
-            walkability[cx][cy] = value;
-        }
-    }
-
-    /**
      * Check if a cell has been observed (within visible range during recording).
      */
     public boolean isObserved(int cx, int cy) {
@@ -158,28 +147,6 @@ public class ChunkNavData {
             return false;
         }
         return observed[cx][cy];
-    }
-
-    /**
-     * Mark a cell as observed.
-     */
-    public void setObserved(int cx, int cy, boolean value) {
-        if (cx >= 0 && cx < CELLS_PER_EDGE && cy >= 0 && cy < CELLS_PER_EDGE) {
-            observed[cx][cy] = value;
-        }
-    }
-
-    /**
-     * Count how many cells have been observed in this chunk.
-     */
-    public int countObservedCells() {
-        int count = 0;
-        for (int x = 0; x < CELLS_PER_EDGE; x++) {
-            for (int y = 0; y < CELLS_PER_EDGE; y++) {
-                if (observed[x][y]) count++;
-            }
-        }
-        return count;
     }
 
     /**
@@ -208,37 +175,6 @@ public class ChunkNavData {
         for (ChunkPortal portal : portals) {
             if (gobHash.equals(portal.gobHash)) {
                 return portal;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Find a portal by its gob name.
-     */
-    public ChunkPortal findPortalByName(String gobName) {
-        if (gobName == null) return null;
-        for (ChunkPortal portal : portals) {
-            if (gobName.equals(portal.gobName)) {
-                return portal;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Find a portal by its position (localCoord).
-     * Two portals are considered the same if they're within a few tiles of each other.
-     */
-    public ChunkPortal findPortalByPosition(Coord localCoord, int tolerance) {
-        if (localCoord == null) return null;
-        for (ChunkPortal portal : portals) {
-            if (portal.localCoord != null) {
-                int dx = Math.abs(portal.localCoord.x - localCoord.x);
-                int dy = Math.abs(portal.localCoord.y - localCoord.y);
-                if (dx <= tolerance && dy <= tolerance) {
-                    return portal;
-                }
             }
         }
         return null;
@@ -287,36 +223,6 @@ public class ChunkNavData {
             portals.remove(existing);
         }
         portals.add(portal);
-    }
-
-    /**
-     * Get walkable edge points for connecting to adjacent chunks.
-     */
-    public List<EdgePoint> getWalkableEdgePoints(Direction dir) {
-        List<EdgePoint> result = new ArrayList<>();
-        EdgePoint[] edge = getEdge(dir);
-        if (edge != null) {
-            for (EdgePoint ep : edge) {
-                if (ep.walkable) {
-                    result.add(ep);
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Count walkable edge points in a direction.
-     */
-    public int countWalkableEdgePoints(Direction dir) {
-        int count = 0;
-        EdgePoint[] edge = getEdge(dir);
-        if (edge != null) {
-            for (EdgePoint ep : edge) {
-                if (ep.walkable) count++;
-            }
-        }
-        return count;
     }
 
     public JSONObject toJson() {
@@ -491,79 +397,9 @@ public class ChunkNavData {
                 default: return this;
             }
         }
-
-        public Coord toOffset() {
-            switch (this) {
-                case NORTH: return new Coord(0, -1);
-                case SOUTH: return new Coord(0, 1);
-                case EAST: return new Coord(1, 0);
-                case WEST: return new Coord(-1, 0);
-                default: return new Coord(0, 0);
-            }
-        }
     }
 
     // ========== Utility Methods ==========
-
-    /**
-     * Check if coordinates are within the chunk bounds.
-     */
-    public boolean isValidCoord(int x, int y) {
-        return x >= 0 && x < CELLS_PER_EDGE && y >= 0 && y < CELLS_PER_EDGE;
-    }
-
-    /**
-     * Check if a tile is fully walkable (no obstacles).
-     */
-    public boolean isWalkable(int x, int y) {
-        return isValidCoord(x, y) && walkability[x][y] == 0;
-    }
-
-    /**
-     * Check if a tile is passable (walkable or partially blocked).
-     * Returns false only for fully blocked tiles.
-     */
-    public boolean isPassable(int x, int y) {
-        return isValidCoord(x, y) && walkability[x][y] <= 1;
-    }
-
-    /**
-     * Convert local chunk coordinates to world coordinates.
-     * Returns null if worldTileOrigin is not set (chunk not visible in this session).
-     */
-    public Coord2d localToWorld(Coord localCoord) {
-        if (worldTileOrigin == null || localCoord == null) {
-            return null;
-        }
-        Coord worldTile = worldTileOrigin.add(localCoord);
-        return worldTile.mul(MCache.tilesz).add(MCache.tilehsz);
-    }
-
-    /**
-     * Get the world tile coordinate for a local coordinate.
-     * Returns null if worldTileOrigin is not set.
-     */
-    public Coord localToWorldTile(Coord localCoord) {
-        if (worldTileOrigin == null || localCoord == null) {
-            return null;
-        }
-        return worldTileOrigin.add(localCoord);
-    }
-
-    /**
-     * Check if a specific edge position is walkable.
-     * This can be used instead of the edge arrays for simpler cases.
-     */
-    public boolean isEdgeWalkable(Direction dir, int index) {
-        if (index < 0 || index >= CELLS_PER_EDGE) return false;
-        switch (dir) {
-            case NORTH: return walkability[index][0] == 0;
-            case SOUTH: return walkability[index][CHUNK_SIZE - 1] == 0;
-            case EAST: return walkability[CHUNK_SIZE - 1][index] == 0;
-            case WEST: return walkability[0][index] == 0;
-            default: return false;
-        }
-    }
 
     /**
      * Get the Layer enum for this chunk's layer string.

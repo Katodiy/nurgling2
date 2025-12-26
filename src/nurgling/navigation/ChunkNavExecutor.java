@@ -48,7 +48,6 @@ public class ChunkNavExecutor implements Action {
         }
 
         static final WalkConfig DEFAULT = new WalkConfig(50, 8, 3, true);
-        static final WalkConfig SEGMENT = new WalkConfig(30, 6, 3, true);
         static final WalkConfig STEP_BY_STEP = new WalkConfig(20, 10, 2, true);
     }
 
@@ -139,10 +138,7 @@ public class ChunkNavExecutor implements Action {
                     targetGridId = nextSegment.gridId;
                 }
 
-                Results portalResult = findAndTraversePortalToGrid(gui, segment, targetGridId);
-                if (!portalResult.IsSuccess()) {
-                    // Portal traversal failed - try to continue anyway
-                }
+                findAndTraversePortalToGrid(gui, segment, targetGridId);
 
                 currentLayer = getCurrentPlayerLayer();
                 tickPortalTracker();
@@ -575,7 +571,6 @@ public class ChunkNavExecutor implements Action {
                 if (recorder != null && nextWaypoint != null) {
                     recorder.recordPortalTraversal(
                             waypoint.portal.gobHash,
-                            waypoint.gridId,
                             nextWaypoint.gridId
                     );
                 }
@@ -594,7 +589,7 @@ public class ChunkNavExecutor implements Action {
                     if (replanAttempts < MAX_REPLAN_ATTEMPTS) {
                         replanAttempts++;
                         gui.msg("ChunkNav: Replanning after navigation failure");
-                        return replanAndContinue(gui, i);
+                        return replanAndContinue(gui);
                     }
                     return Results.FAIL();
                 }
@@ -907,7 +902,7 @@ public class ChunkNavExecutor implements Action {
         return null;
     }
 
-    private Results replanAndContinue(NGameUI gui, int failedWaypointIndex) throws InterruptedException {
+    private Results replanAndContinue(NGameUI gui) throws InterruptedException {
         if (targetArea == null) {
             return Results.FAIL();
         }

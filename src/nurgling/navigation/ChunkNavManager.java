@@ -217,17 +217,6 @@ public class ChunkNavManager {
     }
 
     /**
-     * Called when player passes through a portal.
-     */
-    public void onPortalTraversal(String gobHash, long fromGridId, long toGridId) {
-        if (!enabled || !initialized) return;
-
-        recorder.recordPortalTraversal(gobHash, fromGridId, toGridId);
-        // Save when portal connections are learned
-        saveThrottled();
-    }
-
-    /**
      * Ensure the player's current chunk is recorded in the graph.
      * This is called before path planning to handle cases where the player
      * teleported (e.g., via Hearth Fire skill) to an unrecorded chunk.
@@ -373,54 +362,6 @@ public class ChunkNavManager {
 
         Set<Long> chunks = graph.getChunksForArea(area.id);
         return !chunks.isEmpty();
-    }
-
-    /**
-     * Update area reachability from visible chunks.
-     */
-    public void updateAreaReachability(NArea area) {
-        if (!enabled || !initialized || area == null) return;
-
-        // Get all visible chunks
-        try {
-            MCache mcache = NUtils.getGameUI().map.glob.map;
-            synchronized (mcache.grids) {
-                for (MCache.Grid grid : mcache.grids.values()) {
-                    ChunkNavData chunk = graph.getChunk(grid.id);
-                    if (chunk != null) {
-                        // Check if area is reachable from this chunk
-                        if (isAreaReachableFromChunk(chunk, area)) {
-                            chunk.reachableAreaIds.add(area.id);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Ignore
-        }
-    }
-
-    /**
-     * Check if an area is reachable from a chunk (simple distance check).
-     */
-    private boolean isAreaReachableFromChunk(ChunkNavData chunk, NArea area) {
-        try {
-            Coord2d areaCenter = area.getCenter2d();
-            if (areaCenter == null) return false;
-
-            MCache mcache = NUtils.getGameUI().map.glob.map;
-            synchronized (mcache.grids) {
-                for (MCache.Grid grid : mcache.grids.values()) {
-                    if (grid.id == chunk.gridId) {
-                        Coord2d chunkCenter = grid.ul.add(CHUNK_SIZE / 2, CHUNK_SIZE / 2).mul(MCache.tilesz);
-                        return chunkCenter.dist(areaCenter) < MAX_EDGE_DISTANCE;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Ignore
-        }
-        return false;
     }
 
     /**
@@ -634,47 +575,6 @@ public class ChunkNavManager {
             }
         } catch (Exception e) {
             // Ignore - UI might not be ready
-        }
-    }
-
-    /**
-     * Enable portal visualization.
-     */
-    public void showPortals() {
-        showPortalsEnabled = true;
-        lastPortalRefreshTime = 0; // Force immediate refresh
-    }
-
-    /**
-     * Disable portal visualization.
-     */
-    public void hidePortals() {
-        showPortalsEnabled = false;
-        try {
-            NGameUI gui = NUtils.getGameUI();
-            if (gui != null && gui.map != null) {
-                ((nurgling.NMapView) gui.map).destroyPortalDummys();
-            }
-        } catch (Exception e) {
-            // Ignore
-        }
-    }
-
-    /**
-     * Check if portal visualization is enabled.
-     */
-    public boolean isShowPortalsEnabled() {
-        return showPortalsEnabled;
-    }
-
-    /**
-     * Toggle portal visualization on/off.
-     */
-    public void togglePortals() {
-        if (showPortalsEnabled) {
-            hidePortals();
-        } else {
-            showPortals();
         }
     }
 }

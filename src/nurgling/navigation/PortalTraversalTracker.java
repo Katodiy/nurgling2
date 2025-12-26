@@ -2,10 +2,8 @@ package nurgling.navigation;
 
 import haven.*;
 import nurgling.NCore;
-import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.tasks.GateDetector;
-import nurgling.tasks.WaitForMapLoadNoCoord;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -14,7 +12,6 @@ import java.util.*;
 /**
  * Tracks when the player traverses portals (doors, stairs, cellars, mines)
  * and records the connections in the ChunkNav graph.
- *
  * Detection approach:
  * 1. Monitor player's grid ID
  * 2. When grid ID changes, check if player was near a portal
@@ -134,14 +131,6 @@ public class PortalTraversalTracker {
     }
 
     /**
-     * Clear the explicitly clicked portal (call after traversal is complete).
-     */
-    public void clearClickedPortal() {
-        this.clickedPortal = null;
-        this.clickedPortalLocalCoord = null;
-    }
-
-    /**
      * Call this periodically to check for portal traversals.
      * Safe to call frequently - internally throttled.
      */
@@ -220,7 +209,7 @@ public class PortalTraversalTracker {
             NCore.LastActions lastActions = NUtils.getUI().core.getLastActions();
             if (lastActions != null && lastActions.gob != null && lastActions.gob.ngob != null) {
                 String gobName = lastActions.gob.ngob.name;
-                if (gobName != null && isPortalGob(gobName)) {
+                if (isPortalGob(gobName)) {
                     cachedLastActionsGob = lastActions.gob;
                     // Use getPortalLocalCoord which offsets buildings toward player for stable door position
                     Coord portalCoord = getPortalLocalCoord(lastActions.gob, player);
@@ -492,7 +481,7 @@ public class PortalTraversalTracker {
         portal.lastTraversed = System.currentTimeMillis();
 
         // Also notify recorder
-        recorder.recordPortalTraversal(gobHash, fromGridId, toGridId);
+        recorder.recordPortalTraversal(gobHash, toGridId);
 
         // Trigger a throttled save
         try {

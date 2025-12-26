@@ -14,145 +14,6 @@ import static nurgling.navigation.ChunkNavConfig.*;
 public class ChunkNavIntraPathfinder {
 
     /**
-     * Validate that a full ChunkPath is actually walkable, including to the target area.
-     * Checks intra-chunk reachability between consecutive waypoints/portals.
-     *
-     * @param path The chunk path to validate
-     * @param graph The navigation graph containing chunk data
-     * @param startLocal Player's starting local coordinate in the first chunk
-     * @param targetAreaLocal Target area's local coordinate in the final chunk (can be null)
-     * @param targetGridId Grid ID where the target area is located
-     * @return true if the entire path is walkable, false if blocked
-     */
-    public static boolean validateFullPathWithTarget(ChunkPath path, ChunkNavGraph graph,
-                                                     Coord startLocal, Coord targetAreaLocal,
-                                                     long targetGridId) {
-        // First validate the waypoint path
-        if (!validateFullPath(path, graph, startLocal)) {
-            return false;
-        }
-
-        // If no target area specified, we're done
-        if (targetAreaLocal == null || targetGridId == -1) {
-            return true;
-        }
-
-        // Get the final position after following the path
-        Coord finalLocal = startLocal;
-        long finalGridId = -1;
-
-        if (!path.waypoints.isEmpty()) {
-            ChunkPath.ChunkWaypoint lastWaypoint = path.waypoints.get(path.waypoints.size() - 1);
-            finalLocal = lastWaypoint.localCoord;
-            finalGridId = lastWaypoint.gridId;
-        }
-
-        // Check if the target is in a different grid than where we end up
-        if (finalGridId != targetGridId) {
-            // Target is in different grid - can't validate intra-chunk reachability
-            return true; // Can't validate, assume passable
-        }
-
-        // Validate we can reach the target from final path position
-        ChunkNavData finalChunk = graph.getChunk(finalGridId);
-        if (finalChunk == null) {
-            return true; // No chunk data, assume passable
-        }
-
-        if (finalLocal != null) {
-            IntraPath toTargetPath = findPath(finalLocal, targetAreaLocal, finalChunk);
-            if (!toTargetPath.reachable) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Validate that a full ChunkPath is actually walkable.
-     * Checks intra-chunk reachability between consecutive waypoints/portals.
-     *
-     * @param path The chunk path to validate
-     * @param graph The navigation graph containing chunk data
-     * @param startLocal Player's starting local coordinate in the first chunk
-     * @return true if the entire path is walkable, false if blocked
-     */
-    public static boolean validateFullPath(ChunkPath path, ChunkNavGraph graph, Coord startLocal) {
-        if (path == null || path.isEmpty()) {
-            return false;
-        }
-
-        Coord currentLocal = startLocal;
-        long currentGridId = -1;
-
-        // Get the first waypoint's grid as starting grid
-        if (!path.waypoints.isEmpty()) {
-            currentGridId = path.waypoints.get(0).gridId;
-        }
-
-        for (int i = 0; i < path.waypoints.size(); i++) {
-            ChunkPath.ChunkWaypoint waypoint = path.waypoints.get(i);
-
-            // If we changed grids (via portal), update current position to portal exit
-            if (waypoint.gridId != currentGridId) {
-                // Portal traversal - assume we land near the portal on the other side
-                // The portal's localCoord is where we need to go in the new grid
-                currentLocal = waypoint.localCoord;
-                currentGridId = waypoint.gridId;
-                continue;
-            }
-
-            // Same grid - validate we can walk from current position to waypoint
-            // EXCEPTION: Skip validation for portal and walk waypoints
-            // Portal waypoints: we trust that recorded portals are reachable
-            // Walk waypoints (edge crossings): trust chunk-level graph - we may not have walked
-            // across the entire chunk, but if chunks are connected, PathFinder will find a way
-            if (waypoint.type == ChunkPath.WaypointType.PORTAL_ENTRY ||
-                waypoint.type == ChunkPath.WaypointType.WALK) {
-                currentLocal = waypoint.localCoord;
-                continue;
-            }
-
-            // Only validate DESTINATION waypoints (final target)
-            ChunkNavData chunk = graph.getChunk(currentGridId);
-            if (chunk == null) {
-                // No chunk data - can't validate, assume passable
-                currentLocal = waypoint.localCoord;
-                continue;
-            }
-
-            // Check if we can reach this waypoint from current position
-            if (currentLocal != null && waypoint.localCoord != null) {
-                IntraPath intraPath = findPath(currentLocal, waypoint.localCoord, chunk);
-                if (!intraPath.reachable) {
-                    return false;
-                }
-            }
-
-            currentLocal = waypoint.localCoord;
-        }
-
-        return true;
-    }
-
-    /**
-     * Validate reachability from a position to a target area within the same chunk.
-     *
-     * @param fromLocal Starting local coordinate
-     * @param targetLocal Target local coordinate
-     * @param chunk The chunk data
-     * @return true if reachable, false if blocked
-     */
-    public static boolean canReachInChunk(Coord fromLocal, Coord targetLocal, ChunkNavData chunk) {
-        if (chunk == null || fromLocal == null || targetLocal == null) {
-            return true; // No data to validate, assume passable
-        }
-        IntraPath path = findPath(fromLocal, targetLocal, chunk);
-        return path.reachable;
-    }
-
-    /**
      * Result of intra-chunk pathfinding.
      */
     public static class IntraPath {
@@ -228,15 +89,6 @@ public class ChunkNavIntraPathfinder {
     }
 
     /**
-     * Check if a path exists between two points without returning the full path.
-     * More efficient for just checking reachability.
-     */
-    public static boolean canReach(Coord fromLocal, Coord toLocal, ChunkNavData chunk) {
-        IntraPath path = findPath(fromLocal, toLocal, chunk);
-        return path.reachable;
-    }
-
-    /**
      * A* pathfinding on the coarse cell grid.
      */
     private static IntraPath aStarPath(Coord fromCell, Coord toCell, ChunkNavData chunk) {
@@ -306,8 +158,7 @@ public class ChunkNavIntraPathfinder {
         if (walkability != 0) return; // Blocked (tile-level: only 0 is walkable)
 
         // With tile-level resolution, no partial walkability - uniform cost
-        float moveCost = baseCost;
-        float tentativeG = current.g + moveCost;
+        float tentativeG = current.g + baseCost;
 
         Node neighbor = allNodes.get(neighborPos);
         if (neighbor == null) {
@@ -355,17 +206,6 @@ public class ChunkNavIntraPathfinder {
      */
     public static Coord localToCell(Coord local) {
         return new Coord(local.x / COARSE_CELL_SIZE, local.y / COARSE_CELL_SIZE);
-    }
-
-    /**
-     * Convert cell coordinate to local tile coordinate.
-     * With tile-level resolution (COARSE_CELL_SIZE=1), this is an identity operation.
-     */
-    public static Coord cellToLocal(Coord cell) {
-        return new Coord(
-            cell.x * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2,
-            cell.y * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2
-        );
     }
 
     /**

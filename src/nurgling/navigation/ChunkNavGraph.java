@@ -55,14 +55,6 @@ public class ChunkNavGraph {
     }
 
     /**
-     * Get a chunk by grid coordinate.
-     */
-    public ChunkNavData getChunkByCoord(Coord gridCoord) {
-        Long gridId = gridCoordToId.get(gridCoord);
-        return gridId != null ? chunks.get(gridId) : null;
-    }
-
-    /**
      * Check if we have data for a chunk.
      */
     public boolean hasChunk(long gridId) {
@@ -81,34 +73,6 @@ public class ChunkNavGraph {
      */
     public int getChunkCount() {
         return chunks.size();
-    }
-
-    /**
-     * Find chunk containing a world coordinate.
-     */
-    public ChunkNavData findChunkAtWorldCoord(Coord2d worldCoord, MCache mcache) {
-        if (mcache == null) {
-            return null;
-        }
-
-        try {
-            Coord tileCoord = worldCoord.floor(MCache.tilesz);
-            MCache.Grid grid = mcache.getgridt(tileCoord);
-            if (grid != null) {
-                return chunks.get(grid.id);
-            }
-        } catch (Exception e) {
-            // Ignore
-        }
-        return null;
-    }
-
-    /**
-     * Get chunk containing the player.
-     */
-    public ChunkNavData getPlayerChunk() {
-        long gridId = getPlayerChunkId();
-        return gridId != -1 ? chunks.get(gridId) : null;
     }
 
     /**
@@ -142,43 +106,10 @@ public class ChunkNavGraph {
     }
 
     /**
-     * Get the player's current grid, recording it if necessary.
-     */
-    public long getPlayerChunkIdAndRecord(ChunkNavRecorder recorder) {
-        try {
-            if (NUtils.getGameUI() == null || NUtils.getGameUI().map == null) return -1;
-            MCache mcache = NUtils.getGameUI().map.glob.map;
-            Gob player = NUtils.player();
-            if (player == null) return -1;
-
-            Coord tileCoord = player.rc.floor(mcache.tilesz);
-            MCache.Grid grid = mcache.getgridt(tileCoord);
-            if (grid == null) return -1;
-
-            // Record if not already recorded
-            if (!hasChunk(grid.id) && recorder != null) {
-                recorder.recordGrid(grid);
-            }
-
-            return grid.id;
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-    /**
      * Find a portal by its gob hash.
      */
     public ChunkPortal findPortal(String gobHash) {
         return portalIndex.get(gobHash);
-    }
-
-    /**
-     * Get chunk containing a portal.
-     */
-    public ChunkNavData getChunkForPortal(String gobHash) {
-        Long gridId = portalToChunk.get(gobHash);
-        return gridId != null ? chunks.get(gridId) : null;
     }
 
     /**

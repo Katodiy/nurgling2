@@ -61,7 +61,7 @@ public class ChunkNavRecorder {
             }
 
             detectPortals(grid, chunk);
-            detectLayer(grid, chunk);
+            detectLayer(chunk);
             updateEdgeWalkability(chunk);
             discoverNeighbors(grid, chunk);
             chunk.markUpdated();
@@ -92,11 +92,6 @@ public class ChunkNavRecorder {
         // Build set of tiles blocked by gobs (only includes visible gobs)
         Set<Long> gobBlockedTiles = getGobBlockedTiles(grid);
 
-        int terrainBlockedCount = 0;
-        int gobBlockedCount = 0;
-        int walkableCount = 0;
-        int skippedCount = 0;
-
         for (int tx = 0; tx < CELLS_PER_EDGE; tx++) {
             for (int ty = 0; ty < CELLS_PER_EDGE; ty++) {
                 // Calculate world tile coordinate
@@ -106,7 +101,6 @@ public class ChunkNavRecorder {
                 int dx = Math.abs(worldTile.x - playerTile.x);
                 int dy = Math.abs(worldTile.y - playerTile.y);
                 if (dx > VISIBLE_RADIUS_TILES || dy > VISIBLE_RADIUS_TILES) {
-                    skippedCount++;
                     continue;  // Leave as unobserved (blocked by default)
                 }
 
@@ -122,13 +116,10 @@ public class ChunkNavRecorder {
 
                 // Record what we observe
                 if (terrainBlocked) {
-                    terrainBlockedCount++;
                     chunk.walkability[tx][ty] = 2;  // Blocked by terrain
                 } else if (gobBlocked) {
-                    gobBlockedCount++;
                     chunk.walkability[tx][ty] = 2;  // Blocked by gob
                 } else {
-                    walkableCount++;
                     chunk.walkability[tx][ty] = 0;  // Walkable
                 }
             }
@@ -221,11 +212,6 @@ public class ChunkNavRecorder {
         // Build set of tiles blocked by gobs
         Set<Long> gobBlockedTiles = getGobBlockedTiles(grid);
 
-        int terrainBlockedCount = 0;
-        int gobBlockedCount = 0;
-        int walkableCount = 0;
-        int skippedCount = 0;
-
         // DEBUG: Track floor tile bounds (non-nil tiles)
         int floorMinX = CELLS_PER_EDGE, floorMaxX = 0, floorMinY = CELLS_PER_EDGE, floorMaxY = 0;
 
@@ -238,7 +224,6 @@ public class ChunkNavRecorder {
                 int dx = Math.abs(worldTile.x - playerTile.x);
                 int dy = Math.abs(worldTile.y - playerTile.y);
                 if (dx > VISIBLE_RADIUS_TILES || dy > VISIBLE_RADIUS_TILES) {
-                    skippedCount++;
                     continue;  // Leave as unobserved (blocked by default)
                 }
 
@@ -254,7 +239,6 @@ public class ChunkNavRecorder {
 
                 // Classify tile: 0 = walkable, 2 = blocked
                 if (terrainBlocked) {
-                    terrainBlockedCount++;
                     chunk.walkability[tx][ty] = 2;  // Blocked
                 } else {
                     // This is a floor tile (non-nil) - track bounds
@@ -264,22 +248,14 @@ public class ChunkNavRecorder {
                     floorMaxY = Math.max(floorMaxY, ty);
 
                     if (gobBlocked) {
-                        gobBlockedCount++;
                         chunk.walkability[tx][ty] = 2;  // Blocked
                     } else {
-                        walkableCount++;
                         chunk.walkability[tx][ty] = 0;  // Walkable
                     }
                 }
             }
         }
-
-        int floorTileCount = gobBlockedCount + walkableCount;
     }
-
-    // Track unique tile types seen for debugging
-    private Set<String> debugSeenTileTypes = new HashSet<>();
-    private boolean debugTileTypesLogged = false;
 
     /**
      * Check if a tile is blocked by terrain.
@@ -303,7 +279,6 @@ public class ChunkNavRecorder {
     /**
      * Get set of all tiles blocked by gobs in this grid.
      * Returns tile keys as (localX << 32) | localY for efficient lookup.
-     *
      * Computes blocked tiles directly from gob positions (gob.rc) relative to the grid,
      * avoiding CellsArray coordinate issues in cellars/buildings where coordinate spaces
      * may differ between sessions.
@@ -408,9 +383,7 @@ public class ChunkNavRecorder {
         }
 
         // Mine holes
-        if (lower.contains("/minehole")) return true;
-
-        return false;
+        return lower.contains("/minehole");
     }
 
     /**
@@ -469,11 +442,9 @@ public class ChunkNavRecorder {
     /**
      * Detect the layer (surface/inside/cellar/mine1/mine2/etc.) based on gobs present in ANY loaded grid.
      * This is more reliable than tracking portal traversals.
-     *
      * When entering a cellar or going inside, the game loads a 3x3 grid of chunks.
      * The layer indicators (cellar stairs, doors, ladders) may only be in ONE of those grids,
      * but ALL loaded grids should be marked with the same layer.
-     *
      * Detection logic:
      * - cellarstairs present -> cellar
      * - ladder present (no building exterior) -> mine (level determined by tracking)
@@ -481,7 +452,7 @@ public class ChunkNavRecorder {
      * - building gob present (stonemansion, etc.) -> surface
      * - default -> surface
      */
-    private void detectLayer(MCache.Grid grid, ChunkNavData chunk) {
+    private void detectLayer(ChunkNavData chunk) {
         try {
             Glob glob = NUtils.getGameUI().ui.sess.glob;
             MCache mcache = getMCache();
@@ -554,11 +525,9 @@ public class ChunkNavRecorder {
 
     /**
      * Determine mine level based on tracked level from portal traversal.
-     *
      * Mine level is tracked as state in PortalTraversalTracker:
      * - When traversing minehole (going down): level++
      * - When traversing ladder (going up): level--
-     *
      * This method queries the current tracked level. If we're inside a mine
      * (tracker returns level > 0), we use that level. Otherwise fall back to
      * checking sibling grids.
@@ -611,28 +580,6 @@ public class ChunkNavRecorder {
     }
 
     /**
-     * Extract mine level number from layer string.
-     * Returns 0 for surface, 1+ for mine levels.
-     */
-    private int getMineLevel(String layer) {
-        if (layer == null) {
-            return 0;
-        }
-        if (layer.equals("mine")) {
-            // Legacy "mine" without number = mine level 1
-            return 1;
-        }
-        if (!layer.startsWith("mine")) {
-            return 0;
-        }
-        try {
-            return Integer.parseInt(layer.substring(4));
-        } catch (NumberFormatException e) {
-            return 1;
-        }
-    }
-
-    /**
      * Check if a gob name is a building exterior (visible from outside).
      */
     private boolean isBuildingExterior(String name) {
@@ -672,7 +619,7 @@ public class ChunkNavRecorder {
      * Record a portal traversal (player went through a door/stairs).
      * This updates the portal's connection information.
      */
-    public void recordPortalTraversal(String gobHash, long fromGridId, long toGridId) {
+    public void recordPortalTraversal(String gobHash, long toGridId) {
         ChunkPortal portal = graph.findPortal(gobHash);
         if (portal != null) {
             portal.connectsToGridId = toGridId;

@@ -1,8 +1,6 @@
 package nurgling.navigation;
 
 import haven.Coord;
-import haven.Coord2d;
-import haven.MCache;
 import nurgling.tasks.GateDetector;
 
 import java.util.*;
@@ -11,11 +9,9 @@ import static nurgling.navigation.ChunkNavConfig.*;
 
 /**
  * Unified A* pathfinder that operates on an implicit tile graph spanning all recorded chunks.
- *
  * The graph is implicit - nodes and edges are computed on-demand during A* expansion:
  * - Nodes: Any walkable tile in any recorded chunk
  * - Edges: Adjacent walkable tiles (same chunk), edge crossings (between chunks), portal connections
- *
  * This allows pathfinding through chunks that aren't currently visible, using only stored data.
  */
 public class UnifiedTilePathfinder {
@@ -303,9 +299,7 @@ public class UnifiedTilePathfinder {
         }
 
         // Same type (some portals are bidirectional with same gob)
-        if (entryGobName.equals(exitGobName)) return true;
-
-        return false;
+        return entryGobName.equals(exitGobName);
     }
 
     /**
@@ -339,7 +333,6 @@ public class UnifiedTilePathfinder {
     /**
      * Heuristic function for A* - estimates distance between two tiles.
      * Uses chunk-aware distance calculation.
-     *
      * IMPORTANT: gridCoord and worldTileOrigin are session-based and may be null
      * for chunks loaded from save files. Use neighbor-based estimation as fallback.
      */
@@ -472,8 +465,7 @@ public class UnifiedTilePathfinder {
     private double moveCost(TileNode from, TileNode to) {
         if (from.chunkId == to.chunkId) {
             // Same chunk - distance-based cost
-            double dist = from.localCoord.dist(to.localCoord);
-            return dist;
+            return from.localCoord.dist(to.localCoord);
         }
 
         // Cross-chunk movement
@@ -626,7 +618,7 @@ public class UnifiedTilePathfinder {
                     }
                 }
 
-                if (currentSegment != null && currentChunk != null) {
+                if (currentSegment != null) {
                     currentSegment.steps.add(new ChunkPath.TileStep(step.localCoord, currentChunk.worldTileOrigin));
                 }
             }
