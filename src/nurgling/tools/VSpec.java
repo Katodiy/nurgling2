@@ -1220,6 +1220,7 @@ public class VSpec {
         categories.put("Tuber", rootVegetables);
 
         ArrayList<JSONObject> onions = new ArrayList<>();
+        onions.add(new JSONObject("{\"static\":\"gfx/invobjs/preonion\",\"name\":\"Wild Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/yellowonion\",\"name\":\"Yellow Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/redonion\",\"name\":\"Red Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/garlic\",\"name\":\"Garlic\"}"));
