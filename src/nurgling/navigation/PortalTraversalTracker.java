@@ -47,7 +47,6 @@ public class PortalTraversalTracker {
     private long lastProcessedPortalGobId = -1;  // Gob ID of last processed portal (prevents re-capture)
 
     private static final long CHECK_INTERVAL_MS = 100;
-    private static final double PORTAL_PROXIMITY_THRESHOLD = 15.0;
 
     // Layer mappings based on portal exit type
     // Maps portal exit name patterns to the layer the destination chunk should be assigned
@@ -569,35 +568,6 @@ public class PortalTraversalTracker {
     }
 
     /**
-     * Get the local tile coordinate of a gob, using cached chunk data if the grid is unloaded.
-     * This is useful when we need the position of a gob on a grid that's no longer in MCache.
-     */
-    private Coord getGobLocalCoordFromCache(Gob gob, long expectedGridId) {
-        // First try the normal method
-        Coord normalCoord = getGobLocalCoord(gob);
-        if (normalCoord != null) {
-            return normalCoord;
-        }
-
-        // Grid might be unloaded - try to use stored worldTileOrigin from ChunkNavData
-        try {
-            ChunkNavData chunk = graph.getChunk(expectedGridId);
-            if (chunk != null && chunk.worldTileOrigin != null) {
-                Coord tileCoord = gob.rc.floor(MCache.tilesz);
-                Coord localCoord = tileCoord.sub(chunk.worldTileOrigin);
-                // Validate the local coord is within chunk bounds (0-99)
-                if (localCoord.x >= 0 && localCoord.x < 100 && localCoord.y >= 0 && localCoord.y < 100) {
-                    return localCoord;
-                }
-            }
-        } catch (Exception e) {
-            // Ignore
-        }
-
-        return null;
-    }
-
-    /**
      * Create a minimal chunk entry for a grid that wasn't recorded yet.
      */
     private ChunkNavData createMinimalChunk(long gridId) {
@@ -617,89 +587,6 @@ public class PortalTraversalTracker {
             // Ignore
         }
         return null;
-    }
-
-    /**
-     * Find a specific portal type nearby.
-     * Searches for a specific expected exit based on getDoorPair() mapping.
-     * This is more precise and prevents phantom portals from proximity matching the wrong type.
-     */
-    private Gob findSpecificPortalNearby(Gob player, String expectedPortalName) {
-        if (expectedPortalName == null || player == null) {
-            return null;
-        }
-
-        try {
-            // First try using Finder which searches all visible gobs
-            Gob found = Finder.findGob(new NAlias(expectedPortalName));
-            if (found != null && found.ngob != null && found.ngob.hash != null) {
-                return found;
-            }
-
-            // Fallback: search by proximity for the specific portal
-            Glob glob = NUtils.getGameUI().ui.sess.glob;
-            double closestDist = PORTAL_PROXIMITY_THRESHOLD;
-            Gob closest = null;
-
-            synchronized (glob.oc) {
-                for (Gob gob : glob.oc) {
-                    if (gob.ngob == null || gob.ngob.name == null) continue;
-
-                    // Check if this gob matches the expected portal name
-                    String gobName = gob.ngob.name;
-                    if (gobName.equals(expectedPortalName) ||
-                        gobName.endsWith("/" + getSimpleName(expectedPortalName)) ||
-                        expectedPortalName.endsWith("/" + getSimpleName(gobName))) {
-                        double dist = player.rc.dist(gob.rc);
-                        if (dist < closestDist) {
-                            closestDist = dist;
-                            closest = gob;
-                        }
-                    }
-                }
-            }
-
-            return closest;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /**
-     * Find an exit portal after traversing.
-     * Uses Finder.findGob which searches more broadly than proximity check.
-     */
-    private Gob findExitPortal(Gob player, String exitPortalName) {
-        try {
-            // First try using Finder which searches all visible gobs
-            Gob exitGob = Finder.findGob(new NAlias(exitPortalName));
-            if (exitGob != null) {
-                return exitGob;
-            }
-
-            // Fallback: search by proximity with larger radius
-            Glob glob = NUtils.getGameUI().ui.sess.glob;
-            double closestDist = PORTAL_PROXIMITY_THRESHOLD * 4;  // Much larger radius for exit search
-            Gob closest = null;
-
-            synchronized (glob.oc) {
-                for (Gob gob : glob.oc) {
-                    if (gob.ngob == null || gob.ngob.name == null) continue;
-
-                    if (gob.ngob.name.contains(exitPortalName) || exitPortalName.contains(gob.ngob.name)) {
-                        double dist = player.rc.dist(gob.rc);
-                        if (dist < closestDist) {
-                            closestDist = dist;
-                            closest = gob;
-                        }
-                    }
-                }
-            }
-
-            return closest;
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     /**
@@ -940,15 +827,6 @@ public class PortalTraversalTracker {
      */
     public int getCurrentMineLevel() {
         return currentMineLevel;
-    }
-
-    /**
-     * Set the current mine level. Useful when restoring state from a known position.
-     * @param level The mine level (0 = surface, 1 = mine1, etc.)
-     */
-    public void setCurrentMineLevel(int level) {
-        this.currentMineLevel = Math.max(0, level);
-        this.mineLevelInitialized = true;
     }
 
     /**
