@@ -93,12 +93,21 @@ public class PortalTraversalTracker {
 
     // Portal resource patterns to track
     // Note: "gate" is intentionally excluded - gates are passthrough openings, not teleporting portals
+    // Buildings are included because clicking them teleports you inside (the door is implicit)
     private static final String[] PORTAL_PATTERNS = {
         "door",
         "cellar",
         "minehole",
         "ladder",
-        "stairs"
+        "stairs",
+        // Buildings - clicking these teleports you inside
+        "stonemansion",
+        "logcabin",
+        "timberhouse",
+        "stonestead",
+        "greathall",
+        "stonetower",
+        "windmill"
     };
 
     public PortalTraversalTracker(ChunkNavGraph graph, ChunkNavRecorder recorder) {
