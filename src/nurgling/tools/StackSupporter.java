@@ -24,11 +24,14 @@ public class StackSupporter {
         customStackSizes.put("Gooseneck Barnacle", 4);
         customStackSizes.put("River Pearl Mussel", 4);
         customStackSizes.put("Tuft of Squirrel's Finest Hair", 3);
-        customStackSizes.put("Ghostpipe", 3);
         customStackSizes.put("Forest Lizard", 3);
         customStackSizes.put("Cavebulb", 4);
         customStackSizes.put("Dusk Fern", 4);
         customStackSizes.put("Frog", 3);
+        customStackSizes.put("Toad", 3);
+        customStackSizes.put("Waybroad", 4);
+        customStackSizes.put("Green Kelp", 4);
+
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
         size3.add("Onion");
@@ -52,7 +55,6 @@ public class StackSupporter {
         size3.add("Solid Fat");
         size3.add("Cured Tea");
         size3.add("Snail");
-        size3.add("Clean Animal Carcass");
         size3.add("Edible Seashell");
         size3.add("Candle");
         size3.add("Pearl");
@@ -74,6 +76,7 @@ public class StackSupporter {
         size3.add("Medicine");
         size3.add("Intestines");
         size3.add("Bait");
+        size3.add("Pipeweed");
         catSize.put(size3,3);
 
         HashSet<String> size4 = new HashSet<>();
@@ -147,8 +150,6 @@ public class StackSupporter {
         catExceptions.add("Silkworm");
         catExceptions.add("Female Silkmoth");
         catExceptions.add("Male Silkmoth");
-        catExceptions.add("Clean Squirrel Carcass");
-        catExceptions.add("Clean Rabbit Carcass");
         catExceptions.add("Bog Turtle Shell");
         catExceptions.add("Cleaned Bat");
         catExceptions.add("Mole's Pawbone");
