@@ -113,7 +113,7 @@ public class PortalTraversalTracker {
      * Call this periodically to check for portal traversals.
      * Safe to call frequently - internally throttled.
      */
-    public void tick() {
+    public void tick() throws InterruptedException {
         long now = System.currentTimeMillis();
         if (now - lastCheckTime < CHECK_INTERVAL_MS) {
             return;
@@ -122,7 +122,7 @@ public class PortalTraversalTracker {
         doCheck();
     }
 
-    private void doCheck() {
+    private void doCheck() throws InterruptedException {
         Gob player = NUtils.player();
         if (player == null) return;
 
@@ -194,7 +194,7 @@ public class PortalTraversalTracker {
     /**
      * Called when player's grid ID changes.
      */
-    private void onGridChanged(long fromGridId, long toGridId, Gob player) {
+    private void onGridChanged(long fromGridId, long toGridId, Gob player) throws InterruptedException {
         // Check for duplicate grid transition (same transition firing multiple times)
         long now = System.currentTimeMillis();
         if (fromGridId == lastProcessedFromGridId && toGridId == lastProcessedToGridId &&
@@ -244,15 +244,7 @@ public class PortalTraversalTracker {
         for (int i = 0; i < 5 && exitPortal == null; i++) {
             if (expectedExitName != null) {
                 // We know exactly what exit to look for - search specifically for it
-                exitPortal = findSpecificPortalNearby(player, expectedExitName);
-            }
-
-            if (exitPortal == null) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    break;
-                }
+                exitPortal = Finder.findGob(new NAlias(expectedExitName));
             }
         }
         if (exitPortal == null || exitPortal.ngob == null) {
