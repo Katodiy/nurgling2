@@ -132,15 +132,6 @@ public class PortalTraversalTracker {
             initializeMineLevelFromCurrentGrid(currentGridId);
         }
 
-        // Calculate player's current local coord in their CURRENT grid
-        Coord currentPlayerLocalCoord = null;
-        MCache mcache = NUtils.getGameUI().map.glob.map;
-        Coord tileCoord = player.rc.floor(MCache.tilesz);
-        MCache.Grid grid = mcache.getgridt(tileCoord);
-        if (grid != null && grid.id == currentGridId) {
-            currentPlayerLocalCoord = tileCoord.sub(grid.ul);
-        }
-
         // Check for grid change
         if (lastGridId != -1 && currentGridId != lastGridId) {
             onGridChanged(lastGridId, currentGridId, player);
@@ -153,28 +144,21 @@ public class PortalTraversalTracker {
         // This preserves the clicked portal info even after the grid changes
         // Only capture if it's a NEW portal (different from the last one we processed)
         // This prevents re-capturing stale actions after we've already recorded the portal
-        try {
-            NCore.LastActions lastActions = NUtils.getUI().core.getLastActions();
-            if (lastActions != null && lastActions.gob != null && lastActions.gob.ngob != null) {
-                String gobName = lastActions.gob.ngob.name;
-                // Only capture if it's a portal AND it's not the same one we already processed
-                if (isPortalGob(gobName) && lastActions.gob.id != lastProcessedPortalGobId) {
-                    cachedLastActionsGob = lastActions.gob;
-                    // Use getPortalLocalCoord which offsets buildings toward player for stable door position
-                    Coord portalCoord = getPortalLocalCoord(lastActions.gob, player);
-                    if (portalCoord != null) {
-                        cachedLastActionsGobLocalCoord = portalCoord;
-                    }
-                    // Cache the portal's actual grid ID while the grid is still loaded (fixes boundary bug)
-                    cachedLastActionsGobGridId = getGobGridId(lastActions.gob);
+        NCore.LastActions lastActions = NUtils.getUI().core.getLastActions();
+        if (lastActions != null && lastActions.gob != null && lastActions.gob.ngob != null) {
+            String gobName = lastActions.gob.ngob.name;
+            // Only capture if it's a portal AND it's not the same one we already processed
+            if (isPortalGob(gobName) && lastActions.gob.id != lastProcessedPortalGobId) {
+                cachedLastActionsGob = lastActions.gob;
+                // Use getPortalLocalCoord which offsets buildings toward player for stable door position
+                Coord portalCoord = getPortalLocalCoord(lastActions.gob, player);
+                if (portalCoord != null) {
+                    cachedLastActionsGobLocalCoord = portalCoord;
                 }
+                // Cache the portal's actual grid ID while the grid is still loaded (fixes boundary bug)
+                cachedLastActionsGobGridId = getGobGridId(lastActions.gob);
             }
-        } catch (Exception e) {
-            // Ignore
         }
-
-        // NOTE: Stairs (upstairs/downstairs) DO cause grid changes, just like doors.
-        // They are handled by the normal onGridChanged() logic, not special same-grid handling.
     }
 
     /**
@@ -217,7 +201,7 @@ public class PortalTraversalTracker {
         // This works for both manual and automated navigation since the game tracks all clicks
         // If we know what portal was clicked, search for the SPECIFIC expected exit using getDoorPair()
         // This prevents phantom portals from proximity matching the wrong portal type
-        Gob exitPortal = null;
+        Gob exitPortal;
         String expectedExitName = null;
 
         // First, try to determine the expected exit from what we clicked
@@ -291,9 +275,9 @@ public class PortalTraversalTracker {
                 // Verify this is the entrance portal we're looking for
                 // Use strict matching: must be exact match OR cachedName must be the building (entranceName)
                 // NOT the reverse (don't match stonemansion-door when looking for stonemansion)
-                if (cachedName != null && isPortalGob(cachedName) &&
-                    (cachedName.equals(entranceName) ||
-                     cachedName.endsWith("/" + getSimpleName(entranceName)))) {
+                if (isPortalGob(cachedName) &&
+                        (cachedName.equals(entranceName) ||
+                                cachedName.endsWith("/" + getSimpleName(entranceName)))) {
                     entranceCoord = cachedLastActionsGobLocalCoord;
                     entranceHash = getPortalHash(cachedLastActionsGob);
                     // Use the portal's actual grid ID (fixes boundary bug)
@@ -351,7 +335,7 @@ public class PortalTraversalTracker {
         // Do NOT use findPortalByName - that causes all buildings with same name to merge
         // Use position+name to avoid merging different portal types at same location (e.g., cellardoor vs stonemansion-door)
         ChunkPortal portal = fromChunk.findPortal(gobHash);
-        if (portal == null && portalCoord != null && gobName != null) {
+        if (portal == null && gobName != null) {
             portal = fromChunk.findPortalByPositionAndName(portalCoord, gobName, 3);
         }
 
@@ -658,7 +642,6 @@ public class PortalTraversalTracker {
     private void updateAllLoadedGridsToMineLevel(String mineLayer, long excludeGridId) {
         try {
             MCache mcache = NUtils.getGameUI().map.glob.map;
-            if (mcache == null) return;
 
             synchronized (mcache.grids) {
                 for (MCache.Grid grid : mcache.grids.values()) {
@@ -830,11 +813,9 @@ public class PortalTraversalTracker {
      * Check if two layers are the same "type" (meaning crossing between them does NOT require a portal).
      * Returns true if they're the same type AND you can walk between grids without a portal.
      * If either is null, returns false (can't determine, so assume portal was used).
-     *
      * Layer types where same→same means NO portal:
      * - surface: Can walk between surface grids without portal
      * - mine, mine1, mine2: Can walk between mine grids at same level without portal
-     *
      * Layer types where same→same DOES require a portal:
      * - inside: All building floors are "inside" - stairs between floors are portals
      * - cellar: Unlikely to span multiple grids, but if so, treat as portal
@@ -853,8 +834,6 @@ public class PortalTraversalTracker {
         if (layer1.equals(layer2)) return true;
 
         // Both are mine types - can walk between grids in the same mine level without portals
-        if (layer1.startsWith("mine") && layer2.startsWith("mine")) return true;
-
-        return false;
+        return layer1.startsWith("mine") && layer2.startsWith("mine");
     }
 }
