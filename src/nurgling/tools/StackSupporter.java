@@ -64,8 +64,8 @@ public class StackSupporter {
         size3.add("Any Brick");
         size3.add("Clay");
         size3.add("Casting Material");
-        size3.add("Board");
-        size3.add("Block of Wood");
+//        size3.add("Board");   //Boards are not stackable
+//        size3.add("Block of Wood");  //Blocks of Wood are not stackable
         size3.add("Ore");
         size3.add("Stone");
         size3.add("Lures");
