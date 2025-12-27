@@ -931,16 +931,19 @@ public class ChunkNavExecutor implements Action {
         if (gobName == null) return 0;
         String lower = gobName.toLowerCase();
 
-        // For building doors and whole-building gobs, we need to stand OUTSIDE the door
+        // Interior doors (seen from inside) - no offset needed, walk directly to door
+        if (lower.contains("-door")) return 0;
+
+        // For exterior building gobs, we need to stand OUTSIDE the door
         // Offset by 2-3 tiles in the direction the building faces
-        if (lower.contains("stonemansion") || lower.contains("stonemansion-door")) return 3;
-        if (lower.contains("logcabin") || lower.contains("logcabin-door")) return 2;
-        if (lower.contains("timberhouse") || lower.contains("timberhouse-door")) return 2;
-        if (lower.contains("stonestead") || lower.contains("stonestead-door")) return 2;
-        if (lower.contains("greathall") || lower.contains("greathall-door")) return 3;
-        if (lower.contains("stonetower") || lower.contains("stonetower-door")) return 2;
-        if (lower.contains("windmill") || lower.contains("windmill-door")) return 2;
-        if (lower.contains("primitivetent") || lower.contains("primitivetent-door")) return 2;
+        if (lower.contains("stonemansion")) return 6;
+        if (lower.contains("logcabin")) return 2;
+        if (lower.contains("timberhouse")) return 2;
+        if (lower.contains("stonestead")) return 2;
+        if (lower.contains("greathall")) return 3;
+        if (lower.contains("stonetower")) return 2;
+        if (lower.contains("windmill")) return 2;
+        if (lower.contains("primitivetent")) return 2;
 
         // Mineholes also need an offset (like routes system does)
         if (lower.contains("minehole")) return 2;

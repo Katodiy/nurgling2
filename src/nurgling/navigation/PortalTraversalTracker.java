@@ -521,9 +521,12 @@ public class PortalTraversalTracker {
         if (gobName == null) return 0;
         String lower = gobName.toLowerCase();
 
+        // Interior doors (seen from inside) - no offset needed
+        if (lower.contains("-door")) return 0;
+
         // Buildings where the gob is the whole structure and door is on the edge
         // Offset is approximate distance from center to door in tiles
-        if (lower.contains("stonemansion")) return 5;
+        if (lower.contains("stonemansion")) return 6;
         if (lower.contains("logcabin")) return 3;
         if (lower.contains("timberhouse")) return 3;
         if (lower.contains("stonestead")) return 4;

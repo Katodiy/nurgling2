@@ -121,11 +121,7 @@ public class ChunkNavManager {
     public void tick() {
         if (!enabled || !initialized) return;
 
-        try {
-            portalTracker.tick();
-        } catch (Exception e) {
-            // Ignore - player might not exist
-        }
+        portalTracker.tick();
 
         // Periodically record all visible grids (not just newly loaded ones)
         long now = System.currentTimeMillis();
