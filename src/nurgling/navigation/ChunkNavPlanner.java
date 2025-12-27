@@ -62,6 +62,10 @@ public class ChunkNavPlanner {
         ChunkPath path = new ChunkPath();
         unifiedPath.populateChunkPath(path, graph);
 
+        // Truncate path at first tile that enters the target area
+        // This prevents walking through the entire area to reach the far corner
+        truncatePathAtAreaEntry(path, area);
+
         return path;
     }
 
@@ -293,6 +297,69 @@ public class ChunkNavPlanner {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    // ============= Path truncation for efficient area navigation =============
+
+    /**
+     * Check if a local coordinate is inside the area bounds for a chunk.
+     */
+    private boolean isInsideVArea(Coord localCoord, NArea.VArea varea) {
+        if (varea == null || varea.area == null) return false;
+
+        int minX = varea.area.ul.x;
+        int minY = varea.area.ul.y;
+        int maxX = varea.area.br.x;
+        int maxY = varea.area.br.y;
+
+        return localCoord.x >= minX && localCoord.x <= maxX &&
+               localCoord.y >= minY && localCoord.y <= maxY;
+    }
+
+    /**
+     * Truncate the path at the first tile that enters the target area.
+     * This prevents walking through an entire area to reach the far corner.
+     * Instead, navigation stops as soon as we enter the area bounds.
+     */
+    private void truncatePathAtAreaEntry(ChunkPath path, NArea area) {
+        if (path == null || area == null) return;
+        if (area.space == null || area.space.space == null) return;
+        if (path.segments == null || path.segments.isEmpty()) return;
+
+        for (int segIdx = 0; segIdx < path.segments.size(); segIdx++) {
+            ChunkPath.PathSegment segment = path.segments.get(segIdx);
+
+            // Check if the area exists in this chunk
+            NArea.VArea varea = area.space.space.get(segment.gridId);
+            if (varea == null || varea.area == null) {
+                continue; // Area not in this chunk, keep going
+            }
+
+            // Area exists in this chunk - check each step
+            for (int stepIdx = 0; stepIdx < segment.steps.size(); stepIdx++) {
+                ChunkPath.TileStep step = segment.steps.get(stepIdx);
+
+                if (isInsideVArea(step.localCoord, varea)) {
+                    // Found entry point! Truncate here.
+
+                    // Keep steps up to and including this one
+                    if (stepIdx + 1 < segment.steps.size()) {
+                        segment.steps = new ArrayList<>(segment.steps.subList(0, stepIdx + 1));
+                    }
+
+                    // Remove all subsequent segments
+                    if (segIdx + 1 < path.segments.size()) {
+                        path.segments = new ArrayList<>(path.segments.subList(0, segIdx + 1));
+                    }
+
+                    // Mark this segment as destination
+                    segment.type = ChunkPath.SegmentType.WALK;
+
+                    return; // Done truncating
+                }
+            }
+        }
+        // If we get here, path never entered the area (shouldn't happen for valid paths)
     }
 
     // ============= Legacy chunk-level A* methods (kept for compatibility) =============
