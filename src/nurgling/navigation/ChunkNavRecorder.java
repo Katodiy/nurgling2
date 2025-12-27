@@ -6,7 +6,6 @@ import nurgling.NUtils;
 import nurgling.tasks.GateDetector;
 
 import java.util.*;
-import java.util.function.Supplier;
 
 import static nurgling.navigation.ChunkNavConfig.*;
 import static nurgling.navigation.ChunkNavData.Direction;
@@ -17,7 +16,6 @@ import static nurgling.navigation.ChunkNavData.Direction;
  */
 public class ChunkNavRecorder {
     private final ChunkNavGraph graph;
-    private final Supplier<Integer> mineLevelSupplier;
 
     // Blocked tile patterns
     // NOTE: "nil" = void/nothing, must be blocked (areas outside playable space)
@@ -29,9 +27,8 @@ public class ChunkNavRecorder {
             "gfx/tiles/odeep"
     ));
 
-    public ChunkNavRecorder(ChunkNavGraph graph, Supplier<Integer> mineLevelSupplier) {
+    public ChunkNavRecorder(ChunkNavGraph graph) {
         this.graph = graph;
-        this.mineLevelSupplier = mineLevelSupplier;
     }
 
     /**
@@ -392,144 +389,46 @@ public class ChunkNavRecorder {
 
 
     /**
-     * Detect the layer (surface/inside/cellar/mine1/mine2/etc.).
-     *
-     * PRIORITY ORDER:
-     * 1. Trust the PortalTraversalTracker's current mine level (most reliable for mines)
-     * 2. Use gob-based detection for non-mine layers (cellar, inside, surface)
-     * 3. Fall back to gob-based detection if tracker has no info
-     *
-     * This approach ensures that when walking between grids in a mine without
-     * layer-indicating gobs (no ladder/minehole), the layer is inherited correctly
-     * from the tracker's state rather than incorrectly defaulting to "surface".
+     * Detect the layer (outside/inside/cellar).
+     * - "cellar" if we see cellarstairs
+     * - "inside" if we see a door but no building exterior (we're inside a building)
+     * - "outside" for everything else (surface, mines, etc.)
      */
     private void detectLayer(ChunkNavData chunk) {
         try {
-            // FIRST: Check if we're in a mine according to the tracker
-            // This is the most reliable source since it tracks portal traversals
-            int trackedMineLevel = getTrackedMineLevel();
-            if (trackedMineLevel > 0) {
-                // We're in a mine - trust the tracker's level
-                chunk.layer = "mine" + trackedMineLevel;
-                return;
-            }
-
-            // Not in a mine (or tracker doesn't know) - use gob-based detection
             Glob glob = NUtils.getGameUI().ui.sess.glob;
-            MCache mcache = getMCache();
-            if (mcache == null) return;
 
             boolean hasCellarStairs = false;
-            boolean hasLadder = false;  // Mine ladder (leads up)
-            boolean hasDoor = false;  // Any door means we're inside
+            boolean hasDoor = false;
             boolean hasBuildingExterior = false;
 
-            // Check ALL gobs in the world, not just this grid
-            // Layer indicators might be in any of the loaded grids
             synchronized (glob.oc) {
                 for (Gob gob : glob.oc) {
                     if (gob.ngob == null || gob.ngob.name == null) continue;
 
                     String name = gob.ngob.name.toLowerCase();
 
-                    // Cellar stairs (inside cellar, leads up)
                     if (name.contains("cellarstairs")) {
                         hasCellarStairs = true;
-                    }
-                    // Mine ladder (inside mine, leads up to previous level)
-                    else if (name.contains("/ladder")) {
-                        hasLadder = true;
-                    }
-                    // Any door gob ending with -door means we're inside a building
-                    else if (name.endsWith("-door") || name.endsWith("door")) {
+                    } else if (name.endsWith("-door") || name.endsWith("door")) {
                         hasDoor = true;
-                    }
-                    // Building exterior (stonemansion, logcabin, etc. - seen from outside)
-                    else if (isBuildingExterior(name)) {
+                    } else if (isBuildingExterior(name)) {
                         hasBuildingExterior = true;
                     }
                 }
             }
 
-            // Determine layer based on what we found (priority order)
-            String detectedLayer;
             if (hasCellarStairs) {
-                // Cellar stairs means we're IN the cellar
-                detectedLayer = "cellar";
-            } else if (hasLadder && !hasBuildingExterior) {
-                // Ladder visible (no building) means we're in a mine
-                // Use tracker level or detect from sibling grids
-                detectedLayer = detectMineLevel(chunk);
+                chunk.layer = "cellar";
             } else if (hasDoor && !hasBuildingExterior) {
-                // Door visible but NO building exterior means we're inside a building
-                detectedLayer = "inside";
+                chunk.layer = "inside";
             } else {
-                // Default to surface (includes minehole on surface case)
-                detectedLayer = "surface";
+                chunk.layer = "outside";
             }
-
-            chunk.layer = detectedLayer;
 
         } catch (Exception e) {
             // Ignore layer detection errors
         }
-    }
-
-    /**
-     * Get the current mine level from the PortalTraversalTracker.
-     * @return Mine level (0 = not in mine/unknown, 1+ = mine level)
-     */
-    private int getTrackedMineLevel() {
-        if (mineLevelSupplier != null) {
-            return mineLevelSupplier.get();
-        }
-        return 0;
-    }
-
-    /**
-     * Determine mine level based on tracked level from portal traversal.
-     * Mine level is tracked as state in PortalTraversalTracker:
-     * - When traversing minehole (going down): level++
-     * - When traversing ladder (going up): level--
-     * This method queries the current tracked level. If we're inside a mine
-     * (tracker returns level > 0), we use that level, otherwise fall back to
-     * checking sibling grids.
-     */
-    private String detectMineLevel(ChunkNavData chunk) {
-        // 1. Already has a proper numbered mine layer (mine1, mine2, etc.) - keep it
-        if (chunk.layer != null && chunk.layer.matches("mine\\d+")) {
-            return chunk.layer;
-        }
-
-        // 2. Check the tracked mine level from portal traversal
-        int trackedLevel = getTrackedMineLevel();
-        if (trackedLevel > 0) {
-            return "mine" + trackedLevel;
-        }
-
-        // 3. Check sibling grids - if another loaded grid has a mine level, use it
-        // This ensures all grids in the same mine area get the same level
-        try {
-            MCache mcache = getMCache();
-            if (mcache != null) {
-                synchronized (mcache.grids) {
-                    for (MCache.Grid g : mcache.grids.values()) {
-                        if (g.id == chunk.gridId) continue;
-                        ChunkNavData other = graph.getChunk(g.id);
-                        if (other != null && other.layer != null && other.layer.matches("mine\\d+")) {
-                            return other.layer;
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Ignore
-        }
-
-        // 4. If we got here, we're detecting mine level before any traversal
-        // This can happen if we're exploring an existing mine area
-        // Default to mine1 as the safest assumption
-        return "mine1";
     }
 
     /**

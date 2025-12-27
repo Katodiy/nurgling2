@@ -109,7 +109,7 @@ public class ChunkNavExecutor implements Action {
             segmentIndex++;
 
             ChunkNavData segmentChunk = graph.getChunk(segment.gridId);
-            Layer segmentLayer = segmentChunk != null ? Layer.fromString(segmentChunk.layer) : Layer.SURFACE;
+            Layer segmentLayer = segmentChunk != null ? Layer.fromString(segmentChunk.layer) : Layer.OUTSIDE;
             boolean sameLayer = segmentLayer == currentLayer;
 
             if (sameLayer) {
@@ -160,7 +160,7 @@ public class ChunkNavExecutor implements Action {
         } catch (Exception e) {
             // Ignore
         }
-        return Layer.SURFACE;
+        return Layer.OUTSIDE;
     }
 
     /**
@@ -171,7 +171,7 @@ public class ChunkNavExecutor implements Action {
         if (player == null) return Results.FAIL();
 
         ChunkNavData sourceChunk = graph.getChunk(segment.gridId);
-        Layer sourceLayer = sourceChunk != null ? Layer.fromString(sourceChunk.layer) : Layer.SURFACE;
+        Layer sourceLayer = sourceChunk != null ? Layer.fromString(sourceChunk.layer) : Layer.OUTSIDE;
         ChunkNavData targetChunk = graph.getChunk(targetGridId);
         Layer targetLayer = targetChunk != null ? Layer.fromString(targetChunk.layer) : Layer.UNKNOWN;
 
@@ -211,11 +211,6 @@ public class ChunkNavExecutor implements Action {
 
         for (ChunkPortal portal : portals) {
             int score = 0;
-
-            // Skip building gobs when transitioning to mine
-            if (targetLayer.isMine() && isBuildingGob(portal.gobName)) {
-                continue;
-            }
 
             // Connects to target grid: +100
             if (portal.connectsToGridId == targetGridId) {
@@ -273,24 +268,8 @@ public class ChunkNavExecutor implements Action {
     private String getExpectedPortalType(Layer sourceLayer, Layer targetLayer) {
         if (sourceLayer == null || targetLayer == null) return null;
 
-        // Surface/inside -> mine: use minehole
-        if (!sourceLayer.isMine() && targetLayer.isMine()) {
-            return "minehole";
-        }
-        // Mine -> surface/shallower mine: use ladder
-        if (sourceLayer.isMine() && !targetLayer.isMine()) {
-            return "ladder";
-        }
-        // Mine level changes
-        if (sourceLayer.isMine() && targetLayer.isMine()) {
-            if (targetLayer.getMineLevel() > sourceLayer.getMineLevel()) {
-                return "minehole";  // Going deeper
-            } else if (targetLayer.getMineLevel() < sourceLayer.getMineLevel()) {
-                return "ladder";    // Going up
-            }
-        }
-        // Inside -> surface: use -door suffix
-        if (sourceLayer == Layer.INSIDE && targetLayer == Layer.SURFACE) {
+        // Inside -> outside: use -door suffix (exiting building)
+        if (sourceLayer == Layer.INSIDE && targetLayer == Layer.OUTSIDE) {
             return "-door";
         }
         // Inside -> cellar: use cellardoor
@@ -302,6 +281,8 @@ public class ChunkNavExecutor implements Action {
             return "cellarstairs";
         }
 
+        // For OUTSIDE -> OUTSIDE transitions (including mines), the portal type is
+        // determined by the recorded portal connection, not by layer comparison
         return null;
     }
 

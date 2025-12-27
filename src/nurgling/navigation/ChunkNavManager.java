@@ -53,9 +53,7 @@ public class ChunkNavManager {
 
     public ChunkNavManager() {
         this.graph = new ChunkNavGraph();
-        // Pass a supplier that accesses portalTracker at call time (not capture time)
-        this.recorder = new ChunkNavRecorder(graph,
-            () -> portalTracker != null ? portalTracker.getCurrentMineLevel() : 0);
+        this.recorder = new ChunkNavRecorder(graph);
         this.planner = new ChunkNavPlanner(graph);
         this.portalTracker = new PortalTraversalTracker(graph, recorder);
 
@@ -106,8 +104,7 @@ public class ChunkNavManager {
 
         this.currentGenus = genus;
         this.graph = new ChunkNavGraph();
-        this.recorder = new ChunkNavRecorder(graph,
-            () -> portalTracker != null ? portalTracker.getCurrentMineLevel() : 0);
+        this.recorder = new ChunkNavRecorder(graph);
         this.planner = new ChunkNavPlanner(graph);
         this.portalTracker = new PortalTraversalTracker(graph, recorder);
 

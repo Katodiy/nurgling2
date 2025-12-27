@@ -28,9 +28,9 @@ public class ChunkNavData {
     public long neighborEast = -1;   // Grid ID of neighbor to the east (gc.x + 1)
     public long neighborWest = -1;   // Grid ID of neighbor to the west (gc.x - 1)
 
-    // Layer identifier - different physical spaces that may share coordinates
-    // "surface" = outside world (default), "inside" = building interior, "cellar" = underground cellar, etc.
-    public String layer = "surface";
+    // Layer identifier - distinguishes walkable outdoor areas from building interiors
+    // "outside" = surface + mines (can walk between grids), "inside" = building interior, "cellar" = underground cellar
+    public String layer = "outside";
 
     // Walkability grid (tile-level resolution)
     // Each cell represents 1 tile (100x100 grid for 100x100 chunk)
@@ -316,8 +316,8 @@ public class ChunkNavData {
         data.neighborEast = obj.optLong("neighborEast", -1);
         data.neighborWest = obj.optLong("neighborWest", -1);
 
-        // Layer (default to "surface" for backwards compatibility)
-        data.layer = obj.optString("layer", "surface");
+        // Layer
+        data.layer = obj.optString("layer", "outside");
 
         // Walkability
         JSONArray walkArr = obj.getJSONArray("walkability");

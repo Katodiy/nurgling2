@@ -26,11 +26,6 @@ public class PortalTraversalTracker {
     private long lastGridId = -1;
     private long lastCheckTime = 0;
 
-    // Mine level tracking - tracks how deep we are in the mine
-    // 0 = surface, 1 = mine1, 2 = mine2, etc.
-    private int currentMineLevel = 0;
-    private boolean mineLevelInitialized = false;  // Has mine level been initialized from current grid?
-
     // Duplicate grid transition prevention
     private long lastProcessedFromGridId = -1;
     private long lastProcessedToGridId = -1;
@@ -49,18 +44,14 @@ public class PortalTraversalTracker {
     // Layer mappings based on portal exit type
     // Maps portal exit name patterns to the layer the destination chunk should be assigned
     // The EXIT portal (what you see after traversing) determines the layer
+    // Only "inside" and "cellar" are special - everything else is "outside" (walkable between grids)
     private static final Map<String, String> PORTAL_TO_LAYER = new HashMap<>();
     static {
-        // When you see cellardoor as exit -> you're INSIDE the building (you came up from cellar)
-        // The cellardoor is the entrance TO the cellar, located on the inside floor
-        PORTAL_TO_LAYER.put("cellardoor", "inside");
+        // Cellar
+        PORTAL_TO_LAYER.put("cellardoor", "inside");     // Exiting cellar -> inside building
+        PORTAL_TO_LAYER.put("cellarstairs", "cellar");   // Entering cellar -> cellar
 
-        // When you see cellarstairs as exit -> you're IN the cellar (you went down)
-        // The cellarstairs is what you see AT THE BOTTOM after going down
-        PORTAL_TO_LAYER.put("cellarstairs", "cellar");
-
-        // When you see a *-door as exit -> you're inside the building (you entered from outside)
-        // These are the "-door" variants you see INSIDE the building after entering
+        // Building interiors (entering from outside)
         PORTAL_TO_LAYER.put("stonemansion-door", "inside");
         PORTAL_TO_LAYER.put("logcabin-door", "inside");
         PORTAL_TO_LAYER.put("timberhouse-door", "inside");
@@ -69,26 +60,12 @@ public class PortalTraversalTracker {
         PORTAL_TO_LAYER.put("stonetower-door", "inside");
         PORTAL_TO_LAYER.put("windmill-door", "inside");
 
-        // When you see the building gob as exit -> you're outside on surface (you exited the building)
-        // These are the building gobs you see OUTSIDE after leaving the building
-        PORTAL_TO_LAYER.put("stonemansion", "surface");
-        PORTAL_TO_LAYER.put("logcabin", "surface");
-        PORTAL_TO_LAYER.put("timberhouse", "surface");
-        PORTAL_TO_LAYER.put("stonestead", "surface");
-        PORTAL_TO_LAYER.put("greathall", "surface");
-        PORTAL_TO_LAYER.put("stonetower", "surface");
-        PORTAL_TO_LAYER.put("windmill", "surface");
-
-        // Stairs between floors - all floors inside a building are "inside" layer
-        // When you see downstairs as exit -> you're on an upper floor (still "inside")
+        // Stairs between floors (still inside)
         PORTAL_TO_LAYER.put("downstairs", "inside");
-        // When you see upstairs as exit -> you're on a lower floor (still "inside")
         PORTAL_TO_LAYER.put("upstairs", "inside");
 
-        // Mine and underground
-        PORTAL_TO_LAYER.put("minehole", "mine");
-        PORTAL_TO_LAYER.put("ladderdown", "underground");
-        PORTAL_TO_LAYER.put("ladderup", "surface");
+        // Everything else (exiting buildings, mines) -> outside
+        // Buildings, minehole, ladder all lead to "outside" (walkable between grids)
     }
 
     // Portal resource patterns to track
@@ -135,12 +112,6 @@ public class PortalTraversalTracker {
         long currentGridId = graph.getPlayerChunkId();
         if (currentGridId == -1) return;
 
-        // Initialize mine level from current grid's layer on first valid tick
-        // This handles login/teleport where we need to know our starting level
-        if (!mineLevelInitialized) {
-            initializeMineLevelFromCurrentGrid(currentGridId);
-        }
-
         // Check for grid change
         if (lastGridId != -1 && currentGridId != lastGridId) {
             onGridChanged(lastGridId, currentGridId, player);
@@ -184,8 +155,6 @@ public class PortalTraversalTracker {
         // Check if player landed on their hearthfire - this indicates a teleport, not a portal traversal
         if (isPlayerOnHearthfire(player)) {
             // Player teleported to hearthfire - don't record this as a portal connection
-            // Re-initialize mine level from the new location since we teleported
-            mineLevelInitialized = false;
             lastProcessedFromGridId = fromGridId;
             lastProcessedToGridId = toGridId;
             lastProcessedTime = now;
@@ -539,7 +508,7 @@ public class PortalTraversalTracker {
 
     /**
      * Determine the layer for a destination grid based on the exit portal type.
-     * Also updates mine level tracking when traversing mine portals.
+     * Only "inside" and "cellar" are special - everything else is "outside".
      * @param exitPortalName The name of the exit portal (the portal you see after traversing)
      * @return The layer name for the destination grid
      */
@@ -548,55 +517,25 @@ public class PortalTraversalTracker {
 
         String lowerName = exitPortalName.toLowerCase();
 
-        // Mine level tracking based on exit portal:
-        // - If we see a LADDER as exit, we went DOWN through a minehole (level++)
-        //   (ladder is what takes you back UP, so seeing it means we descended)
-        // - If we see a MINEHOLE as exit, we went UP through a ladder (level--)
-        //   (minehole is what takes you DOWN, so seeing it means we ascended)
-        if (lowerName.contains("ladder")) {
-            // We went DOWN into mine (minehole entrance -> ladder exit)
-            currentMineLevel++;
-            return "mine" + currentMineLevel;
-        }
-        if (lowerName.contains("minehole")) {
-            // We went UP out of mine (ladder entrance -> minehole exit)
-            currentMineLevel--;
-            if (currentMineLevel <= 0) {
-                currentMineLevel = 0;
-                return "surface";
-            }
-            return "mine" + currentMineLevel;
-        }
-
-        // Check each mapping for non-mine portals
+        // Check PORTAL_TO_LAYER for inside/cellar mappings
         for (Map.Entry<String, String> entry : PORTAL_TO_LAYER.entrySet()) {
-            String key = entry.getKey().toLowerCase();
-            // Skip mine-related entries - handled above
-            if (key.equals("minehole") || key.contains("ladder")) {
-                continue;
-            }
-            if (lowerName.contains(key)) {
-                // Reset mine level when going to surface
-                if ("surface".equals(entry.getValue())) {
-                    currentMineLevel = 0;
-                }
+            if (lowerName.contains(entry.getKey().toLowerCase())) {
                 return entry.getValue();
             }
         }
 
         // Default: if it ends with "-door" it's likely inside a building
-        if (lowerName.endsWith("-door") || lowerName.contains("-door")) {
+        if (lowerName.contains("-door")) {
             return "inside";
         }
 
-        return null; // Unknown - don't change layer
+        // Everything else (surface, mines, etc.) is "outside"
+        return "outside";
     }
 
     /**
      * Update the layer of a chunk based on the exit portal.
      * Called when we traverse to a new grid and find an exit portal.
-     * Only updates if a definitive layer can be determined from the exit portal.
-     * For mine levels, also updates all currently loaded grids to the same level.
      */
     private void updateChunkLayer(long gridId, String exitPortalName) {
         String layer = determineLayerFromExitPortal(exitPortalName);
@@ -604,48 +543,9 @@ public class PortalTraversalTracker {
             return;
         }
 
-        // Update the target chunk
         ChunkNavData chunk = graph.getChunk(gridId);
         if (chunk != null && !layer.equals(chunk.layer)) {
             chunk.layer = layer;
-        }
-
-        // For mine levels, update ALL currently loaded grids to the same level
-        // This ensures all grids at this mine level get the correct layer
-        if (layer.startsWith("mine")) {
-            updateAllLoadedGridsToMineLevel(layer, gridId);
-        }
-    }
-
-    /**
-     * Update all currently loaded grids to the specified mine level.
-     * Called after we determine the mine level from portal traversal.
-     * @param mineLayer The mine layer (e.g., "mine1", "mine2")
-     * @param excludeGridId Grid to exclude (already updated)
-     */
-    private void updateAllLoadedGridsToMineLevel(String mineLayer, long excludeGridId) {
-        try {
-            MCache mcache = NUtils.getGameUI().map.glob.map;
-
-            synchronized (mcache.grids) {
-                for (MCache.Grid grid : mcache.grids.values()) {
-                    if (grid.id == excludeGridId) continue;
-
-                    ChunkNavData chunk = graph.getChunk(grid.id);
-                    if (chunk != null) {
-                        // Only update if chunk doesn't have a proper mine level yet,
-                        // or if it has the wrong level
-                        if (chunk.layer == null ||
-                            chunk.layer.equals("mine") ||
-                            chunk.layer.equals("surface") ||
-                            (chunk.layer.startsWith("mine") && !chunk.layer.equals(mineLayer))) {
-                            chunk.layer = mineLayer;
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Ignore - grids might not be available
         }
     }
 
@@ -699,49 +599,9 @@ public class PortalTraversalTracker {
         lastProcessedFromGridId = -1;
         lastProcessedToGridId = -1;
         lastProcessedTime = 0;
-        currentMineLevel = 0;
-        mineLevelInitialized = false;  // Will re-initialize on next tick
         cachedLastActionsGob = null;
         cachedLastActionsGobLocalCoord = null;
         cachedLastActionsGobGridId = -1;
         lastProcessedPortalGobId = -1;
-    }
-
-    /**
-     * Initialize mine level from the current grid's stored layer.
-     * Called on first tick after reset/login to restore correct mine depth.
-     */
-    private void initializeMineLevelFromCurrentGrid(long gridId) {
-        mineLevelInitialized = true;  // Mark as initialized even if we fail, to avoid repeated attempts
-
-        ChunkNavData chunk = graph.getChunk(gridId);
-        if (chunk == null || chunk.layer == null) {
-            // No stored data - assume surface
-            currentMineLevel = 0;
-            return;
-        }
-
-        // Parse mine level from layer string (e.g., "mine3" -> 3)
-        if (chunk.layer.startsWith("mine")) {
-            try {
-                String levelStr = chunk.layer.substring(4);  // Remove "mine" prefix
-                int level = Integer.parseInt(levelStr);
-                currentMineLevel = Math.max(0, level);
-            } catch (NumberFormatException e) {
-                // Legacy "mine" without number - assume level 1
-                currentMineLevel = 1;
-            }
-        } else {
-            // Not in a mine (surface, inside, cellar, etc.)
-            currentMineLevel = 0;
-        }
-    }
-
-    /**
-     * Get the current mine level (for debugging/display).
-     * @return 0 if on surface, 1+ for mine levels
-     */
-    public int getCurrentMineLevel() {
-        return currentMineLevel;
     }
 }
