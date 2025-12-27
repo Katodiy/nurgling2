@@ -150,8 +150,8 @@ public class PathFinder implements Action {
 
             start_pos = Utils.toPfGrid(begin).sub(pfmap.getBegin());
             end_pos = Utils.toPfGrid(end).sub(pfmap.getBegin());
-
             // Находим свободные начальные и конечные точки
+
             if (!fixStartEnd(test)) {
 //                dn = true; //start == end
                 return null;
