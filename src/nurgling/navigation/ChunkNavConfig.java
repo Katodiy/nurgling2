@@ -25,7 +25,4 @@ public class ChunkNavConfig {
 
     // Storage
     public static final String STORAGE_FILENAME = "chunknav.nurgling.json";
-
-    // Edge connectivity
-    public static final double MAX_EDGE_DISTANCE = 250.0;   // Max distance for edge connections
 }

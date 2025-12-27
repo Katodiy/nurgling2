@@ -1,7 +1,6 @@
 package nurgling.navigation;
 
 import haven.Coord;
-import haven.Coord2d;
 import haven.Gob;
 import haven.MCache;
 import nurgling.NGameUI;
@@ -20,14 +19,8 @@ public class ChunkNavGraph {
     // All known chunks indexed by grid ID
     private final Map<Long, ChunkNavData> chunks = new ConcurrentHashMap<>();
 
-    // Spatial index: grid coordinate -> grid ID
-    private final Map<Coord, Long> gridCoordToId = new ConcurrentHashMap<>();
-
     // Portal index (gobHash -> ChunkPortal)
     private final Map<String, ChunkPortal> portalIndex = new ConcurrentHashMap<>();
-
-    // Portal to chunk mapping (gobHash -> gridId)
-    private final Map<String, Long> portalToChunk = new ConcurrentHashMap<>();
 
     public ChunkNavGraph() {
     }
@@ -37,13 +30,9 @@ public class ChunkNavGraph {
      */
     public void addChunk(ChunkNavData chunk) {
         chunks.put(chunk.gridId, chunk);
-        if (chunk.gridCoord != null) {
-            gridCoordToId.put(chunk.gridCoord, chunk.gridId);
-        }
         // Index portals
         for (ChunkPortal portal : chunk.portals) {
             portalIndex.put(portal.gobHash, portal);
-            portalToChunk.put(portal.gobHash, chunk.gridId);
         }
     }
 
@@ -78,7 +67,6 @@ public class ChunkNavGraph {
     /**
      * Get the grid ID for the player's current chunk.
      * Returns -1 if the grid ID cannot be determined.
-     *
      * IMPORTANT: Always uses fresh MCache lookup to avoid stale grid IDs.
      * The ngob.grid_id cache can become stale when player moves between grids,
      * causing portals to be recorded in the wrong grid.
@@ -362,9 +350,7 @@ public class ChunkNavGraph {
      */
     public void clear() {
         chunks.clear();
-        gridCoordToId.clear();
         portalIndex.clear();
-        portalToChunk.clear();
     }
 
     /**

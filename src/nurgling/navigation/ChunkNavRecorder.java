@@ -6,6 +6,7 @@ import nurgling.NUtils;
 import nurgling.tasks.GateDetector;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 import static nurgling.navigation.ChunkNavConfig.*;
 import static nurgling.navigation.ChunkNavData.Direction;
@@ -16,6 +17,7 @@ import static nurgling.navigation.ChunkNavData.Direction;
  */
 public class ChunkNavRecorder {
     private final ChunkNavGraph graph;
+    private final Supplier<Integer> mineLevelSupplier;
 
     // Blocked tile patterns
     // NOTE: "nil" = void/nothing, must be blocked (areas outside playable space)
@@ -27,8 +29,9 @@ public class ChunkNavRecorder {
             "gfx/tiles/odeep"
     ));
 
-    public ChunkNavRecorder(ChunkNavGraph graph) {
+    public ChunkNavRecorder(ChunkNavGraph graph, Supplier<Integer> mineLevelSupplier) {
         this.graph = graph;
+        this.mineLevelSupplier = mineLevelSupplier;
     }
 
     /**
@@ -477,16 +480,8 @@ public class ChunkNavRecorder {
      * @return Mine level (0 = not in mine/unknown, 1+ = mine level)
      */
     private int getTrackedMineLevel() {
-        try {
-            ChunkNavManager manager = ChunkNavManager.getInstance();
-            if (manager != null) {
-                PortalTraversalTracker tracker = manager.getPortalTracker();
-                if (tracker != null) {
-                    return tracker.getCurrentMineLevel();
-                }
-            }
-        } catch (Exception e) {
-            // Ignore
+        if (mineLevelSupplier != null) {
+            return mineLevelSupplier.get();
         }
         return 0;
     }
@@ -497,7 +492,7 @@ public class ChunkNavRecorder {
      * - When traversing minehole (going down): level++
      * - When traversing ladder (going up): level--
      * This method queries the current tracked level. If we're inside a mine
-     * (tracker returns level > 0), we use that level. Otherwise fall back to
+     * (tracker returns level > 0), we use that level, otherwise fall back to
      * checking sibling grids.
      */
     private String detectMineLevel(ChunkNavData chunk) {
@@ -507,19 +502,9 @@ public class ChunkNavRecorder {
         }
 
         // 2. Check the tracked mine level from portal traversal
-        try {
-            ChunkNavManager manager = ChunkNavManager.getInstance();
-            if (manager != null) {
-                PortalTraversalTracker tracker = manager.getPortalTracker();
-                if (tracker != null) {
-                    int trackedLevel = tracker.getCurrentMineLevel();
-                    if (trackedLevel > 0) {
-                        return "mine" + trackedLevel;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Ignore - fall back to other methods
+        int trackedLevel = getTrackedMineLevel();
+        if (trackedLevel > 0) {
+            return "mine" + trackedLevel;
         }
 
         // 3. Check sibling grids - if another loaded grid has a mine level, use it

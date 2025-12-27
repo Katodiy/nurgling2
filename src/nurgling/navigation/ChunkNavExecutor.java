@@ -552,7 +552,6 @@ public class ChunkNavExecutor implements Action {
     private Results followWaypointPath(NGameUI gui) throws InterruptedException {
         for (int i = 0; i < path.waypoints.size(); i++) {
             ChunkPath.ChunkWaypoint waypoint = path.waypoints.get(i);
-            ChunkPath.ChunkWaypoint nextWaypoint = (i + 1 < path.waypoints.size()) ? path.waypoints.get(i + 1) : null;
 
             if (waypoint.portal != null && waypoint.type == ChunkPath.WaypointType.PORTAL_ENTRY) {
                 tickPortalTracker();
@@ -607,7 +606,7 @@ public class ChunkNavExecutor implements Action {
             return Results.FAIL();
         }
 
-        if (areaBounds == null && areaCenter != null) {
+        if (areaBounds == null) {
             Results walkResult = walkTowardTarget(areaCenter, gui, WalkConfig.DEFAULT);
             if (!walkResult.IsSuccess()) {
                 return Results.FAIL();
@@ -775,7 +774,7 @@ public class ChunkNavExecutor implements Action {
         }
         if (portalGob == null) {
             Collection<Gob> candidates = Finder.findGobs(new NAlias(portal.gobName));
-            if (candidates != null && !candidates.isEmpty()) {
+            if (!candidates.isEmpty()) {
                 Gob player = NUtils.player();
                 if (player != null) {
                     double closestDist = Double.MAX_VALUE;
@@ -827,7 +826,7 @@ public class ChunkNavExecutor implements Action {
         }
 
         Collection<Gob> candidates = Finder.findGobs(new NAlias(portal.gobName));
-        if (candidates == null || candidates.isEmpty()) {
+        if (candidates.isEmpty()) {
             return null;
         }
 
@@ -906,11 +905,10 @@ public class ChunkNavExecutor implements Action {
                     // The angle 'a' is the direction the building faces
                     double angle = portalGob.a;
                     double offsetPixels = accessOffset * MCache.tilesz.x;
-                    Coord2d accessPoint = new Coord2d(
+                    return new Coord2d(
                         basePosition.x + Math.cos(angle) * offsetPixels,
                         basePosition.y + Math.sin(angle) * offsetPixels
                     );
-                    return accessPoint;
                 }
             }
 
