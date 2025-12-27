@@ -31,6 +31,7 @@ public class StackSupporter {
         customStackSizes.put("Toad", 3);
         customStackSizes.put("Waybroad", 4);
         customStackSizes.put("Green Kelp", 4);
+
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
         size3.add("Onion");
@@ -54,7 +55,6 @@ public class StackSupporter {
         size3.add("Solid Fat");
         size3.add("Cured Tea");
         size3.add("Snail");
-        size3.add("Clean Animal Carcass");
         size3.add("Edible Seashell");
         size3.add("Candle");
         size3.add("Pearl");
@@ -149,19 +149,11 @@ public class StackSupporter {
         catExceptions.add("Silkworm");
         catExceptions.add("Female Silkmoth");
         catExceptions.add("Male Silkmoth");
-        catExceptions.add("Clean Squirrel Carcass");
-        catExceptions.add("Clean Rabbit Carcass");
         catExceptions.add("Bog Turtle Shell");
         catExceptions.add("Cleaned Bat");
         catExceptions.add("Mole's Pawbone");
         catExceptions.add("Lobster");
         catExceptions.add("Leech");
-        catExceptions.add("Clean Adder Carcass");
-        catExceptions.add("Cleaned Chicken");
-        catExceptions.add("Clean Pelican");
-        catExceptions.add("Cleaned Bullfinch");
-        catExceptions.add("Cleaned Rock Dove");
-        catExceptions.add("Cleaned Mallard");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
     public static boolean isStackable(NInventory inv, String name)
