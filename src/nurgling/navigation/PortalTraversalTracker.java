@@ -96,13 +96,17 @@ public class PortalTraversalTracker {
      * Call this periodically to check for portal traversals.
      * Safe to call frequently - internally throttled.
      */
-    public void tick() throws InterruptedException {
+    public void tick() {
         long now = System.currentTimeMillis();
         if (now - lastCheckTime < CHECK_INTERVAL_MS) {
             return;
         }
         lastCheckTime = now;
-        doCheck();
+        try {
+            doCheck();
+        } catch (InterruptedException e) {
+
+        }
     }
 
     private void doCheck() throws InterruptedException {
@@ -175,7 +179,6 @@ public class PortalTraversalTracker {
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
-            throw e;  // Propagate interruption for proper bot stopping
         }
 
         // Portal detection uses cachedLastActionsGob (captured from getLastActions() before grid change)

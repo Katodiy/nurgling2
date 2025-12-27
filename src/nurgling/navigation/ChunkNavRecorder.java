@@ -27,6 +27,30 @@ public class ChunkNavRecorder {
             "gfx/tiles/odeep"
     ));
 
+    /**
+     * Snapshot of gob data for lock-free processing.
+     * Captures only the fields needed for walkability and layer detection.
+     */
+    private static class GobSnapshot {
+        final long id;
+        final Coord2d rc;
+        final double angle;
+        final NHitBox hitBox;
+        final String name;
+        final boolean isFollowing;
+        final long modelAttribute;  // For gate open/closed detection
+
+        GobSnapshot(Gob gob) {
+            this.id = gob.id;
+            this.rc = gob.rc;
+            this.angle = gob.a;
+            this.hitBox = (gob.ngob != null) ? gob.ngob.hitBox : null;
+            this.name = (gob.ngob != null) ? gob.ngob.name : null;
+            this.isFollowing = gob.getattr(Following.class) != null;
+            this.modelAttribute = (gob.ngob != null) ? gob.ngob.getModelAttribute() : -1L;
+        }
+    }
+
     public ChunkNavRecorder(ChunkNavGraph graph) {
         this.graph = graph;
     }
@@ -69,9 +93,6 @@ public class ChunkNavRecorder {
 
             graph.addChunk(chunk);
             graph.updateConnections(chunk);
-
-            // DEBUG: Dump walkability grid to file
-            dumpWalkabilityGrid(chunk, grid.id);
 
         } catch (Exception e) {
         }
@@ -289,54 +310,62 @@ public class ChunkNavRecorder {
 
         try {
             Glob glob = NUtils.getGameUI().ui.sess.glob;
+            long playerId = NUtils.player() != null ? NUtils.player().id : -1;
 
             // Grid bounds in world coordinates
             Coord2d gridWorldUL = grid.ul.mul(MCache.tilesz);
             Coord2d gridWorldBR = grid.ul.add(CHUNK_SIZE, CHUNK_SIZE).mul(MCache.tilesz);
 
+            // Quick copy of gob data while holding lock - minimizes lock time
+            List<GobSnapshot> snapshots = new ArrayList<>();
             synchronized (glob.oc) {
                 for (Gob gob : glob.oc) {
                     if (gob.ngob == null || gob.ngob.hitBox == null) continue;
-                    if (gob.getattr(Following.class) != null) continue;
+                    snapshots.add(new GobSnapshot(gob));
+                }
+            }
 
-                    // Skip player
-                    if (NUtils.player() != null && gob.id == NUtils.player().id) continue;
+            // Process snapshots WITHOUT holding the lock - expensive operations here
+            for (GobSnapshot snap : snapshots) {
+                if (snap.hitBox == null) continue;
+                if (snap.isFollowing) continue;
 
-                    // Skip portals - doors, cellars, stairs should be passable
-                    // Gates are only passable when open
-                    if (isPassableGob(gob)) continue;
+                // Skip player
+                if (snap.id == playerId) continue;
 
-                    // Quick bounds check - skip gobs clearly outside this grid
-                    if (gob.rc.x < gridWorldUL.x - 50 || gob.rc.x > gridWorldBR.x + 50 ||
-                        gob.rc.y < gridWorldUL.y - 50 || gob.rc.y > gridWorldBR.y + 50) {
-                        continue;
-                    }
+                // Skip portals - doors, cellars, stairs should be passable
+                // Gates are only passable when open
+                if (isPassableGob(snap)) continue;
 
-                    // Compute hitbox bounds directly from gob position
-                    NHitBox hitBox = gob.ngob.hitBox;
-                    nurgling.pf.NHitBoxD worldHitBox = new nurgling.pf.NHitBoxD(
-                        hitBox.begin, hitBox.end, gob.rc, gob.a
-                    );
+                // Quick bounds check - skip gobs clearly outside this grid
+                if (snap.rc.x < gridWorldUL.x - 50 || snap.rc.x > gridWorldBR.x + 50 ||
+                    snap.rc.y < gridWorldUL.y - 50 || snap.rc.y > gridWorldBR.y + 50) {
+                    continue;
+                }
 
-                    // Get circumscribed bounding box (axis-aligned after rotation)
-                    Coord2d hitUL = worldHitBox.getCircumscribedUL();
-                    Coord2d hitBR = worldHitBox.getCircumscribedBR();
+                // Compute hitbox bounds directly from gob position
+                nurgling.pf.NHitBoxD worldHitBox = new nurgling.pf.NHitBoxD(
+                    snap.hitBox.begin, snap.hitBox.end, snap.rc, snap.angle
+                );
 
-                    // Convert to tile coordinates
-                    Coord tileUL = hitUL.floor(MCache.tilesz);
-                    Coord tileBR = new Coord2d(hitBR.x - 0.01, hitBR.y - 0.01).floor(MCache.tilesz);
+                // Get circumscribed bounding box (axis-aligned after rotation)
+                Coord2d hitUL = worldHitBox.getCircumscribedUL();
+                Coord2d hitBR = worldHitBox.getCircumscribedBR();
 
-                    // Mark all tiles covered by the hitbox
-                    for (int tx = tileUL.x; tx <= tileBR.x; tx++) {
-                        for (int ty = tileUL.y; ty <= tileBR.y; ty++) {
-                            int localX = tx - grid.ul.x;
-                            int localY = ty - grid.ul.y;
+                // Convert to tile coordinates
+                Coord tileUL = hitUL.floor(MCache.tilesz);
+                Coord tileBR = new Coord2d(hitBR.x - 0.01, hitBR.y - 0.01).floor(MCache.tilesz);
 
-                            if (localX >= 0 && localX < CHUNK_SIZE &&
-                                localY >= 0 && localY < CHUNK_SIZE) {
-                                long tileKey = ((long) localX << 32) | (localY & 0xFFFFFFFFL);
-                                blockedTiles.add(tileKey);
-                            }
+                // Mark all tiles covered by the hitbox
+                for (int tx = tileUL.x; tx <= tileBR.x; tx++) {
+                    for (int ty = tileUL.y; ty <= tileBR.y; ty++) {
+                        int localX = tx - grid.ul.x;
+                        int localY = ty - grid.ul.y;
+
+                        if (localX >= 0 && localX < CHUNK_SIZE &&
+                            localY >= 0 && localY < CHUNK_SIZE) {
+                            long tileKey = ((long) localX << 32) | (localY & 0xFFFFFFFFL);
+                            blockedTiles.add(tileKey);
                         }
                     }
                 }
@@ -387,6 +416,37 @@ public class ChunkNavRecorder {
         return lower.contains("/minehole");
     }
 
+    /**
+     * Check if a gob snapshot should be considered passable (not blocking).
+     * Snapshot version for lock-free processing.
+     */
+    private boolean isPassableGob(GobSnapshot snap) {
+        if (snap.name == null) return false;
+        String lower = snap.name.toLowerCase();
+
+        // Indoor wall decorations
+        if (lower.contains("/arch/") && (lower.contains("/hwall") || lower.contains("/vwall"))) return true;
+
+        // Door gobs
+        if (lower.endsWith("-door")) return true;
+
+        // Cellar door and stairs
+        if (lower.equals("gfx/terobjs/cellardoor") || lower.contains("/cellardoor")) return true;
+        if (lower.equals("gfx/terobjs/cellarstairs") || lower.contains("/cellarstairs")) return true;
+
+        // Ladders
+        if (lower.contains("/ladder")) return true;
+
+        // Gates - only passable when OPEN (modelAttribute == 1)
+        if (lower.contains("/polegate") || lower.contains("/polebiggate") ||
+            lower.contains("/palisadegate") || lower.contains("/palisadebiggate") ||
+            lower.contains("/drystonewallgate") || lower.contains("/drystonewallbiggate")) {
+            return snap.modelAttribute == 1L;  // 1 = open
+        }
+
+        // Mine holes
+        return lower.contains("/minehole");
+    }
 
     /**
      * Detect the layer (outside/inside/cellar).
@@ -398,23 +458,28 @@ public class ChunkNavRecorder {
         try {
             Glob glob = NUtils.getGameUI().ui.sess.glob;
 
+            // Quick copy of gob names while holding lock
+            List<String> gobNames = new ArrayList<>();
+            synchronized (glob.oc) {
+                for (Gob gob : glob.oc) {
+                    if (gob.ngob != null && gob.ngob.name != null) {
+                        gobNames.add(gob.ngob.name.toLowerCase());
+                    }
+                }
+            }
+
+            // Process WITHOUT holding the lock
             boolean hasCellarStairs = false;
             boolean hasDoor = false;
             boolean hasBuildingExterior = false;
 
-            synchronized (glob.oc) {
-                for (Gob gob : glob.oc) {
-                    if (gob.ngob == null || gob.ngob.name == null) continue;
-
-                    String name = gob.ngob.name.toLowerCase();
-
-                    if (name.contains("cellarstairs")) {
-                        hasCellarStairs = true;
-                    } else if (name.endsWith("-door") || name.endsWith("door")) {
-                        hasDoor = true;
-                    } else if (isBuildingExterior(name)) {
-                        hasBuildingExterior = true;
-                    }
+            for (String name : gobNames) {
+                if (name.contains("cellarstairs")) {
+                    hasCellarStairs = true;
+                } else if (name.endsWith("-door") || name.endsWith("door")) {
+                    hasDoor = true;
+                } else if (isBuildingExterior(name)) {
+                    hasBuildingExterior = true;
                 }
             }
 
@@ -550,112 +615,5 @@ public class ChunkNavRecorder {
      */
     public String getStats() {
         return String.format("ChunkNavRecorder[chunks=%d]", graph.getChunkCount());
-    }
-
-    /**
-     * DEBUG: Dump walkability grid to text file for visualization.
-     * '.' = walkable, '#' = blocked by gob, 'x' = terrain-blocked, '?' = unobserved
-     */
-    private void dumpWalkabilityGrid(ChunkNavData chunk, long gridId) {
-        try {
-            MCache mcache = getMCache();
-            java.io.File debugDir = new java.io.File(System.getProperty("user.home"), "chunknav_debug");
-            debugDir.mkdirs();
-            java.io.File debugFile = new java.io.File(debugDir, "grid_" + gridId + ".txt");
-
-            // Build terrain map to distinguish floor from gob blocking
-            boolean[][] isFloorTile = new boolean[CELLS_PER_EDGE][CELLS_PER_EDGE];
-            int floorMinX = CELLS_PER_EDGE, floorMaxX = 0, floorMinY = CELLS_PER_EDGE, floorMaxY = 0;
-
-            if (mcache != null && chunk.worldTileOrigin != null) {
-                for (int x = 0; x < CELLS_PER_EDGE; x++) {
-                    for (int y = 0; y < CELLS_PER_EDGE; y++) {
-                        Coord worldTile = chunk.worldTileOrigin.add(x, y);
-                        boolean terrainBlocked = isTileBlocked(mcache, worldTile);
-                        isFloorTile[x][y] = !terrainBlocked;
-                        if (!terrainBlocked) {
-                            floorMinX = Math.min(floorMinX, x);
-                            floorMaxX = Math.max(floorMaxX, x);
-                            floorMinY = Math.min(floorMinY, y);
-                            floorMaxY = Math.max(floorMaxY, y);
-                        }
-                    }
-                }
-            }
-
-            try (java.io.PrintWriter writer = new java.io.PrintWriter(debugFile)) {
-                writer.println("Grid ID: " + gridId);
-                writer.println("Layer: " + chunk.layer);
-                writer.println("Grid Coord: " + chunk.gridCoord);
-                writer.println("World Tile Origin: " + chunk.worldTileOrigin);
-                writer.println();
-
-                // Count stats including unobserved
-                int walkable = 0, gobBlocked = 0, terrainBlocked = 0, unobserved = 0;
-                int minX = CELLS_PER_EDGE, maxX = 0, minY = CELLS_PER_EDGE, maxY = 0;
-                for (int x = 0; x < CELLS_PER_EDGE; x++) {
-                    for (int y = 0; y < CELLS_PER_EDGE; y++) {
-                        if (!chunk.observed[x][y]) {
-                            unobserved++;
-                        } else if (chunk.walkability[x][y] == 0) {
-                            walkable++;
-                            minX = Math.min(minX, x);
-                            maxX = Math.max(maxX, x);
-                            minY = Math.min(minY, y);
-                            maxY = Math.max(maxY, y);
-                        } else if (isFloorTile[x][y]) {
-                            gobBlocked++;
-                        } else {
-                            terrainBlocked++;
-                        }
-                    }
-                }
-
-                writer.println("Total: " + walkable + " walkable, " + gobBlocked + " gob-blocked, " +
-                    terrainBlocked + " terrain-blocked, " + unobserved + " unobserved");
-                writer.println("Floor tile bounds: (" + floorMinX + "," + floorMinY + ") to (" + floorMaxX + "," + floorMaxY + ")");
-                writer.println("Walkable bounds: (" + minX + "," + minY + ") to (" + maxX + "," + maxY + ")");
-                writer.println();
-
-                // Show floor area with padding
-                if (floorMaxX >= floorMinX) {
-                    int padX = Math.max(0, floorMinX - 2);
-                    int padY = Math.max(0, floorMinY - 2);
-                    int endX = Math.min(CELLS_PER_EDGE, floorMaxX + 3);
-                    int endY = Math.min(CELLS_PER_EDGE, floorMaxY + 3);
-
-                    writer.println("Legend: . = walkable, # = gob-blocked, x = terrain-blocked, ? = unobserved");
-                    writer.println("Showing tiles " + padX + "-" + (endX-1) + " x " + padY + "-" + (endY-1) + ":");
-                    writer.println();
-
-                    // Add column numbers header
-                    StringBuilder header = new StringBuilder("    ");
-                    for (int x = padX; x < endX; x++) {
-                        header.append(x % 10);
-                    }
-                    writer.println(header.toString());
-
-                    for (int y = padY; y < endY; y++) {
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(String.format("%3d ", y));
-                        for (int x = padX; x < endX; x++) {
-                            if (!chunk.observed[x][y]) {
-                                sb.append('?');  // Unobserved (blocked by default)
-                            } else if (chunk.walkability[x][y] == 0) {
-                                sb.append('.');  // Walkable
-                            } else if (isFloorTile[x][y]) {
-                                sb.append('#');  // Gob-blocked floor
-                            } else {
-                                sb.append('x');  // Terrain-blocked (nil)
-                            }
-                        }
-                        writer.println(sb.toString());
-                    }
-                } else {
-                    writer.println("No floor tiles found!");
-                }
-            }
-        } catch (Exception e) {
-        }
     }
 }

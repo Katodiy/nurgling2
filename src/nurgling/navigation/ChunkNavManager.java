@@ -45,6 +45,7 @@ public class ChunkNavManager {
     // Background thread for recording (to avoid FPS drops)
     private ExecutorService recordingExecutor;
     private volatile boolean recordingInProgress = false;
+    private volatile boolean saveInProgress = false;
 
     // Instance reference - managed by NMapView, not a traditional singleton
     // This static reference exists for backward compatibility with code that
@@ -118,7 +119,7 @@ public class ChunkNavManager {
      * Called periodically to check for portal traversals and record visible grids.
      * Should be called from game loop or a polling task (NMapView.tick).
      */
-    public void tick() throws InterruptedException {
+    public void tick() {
         if (!enabled || !initialized) return;
 
         portalTracker.tick();
@@ -335,19 +336,43 @@ public class ChunkNavManager {
     /**
      * Save navigation data to disk (throttled version).
      * Won't save more often than SAVE_THROTTLE_MS.
+     * Runs on background thread to avoid FPS drops.
      */
     public void saveThrottled() {
         long now = System.currentTimeMillis();
         if (now - lastSaveTime < SAVE_THROTTLE_MS) {
             return; // Too soon since last save
         }
-        save();
+        if (saveInProgress) {
+            return; // Already saving
+        }
+        lastSaveTime = now; // Update immediately to prevent rapid re-triggers
+
+        saveInProgress = true;
+        recordingExecutor.submit(() -> {
+            try {
+                saveInternal();
+            } finally {
+                saveInProgress = false;
+            }
+        });
     }
 
     /**
-     * Save navigation data to disk.
+     * Save navigation data to disk synchronously.
+     * Used for shutdown - blocks until complete.
      */
     public void save() {
+        if (saveInProgress) {
+            return; // Background save in progress
+        }
+        saveInternal();
+    }
+
+    /**
+     * Internal save implementation.
+     */
+    private void saveInternal() {
         if (!initialized || currentGenus == null) return;
 
         try {
@@ -368,7 +393,6 @@ public class ChunkNavManager {
 
             // Write to file
             Files.write(filePath, root.toString(2).getBytes(StandardCharsets.UTF_8));
-            lastSaveTime = System.currentTimeMillis();
 
         } catch (Exception e) {
             // Ignore save errors
