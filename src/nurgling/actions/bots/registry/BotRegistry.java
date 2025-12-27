@@ -229,7 +229,6 @@ public class BotRegistry {
         bots.add(new BotDescriptor("chunknav_test", BotDescriptor.BotType.TOOLS, "ChunkNav Test", "Tests the chunk-based navigation system.", false, true, ChunkNavTestBot.class, "test13", false));
         bots.add(new BotDescriptor("chunknav_navigator", BotDescriptor.BotType.TOOLS, "ChunkNav Navigator", "Opens UI to navigate to areas using chunk-based navigation.", false, true, ChunkNavNavigatorBot.class, "test14", false));
         bots.add(new BotDescriptor("navstresstest", BotDescriptor.BotType.TOOLS, "Navigation Stress Test", "Continuously tests chunk navigation between random areas. Results saved to JSON file.", false, true, NavigationStressTest.class, "test15", true));
-        bots.add(new BotDescriptor("intermittent_test", BotDescriptor.BotType.TOOLS, "Intermittent Failure Test", "Tests only areas with intermittent navigation failures. Reads previous navtest results to identify targets.", false, true, IntermittentFailureTest.class, "test16", true));
     }
 
     public static BotDescriptor byId(String id) {
