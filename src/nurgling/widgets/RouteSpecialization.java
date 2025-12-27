@@ -68,6 +68,8 @@ public class RouteSpecialization extends Window {
                     if(!isFound) {
                         route.spec.add(new Route.RouteSpecialization(value));
                         NConfig.needRoutesUpdate();
+                        // Save to database if DB mode is enabled
+                        ((NMapView) NUtils.getGameUI().map).routeGraphManager.saveRouteToDatabase(route);
                         NUtils.getGameUI().routesWidget.showRoutes();
                         RouteSpecialization.this.hide();
                     } else {
@@ -177,6 +179,8 @@ public class RouteSpecialization extends Window {
                                 if (option != null && option.name.equals("Delete")) {
                                     route.removeSpecialization(item.name);
                                     NConfig.needRoutesUpdate();
+                                    // Save to database if DB mode is enabled
+                                    ((NMapView) NUtils.getGameUI().map).routeGraphManager.saveRouteToDatabase(route);
                                     NUtils.getGameUI().routesWidget.showRoutes();
                                 }
                                 uimsg("cancel");

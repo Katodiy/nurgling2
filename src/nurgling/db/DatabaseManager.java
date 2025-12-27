@@ -54,9 +54,21 @@ public class DatabaseManager {
 
     public DatabaseManager(int threadPoolSize) {
         this.threadPoolSize = threadPoolSize;
-        this.executorService = Executors.newFixedThreadPool(threadPoolSize);
+        this.executorService = Executors.newFixedThreadPool(threadPoolSize, r -> {
+            Thread t = new Thread(r, "DB-Worker");
+            t.setDaemon(true);  // Daemon threads don't prevent JVM shutdown
+            return t;
+        });
         startQueueProcessor();
         initialize();
+        
+        // Register shutdown hook to ensure clean shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (!shutdown) {
+                System.out.println("[DatabaseManager] Shutdown hook triggered, cleaning up...");
+                shutdown();
+            }
+        }, "DB-Shutdown-Hook"));
     }
     
     /**
@@ -411,7 +423,11 @@ public class DatabaseManager {
         initialized = false;
         
         // Create new executor and reinitialize
-        this.executorService = Executors.newFixedThreadPool(threadPoolSize);
+        this.executorService = Executors.newFixedThreadPool(threadPoolSize, r -> {
+            Thread t = new Thread(r, "DB-Worker");
+            t.setDaemon(true);
+            return t;
+        });
         this.shutdown = false;
         initialize();
     }

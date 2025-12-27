@@ -74,6 +74,22 @@ public class RouteGraphManager implements ProfileAwareService {
         needsUpdate = true;
     }
 
+    /**
+     * Save a single route to database if DB mode is enabled.
+     * Call this after modifying a route through the UI.
+     */
+    public void saveRouteToDatabase(Route route) {
+        if ((Boolean) NConfig.get(NConfig.Key.ndbenable) &&
+            nurgling.NCore.databaseManager != null && 
+            nurgling.NCore.databaseManager.isReady()) {
+            String profile = NUtils.getGameUI() != null ? NUtils.getGameUI().getGenus() : null;
+            if (profile == null || profile.isEmpty()) {
+                profile = "global";
+            }
+            nurgling.NCore.databaseManager.getRouteService().saveRouteAsync(route, profile);
+        }
+    }
+
     public void updateGraph() {
         if (!needsUpdate) return;
 
@@ -206,7 +222,20 @@ public class RouteGraphManager implements ProfileAwareService {
             }
         }
 
-        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().remove(route.id);
+        int routeId = route.id;
+        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().remove(routeId);
+
+        // Delete from database if enabled
+        if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable) &&
+            nurgling.NCore.databaseManager != null && 
+            nurgling.NCore.databaseManager.isReady()) {
+            String profile = NUtils.getGameUI().getGenus();
+            if (profile == null || profile.isEmpty()) {
+                profile = "global";
+            }
+            final String finalProfile = profile;
+            nurgling.NCore.databaseManager.getRouteService().deleteRouteAsync(routeId, finalProfile);
+        }
     }
 
     public void deleteRoutePointFromNeighborsAndConnections(RoutePoint routePoint) {

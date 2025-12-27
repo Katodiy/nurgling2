@@ -23,7 +23,11 @@ public class DBPoolManager {
     private static final int SQLITE_POOL_SIZE = 1;
 
     public DBPoolManager(int threadPoolSize) {
-        this.executorService = Executors.newFixedThreadPool(threadPoolSize);
+        this.executorService = Executors.newFixedThreadPool(threadPoolSize, r -> {
+            Thread t = new Thread(r, "DBPool-Worker");
+            t.setDaemon(true);  // Daemon thread won't prevent JVM shutdown
+            return t;
+        });
         initializePool();
     }
 

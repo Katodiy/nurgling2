@@ -732,6 +732,7 @@ public class NMapView extends MapView
     public String addRoute()
     {
         String key;
+        Route newRoute;
         synchronized (((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes())
         {
             HashSet<String> names = new HashSet<String>();
@@ -749,18 +750,21 @@ public class NMapView extends MapView
             {
                 key = key+"(1)";
             }
-            Route newRoute = new Route(key);
+            newRoute = new Route(key);
             newRoute.id = id;
             newRoute.path = NUtils.getGameUI().routesWidget.currentPath;
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().put(id, newRoute);
             createRouteLabel(id);
         }
+        // Save to database if DB mode is enabled
+        routeGraphManager.saveRouteToDatabase(newRoute);
         return key;
     }
 
     public String addHearthFireRoute()
     {
         String key;
+        Route newRoute;
         synchronized (((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes())
         {
             HashSet<String> names = new HashSet<String>();
@@ -778,13 +782,15 @@ public class NMapView extends MapView
             {
                 key = key+"(1)";
             }
-            Route newRoute = new Route(key);
+            newRoute = new Route(key);
             newRoute.id = id;
             newRoute.path = NUtils.getGameUI().routesWidget.currentPath;
             newRoute.spec.add(new Route.RouteSpecialization("HearthFires"));
             ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().put(id, newRoute);
             createRouteLabel(id);
         }
+        // Save to database if DB mode is enabled
+        routeGraphManager.saveRouteToDatabase(newRoute);
         return key;
     }
 
@@ -1553,8 +1559,11 @@ public class NMapView extends MapView
 
     public void changeRouteName(Integer id, String new_name)
     {
-        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(id).name = new_name;
+        Route route = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(id);
+        route.name = new_name;
         NConfig.needRoutesUpdate();
+        // Save to database if DB mode is enabled
+        routeGraphManager.saveRouteToDatabase(route);
     }
 
     void getGob(Coord c) {
