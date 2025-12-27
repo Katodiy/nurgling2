@@ -2876,6 +2876,11 @@ public class VSpec {
         intandent.add(new JSONObject("{\"static\":\"gfx/invobjs/intestines\",\"name\":\"Intestines\"}"));
         intandent.add(new JSONObject("{\"static\":\"gfx/invobjs/entrails\",\"name\":\"Entrails\"}"));
         categories.put("Intestines and entrails", intandent);
+
+        ArrayList<JSONObject> pipeweed = new ArrayList<>();
+        pipeweed.add(new JSONObject("{\"static\":\"gfx/invobjs/tobacco-fresh\",\"name\":\"Fresh Leaf of Pipeweed\"}"));
+        pipeweed.add(new JSONObject("{\"static\":\"gfx/invobjs/tobacco-cured\",\"name\":\"Cured Pipeweed\"}"));
+        categories.put("Pipeweed", pipeweed);
     }
 
     public static NAlias getNamesInCategory(String categoryName) {
