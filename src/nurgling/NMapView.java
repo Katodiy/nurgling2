@@ -878,12 +878,8 @@ public class NMapView extends MapView
         }
 
         // Tick chunk navigation system for recording
-        try {
-            if (chunkNavManager != null) {
-                chunkNavManager.tick();
-            }
-        } catch (Exception e) {
-            // Ignore - system may not be ready
+        if (chunkNavManager != null) {
+            chunkNavManager.tick();
         }
         ArrayList<Long> forRemove = new ArrayList<>();
 //        for(Gob dummy : dummys.values())

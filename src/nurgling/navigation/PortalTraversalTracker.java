@@ -24,8 +24,6 @@ public class PortalTraversalTracker {
 
     // State tracking
     private long lastGridId = -1;
-    private Gob lastNearbyPortal = null;
-    private Coord lastNearbyPortalLocalCoord = null;  // Cached local coord of lastNearbyPortal
     private Coord lastPlayerLocalCoord = null;  // Player's local coord in PREVIOUS grid (preserved across grid change)
     private Coord previousTickPlayerLocalCoord = null;  // Player position from previous tick (before any grid change)
     private long lastCheckTime = 0;
@@ -47,9 +45,6 @@ public class PortalTraversalTracker {
     private Coord cachedLastActionsGobLocalCoord = null;
     private long cachedLastActionsGobGridId = -1;  // Grid ID of the cached portal (for boundary fix)
     private long lastProcessedPortalGobId = -1;  // Gob ID of last processed portal (prevents re-capture)
-
-    // Cached grid ID for lastNearbyPortal (for boundary fix)
-    private long lastNearbyPortalGridId = -1;
 
     private static final long CHECK_INTERVAL_MS = 100;
     private static final double PORTAL_PROXIMITY_THRESHOLD = 15.0;
@@ -124,12 +119,7 @@ public class PortalTraversalTracker {
             return;
         }
         lastCheckTime = now;
-
-        try {
-            doCheck();
-        } catch (Exception e) {
-            // Ignore - player might not exist yet
-        }
+        doCheck();
     }
 
     private void doCheck() {
@@ -147,15 +137,11 @@ public class PortalTraversalTracker {
 
         // Calculate player's current local coord in their CURRENT grid
         Coord currentPlayerLocalCoord = null;
-        try {
-            MCache mcache = NUtils.getGameUI().map.glob.map;
-            Coord tileCoord = player.rc.floor(MCache.tilesz);
-            MCache.Grid grid = mcache.getgridt(tileCoord);
-            if (grid != null && grid.id == currentGridId) {
-                currentPlayerLocalCoord = tileCoord.sub(grid.ul);
-            }
-        } catch (Exception e) {
-            // Ignore
+        MCache mcache = NUtils.getGameUI().map.glob.map;
+        Coord tileCoord = player.rc.floor(MCache.tilesz);
+        MCache.Grid grid = mcache.getgridt(tileCoord);
+        if (grid != null && grid.id == currentGridId) {
+            currentPlayerLocalCoord = tileCoord.sub(grid.ul);
         }
 
         // Check for grid change
@@ -175,16 +161,6 @@ public class PortalTraversalTracker {
             // And save previous tick as "last player" for grid change detection
             lastPlayerLocalCoord = previousTickPlayerLocalCoord;
             previousTickPlayerLocalCoord = currentPlayerLocalCoord;
-        }
-
-        // Track nearby portals - use getPortalLocalCoord which handles building offsets
-        Gob nearbyPortal = findNearbyPortal(player);
-        if (nearbyPortal != null) {
-            lastNearbyPortal = nearbyPortal;
-            // Use getPortalLocalCoord which offsets buildings toward player for stable door position
-            lastNearbyPortalLocalCoord = getPortalLocalCoord(nearbyPortal, player);
-            // Cache the portal's actual grid ID while the grid is still loaded (fixes boundary bug)
-            lastNearbyPortalGridId = getGobGridId(nearbyPortal);
         }
 
         // Capture lastActions gob BEFORE grid change (like routes system does)
@@ -269,10 +245,8 @@ public class PortalTraversalTracker {
             if (expectedExitName != null) {
                 // We know exactly what exit to look for - search specifically for it
                 exitPortal = findSpecificPortalNearby(player, expectedExitName);
-            } else {
-                // No clicked portal info - fall back to generic search (less reliable)
-                exitPortal = findNearbyPortal(player);
             }
+
             if (exitPortal == null) {
                 try {
                     Thread.sleep(100);
@@ -309,9 +283,6 @@ public class PortalTraversalTracker {
             if (layersUnknown || layersSame) {
                 // Either can't determine layers or same layer type - not a verified portal traversal
                 // Clear tracking state and return without recording
-                lastNearbyPortal = null;
-                lastNearbyPortalLocalCoord = null;
-                lastNearbyPortalGridId = -1;
                 cachedLastActionsGob = null;
                 cachedLastActionsGobLocalCoord = null;
                 cachedLastActionsGobGridId = -1;
@@ -357,24 +328,7 @@ public class PortalTraversalTracker {
                 }
             }
 
-            // Strategy 2: Check if the portal we were tracking matches the expected entrance
-            if (entranceCoord == null && lastNearbyPortal != null && lastNearbyPortal.ngob != null &&
-                lastNearbyPortal.ngob.name != null && lastNearbyPortalLocalCoord != null) {
-                String nearbyName = lastNearbyPortal.ngob.name;
-                // Use strict matching like Strategy 1
-                if (nearbyName.equals(entranceName) ||
-                    nearbyName.endsWith("/" + getSimpleName(entranceName))) {
-                    // Use the actual portal position we were tracking
-                    entranceCoord = lastNearbyPortalLocalCoord;
-                    entranceHash = getPortalHash(lastNearbyPortal);
-                    // Use the portal's actual grid ID (fixes boundary bug)
-                    if (lastNearbyPortalGridId != -1) {
-                        entranceGridId = lastNearbyPortalGridId;
-                    }
-                }
-            }
-
-            // Strategy 3: Fallback to player position if we don't have the portal position
+            // Strategy 2: Fallback to player position if we don't have the portal position
             // BUT only if the cachedLastActionsGob matches the expected entrance type
             // This prevents creating fake portals (e.g., cellarstairs on surface)
             if (entranceCoord == null && lastPlayerLocalCoord != null) {
@@ -421,9 +375,6 @@ public class PortalTraversalTracker {
         }
 
         // Clear tracking state after use
-        lastNearbyPortal = null;
-        lastNearbyPortalLocalCoord = null;
-        lastNearbyPortalGridId = -1;
         cachedLastActionsGob = null;
         cachedLastActionsGobLocalCoord = null;
         cachedLastActionsGobGridId = -1;
@@ -674,142 +625,8 @@ public class PortalTraversalTracker {
     }
 
     /**
-     * Find exit portal and update the destination chunk's layer.
-     * Returns the exit portal gob if found.
-     */
-    private Gob findExitPortalAndUpdateLayer(Gob player, String entrancePortalName, long toGridId) {
-        String exitPortalName = GateDetector.getDoorPair(entrancePortalName);
-        Gob exitPortal = null;
-
-        if (exitPortalName != null) {
-            exitPortal = findExitPortal(player, exitPortalName);
-        }
-
-        if (exitPortal == null) {
-            exitPortal = findNearbyPortal(player);
-        }
-
-        if (exitPortal != null && exitPortal.ngob != null) {
-            updateChunkLayer(toGridId, exitPortal.ngob.name);
-        }
-
-        return exitPortal;
-    }
-
-    /**
-     * Find and record the exit portal after traversing through a known entrance.
-     */
-    private void findAndRecordExitPortal(Gob player, String entrancePortalName, long fromGridId, long toGridId) {
-        // Get the expected exit portal name
-        String exitPortalName = GateDetector.getDoorPair(entrancePortalName);
-        Gob exitPortal = null;
-
-        if (exitPortalName != null) {
-            exitPortal = findExitPortal(player, exitPortalName);
-        }
-
-        // If no mapped pair found, look for any nearby portal
-        if (exitPortal == null) {
-            exitPortal = findNearbyPortal(player);
-        }
-
-        if (exitPortal != null && exitPortal.ngob != null) {
-            String exitHash = getPortalHash(exitPortal);
-            String exitName = exitPortal.ngob.name;
-            // Use PLAYER's position - this is where we land after exiting, the accessible spot
-            Coord exitLocalCoord = getGobLocalCoord(player);
-            recordPortalConnection(exitHash, exitName, toGridId, fromGridId, exitLocalCoord);
-        }
-    }
-
-    /**
-     * Find the closest portal to the player.
-     * Searches all known portal types and returns the one closest to the player.
-     */
-    private Gob findNearbyPortal(Gob player) {
-        // Search all known portal types and find the CLOSEST one to player
-        // Includes both interior portals and exterior building gobs
-        String[] knownPortals = {
-            // Interior portals (seen from inside)
-            "gfx/terobjs/arch/upstairs",
-            "gfx/terobjs/arch/downstairs",
-            "gfx/terobjs/arch/cellardoor",
-            "gfx/terobjs/arch/cellarstairs",
-            "gfx/terobjs/arch/minehole",
-            "gfx/terobjs/arch/ladder",
-            // Interior doors (seen from inside buildings)
-            "gfx/terobjs/arch/stonemansion-door",
-            "gfx/terobjs/arch/logcabin-door",
-            "gfx/terobjs/arch/timberhouse-door",
-            "gfx/terobjs/arch/stonestead-door",
-            "gfx/terobjs/arch/greathall-door",
-            "gfx/terobjs/arch/stonetower-door",
-            "gfx/terobjs/arch/windmill-door",
-            // Exterior buildings (seen from outside)
-            "gfx/terobjs/arch/stonemansion",
-            "gfx/terobjs/arch/logcabin",
-            "gfx/terobjs/arch/timberhouse",
-            "gfx/terobjs/arch/stonestead",
-            "gfx/terobjs/arch/greathall",
-            "gfx/terobjs/arch/stonetower",
-            "gfx/terobjs/arch/windmill"
-        };
-
-        Gob closestPortal = null;
-        double closestDist = Double.MAX_VALUE;
-
-        try {
-            for (String portalName : knownPortals) {
-                ArrayList<Gob> portals = Finder.findGobs(new NAlias(portalName));
-                for (Gob portal : portals) {
-                    // Verify hash is populated (gob is fully loaded)
-                    if (portal.ngob != null && portal.ngob.hash != null) {
-                        double dist = player.rc.dist(portal.rc);
-                        if (dist < closestDist) {
-                            closestDist = dist;
-                            closestPortal = portal;
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Continue to fallback
-        }
-
-        if (closestPortal != null) {
-            return closestPortal;
-        }
-
-        // Fallback: proximity-based search using glob
-        try {
-            Glob glob = NUtils.getGameUI().ui.sess.glob;
-            closestDist = PORTAL_PROXIMITY_THRESHOLD;
-            Gob closest = null;
-
-            synchronized (glob.oc) {
-                for (Gob gob : glob.oc) {
-                    if (gob.ngob == null || gob.ngob.name == null) continue;
-
-                    // Check if it's a portal type
-                    if (!isPortalGob(gob.ngob.name)) continue;
-
-                    double dist = player.rc.dist(gob.rc);
-                    if (dist < closestDist) {
-                        closestDist = dist;
-                        closest = gob;
-                    }
-                }
-            }
-
-            return closest;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /**
      * Find a specific portal type nearby.
-     * Unlike findNearbyPortal which searches all portal types, this searches for a specific expected exit.
+     * Searches for a specific expected exit based on getDoorPair() mapping.
      * This is more precise and prevents phantom portals from proximity matching the wrong type.
      */
     private Gob findSpecificPortalNearby(Gob player, String expectedPortalName) {
@@ -1079,9 +896,6 @@ public class PortalTraversalTracker {
      */
     public void reset() {
         lastGridId = -1;
-        lastNearbyPortal = null;
-        lastNearbyPortalLocalCoord = null;
-        lastNearbyPortalGridId = -1;
         lastPlayerLocalCoord = null;
         previousTickPlayerLocalCoord = null;
         lastProcessedFromGridId = -1;
