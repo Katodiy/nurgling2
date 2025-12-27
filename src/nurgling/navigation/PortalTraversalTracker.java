@@ -24,8 +24,6 @@ public class PortalTraversalTracker {
 
     // State tracking
     private long lastGridId = -1;
-    private Coord lastPlayerLocalCoord = null;  // Player's local coord in PREVIOUS grid (preserved across grid change)
-    private Coord previousTickPlayerLocalCoord = null;  // Player position from previous tick (before any grid change)
     private long lastCheckTime = 0;
 
     // Mine level tracking - tracks how deep we are in the mine
@@ -145,22 +143,11 @@ public class PortalTraversalTracker {
 
         // Check for grid change
         if (lastGridId != -1 && currentGridId != lastGridId) {
-            // Grid changed! Use previousTickPlayerLocalCoord - the player's position from BEFORE the change
-            // This is the position they were standing at when they clicked the door
             onGridChanged(lastGridId, currentGridId, player);
         }
 
         // Update tracking state AFTER handling grid change
         lastGridId = currentGridId;
-
-        // Chain the local coords: current -> previous -> lastPlayer
-        // This ensures we always have the position from 1-2 ticks ago when grid change is detected
-        if (currentPlayerLocalCoord != null) {
-            // Save current tick position as the "previous tick" for next time
-            // And save previous tick as "last player" for grid change detection
-            lastPlayerLocalCoord = previousTickPlayerLocalCoord;
-            previousTickPlayerLocalCoord = currentPlayerLocalCoord;
-        }
 
         // Capture lastActions gob BEFORE grid change (like routes system does)
         // This preserves the clicked portal info even after the grid changes
@@ -240,12 +227,9 @@ public class PortalTraversalTracker {
         }
 
         // Search for the exit portal
-        for (int i = 0; i < 5 && exitPortal == null; i++) {
-            if (expectedExitName != null) {
-                // We know exactly what exit to look for - search specifically for it
-                exitPortal = Finder.findGob(new NAlias(expectedExitName));
-            }
-        }
+        // We know exactly what exit to look for - search specifically for it
+        exitPortal = Finder.findGob(new NAlias(expectedExitName));
+
         if (exitPortal == null || exitPortal.ngob == null) {
             return;
         }
@@ -316,32 +300,6 @@ public class PortalTraversalTracker {
                     if (cachedLastActionsGobGridId != -1) {
                         entranceGridId = cachedLastActionsGobGridId;
                     }
-                }
-            }
-
-            // Strategy 2: Fallback to player position if we don't have the portal position
-            // BUT only if the cachedLastActionsGob matches the expected entrance type
-            // This prevents creating fake portals (e.g., cellarstairs on surface)
-            if (entranceCoord == null && lastPlayerLocalCoord != null) {
-                // Only use fallback if we actually clicked a portal that matches the expected entrance
-                // Check if cachedLastActionsGob is a portal that could reasonably be the entrance
-                boolean canUseFallback = false;
-                if (cachedLastActionsGob != null && cachedLastActionsGob.ngob != null) {
-                    String cachedName = cachedLastActionsGob.ngob.name;
-                    // If the cached action matches the expected entrance, use fallback
-                    if (cachedName != null && cachedName.equals(entranceName)) {
-                        canUseFallback = true;
-                        // Use cached portal's grid ID if available
-                        if (cachedLastActionsGobGridId != -1) {
-                            entranceGridId = cachedLastActionsGobGridId;
-                        }
-                    }
-                }
-
-                if (canUseFallback) {
-                    entranceCoord = lastPlayerLocalCoord;
-                    // Include position in hash to distinguish different buildings of same type
-                    entranceHash = "entrance_" + entranceGridId + "_" + entranceName.hashCode() + "_" + lastPlayerLocalCoord.x + "_" + lastPlayerLocalCoord.y;
                 }
             }
 
@@ -418,13 +376,6 @@ public class PortalTraversalTracker {
 
         // Also notify recorder
         recorder.recordPortalTraversal(gobHash, toGridId);
-
-        // Trigger a throttled save
-        try {
-            ChunkNavManager.getInstance().saveThrottled();
-        } catch (Exception e) {
-            // Ignore save errors
-        }
     }
 
     /**
@@ -778,8 +729,6 @@ public class PortalTraversalTracker {
      */
     public void reset() {
         lastGridId = -1;
-        lastPlayerLocalCoord = null;
-        previousTickPlayerLocalCoord = null;
         lastProcessedFromGridId = -1;
         lastProcessedToGridId = -1;
         lastProcessedTime = 0;

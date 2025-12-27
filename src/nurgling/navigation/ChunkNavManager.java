@@ -118,10 +118,13 @@ public class ChunkNavManager {
      * Called periodically to check for portal traversals and record visible grids.
      * Should be called from game loop or a polling task (NMapView.tick).
      */
-    public void tick() {
+    public void tick() throws InterruptedException {
         if (!enabled || !initialized) return;
 
         portalTracker.tick();
+
+        // Save after portal tracking (throttled - won't save every tick)
+        saveThrottled();
 
         // Periodically record all visible grids (not just newly loaded ones)
         long now = System.currentTimeMillis();
