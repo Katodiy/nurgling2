@@ -40,7 +40,7 @@ public class ChunkNavManager {
     // Portal visualization
     private boolean showPortalsEnabled = true; // Show portals by default
     private long lastPortalRefreshTime = 0;
-    private static final long PORTAL_REFRESH_MS = 3000; // Refresh portal display every 3 seconds
+    private static final long PORTAL_REFRESH_MS = 2000; // Refresh portal display every 3 seconds
 
     // Background thread for recording (to avoid FPS drops)
     private ExecutorService recordingExecutor;
@@ -98,7 +98,7 @@ public class ChunkNavManager {
         }
 
         // Save previous world data if switching
-        if (initialized && currentGenus != null && !genus.equals(currentGenus)) {
+        if (initialized && currentGenus != null) {
             save();
         }
 
@@ -173,11 +173,7 @@ public class ChunkNavManager {
             recordingExecutor.submit(() -> {
                 try {
                     for (MCache.Grid grid : gridsToRecord) {
-                        try {
-                            recorder.recordGrid(grid);
-                        } catch (Exception e) {
-                            // Ignore individual grid errors
-                        }
+                        recorder.recordGrid(grid);
                     }
                     saveThrottled();
                 } catch (Exception e) {
@@ -251,10 +247,6 @@ public class ChunkNavManager {
      */
     private void exportPathVisualization(ChunkPath path, NArea area) {
         if (path == null) return;
-
-        for (int i = 0; i < path.segments.size(); i++) {
-            ChunkPath.PathSegment seg = path.segments.get(i);
-        }
 
         try {
             JSONObject pathJson = new JSONObject();
