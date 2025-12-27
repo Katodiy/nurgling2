@@ -135,8 +135,9 @@ public class PortalTraversalTracker {
                 if (portalCoord != null) {
                     cachedLastActionsGobLocalCoord = portalCoord;
                 }
-                // Cache the portal's actual grid ID while the grid is still loaded (fixes boundary bug)
-                cachedLastActionsGobGridId = getGobGridId(lastActions.gob);
+                // Use player's grid, not portal gob's grid - this ensures the portal is recorded
+                // in the chunk where the player accesses it from (fixes large building boundary bug)
+                cachedLastActionsGobGridId = currentGridId;
             }
         }
     }
@@ -329,24 +330,6 @@ public class PortalTraversalTracker {
         if (portal != null) {
             portal.exitLocalCoord = exitLocalCoord;
         }
-    }
-
-    /**
-     * Get the grid ID of the grid containing a gob.
-     * Returns -1 if the grid cannot be determined.
-     */
-    private long getGobGridId(Gob gob) {
-        try {
-            MCache mcache = NUtils.getGameUI().map.glob.map;
-            Coord tileCoord = gob.rc.floor(MCache.tilesz);
-            MCache.Grid grid = mcache.getgridt(tileCoord);
-            if (grid != null) {
-                return grid.id;
-            }
-        } catch (Exception e) {
-            // Ignore
-        }
-        return -1;
     }
 
     /**
