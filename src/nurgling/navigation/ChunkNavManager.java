@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.overlays.map.MinimapChunkNavRenderer;
 import nurgling.profiles.ProfileManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -102,6 +103,9 @@ public class ChunkNavManager {
         if (initialized && currentGenus != null) {
             save();
         }
+
+        // Clear renderer cache to avoid stale textures from previous genus
+        MinimapChunkNavRenderer.clearCache();
 
         this.currentGenus = genus;
         this.graph = new ChunkNavGraph();
@@ -403,7 +407,9 @@ public class ChunkNavManager {
      * Load navigation data from disk.
      */
     public void load() {
-        if (currentGenus == null) return;
+        if (currentGenus == null) {
+            return;
+        }
 
         try {
             Path filePath = getStoragePath();
@@ -427,7 +433,7 @@ public class ChunkNavManager {
                     ChunkNavData chunk = ChunkNavData.fromJson(chunksArray.getJSONObject(i));
                     graph.addChunk(chunk);
                 } catch (Exception e) {
-                    // Ignore individual chunk errors
+                    // Skip invalid chunks
                 }
             }
 
@@ -435,7 +441,7 @@ public class ChunkNavManager {
             graph.rebuildAllConnections();
 
         } catch (Exception e) {
-            // Ignore load errors
+            // Failed to load, start fresh
         }
     }
 

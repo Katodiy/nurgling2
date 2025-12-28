@@ -41,6 +41,24 @@ public class ChunkNavData {
     // true = tile was within visible range when recorded, false = not yet observed
     public boolean[][] observed = new boolean[CELLS_PER_EDGE][CELLS_PER_EDGE];
 
+    // Pre-computed section observation counts for O(1) overlay rendering
+    // Grid is divided into 5x5 = 25 sections for finer granularity
+    // Each section is exactly 20x20 = 400 tiles (100/5 divides evenly)
+    public static final int SECTIONS_PER_SIDE = 5;
+    public static final int TOTAL_SECTIONS = SECTIONS_PER_SIDE * SECTIONS_PER_SIDE; // 25
+    public static final int TILES_PER_SECTION_SIDE = CELLS_PER_EDGE / SECTIONS_PER_SIDE; // 20
+    public static final int TILES_PER_SECTION = TILES_PER_SECTION_SIDE * TILES_PER_SECTION_SIDE; // 400
+    private int[] sectionObservedCount = new int[TOTAL_SECTIONS];
+
+    /**
+     * Get section index (0-24) for a tile coordinate.
+     */
+    private static int getSectionIndex(int cx, int cy) {
+        int sx = cx / TILES_PER_SECTION_SIDE;
+        int sy = cy / TILES_PER_SECTION_SIDE;
+        return sy * SECTIONS_PER_SIDE + sx;
+    }
+
     // Edge connections to adjacent chunks
     // Each array has 100 entries (one per tile along edge)
     public EdgePoint[] northEdge = new EdgePoint[CELLS_PER_EDGE];
@@ -147,6 +165,68 @@ public class ChunkNavData {
             return false;
         }
         return observed[cx][cy];
+    }
+
+    /**
+     * Set the observed state for a cell and update section counts.
+     */
+    public void setObserved(int cx, int cy, boolean value) {
+        if (cx < 0 || cx >= CELLS_PER_EDGE || cy < 0 || cy >= CELLS_PER_EDGE) {
+            return;
+        }
+        boolean oldValue = observed[cx][cy];
+        if (oldValue != value) {
+            observed[cx][cy] = value;
+            int section = getSectionIndex(cx, cy);
+            if (value) {
+                sectionObservedCount[section]++;
+            } else {
+                sectionObservedCount[section]--;
+            }
+        }
+    }
+
+    /**
+     * Check if a section is fully observed (O(1) operation).
+     * @param section 0-24 (5x5 grid, row-major order)
+     * @return true if all tiles in the section are observed
+     */
+    public boolean isSectionFullyObserved(int section) {
+        if (section < 0 || section >= TOTAL_SECTIONS) return false;
+        return sectionObservedCount[section] >= TILES_PER_SECTION;
+    }
+
+    /**
+     * Get the observation count for a section (for debugging/display).
+     */
+    public int getSectionObservedCount(int section) {
+        if (section < 0 || section >= TOTAL_SECTIONS) return 0;
+        return sectionObservedCount[section];
+    }
+
+    /**
+     * Get the expected tile count for a section.
+     */
+    public static int getSectionTileCount(int section) {
+        if (section < 0 || section >= TOTAL_SECTIONS) return 0;
+        return TILES_PER_SECTION;
+    }
+
+    /**
+     * Recompute section counts from the observed array.
+     * Called after loading from JSON or for data repair.
+     */
+    public void recomputeSectionCounts() {
+        for (int i = 0; i < TOTAL_SECTIONS; i++) {
+            sectionObservedCount[i] = 0;
+        }
+        for (int x = 0; x < CELLS_PER_EDGE; x++) {
+            for (int y = 0; y < CELLS_PER_EDGE; y++) {
+                if (observed[x][y]) {
+                    sectionObservedCount[getSectionIndex(x, y)]++;
+                }
+            }
+        }
     }
 
     /**
@@ -349,6 +429,9 @@ public class ChunkNavData {
                 }
             }
         }
+
+        // Recompute section counts from loaded observed data
+        data.recomputeSectionCounts();
 
         // Edges
         data.northEdge = edgeFromJson(obj.getJSONArray("northEdge"));

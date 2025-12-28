@@ -133,8 +133,8 @@ public class ChunkNavRecorder {
                 long tileKey = ((long) tx << 32) | (ty & 0xFFFFFFFFL);
                 boolean gobBlocked = gobBlockedTiles.contains(tileKey);
 
-                // Mark tile as observed
-                chunk.observed[tx][ty] = true;
+                // Mark tile as observed (uses setObserved for quadrant count tracking)
+                chunk.setObserved(tx, ty, true);
 
                 // Record what we observe
                 if (terrainBlocked) {
@@ -249,8 +249,8 @@ public class ChunkNavRecorder {
                     continue;  // Leave as unobserved (blocked by default)
                 }
 
-                // Mark as observed
-                chunk.observed[tx][ty] = true;
+                // Mark as observed (uses setObserved for quadrant count tracking)
+                chunk.setObserved(tx, ty, true);
 
                 // Check terrain
                 boolean terrainBlocked = isTileBlocked(mcache, worldTile);

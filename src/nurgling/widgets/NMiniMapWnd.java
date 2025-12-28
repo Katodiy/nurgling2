@@ -206,6 +206,23 @@ public class NMiniMapWnd extends Widget{
         });
         buttons.add(timer);
 
+        // ChunkNav exploration overlay toggle (using grid icon as placeholder)
+        ACheckBox chunkNav = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, "ChunkNav Exploration");
+        chunkNav.changed(a -> {
+            NConfig.set(NConfig.Key.chunkNavOverlay, a);
+            NConfig.needUpdate();
+            // Update all NMiniMap instances
+            if (miniMap instanceof NMiniMap) {
+                ((NMiniMap) miniMap).showChunkNavOverlay = a;
+            }
+            NGameUI gui = NUtils.getGameUI();
+            if (gui != null && gui.mmap instanceof NMiniMap) {
+                ((NMiniMap) gui.mmap).showChunkNavOverlay = a;
+            }
+        });
+        chunkNav.a = (Boolean) NConfig.get(NConfig.Key.chunkNavOverlay);
+        buttons.add(chunkNav);
+
         // Layout buttons with wrapping
         layoutButtons(buttons);
 

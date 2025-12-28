@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import haven.res.ui.obj.buddy.Buddy;
 import nurgling.*;
+import nurgling.overlays.map.MinimapChunkNavRenderer;
 import nurgling.overlays.map.MinimapClaimRenderer;
 import nurgling.overlays.map.MinimapExploredAreaRenderer;
 import nurgling.tools.ExploredArea;
@@ -35,6 +36,9 @@ NMiniMap extends MiniMap {
     // Visibility flags for tree and fish icons
     public boolean showTreeIcons = true;
     public boolean showFishIcons = true;
+
+    // Visibility flag for ChunkNav exploration overlay
+    public boolean showChunkNavOverlay = false;
 
     private static final Coord2d sgridsz = new Coord2d(new Coord(100,100));
     public NMiniMap(Coord sz, MapFile file) {
@@ -193,6 +197,11 @@ NMiniMap extends MiniMap {
         
         // Render claim overlays (personal, village, realm)
         MinimapClaimRenderer.renderClaims(this, g);
+
+        // Render ChunkNav exploration overlay
+        if (showChunkNavOverlay) {
+            MinimapChunkNavRenderer.renderChunkNav(this, g);
+        }
 
         boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id));
         // Show grid when zoomed in enough (scale >= 0.25, i.e. not too far out)
