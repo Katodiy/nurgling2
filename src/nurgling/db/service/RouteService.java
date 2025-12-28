@@ -107,12 +107,55 @@ public class RouteService {
     }
 
     /**
+     * Save a single route to database
+     */
+    public void saveRoute(Route route, String profile) throws SQLException {
+        databaseManager.executeOperation(adapter -> {
+            JSONObject json = route.toJson();
+            int newVersion = routeDao.saveRoute(adapter,
+                route.id,
+                route.name,
+                route.path,
+                json.toString(),
+                profile);
+            route.version = newVersion;
+            return null;
+        });
+    }
+
+    /**
+     * Save a single route asynchronously
+     */
+    public CompletableFuture<Void> saveRouteAsync(Route route, String profile) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                saveRoute(route, profile);
+            } catch (SQLException e) {
+                System.err.println("Failed to save route to database: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
      * Delete a route
      */
     public void deleteRoute(int routeId, String profile) throws SQLException {
         databaseManager.executeOperation(adapter -> {
             routeDao.deleteRoute(adapter, routeId, profile);
             return null;
+        });
+    }
+
+    /**
+     * Delete a route asynchronously
+     */
+    public CompletableFuture<Void> deleteRouteAsync(int routeId, String profile) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                deleteRoute(routeId, profile);
+            } catch (SQLException e) {
+                System.err.println("Failed to delete route from database: " + e.getMessage());
+            }
         });
     }
 
@@ -126,7 +169,11 @@ public class RouteService {
         
         this.syncCallback = callback;
         this.syncEnabled = true;
-        this.syncScheduler = Executors.newSingleThreadScheduledExecutor();
+        this.syncScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "Route-Sync-Worker");
+            t.setDaemon(true);  // Daemon thread won't prevent JVM shutdown
+            return t;
+        });
         
         syncScheduler.scheduleAtFixedRate(() -> {
             if (!syncEnabled) return;
@@ -255,7 +302,7 @@ public class RouteService {
                 nurgling.NUtils.getGameUI().map != null) {
                 
                 nurgling.NMapView map = (nurgling.NMapView) nurgling.NUtils.getGameUI().map;
-                Map<Integer, Route> routes = map.routeGraphManager.getRoutes();
+                Map<Integer, Route> routes = map.getRouteGraphManager().getRoutes();
                 if (routes != null) {
                     for (Map.Entry<Integer, Route> entry : routes.entrySet()) {
                         versions.put(entry.getKey(), entry.getValue().version);
@@ -285,9 +332,6 @@ public class RouteService {
         return null;
     }
 }
-
-
-
 
 
 

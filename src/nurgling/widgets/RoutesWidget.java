@@ -253,6 +253,8 @@ public class RoutesWidget extends Window {
                 waypointList.update(route.waypoints);
                 hearthfireWaypointList.updateHearthfireWaypoints();
                 NConfig.needRoutesUpdate(); // Data changed: waypoint added
+                // Save to database if DB mode is enabled
+                ((NMapView) NUtils.getGameUI().map).routeGraphManager.saveRouteToDatabase(route);
             }
         }, new Coord(x, 0)).settip("Record Position");
 
@@ -267,6 +269,8 @@ public class RoutesWidget extends Window {
                         new AddHearthFire().run(NUtils.getGameUI());
                         hearthfireWaypointList.updateHearthfireWaypoints();
                         NConfig.needRoutesUpdate(); // Data changed: hearth fire added
+                        // Save to database if DB mode is enabled
+                        ((NMapView) NUtils.getGameUI().map).routeGraphManager.saveRouteToDatabase(route);
                     } catch (InterruptedException e) {
                         NUtils.getGameUI().error("Failed to add hearth fire");
                     }
@@ -503,6 +507,8 @@ public class RoutesWidget extends Window {
                                         NConfig.needRoutesUpdate(); // Data changed: waypoint deleted
                                         specList.update(routeList.sel.route);
                                         ((NMapView) NUtils.getGameUI().map).initRouteDummys(routeList.sel.route.id);
+                                        // Save to database if DB mode is enabled
+                                        ((NMapView) NUtils.getGameUI().map).routeGraphManager.saveRouteToDatabase(routeList.sel.route);
                                     }
                                 }
                                 uimsg("cancel");
@@ -700,6 +706,8 @@ public class RoutesWidget extends Window {
                                             hearthfireWaypointList.updateHearthfireWaypoints();
                                             NConfig.needRoutesUpdate(); // Data changed: hearth fire deleted
                                             ((NMapView) NUtils.getGameUI().map).initRouteDummys(hearthfireRoute.id);
+                                            // Save to database if DB mode is enabled
+                                            ((NMapView) NUtils.getGameUI().map).routeGraphManager.saveRouteToDatabase(hearthfireRoute);
                                         }
                                     }
                                 }

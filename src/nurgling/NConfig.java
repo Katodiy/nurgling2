@@ -1227,31 +1227,13 @@ public class NConfig
                 return;
             }
 
-            // If DB is enabled - ONLY use DB, never fallback to file
+            // If DB is enabled - do NOT batch export!
+            // Routes are saved individually when recorded through RouteAutoRecorder.
+            // This prevents local files from overwriting database.
             if ((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
                 current.isRoutesUpd = false;
-                
-                if (NCore.databaseManager != null && NCore.databaseManager.isReady()) {
-                    try {
-                        String profile = NUtils.getGameUI().getGenus();
-                        if (profile == null || profile.isEmpty()) {
-                            profile = "global";
-                        }
-                        java.util.Map<Integer, Route> routes = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getRoutes();
-                        NCore.databaseManager.getRouteService().exportRoutesToDatabaseAsync(routes, profile)
-                            .exceptionally(e -> {
-                                System.err.println("Failed to save routes to database: " + e.getMessage());
-                                if (e.getCause() != null) {
-                                    e.getCause().printStackTrace();
-                                }
-                                current.isRoutesUpd = true;
-                                return null;
-                            });
-                    } catch (Exception e) {
-                        System.err.println("Failed to save routes to database: " + e.getMessage());
-                        current.isRoutesUpd = true;
-                    }
-                }
+                // Individual routes are saved via RouteService.saveRouteAsync()
+                // when they are actually recorded through the client
                 return;
             }
 

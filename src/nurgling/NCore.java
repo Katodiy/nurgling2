@@ -767,6 +767,10 @@ public class NCore extends Widget
             new nurgling.db.service.RouteService.RouteSyncCallback() {
                 @Override
                 public void onRoutesUpdated(java.util.List<nurgling.routes.Route> updatedRoutes) {
+                    // Skip sync if route recording is in progress
+                    if (nurgling.NMapView.isRecordingRoutePoint) {
+                        return;
+                    }
                     if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
                         nurgling.NMapView map = (nurgling.NMapView) NUtils.getGameUI().map;
                         long now = System.currentTimeMillis();
@@ -792,6 +796,10 @@ public class NCore extends Widget
 
                 @Override
                 public void onRouteDeleted(int routeId) {
+                    // Skip sync if route recording is in progress
+                    if (nurgling.NMapView.isRecordingRoutePoint) {
+                        return;
+                    }
                     if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
                         nurgling.NMapView map = (nurgling.NMapView) NUtils.getGameUI().map;
                         map.routeGraphManager.getRoutes().remove(routeId);
@@ -802,6 +810,10 @@ public class NCore extends Widget
 
                 @Override
                 public void onFullSync(java.util.Map<Integer, nurgling.routes.Route> allRoutes) {
+                    // Skip sync if route recording is in progress
+                    if (nurgling.NMapView.isRecordingRoutePoint) {
+                        return;
+                    }
                     if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
                         nurgling.NMapView map = (nurgling.NMapView) NUtils.getGameUI().map;
                         map.routeGraphManager.getRoutes().clear();

@@ -284,7 +284,11 @@ public class AreaService {
 
         this.syncCallback = callback;
         this.syncEnabled = true;
-        this.syncScheduler = Executors.newSingleThreadScheduledExecutor();
+        this.syncScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "Area-Sync-Worker");
+            t.setDaemon(true);  // Daemon thread won't prevent JVM shutdown
+            return t;
+        });
 
         syncScheduler.scheduleAtFixedRate(() -> {
             if (!syncEnabled) return;

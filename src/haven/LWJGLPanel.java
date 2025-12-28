@@ -170,6 +170,20 @@ public class LWJGLPanel extends AWTGLCanvas implements GLPanel, Console.Director
 		    });
 	    }
 	} catch(InterruptedException e) {
+	} finally {
+	    // Ensure proper cleanup of OpenGL resources to prevent GPU hooks from hanging
+	    synchronized(this) {
+		if(env != null) {
+		    try {
+			glrun(() -> env.dispose());
+		    } catch(InterruptedException e) {
+			// Ignore - we're already shutting down
+		    } catch(Exception e) {
+			// Log but don't fail on cleanup errors
+			System.err.println("[LWJGLPanel] Error during env.dispose(): " + e.getMessage());
+		    }
+		}
+	    }
 	}
     }
 

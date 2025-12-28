@@ -177,6 +177,29 @@ public class RouteAutoRecorder implements Runnable {
             NUtils.getGameUI().routesWidget.updateWaypoints();
             route.lastAction = null;
         }
+
+        // Save route to database when recording is finished
+        saveRouteToDatabase();
+    }
+
+    /**
+     * Save the recorded route to database if DB mode is enabled
+     */
+    private void saveRouteToDatabase() {
+        if ((Boolean) NConfig.get(NConfig.Key.ndbenable) &&
+            nurgling.NCore.databaseManager != null && 
+            nurgling.NCore.databaseManager.isReady()) {
+            String profile = NUtils.getGameUI().getGenus();
+            if (profile == null || profile.isEmpty()) {
+                profile = "global";
+            }
+            nurgling.NCore.databaseManager.getRouteService().saveRouteAsync(route, profile)
+                .thenRun(() -> System.out.println("Route '" + route.name + "' saved to database"))
+                .exceptionally(e -> {
+                    System.err.println("Failed to save route to database: " + e.getMessage());
+                    return null;
+                });
+        }
     }
 
     /**
