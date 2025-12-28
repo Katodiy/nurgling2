@@ -28,6 +28,7 @@ import nurgling.tools.*;
 import nurgling.widgets.NAreasWidget;
 import nurgling.widgets.NMiniMap;
 import nurgling.widgets.NZoneMeasureTool;
+import nurgling.NConfig;
 
 import java.awt.event.KeyEvent;
 import java.awt.image.*;
@@ -362,9 +363,16 @@ public class NMapView extends MapView
 
     /**
      * Create portal labels for all portals in all visible chunks.
+     * Only creates labels if chunkNavOverlay config is enabled.
      */
     public void createPortalLabels() {
         destroyPortalDummys();
+
+        // Check if ChunkNav overlay is enabled
+        Object val = NConfig.get(NConfig.Key.chunkNavOverlay);
+        if (!(val instanceof Boolean) || !(Boolean) val) {
+            return; // Don't show portal dots if overlay is disabled
+        }
 
         ChunkNavManager manager = getChunkNavManager();
         if (manager == null || !manager.isInitialized()) return;
