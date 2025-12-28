@@ -1,6 +1,7 @@
 package nurgling.overlays.map;
 
 import haven.*;
+import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.navigation.ChunkNavData;
 import nurgling.navigation.ChunkNavGraph;
@@ -16,7 +17,6 @@ import java.util.Map;
 /**
  * Renders ChunkNav exploration overlay on the minimap.
  * Shows 5x5 = 25 sections per chunk: green if fully observed, red if any tile unobserved.
- *
  * Simple approach: iterate MCache grids directly, use p2c() for screen positions.
  */
 public class MinimapChunkNavRenderer {
@@ -42,6 +42,12 @@ public class MinimapChunkNavRenderer {
      * Main rendering method called from NMiniMap.drawparts()
      */
     public static void renderChunkNav(NMiniMap map, GOut g) {
+        // Check if feature is enabled
+        Object val = NConfig.get(NConfig.Key.chunkNavOverlay);
+        if (!(val instanceof Boolean) || !(Boolean) val) {
+            return;
+        }
+
         if (map.ui == null || map.ui.gui == null || map.ui.gui.map == null) {
             return;
         }

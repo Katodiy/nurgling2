@@ -206,19 +206,11 @@ public class NMiniMapWnd extends Widget{
         });
         buttons.add(timer);
 
-        // ChunkNav exploration overlay toggle (using grid icon as placeholder)
+        // ChunkNav exploration overlay toggle
         ACheckBox chunkNav = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, "ChunkNav Exploration");
         chunkNav.changed(a -> {
             NConfig.set(NConfig.Key.chunkNavOverlay, a);
             NConfig.needUpdate();
-            // Update all NMiniMap instances
-            if (miniMap instanceof NMiniMap) {
-                ((NMiniMap) miniMap).showChunkNavOverlay = a;
-            }
-            NGameUI gui = NUtils.getGameUI();
-            if (gui != null && gui.mmap instanceof NMiniMap) {
-                ((NMiniMap) gui.mmap).showChunkNavOverlay = a;
-            }
         });
         chunkNav.a = (Boolean) NConfig.get(NConfig.Key.chunkNavOverlay);
         buttons.add(chunkNav);
@@ -409,9 +401,14 @@ public class NMiniMapWnd extends Widget{
 
     private void layoutButtons(java.util.List<Widget> buttons) {
         if(buttons.isEmpty()) return;
-        
+
         int btnSpacing = UI.scale(3);
-        int maxWidth = miniMap.sz.x;
+        // Calculate total width needed for all buttons in one row
+        int totalWidth = 0;
+        for(Widget btn : buttons) {
+            totalWidth += btn.sz.x + btnSpacing;
+        }
+        int maxWidth = Math.max(miniMap.sz.x, totalWidth);
         int currentX = 0;
         int currentY = 0;
         int rowHeight = 0;
