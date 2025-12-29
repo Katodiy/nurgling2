@@ -207,7 +207,7 @@ public class NMiniMapWnd extends Widget{
         buttons.add(timer);
 
         // ChunkNav exploration overlay toggle
-        ACheckBox chunkNav = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, "ChunkNav Exploration");
+        ACheckBox chunkNav = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/gridnav", kb_grid, "ChunkNav Exploration");
         chunkNav.changed(a -> {
             NConfig.set(NConfig.Key.chunkNavOverlay, a);
             NConfig.needUpdate();
