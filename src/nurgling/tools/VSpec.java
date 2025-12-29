@@ -1515,7 +1515,7 @@ public class VSpec {
 //        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/gingerbreadman\",\"name\":\"Gingerbread Man\"}"));
 //        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/gingerbreadwoman\",\"name\":\"Gingerbread Woman\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/greenleafpie\",\"name\":\"Greenleaf Pie\"}"));
-        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/grubpie\",\"name\":\"Grub Pie\"}"));
+        pies.add(new JSONObject("{\"static\":\"gfx/invobjs/grubpie\",\"name\":\"Grubpie\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/honeybun\",\"name\":\"Honeybun\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/jellycake\",\"name\":\"Jelly Cake\"}"));
         pies.add(new JSONObject("{\"static\":\"gfx/invobjs/lardycake\",\"name\":\"Lardy Cake\"}"));
@@ -1552,7 +1552,7 @@ public class VSpec {
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-fishpie\",\"name\":\"Unbaked Fishpie\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-fruitpie\",\"name\":\"Unbaked Fruit Pie\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-greenleafpie\",\"name\":\"Unbaked Greenleaf Pie\"}"));
-        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-grubpie\",\"name\":\"Unbaked Grub Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-grubpie\",\"name\":\"Unbaked Grubpie\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-honeybun\",\"name\":\"Unbaked Honeybun\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-jellycake\",\"name\":\"Unbaked Jelly Cake\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-lardycake\",\"name\":\"Unbaked Lardy Cake\"}"));

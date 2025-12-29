@@ -105,7 +105,14 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 	    dev.setFullScreenWindow(this);
 	    if(fsmode != null) {
 		prefs = dev.getDisplayMode();
-		dev.setDisplayMode(fsmode);
+		try {
+		    dev.setDisplayMode(fsmode);
+		    // Give DWM time to process the display mode change
+		    Thread.sleep(100);
+		} catch(Exception e) {
+		    System.err.println("[MainFrame] Failed to set display mode: " + e.getMessage());
+		    // Don't fail completely - continue without mode change
+		}
 	    }
 	    pack();
 	} catch(Exception e) {
@@ -118,8 +125,16 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 	if(!fullscreen)
 	    return;
 	try {
-	    if(prefs != null)
-		dev.setDisplayMode(prefs);
+	    if(prefs != null) {
+		try {
+		    dev.setDisplayMode(prefs);
+		    // Give DWM time to process the display mode change
+		    Thread.sleep(100);
+		} catch(Exception e) {
+		    System.err.println("[MainFrame] Failed to restore display mode: " + e.getMessage());
+		    // Don't fail completely - continue without mode change
+		}
+	    }
 	    dev.setFullScreenWindow(null);
 	    setVisible(false);
 	    dispose();

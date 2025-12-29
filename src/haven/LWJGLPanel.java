@@ -27,6 +27,9 @@
 package haven;
 
 import java.util.*;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
 import java.awt.AWTException;
 import java.awt.EventQueue;
 import java.awt.Robot;
@@ -49,6 +52,8 @@ public class LWJGLPanel extends AWTGLCanvas implements GLPanel, Console.Director
     private Area shape;
     private Pipe base, wnd;
     private final Loop main = new Loop(this);
+    private static final Set<LWJGLPanel> activePanels = Collections.synchronizedSet(new HashSet<>());
+    private static boolean shutdownHookRegistered = false;
 
     public LWJGLPanel() {
 	super();
@@ -57,6 +62,27 @@ public class LWJGLPanel extends AWTGLCanvas implements GLPanel, Console.Director
 	base.prep(FragColor.blend(new BlendMode()));
 	setFocusTraversalKeysEnabled(false);
 	newui(null);
+	
+	// Register shutdown hook for emergency cleanup
+	synchronized(LWJGLPanel.class) {
+	    if (!shutdownHookRegistered) {
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+		    synchronized(activePanels) {
+			for (LWJGLPanel panel : activePanels) {
+			    try {
+				if (panel.env != null) {
+				    panel.env.dispose();
+				}
+			    } catch (Exception e) {
+				// Ignore errors during shutdown
+			    }
+			}
+			activePanels.clear();
+		    }
+		}, "LWJGL-Cleanup-Hook"));
+		shutdownHookRegistered = true;
+	    }
+	}
     }
 
     public void initGL() {}
@@ -110,7 +136,14 @@ public class LWJGLPanel extends AWTGLCanvas implements GLPanel, Console.Director
 	    GLException.checkfor(gl, null);
 	if(iswap != aswap)
 	    setSwapInterval((aswap = iswap) ? 1 : 0);
-	swapBuffers();
+	try {
+	    swapBuffers();
+	} catch(Exception e) {
+	    // If swapBuffers fails (e.g., window was destroyed or DWM conflict),
+	    // log but don't crash - this can happen during window operations
+	    System.err.println("[LWJGLPanel] swapBuffers failed: " + e.getMessage());
+	    // Don't throw - let the render loop continue
+	}
 	if(main.gldebug)
 	    GLException.checkfor(gl, null);
     }
@@ -145,6 +178,7 @@ public class LWJGLPanel extends AWTGLCanvas implements GLPanel, Console.Director
 		    org.lwjgl.opengl.GL.createCapabilities();
 		    synchronized(this) {
 			setenv(new LWJGLEnvironment(this.shape));
+			activePanels.add(this);
 			initgl();
 			notifyAll();
 		    }
@@ -174,13 +208,28 @@ public class LWJGLPanel extends AWTGLCanvas implements GLPanel, Console.Director
 	    // Ensure proper cleanup of OpenGL resources to prevent GPU hooks from hanging
 	    synchronized(this) {
 		if(env != null) {
+		    activePanels.remove(this);
 		    try {
-			glrun(() -> env.dispose());
-		    } catch(InterruptedException e) {
-			// Ignore - we're already shutting down
+			// Try to cleanup in OpenGL context first (preferred method)
+			try {
+			    glrun(() -> env.dispose());
+			} catch(InterruptedException e) {
+			    // If AWT context is gone, try direct cleanup
+			    try {
+				runInContext(() -> env.dispose());
+			    } catch(Exception e2) {
+				// If even that fails, at least mark as disposed
+				System.err.println("[LWJGLPanel] Could not cleanup in context, forcing dispose");
+				env.dispose();
+			    }
+			}
 		    } catch(Exception e) {
-			// Log but don't fail on cleanup errors
-			System.err.println("[LWJGLPanel] Error during env.dispose(): " + e.getMessage());
+			// Last resort: force dispose even without context
+			try {
+			    env.dispose();
+			} catch(Exception e2) {
+			    System.err.println("[LWJGLPanel] Error during env.dispose(): " + e2.getMessage());
+			}
 		    }
 		}
 	    }
