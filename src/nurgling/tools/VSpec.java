@@ -1220,6 +1220,7 @@ public class VSpec {
         categories.put("Tuber", rootVegetables);
 
         ArrayList<JSONObject> onions = new ArrayList<>();
+        onions.add(new JSONObject("{\"static\":\"gfx/invobjs/preonion\",\"name\":\"Wild Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/yellowonion\",\"name\":\"Yellow Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/redonion\",\"name\":\"Red Onion\"}"));
         onions.add(new JSONObject("{\"static\":\"gfx/invobjs/garlic\",\"name\":\"Garlic\"}"));
@@ -1470,6 +1471,8 @@ public class VSpec {
         fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/plum\",\"name\":\"Plum\"}"));
         fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/quince\",\"name\":\"Quince\"}"));
         fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/apple\",\"name\":\"Red Apple\"}"));
+        fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/applegreen\",\"name\":\"Green Apple\"}"));
+        fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/sorbapple\",\"name\":\"Sorb Apple\"}"));
         fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-blackcurrant-yester\",\"name\":\"Yesteryear's Blackcurrant Seed\"}"));
         fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/cherry-yester\",\"name\":\"Yesteryear's Cherry\"}"));
         fruitOrBerry.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-elderberrybush-yester\",\"name\":\"Yesteryear's Elderberry Seed\"}"));
@@ -2693,6 +2696,8 @@ public class VSpec {
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-crabappletree-yester\",\"name\":\"Yesteryear's Crabapple\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/cork\",\"name\":\"Cork\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/applecore\",\"name\":\"Red Apple Core\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/applegreencore\",\"name\":\"Green Apple Core\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/sorbapplecore\",\"name\":\"Sorb Apple Core\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-maple\",\"name\":\"Maple Samara\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-willow\",\"name\":\"Willow Catkin\"}"));
         categories.put("Seed of Tree or Bush", seedsAndBerries);
@@ -2893,17 +2898,25 @@ public class VSpec {
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/tapeworm\",\"name\":\"Disgusting Tapeworm\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/glowshrooms\",\"name\":\"Glowshroom\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/squirrelhair\",\"name\":\"Tuft of Squirrel's Finest Hair\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/adderfang\",\"name\":\"Adder Fang\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/ghostpipes\",\"name\":\"Ghostpipe\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lampstalk\",\"name\":\"Lamp Stalk\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/mistletoe\",\"name\":\"Mistletoe\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/cattailhead\",\"name\":\"Cattail Head\"}"));
         categories.put("Curiosities", curio);
 
         ArrayList<JSONObject> Misc = new ArrayList<>();
-        Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/standinggrass\",\"name\":\"Standing Grass\"}"));
         Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/leather\",\"name\":\"Leather\"}"));
         Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/forestlizard\",\"name\":\"Forest Lizard\"}"));
         Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/frog\",\"name\":\"Frog\"}"));
         Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/toad\",\"name\":\"Toad\"}"));
         categories.put("Miscellaneous", Misc);
+
+        ArrayList<JSONObject> weavableGrass = new ArrayList<>();
+        weavableGrass.add(new JSONObject("{\"static\":\"gfx/invobjs/standinggrass\",\"name\":\"Standing Grass\"}"));
+        weavableGrass.add(new JSONObject("{\"static\":\"gfx/invobjs/reeds\",\"name\":\"Reeds\"}"));
+        weavableGrass.add(new JSONObject("{\"static\":\"gfx/invobjs/straw\",\"name\":\"Straw\"}"));
+        categories.put("Weavable Grass", weavableGrass);
 
         ArrayList<JSONObject> Bark = new ArrayList<>();
         Bark.add(new JSONObject("{\"static\":\"gfx/invobjs/bark-birch\",\"name\":\"Birch Bark\"}"));

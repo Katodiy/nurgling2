@@ -27,10 +27,13 @@ public class StackSupporter {
         customStackSizes.put("Forest Lizard", 3);
         customStackSizes.put("Cavebulb", 4);
         customStackSizes.put("Dusk Fern", 4);
+        customStackSizes.put("Straw", 5);
+        customStackSizes.put("Standing Grass", 4);
         customStackSizes.put("Frog", 3);
         customStackSizes.put("Toad", 3);
         customStackSizes.put("Waybroad", 4);
         customStackSizes.put("Green Kelp", 4);
+        customStackSizes.put("Cattail Roots", 4);
 
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
