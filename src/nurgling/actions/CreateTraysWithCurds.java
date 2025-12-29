@@ -45,12 +45,43 @@ public class CreateTraysWithCurds implements Action {
                 break;
             }
 
-            // 2. Make sure you have 4 curds
+           // 2. Make sure you have 4 curds
             ArrayList<WItem> curds = gui.getInventory().getItems(curdType);
             if (curds.size() < CheeseConstants.CURDS_PER_TRAY) {
-                Results curdRes = new TakeItems2(context, curdType, CheeseConstants.CURDS_PER_TRAY - curds.size()).run(gui);
+                int needed = CheeseConstants.CURDS_PER_TRAY - curds.size();
+                
+                // Check if storage has at least 'needed' curds available
+                ArrayList<NContext.ObjectStorage> curdStorages = context.getInStorages(curdType);
+                int availableInStorage = 0;
+                
+                if (curdStorages != null && !curdStorages.isEmpty()) {
+                    for (NContext.ObjectStorage storage : curdStorages) {
+                        if (storage instanceof Container) {
+                            Container container = (Container) storage;
+                            Gob containerGob = Finder.findGob(container.gobid);
+                            if (containerGob != null) {
+                                new PathFinder(containerGob).run(gui);
+                                new OpenTargetContainer(container).run(gui);
+                                
+                                ArrayList<WItem> curdsInContainer = gui.getInventory(container.cap).getItems(curdType);
+                                availableInStorage += curdsInContainer.size();
+                                
+                                new CloseTargetContainer(container).run(gui);
+                            }
+                        }
+                    }
+                }
+                
+                // Only proceed if we have enough curds in storage
+                if (availableInStorage < needed) {
+                    gui.error("Not enough curds available to fill a tray (need " + needed + ", found " + availableInStorage + ")");
+                    break;
+                }
+                
+                // Now safely take the curds
+                Results curdRes = new TakeItems2(context, curdType, needed).run(gui);
                 if (!curdRes.isSuccess || gui.getInventory().getItems(curdType).size() < CheeseConstants.CURDS_PER_TRAY) {
-                    gui.error("Not enough curds available to fill a tray");
+                    gui.error("Failed to retrieve curds from storage");
                     break;
                 }
 
