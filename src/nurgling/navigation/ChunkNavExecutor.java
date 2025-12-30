@@ -765,23 +765,21 @@ public class ChunkNavExecutor implements Action {
             return Results.FAIL();
         }
 
-        if (portal.requiresInteraction) {
-            // Portal recording is handled automatically by PortalTraversalTracker via getLastActions()
-            NUtils.openDoorOnAGob(gui, portalGob);
+        // Portal recording is handled automatically by PortalTraversalTracker via getLastActions()
+        NUtils.openDoorOnAGob(gui, portalGob);
 
-            if (isLoadingPortal(portal.type)) {
-                String exitGobName = GateDetector.getDoorPair(portal.gobName);
+        if (isLoadingPortal(portal.type)) {
+            String exitGobName = GateDetector.getDoorPair(portal.gobName);
 
-                NUtils.getUI().core.addTask(new WaitForMapLoad());
+            NUtils.getUI().core.addTask(new WaitForMapLoad());
 
-                if (exitGobName != null) {
-                    NUtils.getUI().core.addTask(new WaitForExitPortal(exitGobName));
-                }
-
-                NUtils.getUI().core.addTask(new WaitForGobStability());
-            } else {
-                NUtils.getUI().core.addTask(new WaitGobModelAttrChange(portalGob, portalGob.ngob.getModelAttribute()));
+            if (exitGobName != null) {
+                NUtils.getUI().core.addTask(new WaitForExitPortal(exitGobName));
             }
+
+            NUtils.getUI().core.addTask(new WaitForGobStability());
+        } else {
+            NUtils.getUI().core.addTask(new WaitGobModelAttrChange(portalGob, portalGob.ngob.getModelAttribute()));
         }
 
         return Results.SUCCESS();
