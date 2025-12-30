@@ -194,10 +194,10 @@ public class SeedCrop implements Action {
                 } else if (!stockpiles.isEmpty()) {
                     fetchSeedsFromStockpiles(gui);
                 }
-                // Re-check after fetch - if still insufficient, skip this area
+                // Re-check after fetch - if still insufficient, abort
                 if (!hasSufficientSeeds(gui, count, !barrels.isEmpty())) {
-                    NUtils.getGameUI().msg("Insufficient seeds for " + count + " cells, skipping area");
-                    return;
+                    gui.error("NO SEEDS: ABORT");
+                    throw new InterruptedException();
                 }
             }
 
@@ -259,6 +259,12 @@ public class SeedCrop implements Action {
                 if (!tb.isFull())
                     break;
             }
+        }
+
+        // Ensure hand is empty before trying to take from barrel
+        // (TransferToBarrel may leave small stacks in hand if they can't be combined)
+        if (!gui.hand.isEmpty()) {
+            NUtils.dropToInv();
         }
 
         for (Gob barrel : barrels) {
