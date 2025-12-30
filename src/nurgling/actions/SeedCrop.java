@@ -194,8 +194,20 @@ public class SeedCrop implements Action {
                 } else if (!stockpiles.isEmpty()) {
                     fetchSeedsFromStockpiles(gui);
                 }
-                // Re-check after fetch - if still insufficient, abort
+                // Re-check after fetch - if still insufficient, drop seeds back and abort
                 if (!hasSufficientSeeds(gui, count, !barrels.isEmpty())) {
+                    // Return seeds to barrel before aborting
+                    if (!gui.hand.isEmpty()) {
+                        NUtils.dropToInv();
+                    }
+                    if (!barrels.isEmpty() && !gui.getInventory().getItems(iseed).isEmpty()) {
+                        for (Gob barrel : barrels) {
+                            TransferToBarrel tb;
+                            (tb = new TransferToBarrel(barrel, iseed)).run(gui);
+                            if (!tb.isFull())
+                                break;
+                        }
+                    }
                     gui.error("NO SEEDS: ABORT");
                     throw new InterruptedException();
                 }
