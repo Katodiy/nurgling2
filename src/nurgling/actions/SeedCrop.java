@@ -161,9 +161,9 @@ public class SeedCrop implements Action {
                 NUtils.dropToInv();
             }
 
-            if (!barrels.isEmpty() && gui.getInventory().getItems(iseed).size() < 2)
+            if (!barrels.isEmpty() && !hasUsableSeeds(gui, true))
                 fetchSeedsFromBarrel(gui, barrels);
-            else if (!stockpiles.isEmpty())
+            else if (!stockpiles.isEmpty() && !hasUsableSeeds(gui, false))
                 fetchSeedsFromStockpiles(gui);
 
         }
@@ -181,8 +181,8 @@ public class SeedCrop implements Action {
                 }
             }
         }
-        if (gui.getInventory().getItems(iseed).size() < 2) {
-            NUtils.getGameUI().msg("No items for seeding");
+        if (!hasUsableSeeds(gui, !barrels.isEmpty())) {
+            NUtils.getGameUI().msg("No usable seeds for seeding");
             return;
         }
         if (count > 0) {
@@ -211,9 +211,9 @@ public class SeedCrop implements Action {
                 stacks_size = NUtils.getGameUI().getInventory().getItems(iseed).size();
             }
 
-            WItem seedItem = NUtils.getGameUI().getInventory().getItem(iseed);
+            WItem seedItem = findUsableSeedStack(gui, !barrels.isEmpty());
             if (seedItem == null) {
-                NUtils.getGameUI().msg("No seeds available for planting");
+                NUtils.getGameUI().msg("No usable seeds available for planting");
                 return;
             }
             NUtils.getGameUI().getInventory().activateItem(seedItem);
@@ -247,12 +247,12 @@ public class SeedCrop implements Action {
         }
 
         for (Gob barrel : barrels) {
-            if (gui.getInventory().getItems(iseed).size() < 2 && NUtils.barrelHasContent(barrel)) {
+            if (!hasUsableSeeds(gui, true) && NUtils.barrelHasContent(barrel)) {
                 new TakeFromBarrel(barrel, iseed).run(gui);
             }
         }
 
-        if (gui.getInventory().getItems(iseed).size() < 2) {
+        if (!hasUsableSeeds(gui, true)) {
             if (!gui.getInventory().getItems(iseed).isEmpty()) {
                 for (Gob barrel : barrels) {
                     TransferToBarrel tb;
@@ -535,6 +535,49 @@ public class SeedCrop implements Action {
                 return false;
         }
         return true;
+    }
+
+    /**
+     * Checks if inventory contains at least one usable seed stack.
+     * For barrel mode (stacked seeds): usable means amount divisible by 5 (no remainder after planting).
+     * For stockpile mode (individual items): any item is usable.
+     *
+     * @param gui The game UI
+     * @param isStackedMode True if using barrels (stacked seeds), false for stockpiles
+     * @return True if at least one usable seed exists
+     */
+    private boolean hasUsableSeeds(NGameUI gui, boolean isStackedMode) throws InterruptedException {
+        return findUsableSeedStack(gui, isStackedMode) != null;
+    }
+
+    /**
+     * Finds the first seed stack that can be cleanly used for planting.
+     * For barrel mode: requires amount >= 5 AND divisible by 5 (e.g., 5, 10, 15, 50).
+     * This prevents creating unusable remainders mid-plant (e.g., [43] becoming [3] in hand).
+     * For stockpile mode: any seed item is usable.
+     *
+     * @param gui The game UI
+     * @param isStackedMode True if using barrels (stacked seeds), false for stockpiles
+     * @return A usable WItem, or null if none found
+     */
+    private WItem findUsableSeedStack(NGameUI gui, boolean isStackedMode) throws InterruptedException {
+        for (WItem seed : gui.getInventory().getItems(iseed)) {
+            if (!isStackedMode) {
+                // Stockpile seeds are individual items, always usable
+                return seed;
+            }
+            // Barrel seeds are stacked - need >= 5 AND divisible by 5 (no remainder)
+            GItem.Amount amount = ((NGItem) seed.item).getInfo(GItem.Amount.class);
+            if (amount == null) {
+                // No amount info - treat as usable (shouldn't happen for barrel seeds)
+                return seed;
+            }
+            int qty = amount.itemnum();
+            if (qty >= 5 && qty % 5 == 0) {
+                return seed;
+            }
+        }
+        return null;
     }
 }
 
