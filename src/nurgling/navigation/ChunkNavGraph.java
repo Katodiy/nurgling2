@@ -159,7 +159,6 @@ public class ChunkNavGraph {
         if (dir == null) return null;
 
         EdgePoint[] fromEdge = fromChunk.getEdge(dir);
-        EdgePoint[] toEdge = toChunk.getEdge(dir.opposite());
 
         // Find best walkable crossing
         // Use lenient check: unobserved edge tiles are assumed passable

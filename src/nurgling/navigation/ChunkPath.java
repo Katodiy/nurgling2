@@ -29,13 +29,6 @@ public class ChunkPath {
         this.requiresPortals = false;
     }
 
-    public void addWaypoint(ChunkWaypoint waypoint) {
-        waypoints.add(waypoint);
-        if (waypoint.portal != null) {
-            requiresPortals = true;
-        }
-    }
-
     public boolean isEmpty() {
         return waypoints.isEmpty();
     }

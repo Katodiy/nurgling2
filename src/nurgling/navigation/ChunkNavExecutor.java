@@ -286,15 +286,6 @@ public class ChunkNavExecutor implements Action {
         return null;
     }
 
-    private boolean isBuildingGob(String gobName) {
-        if (gobName == null) return false;
-        String lower = gobName.toLowerCase();
-        return lower.contains("stonemansion") || lower.contains("logcabin") ||
-               lower.contains("timberhouse") || lower.contains("stonestead") ||
-               lower.contains("greathall") || lower.contains("stonetower") ||
-               lower.contains("windmill");
-    }
-
     private Results tryTraversePortal(NGameUI gui, Gob player, ChunkPortal recordedPortal) throws InterruptedException {
         Gob portalGob = findGobByName(gui, recordedPortal.gobName, player.rc, MCache.tilesz.x * 30);
         if (portalGob == null) {

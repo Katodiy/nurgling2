@@ -68,10 +68,6 @@ public class ChunkNavIntraPathfinder {
             return new IntraPath(Collections.emptyList(), false, Float.MAX_VALUE);
         }
 
-        // Check if start or end is blocked
-        if (chunk.getWalkability(fromCell.x, fromCell.y) == 2) {
-            // Start is fully blocked - but we're standing here, so allow it
-        }
         if (chunk.getWalkability(toCell.x, toCell.y) == 2) {
             // Destination is fully blocked
             return new IntraPath(Collections.emptyList(), false, Float.MAX_VALUE);
