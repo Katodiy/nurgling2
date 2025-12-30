@@ -132,6 +132,7 @@ public class NConfig
         bbDisplayMode,
         showBeehiveRadius,
         showTroughRadius,
+        showMoundBedRadius,
         showDamageShields,
         disableTileSmoothing,
         disableTileTransitions,
@@ -400,6 +401,7 @@ public class NConfig
         // Object radius overlays - simple boolean flags
         conf.put(Key.showBeehiveRadius, false);
         conf.put(Key.showTroughRadius, false);
+        conf.put(Key.showMoundBedRadius, false);
 
         // Damage shields display
         conf.put(Key.showDamageShields, true);
