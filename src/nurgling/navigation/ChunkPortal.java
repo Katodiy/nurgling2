@@ -14,7 +14,6 @@ public class ChunkPortal {
     public long connectsToGridId;  // Grid ID on the other side (if known, -1 otherwise)
     public Coord exitLocalCoord;   // Where you appear in the destination chunk (recorded on traversal)
     public long lastTraversed;     // When we last went through (timestamp)
-    public boolean requiresInteraction; // Need to click to open?
 
     public enum PortalType {
         DOOR,           // Regular doors (stonemansion-door, etc.)
@@ -42,7 +41,6 @@ public class ChunkPortal {
     public ChunkPortal() {
         this.connectsToGridId = -1;
         this.lastTraversed = 0;
-        this.requiresInteraction = true;
     }
 
     public ChunkPortal(String gobHash, String gobName, PortalType type, Coord localCoord) {
@@ -51,21 +49,6 @@ public class ChunkPortal {
         this.gobName = gobName;
         this.type = type;
         this.localCoord = localCoord;
-        this.requiresInteraction = determineRequiresInteraction(type);
-    }
-
-    private boolean determineRequiresInteraction(PortalType type) {
-        switch (type) {
-            case DOOR:
-            case GATE:
-            case STAIRS_UP:
-            case STAIRS_DOWN:
-            case CELLAR:
-            case MINE_ENTRANCE:
-                return true;
-            default:
-                return true;
-        }
     }
 
     /**
@@ -122,7 +105,6 @@ public class ChunkPortal {
             obj.put("exitLocalY", exitLocalCoord.y);
         }
         obj.put("lastTraversed", lastTraversed);
-        obj.put("requiresInteraction", requiresInteraction);
         return obj;
     }
 
@@ -137,7 +119,6 @@ public class ChunkPortal {
             portal.exitLocalCoord = new Coord(obj.getInt("exitLocalX"), obj.getInt("exitLocalY"));
         }
         portal.lastTraversed = obj.optLong("lastTraversed", 0);
-        portal.requiresInteraction = obj.optBoolean("requiresInteraction", true);
         return portal;
     }
 

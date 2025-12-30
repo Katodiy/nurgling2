@@ -1,6 +1,7 @@
 package nurgling.navigation;
 
 import haven.*;
+import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
@@ -151,6 +152,12 @@ public class ChunkNavManager {
      * Runs in a background thread to avoid FPS drops.
      */
     private void recordVisibleGrids() {
+        // Skip if ChunkNav overlay is disabled
+        Object val = NConfig.get(NConfig.Key.chunkNavOverlay);
+        if (!(val instanceof Boolean) || !(Boolean) val) {
+            return;
+        }
+
         // Skip if recording is already in progress
         if (recordingInProgress) {
             return;
@@ -199,6 +206,12 @@ public class ChunkNavManager {
      * teleported (e.g., via Hearth Fire skill) to an unrecorded chunk.
      */
     private void ensurePlayerChunkRecorded() {
+        // Skip if ChunkNav overlay is disabled
+        Object val = NConfig.get(NConfig.Key.chunkNavOverlay);
+        if (!(val instanceof Boolean) || !(Boolean) val) {
+            return;
+        }
+
         try {
             NGameUI gui = NUtils.getGameUI();
             if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null) {
@@ -458,7 +471,6 @@ public class ChunkNavManager {
      */
     public void clear() {
         graph.clear();
-        recorder.clearSession();
     }
 
     /**
@@ -481,16 +493,8 @@ public class ChunkNavManager {
         return graph;
     }
 
-    public ChunkNavRecorder getRecorder() {
-        return recorder;
-    }
-
     public ChunkNavPlanner getPlanner() {
         return planner;
-    }
-
-    public PortalTraversalTracker getPortalTracker() {
-        return portalTracker;
     }
 
     public boolean isEnabled() {
@@ -503,10 +507,6 @@ public class ChunkNavManager {
 
     public boolean isInitialized() {
         return initialized;
-    }
-
-    public String getCurrentGenus() {
-        return currentGenus;
     }
 
     /**
@@ -528,37 +528,6 @@ public class ChunkNavManager {
             } catch (InterruptedException e) {
                 recordingExecutor.shutdownNow();
             }
-        }
-    }
-
-    /**
-     * Force update connections between all visible chunks.
-     */
-    public void updateAllConnections() {
-        if (!initialized) return;
-
-        try {
-            MCache mcache = NUtils.getGameUI().map.glob.map;
-            List<ChunkNavData> visibleChunks = new ArrayList<>();
-
-            synchronized (mcache.grids) {
-                for (MCache.Grid grid : mcache.grids.values()) {
-                    ChunkNavData chunk = graph.getChunk(grid.id);
-                    if (chunk != null) {
-                        visibleChunks.add(chunk);
-                    }
-                }
-            }
-
-            // Update connections between all visible chunk pairs
-            for (int i = 0; i < visibleChunks.size(); i++) {
-                for (int j = i + 1; j < visibleChunks.size(); j++) {
-                    recorder.updateEdgeConnectivity(visibleChunks.get(i), visibleChunks.get(j));
-                }
-            }
-
-        } catch (Exception e) {
-            // Ignore
         }
     }
 

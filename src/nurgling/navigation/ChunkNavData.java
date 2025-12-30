@@ -197,22 +197,6 @@ public class ChunkNavData {
     }
 
     /**
-     * Get the observation count for a section (for debugging/display).
-     */
-    public int getSectionObservedCount(int section) {
-        if (section < 0 || section >= TOTAL_SECTIONS) return 0;
-        return sectionObservedCount[section];
-    }
-
-    /**
-     * Get the expected tile count for a section.
-     */
-    public static int getSectionTileCount(int section) {
-        if (section < 0 || section >= TOTAL_SECTIONS) return 0;
-        return TILES_PER_SECTION;
-    }
-
-    /**
      * Recompute section counts from the observed array.
      * Called after loading from JSON or for data repair.
      */

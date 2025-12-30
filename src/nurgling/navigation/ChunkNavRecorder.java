@@ -1,6 +1,7 @@
 package nurgling.navigation;
 
 import haven.*;
+import nurgling.NGameUI;
 import nurgling.NHitBox;
 import nurgling.NUtils;
 import nurgling.tasks.GateDetector;
@@ -456,7 +457,11 @@ public class ChunkNavRecorder {
      */
     private void detectLayer(ChunkNavData chunk) {
         try {
-            Glob glob = NUtils.getGameUI().ui.sess.glob;
+            NGameUI gui = NUtils.getGameUI();
+            if (gui == null || gui.ui == null || gui.ui.sess == null || gui.ui.sess.glob == null) {
+                return; // GUI not ready, layer will be detected on next recording
+            }
+            Glob glob = gui.ui.sess.glob;
 
             // Quick copy of gob names while holding lock
             List<String> gobNames = new ArrayList<>();
@@ -601,13 +606,6 @@ public class ChunkNavRecorder {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    /**
-     * Clear session tracking (no-op since we resample every time now).
-     */
-    public void clearSession() {
-        // No longer tracking session - we resample every time
     }
 
     /**

@@ -1,6 +1,7 @@
 package nurgling.navigation;
 
 import haven.*;
+import nurgling.NConfig;
 import nurgling.NCore;
 import nurgling.NUtils;
 import nurgling.tasks.GateDetector;
@@ -97,6 +98,12 @@ public class PortalTraversalTracker {
      * Safe to call frequently - internally throttled.
      */
     public void tick() {
+        // Skip if ChunkNav overlay is disabled
+        Object val = NConfig.get(NConfig.Key.chunkNavOverlay);
+        if (!(val instanceof Boolean) || !(Boolean) val) {
+            return;
+        }
+
         long now = System.currentTimeMillis();
         if (now - lastCheckTime < CHECK_INTERVAL_MS) {
             return;
