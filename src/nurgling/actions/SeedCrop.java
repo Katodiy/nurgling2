@@ -280,7 +280,7 @@ public class SeedCrop implements Action {
         }
 
         for (Gob barrel : barrels) {
-            if (lacksUsableSeeds(gui, true) && NUtils.barrelHasContent(barrel)) {
+            if (NUtils.barrelHasContent(barrel)) {
                 new TakeFromBarrel(barrel, iseed).run(gui);
             }
         }
