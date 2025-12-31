@@ -104,25 +104,51 @@ public class ChunkNavExecutor implements Action {
     private Results followDetailedPath(NGameUI gui) throws InterruptedException {
         int segmentIndex = 0;
         Layer currentLayer = getCurrentPlayerLayer();
+        long playerGridId = graph.getPlayerChunkId();
+        System.out.println("ChunkNav: Starting path execution. Player in grid " + playerGridId + ", layer " + currentLayer);
 
         for (ChunkPath.PathSegment segment : path.segments) {
             segmentIndex++;
+            playerGridId = graph.getPlayerChunkId();
 
             ChunkNavData segmentChunk = graph.getChunk(segment.gridId);
             Layer segmentLayer = segmentChunk != null ? Layer.fromString(segmentChunk.layer) : Layer.OUTSIDE;
             boolean sameLayer = segmentLayer == currentLayer;
 
+            // Calculate targetGridId for PORTAL segments (the grid we'll be in after the portal)
+            long targetGridId = -1;
+            if (segment.type == ChunkPath.SegmentType.PORTAL && segmentIndex < path.segments.size()) {
+                ChunkPath.PathSegment nextSegment = path.segments.get(segmentIndex);
+                targetGridId = nextSegment.gridId;
+            }
+
+            System.out.println("ChunkNav: Segment " + segmentIndex + "/" + path.segments.size() +
+                " - type=" + segment.type +
+                ", segmentGridId=" + segment.gridId +
+                ", playerGridId=" + playerGridId +
+                ", sameLayer=" + sameLayer +
+                " (player=" + currentLayer + ", segment=" + segmentLayer + ")" +
+                (targetGridId != -1 ? ", targetGridId=" + targetGridId : ""));
+
+            // Track portal gob found during walking (for PORTAL segments)
+            Gob portalGobFromWalk = null;
+
             if (sameLayer) {
-                Results segResult = followSegmentTiles(segment, gui);
-                if (!segResult.IsSuccess()) {
+                SegmentWalkResult segResult = followSegmentTiles(segment, gui, targetGridId);
+                if (!segResult.result.IsSuccess()) {
+                    System.out.println("ChunkNav: Segment " + segmentIndex + " FAILED (sameLayer walk)");
                     return Results.FAIL();
                 }
+                portalGobFromWalk = segResult.portalGob;
             } else if (segment.type == ChunkPath.SegmentType.PORTAL) {
                 // Cross-layer segment that leads to a portal - skip the walk, we'll traverse portal next
+                System.out.println("ChunkNav: Skipping cross-layer PORTAL segment walk, will traverse portal");
             } else {
                 // Cross-layer WALK segment - we likely just traversed a portal and are already in target layer
-                Results segResult = followSegmentTiles(segment, gui);
-                if (!segResult.IsSuccess()) {
+                System.out.println("ChunkNav: Cross-layer WALK segment, attempting walk anyway");
+                SegmentWalkResult segResult = followSegmentTiles(segment, gui, -1);
+                if (!segResult.result.IsSuccess()) {
+                    System.out.println("ChunkNav: Segment " + segmentIndex + " FAILED (cross-layer walk)");
                     return Results.FAIL();
                 }
             }
@@ -130,21 +156,26 @@ public class ChunkNavExecutor implements Action {
             if (segment.type == ChunkPath.SegmentType.PORTAL) {
                 tickPortalTracker();
 
-                long targetGridId = -1;
-                if (segmentIndex < path.segments.size()) {
-                    ChunkPath.PathSegment nextSegment = path.segments.get(segmentIndex);
-                    targetGridId = nextSegment.gridId;
+                // If we found portal gob during walking, use it directly
+                if (portalGobFromWalk != null) {
+                    System.out.println("ChunkNav: Using portal gob found during walk: " +
+                        (portalGobFromWalk.ngob != null ? portalGobFromWalk.ngob.name : "unknown"));
+                    traversePortalGob(gui, portalGobFromWalk);
+                } else {
+                    System.out.println("ChunkNav: Traversing portal to target grid " + targetGridId);
+                    findAndTraversePortalToGrid(gui, segment, targetGridId);
                 }
 
-                findAndTraversePortalToGrid(gui, segment, targetGridId);
-
                 currentLayer = getCurrentPlayerLayer();
+                playerGridId = graph.getPlayerChunkId();
+                System.out.println("ChunkNav: After portal - now in grid " + playerGridId + ", layer " + currentLayer);
                 tickPortalTracker();
             }
 
             tickPortalTracker();
         }
 
+        System.out.println("ChunkNav: Path execution completed successfully");
         return Results.SUCCESS();
     }
 
@@ -265,6 +296,49 @@ public class ChunkNavExecutor implements Action {
         return nearest;
     }
 
+    /**
+     * Find a visible portal gob that connects to the target grid.
+     * Checks recorded portals in the current chunk to find one that leads to targetGridId.
+     * Returns the gob if it's currently visible to the player.
+     * Matches by gobHash (name + gridId + position) for accuracy.
+     */
+    private Gob findVisiblePortalForTargetGrid(NGameUI gui, long currentGridId, long targetGridId) {
+        if (targetGridId == -1) return null;
+
+        ChunkNavData currentChunk = graph.getChunk(currentGridId);
+        if (currentChunk == null || currentChunk.portals.isEmpty()) return null;
+
+        Gob player = gui.map.player();
+        if (player == null) return null;
+
+        // Find portals that connect to the target grid
+        for (ChunkPortal portal : currentChunk.portals) {
+            if (portal.connectsToGridId != targetGridId) continue;
+            if (portal.gobHash == null) continue;
+
+            // Try to find this portal gob by hash (most accurate - uses name + gridId + position)
+            synchronized (gui.map.glob.oc) {
+                for (Gob gob : gui.map.glob.oc) {
+                    if (gob.ngob == null || gob.ngob.hash == null) continue;
+
+                    // Match by gobHash - this is based on name + gridId + position
+                    if (gob.ngob.hash.equals(portal.gobHash)) {
+                        double dist = player.rc.dist(gob.rc);
+                        if (dist < MCache.tilesz.x * 25) {
+                            System.out.println("ChunkNav: Found visible portal gob by hash '" +
+                                (gob.ngob.name != null ? gob.ngob.name : "unknown") +
+                                "' at dist=" + String.format("%.1f", dist) +
+                                " connecting to target grid " + targetGridId);
+                            return gob;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     private String getExpectedPortalType(Layer sourceLayer, Layer targetLayer) {
         if (sourceLayer == null || targetLayer == null) return null;
 
@@ -292,11 +366,27 @@ public class ChunkNavExecutor implements Action {
             return null;
         }
 
-        // Always walk to the portal gob - cellar doors and other portals require being close
-        PathFinder pf = new PathFinder(portalGob);
-        Results walkResult = pf.run(gui);
-        if (!walkResult.IsSuccess()) {
-            return null;
+        // For buildings, navigate to door access point first
+        Coord2d accessPoint = getBuildingDoorAccessPoint(portalGob);
+        if (accessPoint != null) {
+            System.out.println("ChunkNav: Navigating to building door access point: " + accessPoint);
+            PathFinder accessPf = new PathFinder(accessPoint);
+            Results accessResult = accessPf.run(gui);
+            if (!accessResult.IsSuccess()) {
+                System.out.println("ChunkNav: Failed to reach building door access point, trying direct approach");
+                // Fall back to direct approach
+                PathFinder directPf = new PathFinder(portalGob);
+                if (!directPf.run(gui).IsSuccess()) {
+                    return null;
+                }
+            }
+        } else {
+            // Non-building portals - walk directly to the gob
+            PathFinder pf = new PathFinder(portalGob);
+            Results walkResult = pf.run(gui);
+            if (!walkResult.IsSuccess()) {
+                return null;
+            }
         }
 
         return traversePortalGob(gui, portalGob);
@@ -350,9 +440,89 @@ public class ChunkNavExecutor implements Action {
         return Results.SUCCESS();
     }
 
-    private Results followSegmentTiles(ChunkPath.PathSegment segment, NGameUI gui) throws InterruptedException {
+    /**
+     * Check if a gob is a building (has door on one side).
+     */
+    private boolean isBuildingGob(String gobName) {
+        if (gobName == null) return false;
+        String lower = gobName.toLowerCase();
+        return lower.contains("stonemansion") ||
+               lower.contains("logcabin") ||
+               lower.contains("timberhouse") ||
+               lower.contains("stonestead") ||
+               lower.contains("greathall") ||
+               lower.contains("stonetower") ||
+               lower.contains("windmill") ||
+               lower.contains("primitivetent");
+    }
+
+    /**
+     * Calculate the access point in front of a building's door.
+     * Buildings have their door on the +x side of hitbox (before rotation).
+     * Access point is 1 tile in front of the door edge.
+     *
+     * @param buildingGob The building gob
+     * @return Access point coordinates, or null if not a building or can't calculate
+     */
+    private Coord2d getBuildingDoorAccessPoint(Gob buildingGob) {
+        if (buildingGob == null || buildingGob.ngob == null) return null;
+
+        String name = buildingGob.ngob.name;
+        if (!isBuildingGob(name)) return null;
+
+        // Get hitbox - door is on +x side
+        nurgling.NHitBox hitBox = buildingGob.ngob.hitBox;
+        if (hitBox == null) return null;
+
+        // Distance from center to door edge + 1 tile for access point
+        double doorEdgeOffset = hitBox.end.x;  // Distance to door edge
+        double accessOffset = doorEdgeOffset + MCache.tilesz.x;  // +1 tile in front of door
+
+        // Calculate access point using building rotation
+        double angle = buildingGob.a;
+        double offsetX = Math.cos(angle) * accessOffset;
+        double offsetY = Math.sin(angle) * accessOffset;
+
+        Coord2d accessPoint = new Coord2d(buildingGob.rc.x + offsetX, buildingGob.rc.y + offsetY);
+
+        System.out.println("ChunkNav: Building '" + name + "' door access point calculated:" +
+            " center=" + buildingGob.rc +
+            ", angle=" + String.format("%.2f", angle) +
+            ", doorEdge=" + doorEdgeOffset +
+            ", accessPoint=" + accessPoint);
+
+        return accessPoint;
+    }
+
+    /**
+     * Result class for followSegmentTiles that includes portal gob if found during walking.
+     */
+    private static class SegmentWalkResult {
+        final Results result;
+        final Gob portalGob;  // Portal gob found during walk (for PORTAL segments)
+
+        SegmentWalkResult(Results result, Gob portalGob) {
+            this.result = result;
+            this.portalGob = portalGob;
+        }
+
+        static SegmentWalkResult success() {
+            return new SegmentWalkResult(Results.SUCCESS(), null);
+        }
+
+        static SegmentWalkResult successWithPortal(Gob portal) {
+            return new SegmentWalkResult(Results.SUCCESS(), portal);
+        }
+
+        static SegmentWalkResult fail() {
+            return new SegmentWalkResult(Results.FAIL(), null);
+        }
+    }
+
+    private SegmentWalkResult followSegmentTiles(ChunkPath.PathSegment segment, NGameUI gui, long targetGridId) throws InterruptedException {
         if (segment.isEmpty()) {
-            return Results.SUCCESS();
+            System.out.println("ChunkNav: followSegmentTiles - segment is empty, returning SUCCESS");
+            return SegmentWalkResult.success();
         }
 
         ChunkNavData segmentChunk = graph.getChunk(segment.gridId);
@@ -362,37 +532,88 @@ public class ChunkNavExecutor implements Action {
         try {
             MCache mcache = gui.map.glob.map;
             synchronized (mcache.grids) {
+                System.out.println("ChunkNav: Searching MCache for gridId " + segment.gridId + " (MCache has " + mcache.grids.size() + " grids)");
                 for (MCache.Grid grid : mcache.grids.values()) {
                     if (grid.id == segment.gridId) {
                         liveWorldTileOrigin = grid.ul;
+                        System.out.println("ChunkNav: Found grid in MCache! worldTileOrigin=" + liveWorldTileOrigin);
                         break;
+                    }
+                }
+                if (liveWorldTileOrigin == null) {
+                    System.out.println("ChunkNav: Grid " + segment.gridId + " NOT found in MCache. Available grids:");
+                    for (MCache.Grid grid : mcache.grids.values()) {
+                        System.out.println("  - Grid " + grid.id + " at " + grid.ul);
                     }
                 }
             }
         } catch (Exception e) {
-            // Ignore
+            System.out.println("ChunkNav: Exception searching MCache: " + e.getMessage());
         }
 
         // Determine which worldTileOrigin to use
         Coord currentWorldTileOrigin = liveWorldTileOrigin;
         if (currentWorldTileOrigin == null && segmentChunk != null && segmentChunk.worldTileOrigin != null) {
             currentWorldTileOrigin = segmentChunk.worldTileOrigin;
+            System.out.println("ChunkNav: Using stored chunk worldTileOrigin: " + currentWorldTileOrigin);
         } else if (currentWorldTileOrigin == null && segment.worldTileOrigin != null) {
             currentWorldTileOrigin = segment.worldTileOrigin;
+            System.out.println("ChunkNav: Using segment worldTileOrigin: " + currentWorldTileOrigin);
         }
 
         if (currentWorldTileOrigin == null) {
-            return Results.FAIL();
+            System.out.println("ChunkNav: FAIL - no worldTileOrigin available! " +
+                "liveWorldTileOrigin=" + liveWorldTileOrigin +
+                ", segmentChunk=" + (segmentChunk != null ? "exists" : "null") +
+                ", segmentChunk.worldTileOrigin=" + (segmentChunk != null ? segmentChunk.worldTileOrigin : "N/A") +
+                ", segment.worldTileOrigin=" + segment.worldTileOrigin);
+            return SegmentWalkResult.fail();
         }
+
+        // For PORTAL segments, check if we should look for portal gob during walking
+        boolean isPortalSegment = segment.type == ChunkPath.SegmentType.PORTAL && targetGridId != -1;
 
         // Navigate through tile-level waypoints instead of just jumping to the end
         double tileSize = MCache.tilesz.x;
         int waypointInterval = 20;
         int currentStepIndex = 0;
 
+        System.out.println("ChunkNav: Walking segment with " + segment.steps.size() + " steps, worldTileOrigin=" + currentWorldTileOrigin);
+
         while (currentStepIndex < segment.steps.size()) {
             Gob player = gui.map.player();
-            if (player == null) return Results.FAIL();
+            if (player == null) return SegmentWalkResult.fail();
+
+            // For PORTAL segments, check if portal gob is now visible
+            if (isPortalSegment) {
+                Gob visiblePortal = findVisiblePortalForTargetGrid(gui, segment.gridId, targetGridId);
+                if (visiblePortal != null) {
+                    // For buildings, navigate to door access point instead of gob center
+                    Coord2d accessPoint = getBuildingDoorAccessPoint(visiblePortal);
+                    if (accessPoint != null) {
+                        System.out.println("ChunkNav: Building portal visible! Navigating to door access point: " + accessPoint);
+                        PathFinder accessPf = new PathFinder(accessPoint);
+                        Results accessResult = accessPf.run(gui);
+                        if (accessResult.IsSuccess()) {
+                            System.out.println("ChunkNav: Reached building door access point, returning with portal gob");
+                            return SegmentWalkResult.successWithPortal(visiblePortal);
+                        } else {
+                            System.out.println("ChunkNav: Failed to reach building door access point, continuing walk");
+                        }
+                    } else {
+                        // Non-building portal - pathfind directly to gob
+                        System.out.println("ChunkNav: Portal gob visible! Switching to PathFinder(gob) for final approach");
+                        PathFinder portalPf = new PathFinder(visiblePortal);
+                        Results portalResult = portalPf.run(gui);
+                        if (portalResult.IsSuccess()) {
+                            System.out.println("ChunkNav: PathFinder(gob) succeeded, returning with portal gob");
+                            return SegmentWalkResult.successWithPortal(visiblePortal);
+                        } else {
+                            System.out.println("ChunkNav: PathFinder(gob) failed, continuing with coordinate-based walk");
+                        }
+                    }
+                }
+            }
 
             int targetIndex = Math.min(currentStepIndex + waypointInterval, segment.steps.size() - 1);
             ChunkPath.TileStep targetStep = segment.steps.get(targetIndex);
@@ -407,6 +628,12 @@ public class ChunkNavExecutor implements Action {
                 continue;
             }
 
+            System.out.println("ChunkNav: Step " + currentStepIndex + "->" + targetIndex +
+                ", localCoord=" + targetStep.localCoord +
+                ", worldTile=" + worldTile +
+                ", waypoint=" + waypoint +
+                ", dist=" + String.format("%.1f", distToWaypoint));
+
             // Try PathFinder first
             PathFinder pf = new PathFinder(waypoint);
             Results pfResult = pf.run(gui);
@@ -415,6 +642,8 @@ public class ChunkNavExecutor implements Action {
                 currentStepIndex = targetIndex + 1;
                 continue;
             }
+
+            System.out.println("ChunkNav: PathFinder failed for waypoint " + waypoint + ", trying smaller steps...");
 
             // PathFinder failed - try smaller steps along the PATH
             boolean madeProgress = false;
@@ -457,11 +686,14 @@ public class ChunkNavExecutor implements Action {
             }
 
             if (!madeProgress) {
-                return Results.FAIL();
+                System.out.println("ChunkNav: FAIL - no progress possible. Stuck at step " + currentStepIndex +
+                    ", player at " + player.rc + ", target waypoint " + waypoint);
+                return SegmentWalkResult.fail();
             }
         }
 
-        return Results.SUCCESS();
+        System.out.println("ChunkNav: Segment walk completed successfully");
+        return SegmentWalkResult.success();
     }
 
     /**
