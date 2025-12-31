@@ -49,6 +49,9 @@ public class ChunkNavManager {
     private volatile boolean recordingInProgress = false;
     private volatile boolean saveInProgress = false;
 
+    // Guard flag to prevent saves during initialization (prevents Bug #3 - empty graph race condition)
+    private volatile boolean initializationInProgress = false;
+
     // Instance reference - managed by NMapView, not a traditional singleton
     // This static reference exists for backward compatibility with code that
     // cannot easily access gui.map.getChunkNavManager()
@@ -68,8 +71,9 @@ public class ChunkNavManager {
             return t;
         });
 
-        // Register shutdown hook to save on exit
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+        // NOTE: No shutdown hook - we save every 2 seconds, so losing at most 2 seconds
+        // of data on abrupt shutdown is acceptable. Shutdown hooks caused more problems
+        // than they solved (race conditions with background saves).
 
         // Set static reference for backward compatibility
         instance = this;
@@ -100,24 +104,32 @@ public class ChunkNavManager {
             return;
         }
 
-        // Save previous world data if switching
-        if (initialized && currentGenus != null) {
-            save();
+        // Set guard flag BEFORE any state changes to prevent saves during init
+        initializationInProgress = true;
+
+        try {
+            // Save previous world data if switching
+            if (initialized && currentGenus != null) {
+                save();
+            }
+
+            // Clear renderer cache to avoid stale textures from previous genus
+            MinimapChunkNavRenderer.clearCache();
+
+            this.currentGenus = genus;
+            this.graph = new ChunkNavGraph();
+            this.recorder = new ChunkNavRecorder(graph);
+            this.planner = new ChunkNavPlanner(graph);
+            this.portalTracker = new PortalTraversalTracker(graph, recorder);
+
+            // Load saved data
+            load();
+
+            this.initialized = true;
+        } finally {
+            // Clear guard flag AFTER load completes (even if exception occurs)
+            initializationInProgress = false;
         }
-
-        // Clear renderer cache to avoid stale textures from previous genus
-        MinimapChunkNavRenderer.clearCache();
-
-        this.currentGenus = genus;
-        this.graph = new ChunkNavGraph();
-        this.recorder = new ChunkNavRecorder(graph);
-        this.planner = new ChunkNavPlanner(graph);
-        this.portalTracker = new PortalTraversalTracker(graph, recorder);
-
-        // Load saved data
-        load();
-
-        this.initialized = true;
     }
 
     /**
@@ -356,6 +368,10 @@ public class ChunkNavManager {
      * Runs on background thread to avoid FPS drops.
      */
     public void saveThrottled() {
+        // Skip save during initialization to prevent Bug #3 (empty graph race condition)
+        if (initializationInProgress) {
+            return;
+        }
         long now = System.currentTimeMillis();
         if (now - lastSaveTime < SAVE_THROTTLE_MS) {
             return; // Too soon since last save
@@ -390,10 +406,13 @@ public class ChunkNavManager {
      * Internal save implementation.
      */
     private void saveInternal() {
+        // Double-check guard flag as extra safety against Bug #3
+        if (initializationInProgress) return;
         if (!initialized || currentGenus == null) return;
 
         try {
             Path filePath = getStoragePath();
+            Path tempFile = filePath.resolveSibling(filePath.getFileName() + ".tmp");
             Files.createDirectories(filePath.getParent());
 
             JSONObject root = new JSONObject();
@@ -408,11 +427,22 @@ public class ChunkNavManager {
             }
             root.put("chunks", chunksArray);
 
-            // Write to file
-            Files.write(filePath, root.toString(2).getBytes(StandardCharsets.UTF_8));
+            // Write to temp file first (atomic write pattern)
+            byte[] data = root.toString(2).getBytes(StandardCharsets.UTF_8);
+            Files.write(tempFile, data);
+
+            // Atomically rename temp file to real file
+            // This prevents corruption if process crashes mid-write
+            try {
+                Files.move(tempFile, filePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+                // Fallback for filesystems that don't support atomic move
+                Files.move(tempFile, filePath, StandardCopyOption.REPLACE_EXISTING);
+            }
 
         } catch (Exception e) {
-            // Ignore save errors
+            System.err.println("ChunkNav: Failed to save data: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -427,7 +457,19 @@ public class ChunkNavManager {
         try {
             Path filePath = getStoragePath();
             if (!Files.exists(filePath)) {
+                System.out.println("ChunkNav: No saved data found at " + filePath);
                 return;
+            }
+
+            // Clean up any orphaned temp file from interrupted save
+            Path tempFile = filePath.resolveSibling(filePath.getFileName() + ".tmp");
+            if (Files.exists(tempFile)) {
+                try {
+                    Files.delete(tempFile);
+                    System.out.println("ChunkNav: Cleaned up orphaned temp file");
+                } catch (Exception e) {
+                    System.err.println("ChunkNav: Failed to delete orphaned temp file: " + e.getMessage());
+                }
             }
 
             String content = new String(Files.readAllBytes(filePath), StandardCharsets.UTF_8);
@@ -436,25 +478,36 @@ public class ChunkNavManager {
             // Verify genus matches
             String savedGenus = root.optString("genus", "");
             if (!currentGenus.equals(savedGenus)) {
+                System.err.println("ChunkNav: Genus mismatch! Expected " + currentGenus + " but file has " + savedGenus);
                 return;
             }
 
             // Load chunks
             JSONArray chunksArray = root.getJSONArray("chunks");
+            int loadedCount = 0;
+            int errorCount = 0;
             for (int i = 0; i < chunksArray.length(); i++) {
                 try {
                     ChunkNavData chunk = ChunkNavData.fromJson(chunksArray.getJSONObject(i));
                     graph.addChunk(chunk);
+                    loadedCount++;
                 } catch (Exception e) {
-                    // Skip invalid chunks
+                    errorCount++;
+                    if (errorCount <= 3) {
+                        System.err.println("ChunkNav: Failed to load chunk " + i + ": " + e.getMessage());
+                    }
                 }
             }
 
             // Rebuild connections after loading all chunks
             graph.rebuildAllConnections();
 
+            System.out.println("ChunkNav: Loaded " + loadedCount + " chunks" +
+                (errorCount > 0 ? " (" + errorCount + " errors)" : ""));
+
         } catch (Exception e) {
-            // Failed to load, start fresh
+            System.err.println("ChunkNav: Failed to load data: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -510,13 +563,12 @@ public class ChunkNavManager {
     }
 
     /**
-     * Shutdown and save.
+     * Shutdown the executor (for explicit cleanup if needed).
+     * Note: No automatic save here - we save every 2 seconds via tick(),
+     * so losing at most 2 seconds of data is acceptable.
      */
     public void shutdown() {
-        if (initialized) {
-            save();
-            initialized = false;
-        }
+        initialized = false;
 
         // Shutdown recording executor
         if (recordingExecutor != null) {
