@@ -2268,6 +2268,7 @@ public class VSpec {
         anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-potters\",\"name\":\"Potter's Brick\"}"));
         anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-soap\",\"name\":\"Soap Brick\"}"));
         anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-coade\",\"name\":\"Coade Stone Brick\"}"));
+        anyBricks.add(new JSONObject("{\"static\":\"gfx/invobjs/brick-riverbed\",\"name\":\"Riverbed Brick\"}"));
         categories.put("Any Brick", anyBricks);
 
         ArrayList<JSONObject> clays = new ArrayList<>();
@@ -2281,6 +2282,7 @@ public class VSpec {
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-coade\",\"name\":\"Coade Clay\"}"));
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-bone\",\"name\":\"Bone Clay\"}"));
         clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-potters\",\"name\":\"Potter's Clay\"}"));
+        clays.add(new JSONObject("{\"static\":\"gfx/invobjs/clay-riverbed\",\"name\":\"Riverbed Clay\"}"));
         categories.put("Clay", clays);
 
         ArrayList<JSONObject> castingMaterials = new ArrayList<>();
