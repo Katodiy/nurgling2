@@ -367,7 +367,7 @@ public class ChunkNavExecutor implements Action {
         }
 
         // For buildings, navigate to door access point first
-        Coord2d accessPoint = getBuildingDoorAccessPoint(portalGob);
+        Coord2d accessPoint = getPortalAccessPoint(portalGob);
         if (accessPoint != null) {
             System.out.println("ChunkNav: Navigating to building door access point: " + accessPoint);
             PathFinder accessPf = new PathFinder(accessPoint);
@@ -457,41 +457,72 @@ public class ChunkNavExecutor implements Action {
     }
 
     /**
-     * Calculate the access point in front of a building's door.
-     * Buildings have their door on the +x side of hitbox (before rotation).
-     * Access point is 1 tile in front of the door edge.
-     *
-     * @param buildingGob The building gob
-     * @return Access point coordinates, or null if not a building or can't calculate
+     * Check if a gob is an interior door (door gob inside a building).
      */
-    private Coord2d getBuildingDoorAccessPoint(Gob buildingGob) {
-        if (buildingGob == null || buildingGob.ngob == null) return null;
+    private boolean isInteriorDoorGob(String gobName) {
+        if (gobName == null) return false;
+        String lower = gobName.toLowerCase();
+        // Interior doors have "-door" suffix (e.g., stonemansion-door, logcabin-door)
+        return lower.contains("-door");
+    }
 
-        String name = buildingGob.ngob.name;
-        if (!isBuildingGob(name)) return null;
+    /**
+     * Calculate the access point in front of a portal gob's door.
+     * - For buildings: door is on +x side of hitbox, access point is 1 tile in front
+     * - For interior doors: access point is 1 tile in front using gob.a direction
+     *
+     * @param portalGob The portal gob (building or interior door)
+     * @return Access point coordinates, or null if not applicable
+     */
+    private Coord2d getPortalAccessPoint(Gob portalGob) {
+        if (portalGob == null || portalGob.ngob == null) return null;
 
-        // Get hitbox - door is on +x side
-        nurgling.NHitBox hitBox = buildingGob.ngob.hitBox;
-        if (hitBox == null) return null;
+        String name = portalGob.ngob.name;
 
-        // Distance from center to door edge + 1 tile for access point
-        double doorEdgeOffset = hitBox.end.x;  // Distance to door edge
-        double accessOffset = doorEdgeOffset + MCache.tilesz.x;  // +1 tile in front of door
+        // Interior doors (1x1 gobs) - access point is 1 tile in front (from inside)
+        // Door faces outward, so we need to go OPPOSITE direction to stand inside
+        if (isInteriorDoorGob(name)) {
+            double angle = portalGob.a;
+            double accessOffset = MCache.tilesz.x;  // 1 tile in front of door
+            // Use negative offset to go opposite direction (inside the building)
+            double offsetX = -Math.cos(angle) * accessOffset;
+            double offsetY = -Math.sin(angle) * accessOffset;
 
-        // Calculate access point using building rotation
-        double angle = buildingGob.a;
-        double offsetX = Math.cos(angle) * accessOffset;
-        double offsetY = Math.sin(angle) * accessOffset;
+            Coord2d accessPoint = new Coord2d(portalGob.rc.x + offsetX, portalGob.rc.y + offsetY);
 
-        Coord2d accessPoint = new Coord2d(buildingGob.rc.x + offsetX, buildingGob.rc.y + offsetY);
+            System.out.println("ChunkNav: Interior door '" + name + "' access point calculated:" +
+                " center=" + portalGob.rc +
+                ", angle=" + String.format("%.2f", angle) +
+                ", accessPoint=" + accessPoint);
 
-        System.out.println("ChunkNav: Building '" + name + "' door access point calculated:" +
-            " center=" + buildingGob.rc +
-            ", angle=" + String.format("%.2f", angle) +
-            ", doorEdge=" + doorEdgeOffset +
-            ", accessPoint=" + accessPoint);
+            return accessPoint;
+        }
 
-        return accessPoint;
+        // Buildings - door is on +x side of hitbox
+        if (isBuildingGob(name)) {
+            nurgling.NHitBox hitBox = portalGob.ngob.hitBox;
+            if (hitBox == null) return null;
+
+            // Distance from center to door edge + 1 tile for access point
+            double doorEdgeOffset = hitBox.end.x;  // Distance to door edge
+            double accessOffset = doorEdgeOffset + MCache.tilesz.x;  // +1 tile in front of door
+
+            double angle = portalGob.a;
+            double offsetX = Math.cos(angle) * accessOffset;
+            double offsetY = Math.sin(angle) * accessOffset;
+
+            Coord2d accessPoint = new Coord2d(portalGob.rc.x + offsetX, portalGob.rc.y + offsetY);
+
+            System.out.println("ChunkNav: Building '" + name + "' door access point calculated:" +
+                " center=" + portalGob.rc +
+                ", angle=" + String.format("%.2f", angle) +
+                ", doorEdge=" + doorEdgeOffset +
+                ", accessPoint=" + accessPoint);
+
+            return accessPoint;
+        }
+
+        return null;
     }
 
     /**
@@ -589,7 +620,7 @@ public class ChunkNavExecutor implements Action {
                 Gob visiblePortal = findVisiblePortalForTargetGrid(gui, segment.gridId, targetGridId);
                 if (visiblePortal != null) {
                     // For buildings, navigate to door access point instead of gob center
-                    Coord2d accessPoint = getBuildingDoorAccessPoint(visiblePortal);
+                    Coord2d accessPoint = getPortalAccessPoint(visiblePortal);
                     if (accessPoint != null) {
                         System.out.println("ChunkNav: Building portal visible! Navigating to door access point: " + accessPoint);
                         PathFinder accessPf = new PathFinder(accessPoint);
