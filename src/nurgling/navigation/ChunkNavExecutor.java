@@ -498,6 +498,32 @@ public class ChunkNavExecutor implements Action {
             return accessPoint;
         }
 
+        // Upstairs/downstairs - access point is 1.5 tiles away
+        // upstairs: positive offset (approach from bottom, same as facing direction)
+        // downstairs: negative offset (approach from top, opposite of facing direction)
+        String lower = name.toLowerCase();
+        if (lower.contains("upstairs") || lower.contains("downstairs")) {
+            double angle = portalGob.a;
+            double accessOffset = MCache.tilesz.x * 1.5;  // 1.5 tiles
+
+            // Downstairs needs negative offset (approach from opposite side)
+            boolean isDownstairs = lower.contains("downstairs");
+            double sign = isDownstairs ? -1.0 : 1.0;
+
+            double offsetX = sign * Math.cos(angle) * accessOffset;
+            double offsetY = sign * Math.sin(angle) * accessOffset;
+
+            Coord2d accessPoint = new Coord2d(portalGob.rc.x + offsetX, portalGob.rc.y + offsetY);
+
+            System.out.println("ChunkNav: Stairs '" + name + "' access point calculated:" +
+                " center=" + portalGob.rc +
+                ", angle=" + String.format("%.2f", angle) +
+                ", sign=" + sign +
+                ", accessPoint=" + accessPoint);
+
+            return accessPoint;
+        }
+
         // Buildings - door is on +x side of hitbox
         if (isBuildingGob(name)) {
             nurgling.NHitBox hitBox = portalGob.ngob.hitBox;
