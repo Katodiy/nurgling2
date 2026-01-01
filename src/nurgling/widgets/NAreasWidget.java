@@ -129,16 +129,16 @@ public class NAreasWidget extends Window
         },importbt.pos("ur").adds(UI.scale(5,0)));
         exportbt.settip("Export to file");
 
-        // Export to Database button
-        haven.Button exportDbBtn;
-        add(exportDbBtn = new haven.Button(UI.scale(80), "Export to DB") {
-            @Override
-            public void click() {
-                super.click();
-                exportAreasToDatabase();
-            }
-        }, exportbt.pos("ur").adds(UI.scale(10, 0)));
-        exportDbBtn.settip("Export all areas to database for sharing");
+//        // Export to Database button
+//        haven.Button exportDbBtn;
+//        add(exportDbBtn = new haven.Button(UI.scale(80), "Export to DB") {
+//            @Override
+//            public void click() {
+//                super.click();
+//                exportAreasToDatabase();
+//            }
+//        }, exportbt.pos("ur").adds(UI.scale(10, 0)));
+//        exportDbBtn.settip("Export all areas to database for sharing");
 
         TextEntry searchField;
         prev = add(searchField = new TextEntry(UI.scale(580), "") {
