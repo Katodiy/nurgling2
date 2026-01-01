@@ -1243,6 +1243,7 @@ public class VSpec {
         strings.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/toadflax\",\"name\":\"Toadflax\"}"));
         strings.add(new JSONObject("{\"static\":\"gfx/invobjs/trollhair\",\"name\":\"Troll Hair\"}"));
         strings.add(new JSONObject("{\"static\":\"gfx/invobjs/grasstwine\",\"name\":\"Grass Twine\"}"));
+        strings.add(new JSONObject("{\"static\":\"gfx/invobjs/wildfibre\",\"name\":\"Wildfibre\"}"));
         categories.put("String", strings);
 
         ArrayList<JSONObject> salads = new ArrayList<>();
@@ -1701,7 +1702,7 @@ public class VSpec {
         flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/wintergreen\",\"name\":\"Wintergreen\"}"));
         flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/yarrow\",\"name\":\"Yarrow\"}"));
         flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/tansy\",\"name\":\"Tansy\"}"));
-        flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/flower-wild\",\"name\":\"Wildflower\"}"));
+        flowers.add(new JSONObject("{\"static\":\"gfx/invobjs/flower-wild\",\"name\":\"Wildflower\"}"));
         categories.put("Flower", flowers);
 
         ArrayList<JSONObject> fats = new ArrayList<>();
