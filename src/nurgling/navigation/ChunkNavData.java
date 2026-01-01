@@ -9,7 +9,8 @@ import java.util.*;
 import static nurgling.navigation.ChunkNavConfig.*;
 
 /**
- * Stores navigation data for a single 100x100 tile grid chunk.
+ * Stores navigation data for a single game grid chunk.
+ * Uses half-tile resolution: 200x200 cells (2x2 cells per tile) for 100x100 tile chunk.
  */
 public class ChunkNavData {
     // Identity
@@ -32,8 +33,8 @@ public class ChunkNavData {
     // "outside" = surface + mines (can walk between grids), "inside" = building interior, "cellar" = underground cellar
     public String layer = "outside";
 
-    // Walkability grid (tile-level resolution)
-    // Each cell represents 1 tile (100x100 grid for 100x100 chunk)
+    // Walkability grid (half-tile resolution, matching NPFMap)
+    // Each cell represents 1/4 tile (200x200 grid = 2x2 cells per tile)
     // Values: 0 = walkable, 1 = partially blocked, 2 = fully blocked
     public byte[][] walkability = new byte[CELLS_PER_EDGE][CELLS_PER_EDGE];
 
@@ -43,7 +44,7 @@ public class ChunkNavData {
 
     // Pre-computed section observation counts for O(1) overlay rendering
     // Grid is divided into 5x5 = 25 sections for finer granularity
-    // Each section is exactly 20x20 = 400 tiles (100/5 divides evenly)
+    // Each section is exactly 40x40 = 1600 cells (200/5 divides evenly)
     public static final int SECTIONS_PER_SIDE = 5;
     public static final int TOTAL_SECTIONS = SECTIONS_PER_SIDE * SECTIONS_PER_SIDE; // 25
     public static final int TILES_PER_SECTION_SIDE = CELLS_PER_EDGE / SECTIONS_PER_SIDE; // 20
@@ -60,7 +61,7 @@ public class ChunkNavData {
     }
 
     // Edge connections to adjacent chunks
-    // Each array has 100 entries (one per tile along edge)
+    // Each array has CELLS_PER_EDGE entries (200 = one per half-tile along edge)
     public EdgePoint[] northEdge = new EdgePoint[CELLS_PER_EDGE];
     public EdgePoint[] southEdge = new EdgePoint[CELLS_PER_EDGE];
     public EdgePoint[] eastEdge = new EdgePoint[CELLS_PER_EDGE];
@@ -112,11 +113,11 @@ public class ChunkNavData {
 
     private void initializeEdges() {
         for (int i = 0; i < CELLS_PER_EDGE; i++) {
-            // With tile-level resolution, edge points are at exact tile positions
+            // With half-tile resolution, edge points are at exact cell positions
             northEdge[i] = new EdgePoint(i, false, new Coord(i, 0));
-            southEdge[i] = new EdgePoint(i, false, new Coord(i, CHUNK_SIZE - 1));
+            southEdge[i] = new EdgePoint(i, false, new Coord(i, CELLS_PER_EDGE - 1));
             westEdge[i] = new EdgePoint(i, false, new Coord(0, i));
-            eastEdge[i] = new EdgePoint(i, false, new Coord(CHUNK_SIZE - 1, i));
+            eastEdge[i] = new EdgePoint(i, false, new Coord(CELLS_PER_EDGE - 1, i));
         }
     }
 
@@ -289,8 +290,14 @@ public class ChunkNavData {
         portals.add(portal);
     }
 
+    // Data format version for JSON migration
+    // Version 1: 100x100 tile grid (original)
+    // Version 2: 200x200 cell grid (half-tile resolution)
+    private static final int CURRENT_DATA_VERSION = 2;
+
     public JSONObject toJson() {
         JSONObject obj = new JSONObject();
+        obj.put("version", CURRENT_DATA_VERSION);
         obj.put("gridId", gridId);
         obj.put("lastUpdated", lastUpdated);
         obj.put("confidence", confidence);
@@ -365,6 +372,14 @@ public class ChunkNavData {
     }
 
     public static ChunkNavData fromJson(JSONObject obj) {
+        int version = obj.optInt("version", 1);
+
+        // Check if migration is needed
+        if (version < CURRENT_DATA_VERSION) {
+            return migrateFromV1(obj);
+        }
+
+        // Current version - load directly
         ChunkNavData data = new ChunkNavData();
         data.gridId = obj.getLong("gridId");
         data.lastUpdated = obj.getLong("lastUpdated");
@@ -442,6 +457,134 @@ public class ChunkNavData {
         }
 
         return data;
+    }
+
+    /**
+     * Migrate v1 (100x100 tile grid) data to v2 (200x200 cell grid).
+     * Each old tile value is replicated to a 2x2 block of cells.
+     * Edge arrays are expanded from 100 to 200 entries.
+     */
+    private static ChunkNavData migrateFromV1(JSONObject obj) {
+        ChunkNavData data = new ChunkNavData();
+        data.gridId = obj.getLong("gridId");
+        data.lastUpdated = obj.getLong("lastUpdated");
+        data.confidence = (float) obj.getDouble("confidence");
+
+        // Neighbor relationships (persistent)
+        data.neighborNorth = obj.optLong("neighborNorth", -1);
+        data.neighborSouth = obj.optLong("neighborSouth", -1);
+        data.neighborEast = obj.optLong("neighborEast", -1);
+        data.neighborWest = obj.optLong("neighborWest", -1);
+
+        // Layer
+        data.layer = obj.optString("layer", "outside");
+
+        // Migrate walkability from 100x100 to 200x200
+        // Each old tile (ox, oy) maps to 4 cells: (ox*2, oy*2), (ox*2+1, oy*2), (ox*2, oy*2+1), (ox*2+1, oy*2+1)
+        JSONArray walkArr = obj.getJSONArray("walkability");
+        int oldSize = 100; // V1 was 100x100
+        int idx = 0;
+        for (int ox = 0; ox < oldSize; ox++) {
+            for (int oy = 0; oy < oldSize; oy++) {
+                byte val = (byte) walkArr.getInt(idx++);
+                // Replicate to 2x2 block
+                int nx = ox * CELLS_PER_TILE;
+                int ny = oy * CELLS_PER_TILE;
+                data.walkability[nx][ny] = val;
+                data.walkability[nx + 1][ny] = val;
+                data.walkability[nx][ny + 1] = val;
+                data.walkability[nx + 1][ny + 1] = val;
+            }
+        }
+
+        // Migrate observed similarly
+        if (obj.has("observed")) {
+            JSONArray obsArr = obj.getJSONArray("observed");
+            idx = 0;
+            for (int ox = 0; ox < oldSize; ox++) {
+                for (int oy = 0; oy < oldSize; oy++) {
+                    boolean val = obsArr.getInt(idx++) != 0;
+                    int nx = ox * CELLS_PER_TILE;
+                    int ny = oy * CELLS_PER_TILE;
+                    data.observed[nx][ny] = val;
+                    data.observed[nx + 1][ny] = val;
+                    data.observed[nx][ny + 1] = val;
+                    data.observed[nx + 1][ny + 1] = val;
+                }
+            }
+        } else {
+            // Infer from walkability
+            for (int x = 0; x < CELLS_PER_EDGE; x++) {
+                for (int y = 0; y < CELLS_PER_EDGE; y++) {
+                    data.observed[x][y] = data.walkability[x][y] < 2;
+                }
+            }
+        }
+
+        // Recompute section counts
+        data.recomputeSectionCounts();
+
+        // Migrate edges from 100 to 200 entries
+        // Each old edge[i] maps to new edge[i*2] and edge[i*2+1]
+        data.northEdge = migrateEdgeFromV1(obj.getJSONArray("northEdge"));
+        data.southEdge = migrateEdgeFromV1(obj.getJSONArray("southEdge"));
+        data.eastEdge = migrateEdgeFromV1(obj.getJSONArray("eastEdge"));
+        data.westEdge = migrateEdgeFromV1(obj.getJSONArray("westEdge"));
+
+        // Portals (no coordinate change needed - portal coords are in tile space)
+        JSONArray portalsArr = obj.getJSONArray("portals");
+        for (int i = 0; i < portalsArr.length(); i++) {
+            data.portals.add(ChunkPortal.fromJson(portalsArr.getJSONObject(i)));
+        }
+
+        // Reachable areas
+        JSONArray areasArr = obj.getJSONArray("reachableAreaIds");
+        for (int i = 0; i < areasArr.length(); i++) {
+            data.reachableAreaIds.add(areasArr.getInt(i));
+        }
+
+        // Connected chunks
+        JSONArray connectedArr = obj.getJSONArray("connectedChunks");
+        for (int i = 0; i < connectedArr.length(); i++) {
+            data.connectedChunks.add(connectedArr.getLong(i));
+        }
+
+        return data;
+    }
+
+    /**
+     * Migrate edge array from v1 (100 entries) to v2 (200 entries).
+     * Each old edge point is duplicated to two adjacent cell positions.
+     */
+    private static EdgePoint[] migrateEdgeFromV1(JSONArray arr) {
+        EdgePoint[] edge = new EdgePoint[CELLS_PER_EDGE];
+        int oldSize = 100;
+
+        for (int i = 0; i < arr.length() && i < oldSize; i++) {
+            EdgePoint oldPoint = EdgePoint.fromJson(arr.getJSONObject(i));
+
+            // Map old edge[i] to new edge[i*2] and edge[i*2+1]
+            int newIdx = i * CELLS_PER_TILE;
+
+            // Create new edge points with updated local coordinates
+            // The local coordinate needs to be scaled as well
+            Coord newLocalCoord1 = oldPoint.localCoord != null ?
+                new Coord(oldPoint.localCoord.x * CELLS_PER_TILE, oldPoint.localCoord.y * CELLS_PER_TILE) : null;
+            Coord newLocalCoord2 = oldPoint.localCoord != null ?
+                new Coord(oldPoint.localCoord.x * CELLS_PER_TILE + 1, oldPoint.localCoord.y * CELLS_PER_TILE) : null;
+
+            edge[newIdx] = new EdgePoint(newIdx, oldPoint.walkable, newLocalCoord1);
+            edge[newIdx + 1] = new EdgePoint(newIdx + 1, oldPoint.walkable, newLocalCoord2);
+        }
+
+        // Fill any remaining entries (shouldn't happen but safety)
+        for (int i = 0; i < CELLS_PER_EDGE; i++) {
+            if (edge[i] == null) {
+                edge[i] = new EdgePoint(i, false, null);
+            }
+        }
+
+        return edge;
     }
 
     private static EdgePoint[] edgeFromJson(JSONArray arr) {

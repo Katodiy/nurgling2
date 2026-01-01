@@ -291,8 +291,8 @@ public class ChunkNavManager {
             for (ChunkPath.ChunkWaypoint wp : path.waypoints) {
                 JSONObject wpJson = new JSONObject();
                 wpJson.put("gridId", wp.gridId);
-                wpJson.put("localX", wp.localCoord != null ? wp.localCoord.x : 50);
-                wpJson.put("localY", wp.localCoord != null ? wp.localCoord.y : 50);
+                wpJson.put("localX", wp.localCoord != null ? wp.localCoord.x : CHUNK_SIZE / 2);
+                wpJson.put("localY", wp.localCoord != null ? wp.localCoord.y : CHUNK_SIZE / 2);
                 wpJson.put("type", wp.type.name());
                 if (wp.portal != null) {
                     wpJson.put("portalName", wp.portal.gobName);

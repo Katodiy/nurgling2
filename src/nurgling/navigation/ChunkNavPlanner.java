@@ -26,6 +26,30 @@ public class ChunkNavPlanner {
     }
 
     /**
+     * Check if a tile (in tile coordinates 0-99) is walkable.
+     * With half-tile resolution, a tile is walkable if any of its 4 cells is walkable.
+     */
+    private boolean isTileWalkable(ChunkNavData chunk, int tileX, int tileY) {
+        // Convert tile to cell coordinates
+        int cellX = tileX * CELLS_PER_TILE;
+        int cellY = tileY * CELLS_PER_TILE;
+
+        // Check all cells in the 2x2 block - tile is walkable if any cell is walkable
+        for (int dx = 0; dx < CELLS_PER_TILE; dx++) {
+            for (int dy = 0; dy < CELLS_PER_TILE; dy++) {
+                int cx = cellX + dx;
+                int cy = cellY + dy;
+                if (cx >= 0 && cx < CELLS_PER_EDGE && cy >= 0 && cy < CELLS_PER_EDGE) {
+                    if (chunk.walkability[cx][cy] == 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Plan a path from player's current position to a target area.
      * Uses the unified tile pathfinder to build a complete path through all chunks.
      */
@@ -160,7 +184,7 @@ public class ChunkNavPlanner {
                     if (!onPerimeter && dist > 0) continue;
 
                     if (x >= 0 && x < CHUNK_SIZE && y >= 0 && y < CHUNK_SIZE) {
-                        if (chunk.walkability[x][y] == 0) {
+                        if (isTileWalkable(chunk, x, y)) {
                             return new Coord(x, y);
                         }
                     }
@@ -178,7 +202,7 @@ public class ChunkNavPlanner {
         // Check the target itself first
         if (target.x >= 0 && target.x < CHUNK_SIZE &&
             target.y >= 0 && target.y < CHUNK_SIZE &&
-            chunk.walkability[target.x][target.y] == 0) {
+            isTileWalkable(chunk, target.x, target.y)) {
             return target;
         }
 
@@ -191,7 +215,7 @@ public class ChunkNavPlanner {
                     int nx = target.x + dx;
                     int ny = target.y + dy;
                     if (nx >= 0 && nx < CHUNK_SIZE && ny >= 0 && ny < CHUNK_SIZE) {
-                        if (chunk.walkability[nx][ny] == 0) {
+                        if (isTileWalkable(chunk, nx, ny)) {
                             return new Coord(nx, ny);
                         }
                     }

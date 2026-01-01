@@ -23,6 +23,26 @@ public class UnifiedTilePathfinder {
     }
 
     /**
+     * Check if a tile (in 0-99 space) is walkable by checking if ANY of its 2x2 cells is walkable.
+     */
+    private boolean isTileWalkable(ChunkNavData chunk, int tileX, int tileY) {
+        int cellX = tileX * CELLS_PER_TILE;
+        int cellY = tileY * CELLS_PER_TILE;
+        for (int dx = 0; dx < CELLS_PER_TILE; dx++) {
+            for (int dy = 0; dy < CELLS_PER_TILE; dy++) {
+                int cx = cellX + dx;
+                int cy = cellY + dy;
+                if (cx >= 0 && cx < CELLS_PER_EDGE && cy >= 0 && cy < CELLS_PER_EDGE) {
+                    if (chunk.walkability[cx][cy] == 0) {
+                        return true;  // At least one sub-cell is walkable
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Find a path from a starting tile to a target tile.
      * Both tiles are specified as (chunkGridId, localCoord).
      *
@@ -139,8 +159,8 @@ public class UnifiedTilePathfinder {
             int ny = y + dir[1];
 
             if (nx >= 0 && nx < CHUNK_SIZE && ny >= 0 && ny < CHUNK_SIZE) {
-                // Same chunk
-                if (chunk.walkability[nx][ny] == 0) {
+                // Same chunk - check tile walkability (any of 2x2 cells walkable)
+                if (isTileWalkable(chunk, nx, ny)) {
                     neighbors.add(new TileNode(tile.chunkId, new Coord(nx, ny)));
                 }
             } else {
@@ -178,6 +198,7 @@ public class UnifiedTilePathfinder {
     /**
      * Get a tile in an adjacent chunk when crossing an edge.
      * Uses neighbor relationships (persistent) instead of gridCoord (session-based).
+     * All coordinates are in tile space (0-99).
      */
     private TileNode getCrossChunkTile(ChunkNavData fromChunk, int nx, int ny) {
         // Determine which direction we're crossing and find neighbor
@@ -225,8 +246,8 @@ public class UnifiedTilePathfinder {
         // Must be same layer
         if (!fromChunk.layer.equals(neighborChunk.layer)) return null;
 
-        // Check if target tile is walkable
-        if (neighborChunk.walkability[newX][newY] == 0) {
+        // Check if target tile is walkable (any of 2x2 cells)
+        if (isTileWalkable(neighborChunk, newX, newY)) {
             return new TileNode(neighborChunk.gridId, new Coord(newX, newY));
         }
 
@@ -304,12 +325,13 @@ public class UnifiedTilePathfinder {
 
     /**
      * Find a walkable tile near the given coordinate.
+     * Coordinates are in tile space (0-99).
      */
     private Coord findWalkableTileNear(ChunkNavData chunk, Coord target) {
         // Check the target itself first
         if (target.x >= 0 && target.x < CHUNK_SIZE &&
             target.y >= 0 && target.y < CHUNK_SIZE &&
-            chunk.walkability[target.x][target.y] == 0) {
+            isTileWalkable(chunk, target.x, target.y)) {
             return target;
         }
 
@@ -320,7 +342,7 @@ public class UnifiedTilePathfinder {
                 int nx = target.x + dir[0] * radius;
                 int ny = target.y + dir[1] * radius;
                 if (nx >= 0 && nx < CHUNK_SIZE && ny >= 0 && ny < CHUNK_SIZE) {
-                    if (chunk.walkability[nx][ny] == 0) {
+                    if (isTileWalkable(chunk, nx, ny)) {
                         return new Coord(nx, ny);
                     }
                 }
@@ -370,8 +392,9 @@ public class UnifiedTilePathfinder {
         // BFS to find shortest path through neighbor relationships
         int neighborDist = getNeighborDistance(from.chunkId, to.chunkId);
         if (neighborDist >= 0) {
-            // Each chunk is 100 tiles, estimate walking across half of each
-            return neighborDist * CHUNK_SIZE + from.localCoord.dist(new Coord(50, 50)) + to.localCoord.dist(new Coord(50, 50));
+            // Each chunk is CHUNK_SIZE tiles, estimate walking across half of each
+            Coord chunkCenter = new Coord(CHUNK_SIZE / 2, CHUNK_SIZE / 2);
+            return neighborDist * CHUNK_SIZE + from.localCoord.dist(chunkCenter) + to.localCoord.dist(chunkCenter);
         }
 
         // No path through neighbors - might need portal
