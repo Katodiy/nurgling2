@@ -131,7 +131,9 @@ public class ChunkNavRecorder {
                 }
 
                 // Check terrain (terrain is at tile level, so convert cell to tile)
-                Coord worldTile = new Coord(worldCell.x / CELLS_PER_TILE, worldCell.y / CELLS_PER_TILE);
+                // IMPORTANT: Use floorDiv for correct rounding with negative coordinates
+                Coord worldTile = new Coord(Math.floorDiv(worldCell.x, CELLS_PER_TILE),
+                                            Math.floorDiv(worldCell.y, CELLS_PER_TILE));
                 boolean terrainBlocked = isTileBlocked(mcache, worldTile);
 
                 // Check gobs
@@ -258,7 +260,9 @@ public class ChunkNavRecorder {
                 chunk.setObserved(cx, cy, true);
 
                 // Check terrain (terrain is at tile level, so convert cell to tile)
-                Coord worldTile = new Coord(worldCell.x / CELLS_PER_TILE, worldCell.y / CELLS_PER_TILE);
+                // IMPORTANT: Use floorDiv for correct rounding with negative coordinates
+                Coord worldTile = new Coord(Math.floorDiv(worldCell.x, CELLS_PER_TILE),
+                                            Math.floorDiv(worldCell.y, CELLS_PER_TILE));
                 boolean terrainBlocked = isTileBlocked(mcache, worldTile);
 
                 // Check gob hitboxes (using local cell coordinates)
@@ -283,7 +287,7 @@ public class ChunkNavRecorder {
     private boolean isTileBlocked(MCache mcache, Coord tileCoord) {
         try {
             String tileName = mcache.tilesetname(mcache.gettile(tileCoord));
-            if (tileName == null) return false;
+            if (tileName == null) return true;  // Unknown tile = blocked (safer default)
 
             for (String blocked : BLOCKED_TILES) {
                 if (tileName.startsWith(blocked) || tileName.equals(blocked)) {
@@ -292,7 +296,7 @@ public class ChunkNavRecorder {
             }
             return false;
         } catch (Exception e) {
-            return false; // Tile not loaded
+            return true; // Tile not loaded = blocked (safer default)
         }
     }
 
@@ -392,12 +396,6 @@ public class ChunkNavRecorder {
         if (gob == null || gob.ngob == null || gob.ngob.name == null) return false;
         String lower = gob.ngob.name.toLowerCase();
 
-        // Indoor wall decorations are thin (about 1/8th of a tile)
-        // They don't block tile access - the room boundary is defined by nil tiles
-        // Specifically: hwall, vwall (horizontal/vertical walls inside buildings)
-        // NOT palisade corners or other outdoor structures!
-        if (lower.contains("/arch/") && (lower.contains("/hwall") || lower.contains("/vwall"))) return true;
-
         // Specific door gobs (the actual door objects, not buildings with doors)
         // These are the "-door" suffix objects like "stonemansion-door"
         if (lower.endsWith("-door")) return true;
@@ -429,9 +427,6 @@ public class ChunkNavRecorder {
     private boolean isPassableGob(GobSnapshot snap) {
         if (snap.name == null) return false;
         String lower = snap.name.toLowerCase();
-
-        // Indoor wall decorations
-        if (lower.contains("/arch/") && (lower.contains("/hwall") || lower.contains("/vwall"))) return true;
 
         // Door gobs
         if (lower.endsWith("-door")) return true;
