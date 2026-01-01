@@ -280,6 +280,10 @@ public class SeedCrop implements Action {
         }
 
         for (Gob barrel : barrels) {
+            // Stop if inventory is full
+            if (gui.getInventory().getFreeSpace() <= 0) {
+                break;
+            }
             if (NUtils.barrelHasContent(barrel)) {
                 new TakeFromBarrel(barrel, iseed).run(gui);
             }
