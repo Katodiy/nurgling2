@@ -35,10 +35,27 @@ except ImportError:
     print("Falling back to ASCII visualization.\n")
 
 
-# Constants matching ChunkNavConfig.java (tile-level resolution)
-CHUNK_SIZE = 100  # Tiles per chunk
-CELLS_PER_EDGE = 100  # Walkability grid size (now 1:1 with tiles)
-COARSE_CELL_SIZE = 1  # Tiles per walkability cell (1 = per-tile)
+# Constants matching ChunkNavConfig.java
+CHUNK_SIZE = 100  # Tiles per chunk (unchanged)
+# CELLS_PER_EDGE is now determined per-chunk based on data version:
+# Version 1: 100x100 (tile-level)
+# Version 2: 200x200 (half-tile level)
+
+
+def get_cells_per_edge(chunk):
+    """Determine grid size from chunk data version or array length."""
+    version = chunk.get('version', 1)
+    if version >= 2:
+        return 200
+    # Fallback: infer from walkability array length
+    walkability = chunk.get('walkability', [])
+    if walkability:
+        # sqrt of array length gives cells per edge
+        import math
+        size = int(math.sqrt(len(walkability)))
+        if size * size == len(walkability):
+            return size
+    return 100  # Default to v1
 
 
 def find_chunknav_files(world=None):
@@ -112,28 +129,28 @@ def load_path_data(chunknav_filepath):
     return None
 
 
-def parse_walkability(walk_array):
-    """Parse flat walkability array into 100x100 grid."""
+def parse_walkability(walk_array, cells_per_edge):
+    """Parse flat walkability array into grid."""
     grid = []
     idx = 0
-    for x in range(CELLS_PER_EDGE):
+    for x in range(cells_per_edge):
         row = []
-        for y in range(CELLS_PER_EDGE):
+        for y in range(cells_per_edge):
             row.append(walk_array[idx])
             idx += 1
         grid.append(row)
     return grid
 
 
-def parse_observed(obs_array):
-    """Parse flat observed array into 100x100 grid."""
+def parse_observed(obs_array, cells_per_edge):
+    """Parse flat observed array into grid."""
     if not obs_array:
-        return [[True] * CELLS_PER_EDGE for _ in range(CELLS_PER_EDGE)]
+        return [[True] * cells_per_edge for _ in range(cells_per_edge)]
     grid = []
     idx = 0
-    for x in range(CELLS_PER_EDGE):
+    for x in range(cells_per_edge):
         row = []
-        for y in range(CELLS_PER_EDGE):
+        for y in range(cells_per_edge):
             row.append(obs_array[idx] != 0)
             idx += 1
         grid.append(row)
@@ -600,16 +617,17 @@ def visualize_matplotlib(data, output_file=None, detail_chunk_index=0, layer_fil
 
             walkability = chunk.get('walkability', [])
             observed = chunk.get('observed', [])
+            cells_per_edge = get_cells_per_edge(chunk)
 
             if walkability:
-                walk_grid = parse_walkability(walkability)
-                obs_grid = parse_observed(observed) if observed else [[True]*CELLS_PER_EDGE for _ in range(CELLS_PER_EDGE)]
+                walk_grid = parse_walkability(walkability, cells_per_edge)
+                obs_grid = parse_observed(observed, cells_per_edge) if observed else [[True]*cells_per_edge for _ in range(cells_per_edge)]
 
                 # Create image data for this chunk
                 # Use origin='upper' so Y=0 is at top (matching game coordinates where Y increases southward)
-                img_data = np.zeros((CELLS_PER_EDGE, CELLS_PER_EDGE, 3))
-                for row in range(CELLS_PER_EDGE):
-                    for col in range(CELLS_PER_EDGE):
+                img_data = np.zeros((cells_per_edge, cells_per_edge, 3))
+                for row in range(cells_per_edge):
+                    for col in range(cells_per_edge):
                         # row corresponds to Y (local), col corresponds to X (local)
                         w = walk_grid[col][row]
                         o = obs_grid[col][row]
@@ -759,16 +777,17 @@ def visualize_matplotlib(data, output_file=None, detail_chunk_index=0, layer_fil
         if detail_chunk:
             walkability = detail_chunk.get('walkability', [])
             observed = detail_chunk.get('observed', [])
+            cells_per_edge = get_cells_per_edge(detail_chunk)
 
             if walkability:
-                walk_grid = parse_walkability(walkability)
-                obs_grid = parse_observed(observed) if observed else [[True]*CELLS_PER_EDGE for _ in range(CELLS_PER_EDGE)]
+                walk_grid = parse_walkability(walkability, cells_per_edge)
+                obs_grid = parse_observed(observed, cells_per_edge) if observed else [[True]*cells_per_edge for _ in range(cells_per_edge)]
 
-                # Create image data (100x100 tile-level)
+                # Create image data (cells_per_edge x cells_per_edge)
                 # Use origin='upper' so Y=0 is at top (matching game coordinates)
-                img_data = np.zeros((CELLS_PER_EDGE, CELLS_PER_EDGE, 3))
-                for row in range(CELLS_PER_EDGE):
-                    for col in range(CELLS_PER_EDGE):
+                img_data = np.zeros((cells_per_edge, cells_per_edge, 3))
+                for row in range(cells_per_edge):
+                    for col in range(cells_per_edge):
                         # row = Y coordinate, col = X coordinate
                         w = walk_grid[col][row]
                         o = obs_grid[col][row]

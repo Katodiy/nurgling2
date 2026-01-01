@@ -4,10 +4,10 @@ package nurgling.navigation;
  * Configuration constants for the chunk-based navigation system.
  */
 public class ChunkNavConfig {
-    // Recording - tile-level resolution (1:1 with game tiles)
-    public static final int COARSE_CELL_SIZE = 1;           // Tiles per walkability cell (1 = per-tile)
-    public static final int CELLS_PER_EDGE = 100;           // Cells along chunk edge (100x100 tiles)
-    public static final int CHUNK_SIZE = 100;               // Tiles per chunk
+    // Recording - half-tile resolution (2x2 cells per game tile, matching NPFMap)
+    public static final int CELLS_PER_TILE = 2;             // Cells per tile dimension (2x2 = 4 cells per tile)
+    public static final int CHUNK_SIZE = 100;               // Tiles per chunk (game grid size, unchanged)
+    public static final int CELLS_PER_EDGE = CHUNK_SIZE * CELLS_PER_TILE;  // 200 cells along chunk edge
 
     // Confidence
     public static final float INITIAL_CONFIDENCE = 1.0f;

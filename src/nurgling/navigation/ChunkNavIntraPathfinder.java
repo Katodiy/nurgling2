@@ -8,7 +8,7 @@ import static nurgling.navigation.ChunkNavConfig.*;
 
 /**
  * Pathfinder for navigating within a single chunk using the walkability grid.
- * Uses A* on the coarse 25x25 cell grid to find paths between two points.
+ * Uses A* on the 200x200 cell grid (half-tile resolution) to find paths between two points.
  * Also provides cross-chunk path validation.
  */
 public class ChunkNavIntraPathfinder {
@@ -17,7 +17,7 @@ public class ChunkNavIntraPathfinder {
      * Result of intra-chunk pathfinding.
      */
     public static class IntraPath {
-        public final List<Coord> cellPath;      // Path in coarse cell coordinates (0-24)
+        public final List<Coord> cellPath;      // Path in cell coordinates (0-199)
         public final List<Coord> localPath;     // Path in local tile coordinates (0-99)
         public final boolean reachable;
         public final float cost;
@@ -27,12 +27,13 @@ public class ChunkNavIntraPathfinder {
             this.reachable = reachable;
             this.cost = cost;
 
-            // Convert cell path to local tile coordinates (center of each cell)
+            // Convert cell path to local tile coordinates
+            // Each tile contains CELLS_PER_TILE x CELLS_PER_TILE cells
             this.localPath = new ArrayList<>();
             for (Coord cell : cellPath) {
-                // Center of the cell in local tile coordinates
-                int localX = cell.x * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2;
-                int localY = cell.y * COARSE_CELL_SIZE + COARSE_CELL_SIZE / 2;
+                // Convert cell to tile coordinates
+                int localX = cell.x / CELLS_PER_TILE;
+                int localY = cell.y / CELLS_PER_TILE;
                 this.localPath.add(new Coord(localX, localY));
             }
         }
@@ -49,19 +50,19 @@ public class ChunkNavIntraPathfinder {
     /**
      * Find a path between two local tile coordinates within a chunk.
      *
-     * @param fromLocal Starting point in local tile coordinates (0-99)
-     * @param toLocal   Target point in local tile coordinates (0-99)
-     * @param chunk     The chunk data containing walkability grid
+     * @param fromTile Starting point in local tile coordinates (0-99)
+     * @param toTile   Target point in local tile coordinates (0-99)
+     * @param chunk    The chunk data containing walkability grid
      * @return IntraPath with the path if reachable, or empty path if not
      */
-    public static IntraPath findPath(Coord fromLocal, Coord toLocal, ChunkNavData chunk) {
+    public static IntraPath findPath(Coord fromTile, Coord toTile, ChunkNavData chunk) {
         if (chunk == null) {
             return new IntraPath(Collections.emptyList(), false, Float.MAX_VALUE);
         }
 
-        // Convert local tile coords to coarse cell coords
-        Coord fromCell = localToCell(fromLocal);
-        Coord toCell = localToCell(toLocal);
+        // Convert local tile coords to cell coords (each tile = 2x2 cells)
+        Coord fromCell = tileToCell(fromTile);
+        Coord toCell = tileToCell(toTile);
 
         // Validate bounds
         if (!isValidCell(fromCell) || !isValidCell(toCell)) {
@@ -80,12 +81,12 @@ public class ChunkNavIntraPathfinder {
             return new IntraPath(path, true, 0);
         }
 
-        // A* pathfinding on the coarse grid
+        // A* pathfinding on the cell grid
         return aStarPath(fromCell, toCell, chunk);
     }
 
     /**
-     * A* pathfinding on the coarse cell grid.
+     * A* pathfinding on the 200x200 cell grid (half-tile resolution).
      */
     private static IntraPath aStarPath(Coord fromCell, Coord toCell, ChunkNavData chunk) {
         PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(n -> n.f));
@@ -105,7 +106,7 @@ public class ChunkNavIntraPathfinder {
         int[][] diagonals = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 
         int iterations = 0;
-        int maxIterations = CELLS_PER_EDGE * CELLS_PER_EDGE * 4; // Reasonable limit for 100x100 grid
+        int maxIterations = CELLS_PER_EDGE * CELLS_PER_EDGE * 4; // Reasonable limit for 200x200 grid
 
         while (!openSet.isEmpty() && iterations < maxIterations) {
             iterations++;
@@ -151,9 +152,9 @@ public class ChunkNavIntraPathfinder {
         if (closedSet.contains(neighborPos)) return;
 
         byte walkability = chunk.getWalkability(neighborPos.x, neighborPos.y);
-        if (walkability != 0) return; // Blocked (tile-level: only 0 is walkable)
+        if (walkability != 0) return; // Blocked (only 0 is walkable)
 
-        // With tile-level resolution, no partial walkability - uniform cost
+        // Half-tile resolution - uniform cost per cell
         float tentativeG = current.g + baseCost;
 
         Node neighbor = allNodes.get(neighborPos);
@@ -198,10 +199,11 @@ public class ChunkNavIntraPathfinder {
 
     /**
      * Convert local tile coordinate to cell coordinate.
-     * With tile-level resolution (COARSE_CELL_SIZE=1), this is an identity operation.
+     * With half-tile resolution, each tile maps to CELLS_PER_TILE x CELLS_PER_TILE cells.
+     * This returns the top-left cell of the tile's 2x2 cell block.
      */
-    public static Coord localToCell(Coord local) {
-        return new Coord(local.x / COARSE_CELL_SIZE, local.y / COARSE_CELL_SIZE);
+    public static Coord tileToCell(Coord tile) {
+        return new Coord(tile.x * CELLS_PER_TILE, tile.y * CELLS_PER_TILE);
     }
 
     /**

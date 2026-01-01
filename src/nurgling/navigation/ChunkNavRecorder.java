@@ -101,62 +101,66 @@ public class ChunkNavRecorder {
 
     /**
      * Merge new walkability observations with existing chunk data.
-     * Only records tiles within gob visibility range (~25 tiles radius).
-     * Tiles outside visibility remain unobserved (blocked by default).
+     * Only records cells within gob visibility range (~50 cells = 25 tiles radius).
+     * Cells outside visibility remain unobserved (blocked by default).
      */
     private void mergeWalkability(MCache.Grid grid, ChunkNavData chunk) {
         MCache mcache = getMCache();
         if (mcache == null) return;
 
-        // Get player's tile position
-        Coord playerTile = getPlayerTile();
-        if (playerTile == null) return;
+        // Get player's cell position (half-tile resolution)
+        Coord playerCell = getPlayerCell();
+        if (playerCell == null) return;
 
-        // Build set of tiles blocked by gobs (only includes visible gobs)
-        Set<Long> gobBlockedTiles = getGobBlockedTiles(grid);
+        // Build set of cells blocked by gobs (only includes visible gobs)
+        Set<Long> gobBlockedCells = getGobBlockedCells(grid);
 
-        for (int tx = 0; tx < CELLS_PER_EDGE; tx++) {
-            for (int ty = 0; ty < CELLS_PER_EDGE; ty++) {
-                // Calculate world tile coordinate
-                Coord worldTile = grid.ul.add(tx, ty);
+        // Grid origin in cell coordinates
+        Coord gridCellOrigin = new Coord(grid.ul.x * CELLS_PER_TILE, grid.ul.y * CELLS_PER_TILE);
 
-                // Skip tiles outside visibility range
-                int dx = Math.abs(worldTile.x - playerTile.x);
-                int dy = Math.abs(worldTile.y - playerTile.y);
-                if (dx > VISIBLE_RADIUS_TILES || dy > VISIBLE_RADIUS_TILES) {
+        for (int cx = 0; cx < CELLS_PER_EDGE; cx++) {
+            for (int cy = 0; cy < CELLS_PER_EDGE; cy++) {
+                // Calculate world cell coordinate
+                Coord worldCell = gridCellOrigin.add(cx, cy);
+
+                // Skip cells outside visibility range
+                int dx = Math.abs(worldCell.x - playerCell.x);
+                int dy = Math.abs(worldCell.y - playerCell.y);
+                if (dx > VISIBLE_RADIUS_CELLS || dy > VISIBLE_RADIUS_CELLS) {
                     continue;  // Leave as unobserved (blocked by default)
                 }
 
-                // Check terrain (deterministic from tile type)
+                // Check terrain (terrain is at tile level, so convert cell to tile)
+                Coord worldTile = new Coord(worldCell.x / CELLS_PER_TILE, worldCell.y / CELLS_PER_TILE);
                 boolean terrainBlocked = isTileBlocked(mcache, worldTile);
 
                 // Check gobs
-                long tileKey = ((long) tx << 32) | (ty & 0xFFFFFFFFL);
-                boolean gobBlocked = gobBlockedTiles.contains(tileKey);
+                long cellKey = ((long) cx << 32) | (cy & 0xFFFFFFFFL);
+                boolean gobBlocked = gobBlockedCells.contains(cellKey);
 
-                // Mark tile as observed (uses setObserved for quadrant count tracking)
-                chunk.setObserved(tx, ty, true);
+                // Mark cell as observed (uses setObserved for section count tracking)
+                chunk.setObserved(cx, cy, true);
 
                 // Record what we observe
                 if (terrainBlocked) {
-                    chunk.walkability[tx][ty] = 2;  // Blocked by terrain
+                    chunk.walkability[cx][cy] = 2;  // Blocked by terrain
                 } else if (gobBlocked) {
-                    chunk.walkability[tx][ty] = 2;  // Blocked by gob
+                    chunk.walkability[cx][cy] = 2;  // Blocked by gob
                 } else {
-                    chunk.walkability[tx][ty] = 0;  // Walkable
+                    chunk.walkability[cx][cy] = 0;  // Walkable
                 }
             }
         }
     }
 
     /**
-     * Get the player's current tile coordinate.
+     * Get the player's current cell coordinate (half-tile resolution).
      */
-    private Coord getPlayerTile() {
+    private Coord getPlayerCell() {
         try {
             Gob player = NUtils.player();
             if (player != null) {
-                return player.rc.floor(MCache.tilesz);
+                return nurgling.pf.Utils.toPfGrid(player.rc);
             }
         } catch (Exception e) {
             // Player not available
@@ -215,66 +219,59 @@ public class ChunkNavRecorder {
 
     // Gob visibility range is smaller than tile visibility range (~25-30 tiles vs ~40 tiles)
     // We must use the GOB visibility range, not tile visibility, to ensure we only
-    // mark tiles as walkable when we can actually see all gobs on them.
-    // Using 25 tiles to be conservative - if gobs aren't visible, don't trust the tile.
-    private static final int VISIBLE_RADIUS_TILES = 25;
+    // mark cells as walkable when we can actually see all gobs on them.
+    // Using 50 cells (= 25 tiles) to be conservative - if gobs aren't visible, don't trust the cell.
+    private static final int VISIBLE_RADIUS_CELLS = 50;
 
     /**
-     * Sample walkability at tile-level resolution (1 tile per cell).
-     * Only samples tiles within gob visibility range (~25 tiles radius).
-     * Tiles outside visibility remain unobserved (blocked by default).
+     * Sample walkability at half-tile resolution (4 cells per tile).
+     * Only samples cells within gob visibility range (~50 cells = 25 tiles radius).
+     * Cells outside visibility remain unobserved (blocked by default).
      */
     private void sampleWalkability(MCache.Grid grid, ChunkNavData chunk) {
         MCache mcache = getMCache();
         if (mcache == null) return;
 
-        // Get player's tile position
-        Coord playerTile = getPlayerTile();
-        if (playerTile == null) return;
+        // Get player's cell position (half-tile resolution)
+        Coord playerCell = getPlayerCell();
+        if (playerCell == null) return;
 
-        // Build set of tiles blocked by gobs
-        Set<Long> gobBlockedTiles = getGobBlockedTiles(grid);
+        // Build set of cells blocked by gobs
+        Set<Long> gobBlockedCells = getGobBlockedCells(grid);
 
-        // DEBUG: Track floor tile bounds (non-nil tiles)
-        int floorMinX = CELLS_PER_EDGE, floorMaxX = 0, floorMinY = CELLS_PER_EDGE, floorMaxY = 0;
+        // Grid origin in cell coordinates
+        Coord gridCellOrigin = new Coord(grid.ul.x * CELLS_PER_TILE, grid.ul.y * CELLS_PER_TILE);
 
-        for (int tx = 0; tx < CELLS_PER_EDGE; tx++) {
-            for (int ty = 0; ty < CELLS_PER_EDGE; ty++) {
-                // Calculate world tile coordinate
-                Coord worldTile = grid.ul.add(tx, ty);
+        for (int cx = 0; cx < CELLS_PER_EDGE; cx++) {
+            for (int cy = 0; cy < CELLS_PER_EDGE; cy++) {
+                // Calculate world cell coordinate
+                Coord worldCell = gridCellOrigin.add(cx, cy);
 
-                // Skip tiles outside visibility range
-                int dx = Math.abs(worldTile.x - playerTile.x);
-                int dy = Math.abs(worldTile.y - playerTile.y);
-                if (dx > VISIBLE_RADIUS_TILES || dy > VISIBLE_RADIUS_TILES) {
+                // Skip cells outside visibility range
+                int dx = Math.abs(worldCell.x - playerCell.x);
+                int dy = Math.abs(worldCell.y - playerCell.y);
+                if (dx > VISIBLE_RADIUS_CELLS || dy > VISIBLE_RADIUS_CELLS) {
                     continue;  // Leave as unobserved (blocked by default)
                 }
 
-                // Mark as observed (uses setObserved for quadrant count tracking)
-                chunk.setObserved(tx, ty, true);
+                // Mark as observed (uses setObserved for section count tracking)
+                chunk.setObserved(cx, cy, true);
 
-                // Check terrain
+                // Check terrain (terrain is at tile level, so convert cell to tile)
+                Coord worldTile = new Coord(worldCell.x / CELLS_PER_TILE, worldCell.y / CELLS_PER_TILE);
                 boolean terrainBlocked = isTileBlocked(mcache, worldTile);
 
-                // Check gob hitboxes (using local coordinates to match getGobBlockedTiles)
-                long tileKey = ((long) tx << 32) | (ty & 0xFFFFFFFFL);
-                boolean gobBlocked = gobBlockedTiles.contains(tileKey);
+                // Check gob hitboxes (using local cell coordinates)
+                long cellKey = ((long) cx << 32) | (cy & 0xFFFFFFFFL);
+                boolean gobBlocked = gobBlockedCells.contains(cellKey);
 
-                // Classify tile: 0 = walkable, 2 = blocked
+                // Classify cell: 0 = walkable, 2 = blocked
                 if (terrainBlocked) {
-                    chunk.walkability[tx][ty] = 2;  // Blocked
+                    chunk.walkability[cx][cy] = 2;  // Blocked
+                } else if (gobBlocked) {
+                    chunk.walkability[cx][cy] = 2;  // Blocked
                 } else {
-                    // This is a floor tile (non-nil) - track bounds
-                    floorMinX = Math.min(floorMinX, tx);
-                    floorMaxX = Math.max(floorMaxX, tx);
-                    floorMinY = Math.min(floorMinY, ty);
-                    floorMaxY = Math.max(floorMaxY, ty);
-
-                    if (gobBlocked) {
-                        chunk.walkability[tx][ty] = 2;  // Blocked
-                    } else {
-                        chunk.walkability[tx][ty] = 0;  // Walkable
-                    }
+                    chunk.walkability[cx][cy] = 0;  // Walkable
                 }
             }
         }
@@ -300,14 +297,13 @@ public class ChunkNavRecorder {
     }
 
     /**
-     * Get set of all tiles blocked by gobs in this grid.
-     * Returns tile keys as (localX << 32) | localY for efficient lookup.
-     * Computes blocked tiles directly from gob positions (gob.rc) relative to the grid,
-     * avoiding CellsArray coordinate issues in cellars/buildings where coordinate spaces
-     * may differ between sessions.
+     * Get set of all cells blocked by gobs in this grid.
+     * Returns cell keys as (localX << 32) | localY for efficient lookup.
+     * Uses half-tile (cell) resolution matching NPFMap for precise hitbox projection.
+     * Uses intersection testing for accurate rotated hitbox handling.
      */
-    private Set<Long> getGobBlockedTiles(MCache.Grid grid) {
-        Set<Long> blockedTiles = new HashSet<>();
+    private Set<Long> getGobBlockedCells(MCache.Grid grid) {
+        Set<Long> blockedCells = new HashSet<>();
 
         try {
             Glob glob = NUtils.getGameUI().ui.sess.glob;
@@ -316,6 +312,9 @@ public class ChunkNavRecorder {
             // Grid bounds in world coordinates
             Coord2d gridWorldUL = grid.ul.mul(MCache.tilesz);
             Coord2d gridWorldBR = grid.ul.add(CHUNK_SIZE, CHUNK_SIZE).mul(MCache.tilesz);
+
+            // Grid origin in cell coordinates
+            Coord gridCellOrigin = new Coord(grid.ul.x * CELLS_PER_TILE, grid.ul.y * CELLS_PER_TILE);
 
             // Quick copy of gob data while holding lock - minimizes lock time
             List<GobSnapshot> snapshots = new ArrayList<>();
@@ -344,7 +343,7 @@ public class ChunkNavRecorder {
                     continue;
                 }
 
-                // Compute hitbox bounds directly from gob position
+                // Compute hitbox in world space with rotation
                 nurgling.pf.NHitBoxD worldHitBox = new nurgling.pf.NHitBoxD(
                     snap.hitBox.begin, snap.hitBox.end, snap.rc, snap.angle
                 );
@@ -353,20 +352,26 @@ public class ChunkNavRecorder {
                 Coord2d hitUL = worldHitBox.getCircumscribedUL();
                 Coord2d hitBR = worldHitBox.getCircumscribedBR();
 
-                // Convert to tile coordinates
-                Coord tileUL = hitUL.floor(MCache.tilesz);
-                Coord tileBR = new Coord2d(hitBR.x - 0.01, hitBR.y - 0.01).floor(MCache.tilesz);
+                // Convert to cell coordinates using NPFMap's conversion
+                Coord cellUL = nurgling.pf.Utils.toPfGrid(hitUL);
+                Coord cellBR = nurgling.pf.Utils.toPfGrid(hitBR);
 
-                // Mark all tiles covered by the hitbox
-                for (int tx = tileUL.x; tx <= tileBR.x; tx++) {
-                    for (int ty = tileUL.y; ty <= tileBR.y; ty++) {
-                        int localX = tx - grid.ul.x;
-                        int localY = ty - grid.ul.y;
+                // For each cell in the bounding box, do intersection test
+                for (int px = cellUL.x; px <= cellBR.x; px++) {
+                    for (int py = cellUL.y; py <= cellBR.y; py++) {
+                        // Create a unit square hitbox for this cell
+                        nurgling.pf.NHitBoxD cellBox = new nurgling.pf.NHitBoxD(new Coord(px, py));
 
-                        if (localX >= 0 && localX < CHUNK_SIZE &&
-                            localY >= 0 && localY < CHUNK_SIZE) {
-                            long tileKey = ((long) localX << 32) | (localY & 0xFFFFFFFFL);
-                            blockedTiles.add(tileKey);
+                        // Test intersection with the gob's actual rotated hitbox
+                        if (cellBox.intersects(worldHitBox, false)) {
+                            int localX = px - gridCellOrigin.x;
+                            int localY = py - gridCellOrigin.y;
+
+                            if (localX >= 0 && localX < CELLS_PER_EDGE &&
+                                localY >= 0 && localY < CELLS_PER_EDGE) {
+                                long cellKey = ((long) localX << 32) | (localY & 0xFFFFFFFFL);
+                                blockedCells.add(cellKey);
+                            }
                         }
                     }
                 }
@@ -375,7 +380,7 @@ public class ChunkNavRecorder {
             // Silently handle exceptions during gob iteration
         }
 
-        return blockedTiles;
+        return blockedCells;
     }
 
     /**
