@@ -322,7 +322,8 @@ public class TransferToContainer implements Action
                 });
                 return 1; // Переносим 1 одиночный предмет
             }
-        } else
+        }
+        else
         {
             // Обрабатываем стакуемые предметы с приоритетом на заполнение не полных стаков
             // Проверяем, является ли предмет изначально частью ItemStack
@@ -354,7 +355,8 @@ public class TransferToContainer implements Action
                         NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
                     }
                     return 1; // Переносим 1 предмет из стака к одиночному предмету
-                } else if (targetNotFullStack != null)
+                }
+                else if (targetNotFullStack != null)
                 {
                     // Если нет одиночных предметов, заполняем неполные стаки
                     int targetStackSize = targetNotFullStack.wmap.size();
@@ -374,6 +376,8 @@ public class TransferToContainer implements Action
                     {
                         NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
                     }
+                    NUtils.addTask(new StackSizeChanged(targetNotFullStack, targetStackSize));
+
                     return 1; // Переносим 1 предмет из стака к стаку
                 }
                 else
