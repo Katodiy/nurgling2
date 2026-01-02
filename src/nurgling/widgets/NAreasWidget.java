@@ -4,12 +4,11 @@ import haven.*;
 import haven.Frame;
 import haven.Label;
 import haven.Window;
-import haven.render.*;
 import nurgling.*;
 import nurgling.actions.bots.*;
 import nurgling.areas.*;
+import nurgling.navigation.NavigationService;
 import nurgling.overlays.map.*;
-import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import org.json.*;
 
@@ -18,10 +17,8 @@ import javax.swing.colorchooser.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.*;
 
 import static nurgling.widgets.Specialisation.findSpecialisation;
 
@@ -497,12 +494,11 @@ public class NAreasWidget extends Window
                             {
                                 Thread t = new Thread(() -> {
                                     try {
-                                        RoutePoint targetPoint = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area);
-                                        if(targetPoint == null) {
-                                            NUtils.getGameUI().error("No route point found for area: " + area.name);
+                                        if(!NavigationService.getInstance().isNavigationAvailable(area)) {
+                                            NUtils.getGameUI().error("No navigation available for area: " + area.name + ". Add route points or record chunks.");
                                             return;
                                         }
-                                        new RoutePointNavigator(targetPoint, area.id).run(NUtils.getGameUI());
+                                        NavigationService.getInstance().navigateToArea(area, NUtils.getGameUI());
                                     } catch (InterruptedException e) {
                                         NUtils.getGameUI().error("Navigation to area interrupted: " + e.getMessage());
                                     }
