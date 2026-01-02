@@ -2,10 +2,8 @@ package nurgling.areas;
 
 import haven.*;
 import nurgling.*;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.actions.bots.SelectArea;
-import nurgling.navigation.ChunkNavManager;
-import nurgling.navigation.ChunkPath;
+import nurgling.navigation.NavigationService;
 import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import nurgling.tools.Container;
@@ -616,28 +614,7 @@ public class NContext {
             return;
         }
 
-        // Try ChunkNav first if it has data for the area
-        ChunkNavManager chunkNav = (gui.map != null && gui.map instanceof NMapView)
-            ? ((NMapView)gui.map).getChunkNavManager() : null;
-        System.out.println("NContext: ChunkNav initialized=" + (chunkNav != null && chunkNav.isInitialized()));
-        if (chunkNav != null && chunkNav.isInitialized()) {
-            ChunkPath path = chunkNav.planToArea(area);
-            System.out.println("NContext: ChunkNav path=" + (path != null ? path.size() + " waypoints" : "null"));
-            if (path != null) {
-                System.out.println("NContext: Using ChunkNav to navigate to " + areaId);
-                nurgling.actions.Results result = chunkNav.navigateToArea(area, gui);
-                System.out.println("NContext: ChunkNav result=" + result.IsSuccess());
-                if (result.IsSuccess()) {
-                    return;
-                }
-                System.out.println("NContext: ChunkNav navigation failed, falling back to routes");
-            }
-        }
-
-        // Fallback to RoutePointNavigator if ChunkNav fails or has no data
-        if (rps.containsKey(areaId)) {
-            new RoutePointNavigator(rps.get(areaId), area.id).run(gui);
-        }
+        NavigationService.getInstance().navigateToArea(area, gui).IsSuccess();
     }
 
     public String createArea(String msg, BufferedImage bauble) throws InterruptedException {
@@ -651,6 +628,7 @@ public class NContext {
             (insa = new SelectArea(bauble)).run(gui);
         else
             (insa = new SelectArea(bauble,custom)).run(gui);
+
         String id = "temp"+counter++;
         NArea tempArea = new NArea(id);
         tempArea.space = insa.result;
@@ -937,40 +915,11 @@ public class NContext {
     }
 
     /**
-     * Calculate distance to an area using ChunkNav if available, falling back to RouteGraph.
+     * Calculate distance to an area using NavigationService.
      * Returns Double.MAX_VALUE if area is unreachable.
      */
     private static double getDistanceToArea(NArea area, NGameUI gui) {
-        if (gui == null || gui.map == null) {
-            return Double.MAX_VALUE;
-        }
-
-        // Try ChunkNav first
-        if (gui.map instanceof NMapView) {
-            ChunkNavManager chunkNav = ((NMapView) gui.map).getChunkNavManager();
-            if (chunkNav != null && chunkNav.isInitialized()) {
-                ChunkPath path = chunkNav.planToArea(area);
-                if (path != null) {
-                    // ChunkNav has a path - use its cost
-                    return path.totalCost;
-                }
-            }
-        }
-
-        // Fallback to RouteGraph
-        if (gui.map instanceof NMapView) {
-            List<RoutePoint> routePoints = ((NMapView) gui.map).routeGraphManager.getGraph().findPath(
-                ((NMapView) gui.map).routeGraphManager.getGraph().findNearestPointToPlayer(gui),
-                ((NMapView) gui.map).routeGraphManager.getGraph().findAreaRoutePoint(area)
-            );
-            if (routePoints != null) {
-                // Scale route points to be comparable with ChunkNav costs
-                // Route points are typically counted, so multiply to make units similar
-                return routePoints.size() * 100.0;
-            }
-        }
-
-        return Double.MAX_VALUE;
+        return NavigationService.getInstance().getDistanceToArea(area, gui);
     }
 
     public static NArea findInGlobal(String name) {

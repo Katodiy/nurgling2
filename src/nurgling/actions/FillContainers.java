@@ -3,12 +3,10 @@ package nurgling.actions;
 import haven.Coord;
 import haven.Gob;
 import nurgling.NGameUI;
-import nurgling.NMapView;
 import nurgling.NUtils;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.NavigationService;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -22,7 +20,7 @@ public class FillContainers implements Action
     NContext context;
     ArrayList<Container> currentContainers = new ArrayList<>();
     Coord targetCoord = new Coord(1,1);
-    RoutePoint closestRoutePoint = null;
+    NArea workingArea = null;
 
     public FillContainers(ArrayList<Container> conts, String transferedItems, NContext context) {
         this.conts = conts;
@@ -33,9 +31,7 @@ public class FillContainers implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         context.addInItem(transferedItems, null);
-        
-        this.closestRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui);
-        
+
         for (Container cont : conts) {
             while(!isReady(cont)) {
                 if (gui.getInventory().getItems(transferedItems).isEmpty()) {
@@ -99,8 +95,8 @@ public class FillContainers implements Action
             pf = new PathFinder(gob);
             pf.isHardMode = true;
             pf.run(gui);
-        } else {
-            new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
+        } else if (workingArea != null) {
+            NavigationService.getInstance().navigateToArea(workingArea, gui);
             if((gob = Finder.findGob(container.gobHash))!=null ) {
                 pf = new PathFinder(gob);
                 pf.isHardMode = true;

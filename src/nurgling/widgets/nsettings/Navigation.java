@@ -13,7 +13,6 @@ public class Navigation extends Panel {
         boolean autoLogoutOnUnknown;
 
         // Navigation settings
-        boolean useGlobalPf;
         boolean waypointRetryOnStuck;
         boolean showPathLine;
         int pathLineWidth = 4;
@@ -29,7 +28,6 @@ public class Navigation extends Panel {
     private TextEntry alarmDelayFramesEntry;
     
     // Navigation checkboxes
-    private CheckBox useGlobalPf;
     private CheckBox waypointRetryOnStuck;
     private CheckBox showPathLine;
     private NColorWidget pathLineColorWidget;
@@ -83,14 +81,7 @@ public class Navigation extends Panel {
 
         // Pathfinding section
         prev = content.add(new Label("● Pathfinding & Navigation"), alarmDelayLabel.pos("bl").adds(0, 15));
-        
-        prev = useGlobalPf = content.add(new CheckBox("Use global pathfinding") {
-            public void set(boolean val) {
-                tempSettings.useGlobalPf = val;
-                a = val;
-            }
-        }, prev.pos("bl").adds(0, 5));
-        
+
         prev = waypointRetryOnStuck = content.add(new CheckBox("Retry waypoint movement when stuck") {
             public void set(boolean val) {
                 tempSettings.waypointRetryOnStuck = val;
@@ -142,7 +133,6 @@ public class Navigation extends Panel {
         tempSettings.autoLogoutOnUnknown = (Boolean) NConfig.get(NConfig.Key.autoLogoutOnUnknown);
         
         // Load navigation settings
-        tempSettings.useGlobalPf = (Boolean) NConfig.get(NConfig.Key.useGlobalPf);
         tempSettings.waypointRetryOnStuck = (Boolean) NConfig.get(NConfig.Key.waypointRetryOnStuck);
         tempSettings.showPathLine = (Boolean) NConfig.get(NConfig.Key.showPathLine);
         tempSettings.showSpeedometer = (Boolean) NConfig.get(NConfig.Key.showSpeedometer);
@@ -156,7 +146,6 @@ public class Navigation extends Panel {
         autoHearthOnUnknown.a = tempSettings.autoHearthOnUnknown;
         autoLogoutOnUnknown.a = tempSettings.autoLogoutOnUnknown;
         alarmDelayFramesEntry.settext(String.valueOf(((Number) NConfig.get(NConfig.Key.alarmDelayFrames)).intValue()));
-        useGlobalPf.a = tempSettings.useGlobalPf;
         waypointRetryOnStuck.a = tempSettings.waypointRetryOnStuck;
         showPathLine.a = tempSettings.showPathLine;
         pathLineColorWidget.color = tempSettings.pathLineColor;
@@ -178,7 +167,6 @@ public class Navigation extends Panel {
         } catch (NumberFormatException ignored) {}
         
         // Save navigation settings
-        NConfig.set(NConfig.Key.useGlobalPf, tempSettings.useGlobalPf);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, tempSettings.waypointRetryOnStuck);
         NConfig.set(NConfig.Key.showPathLine, tempSettings.showPathLine);
         NConfig.set(NConfig.Key.showSpeedometer, tempSettings.showSpeedometer);
