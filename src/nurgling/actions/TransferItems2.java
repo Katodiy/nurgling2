@@ -6,8 +6,6 @@ import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.areas.NContext;
-import nurgling.routes.RouteGraph;
-import nurgling.routes.RoutePoint;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -129,9 +127,8 @@ public class TransferItems2 implements Action
         // Step 3: Process each threshold group in order (highest first)
         // Within each group, optimize area visit order by distance
         for (ThresholdGroup group : thresholdGroups.values()) {
-            List<String> optimizedAreaOrder = optimizeAreaVisitOrder(gui, group.itemsByArea);
 
-            for (String areaId : optimizedAreaOrder) {
+            for (String areaId : group.itemsByArea.keySet()) {
                 List<ItemTransfer> itemsForArea = group.itemsByArea.get(areaId);
 
                 for (ItemTransfer itemTransfer : itemsForArea) {
@@ -157,63 +154,6 @@ public class TransferItems2 implements Action
         return Results.SUCCESS();
     }
 
-    /**
-     * Optimizes the order to visit areas using RouteGraph's greedy nearest-neighbor algorithm
-     */
-    private List<String> optimizeAreaVisitOrder(NGameUI gui, Map<String, List<ItemTransfer>> itemsByArea) {
-        if (itemsByArea.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        try {
-            RouteGraph graph = ((NMapView) gui.map).routeGraphManager.getGraph();
-            RoutePoint playerPos = graph.findNearestPointToPlayer(gui);
-
-            if (playerPos == null) {
-                return new ArrayList<>(itemsByArea.keySet());
-            }
-
-            // Get RoutePoints for each area
-            Map<String, RoutePoint> areaRoutePoints = new HashMap<>();
-            for (String areaId : itemsByArea.keySet()) {
-                RoutePoint rp = cnt.getRoutePoint(areaId);
-                if (rp != null) {
-                    areaRoutePoints.put(areaId, rp);
-                }
-            }
-
-            if (areaRoutePoints.isEmpty()) {
-                return new ArrayList<>(itemsByArea.keySet());
-            }
-
-            // Optimize the visit order
-            List<RoutePoint> optimizedRoutePoints = graph.optimizeVisitOrder(playerPos, areaRoutePoints.values());
-
-            // Convert back to area IDs
-            List<String> optimizedAreaIds = new ArrayList<>();
-            for (RoutePoint rp : optimizedRoutePoints) {
-                for (Map.Entry<String, RoutePoint> entry : areaRoutePoints.entrySet()) {
-                    if (entry.getValue().id == rp.id) {
-                        optimizedAreaIds.add(entry.getKey());
-                        break;
-                    }
-                }
-            }
-
-            // Add any areas that weren't in the optimized list (no route points)
-            for (String areaId : itemsByArea.keySet()) {
-                if (!optimizedAreaIds.contains(areaId)) {
-                    optimizedAreaIds.add(areaId);
-                }
-            }
-
-            return optimizedAreaIds;
-
-        } catch (Exception e) {
-            NUtils.getGameUI().error("Route optimization failed, using default order: " + e.getMessage());
-            return new ArrayList<>(itemsByArea.keySet());
-        }
-    }
 
     /**
      * Gets items from inventory with exact name match only.

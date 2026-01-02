@@ -6,11 +6,9 @@ import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.*;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.conf.NSmokProp;
-import nurgling.routes.RoutePoint;
 import nurgling.tasks.WaitCheckable;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -73,20 +71,7 @@ public class Smoking implements Action {
         // Check global route availability
         NArea smokeArea = NContext.findSpecGlobal(ssmokshed);
         NArea logsArea = NContext.findSpecGlobal(slogs);
-        
-        RoutePoint smokeRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(smokeArea);
-        if(smokeRoutePoint == null) {
-            return Results.ERROR("Smokeshed area is not accessible via global routes. Please add route points.");
-        }
-        
-        RoutePoint logsRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(logsArea);
-        if(logsRoutePoint == null) {
-            return Results.ERROR("Logs area is not accessible via global routes. Please add route points.");
-        }
-        
-        // Navigate to smokeshed area using global pathfinding
-        new RoutePointNavigator(smokeRoutePoint).run(gui);
-        
+
         ArrayList<NSmokProp> cands = new ArrayList<>();
         Pair<Coord2d,Coord2d> sheds = smokeArea.getRCArea();
         for(NSmokProp prop : smokProps) {

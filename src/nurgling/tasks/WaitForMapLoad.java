@@ -3,7 +3,6 @@ package nurgling.tasks;
 import haven.MCache;
 import nurgling.NGameUI;
 import nurgling.areas.NGlobalCoord;
-import nurgling.routes.RoutePoint;
 
 public class WaitForMapLoad extends NTask {
     private final NGameUI gui;

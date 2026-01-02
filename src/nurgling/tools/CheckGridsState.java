@@ -36,10 +36,6 @@ public class CheckGridsState implements Runnable{
                             ((NMapView) NUtils.getGameUI().map).destroyDummys();
                             ((NMapView) NUtils.getGameUI().map).initDummys();
                         }
-
-                        if (NUtils.getGameUI().routesWidget.visible) {
-                            ((NMapView) NUtils.getGameUI().map).initRouteDummys(NUtils.getGameUI().routesWidget.getSelectedRouteId());
-                        }
                     }
                 }
             }

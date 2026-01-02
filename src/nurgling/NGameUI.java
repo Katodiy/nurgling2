@@ -43,7 +43,6 @@ public class NGameUI extends GameUI
     public NEditFolderName nefn;
     public NImportStrategyDialog importDialog;
     public Specialisation spec;
-    public RouteSpecialization routespec;
     public BotsInterruptWidget biw;
     public NEquipProxy nep;
     public NBeltProxy nbp;
@@ -193,10 +192,7 @@ public class NGameUI extends GameUI
         // Position Specialisation relative to areas widget center
         add(spec = new Specialisation(), new Coord(sz.x/2 - spec.sz.x/2, sz.y/2 - spec.sz.y/2));
         spec.hide();
-        // Position RouteSpecialization relative to routes widget center
-        add(routespec = new RouteSpecialization(), new Coord(sz.x/2 - routespec.sz.x/2, sz.y/2 - routespec.sz.y/2));
-        routespec.hide();
-        
+
         // Heavy service widgets
         add(localizedResourceTimerDialog = new LocalizedResourceTimerDialog(), new Coord(200, 200));
         localizedResourceTimerService = new LocalizedResourceTimerService(this, genus);

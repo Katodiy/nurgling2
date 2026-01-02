@@ -2,11 +2,9 @@ package nurgling.areas;
 
 import haven.*;
 import nurgling.*;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.actions.bots.SelectArea;
 import nurgling.navigation.ChunkNavManager;
 import nurgling.navigation.ChunkPath;
-import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import nurgling.tools.Container;
 import nurgling.widgets.Specialisation;
@@ -26,7 +24,6 @@ public class NContext {
     private HashMap<String, BarrelStorage> barrelstorage = new HashMap<>();
     private HashMap<NArea.Specialisation, String> specArea = new HashMap<>();
     private HashMap<String, NArea> areas = new HashMap<>();
-    private HashMap<String, RoutePoint> rps = new HashMap<>();
     private HashMap<String, ObjectStorage> containers = new HashMap<>();
 
     public boolean bwaused = false;
@@ -187,10 +184,6 @@ public class NContext {
         return outAreas.get(item);
     }
 
-    public RoutePoint getRoutePoint(String areaId) {
-        return rps.get(areaId);
-    }
-
     public NArea getSpecArea(NContext.Workstation workstation) throws InterruptedException {
         if(!areas.containsKey(workstation_spec_map.get(workstation.station).toString())) {
             NArea area = findSpec(workstation_spec_map.get(workstation.station).toString());
@@ -199,9 +192,6 @@ public class NContext {
             }
             if (area != null) {
                 areas.put(String.valueOf(workstation_spec_map.get(workstation.station).toString()), area);
-                List<RoutePoint> pointList = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area));
-                if(pointList!=null && !pointList.isEmpty())
-                    rps.put(workstation_spec_map.get(workstation.station).toString(),pointList.get(pointList.size()-1));
             }
             else
             {
@@ -236,9 +226,6 @@ public class NContext {
             }
             if (area != null) {
                 areas.put(String.valueOf(area.id), area);
-                List<RoutePoint> pointList = (((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
-                if(pointList!=null && !pointList.isEmpty())
-                    rps.put(String.valueOf(area.id),pointList.get(pointList.size()-1));
                 barrels.put(item, String.valueOf(area.id));
             }
             if(area == null)
@@ -295,9 +282,6 @@ public class NContext {
             }
             if (area != null) {
                 areas.put(String.valueOf(name.toString()), area);
-                List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
-                if(pointList!=null && !pointList.isEmpty())
-                    rps.put(String.valueOf(name.toString()),pointList.get(pointList.size()-1));
             }
             else
             {
@@ -316,9 +300,6 @@ public class NContext {
             }
             if (area != null) {
                 areas.put(String.valueOf(name.toString()), area);
-                List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
-                if(pointList!=null && !pointList.isEmpty())
-                    rps.put(String.valueOf(name.toString()),pointList.get(pointList.size()-1));
             }
             else
             {
@@ -339,13 +320,6 @@ public class NContext {
             NArea area = NUtils.getGameUI().map.glob.map.areas.get(areaId);
             if (area != null) {
                 areas.put(key, area);
-                List<RoutePoint> pointList = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(
-                    ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()),
-                    ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)
-                );
-                if (pointList != null && !pointList.isEmpty()) {
-                    rps.put(key, pointList.get(pointList.size() - 1));
-                }
             } else {
                 return null;
             }
@@ -633,11 +607,6 @@ public class NContext {
                 System.out.println("NContext: ChunkNav navigation failed, falling back to routes");
             }
         }
-
-        // Fallback to RoutePointNavigator if ChunkNav fails or has no data
-        if (rps.containsKey(areaId)) {
-            new RoutePointNavigator(rps.get(areaId), area.id).run(gui);
-        }
     }
 
     public String createArea(String msg, BufferedImage bauble) throws InterruptedException {
@@ -658,18 +627,6 @@ public class NContext {
         tempArea.grids_id.clear();
         tempArea.grids_id.addAll(tempArea.space.space.keySet());
         areas.put(id, tempArea);
-        int size = 10000;
-        RoutePoint target = null;
-        for(RoutePoint point : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestRoutePoints(tempArea)) {
-            List<RoutePoint> path = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(NUtils.findNearestPoint(), point);
-            if(path!=null) {
-                if (size > path.size()) {
-                    target = point;
-                    size = path.size();
-                }
-            }
-        }
-        rps.put(id,target);
         return id;
     }
 
@@ -693,9 +650,6 @@ public class NContext {
         if(area!=null)
         {
             areas.put(String.valueOf(area.id),area);
-            List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
-            if(pointList!=null && !pointList.isEmpty())
-                rps.put(String.valueOf(area.id),pointList.get(pointList.size()-1));
             inAreas.put(name, String.valueOf(area.id));
         }
         if (loadsimg!=null && area == null) {
@@ -721,9 +675,6 @@ public class NContext {
         if(area!=null)
         {
             areas.put(String.valueOf(area.id),area);
-            List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
-            if(pointList!=null && !pointList.isEmpty())
-                rps.put(String.valueOf(area.id),pointList.get(pointList.size()-1));
             outAreas.get(name).put(Math.abs((double)area.getOutput(name).th), String.valueOf(area.id));
         }
         if (loadsimg!=null && area == null) {
@@ -954,19 +905,6 @@ public class NContext {
                     // ChunkNav has a path - use its cost
                     return path.totalCost;
                 }
-            }
-        }
-
-        // Fallback to RouteGraph
-        if (gui.map instanceof NMapView) {
-            List<RoutePoint> routePoints = ((NMapView) gui.map).routeGraphManager.getGraph().findPath(
-                ((NMapView) gui.map).routeGraphManager.getGraph().findNearestPointToPlayer(gui),
-                ((NMapView) gui.map).routeGraphManager.getGraph().findAreaRoutePoint(area)
-            );
-            if (routePoints != null) {
-                // Scale route points to be comparable with ChunkNav costs
-                // Route points are typically counted, so multiply to make units similar
-                return routePoints.size() * 100.0;
             }
         }
 

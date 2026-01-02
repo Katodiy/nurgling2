@@ -5,7 +5,6 @@ import nurgling.areas.*;
 import nurgling.conf.*;
 import nurgling.conf.QuickActionPreset;
 import nurgling.profiles.ProfileManager;
-import nurgling.routes.Route;
 import nurgling.scenarios.Scenario;
 import nurgling.widgets.NCornerMiniMap;
 import org.json.*;
@@ -566,21 +565,7 @@ public class NConfig
         }
     }
 
-    public static void needRoutesUpdate()
-    {
-        // Only update profile-specific config (routes are per-world)
-        try {
-            if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
-                nurgling.NUtils.getUI().core.config.isRoutesUpd = true;
-            }
-        } catch (Exception e) {
-            // Fallback to global config if profile config not available
-            if (current != null)
-            {
-                current.isRoutesUpd = true;
-            }
-        }
-    }
+
 
     public static void needExploredUpdate()
     {
@@ -1216,83 +1201,6 @@ public class NConfig
                     newArea.id = maxId + 1;
                     mapView.glob.map.areas.put(newArea.id, newArea);
                 }
-            }
-        }
-    }
-
-    public void writeRoutes(String customPath)
-    {
-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
-        {
-            // If customPath is provided, write to file (for manual export only)
-            if (customPath != null) {
-                writeRoutesToFile(customPath);
-                return;
-            }
-
-            // If DB is enabled - do NOT batch export!
-            // Routes are saved individually when recorded through RouteAutoRecorder.
-            // This prevents local files from overwriting database.
-            if ((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
-                current.isRoutesUpd = false;
-                // Individual routes are saved via RouteService.saveRouteAsync()
-                // when they are actually recorded through the client
-                return;
-            }
-
-            // DB not enabled - write to file
-            writeRoutesToFile(getRoutesPath());
-        }
-    }
-
-    private void writeRoutesToFile(String path) {
-        JSONObject main = new JSONObject();
-        JSONArray jroutes = new JSONArray();
-        for(Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values())
-        {
-            jroutes.put(route.toJson());
-        }
-        main.put("routes",jroutes);
-
-        try
-        {
-            FileWriter f = new FileWriter(path, StandardCharsets.UTF_8);
-            main.write(f);
-            f.close();
-            this.isRoutesUpd = false;
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void mergeRoutes(File file) {
-        StringBuilder contentBuilder = new StringBuilder();
-        try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
-        {
-            stream.forEach(s -> contentBuilder.append(s).append("\n"));
-        }
-        catch (IOException ignore)
-        {
-        }
-
-        if (!contentBuilder.toString().isEmpty()) {
-            JSONObject main = new JSONObject(contentBuilder.toString());
-            JSONArray array = (JSONArray) main.get("routes");
-            for (int i = 0; i < array.length(); i++) {
-                Route a = new Route((JSONObject) array.get(i));
-                int id = 1;
-                for (Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values()) {
-                    if (route.name.equals(a.name)) {
-                        a.name = "Other_" + a.name;
-                    }
-                    if (route.id >= id) {
-                        id = route.id + 1;
-                    }
-                }
-                a.id = id;
-                ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().put(a.id, a);
             }
         }
     }

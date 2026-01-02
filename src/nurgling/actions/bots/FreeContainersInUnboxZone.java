@@ -5,7 +5,6 @@ import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import nurgling.widgets.Specialisation;
 
@@ -17,7 +16,6 @@ public class FreeContainersInUnboxZone implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-//        this.closestRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui);
 
         // Find the area with "unbox" specialization
         NContext context = new NContext(gui);

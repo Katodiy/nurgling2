@@ -4,7 +4,6 @@ import haven.*;
 import static haven.MCache.cmaps;
 import nurgling.*;
 import nurgling.actions.PathFinder;
-import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import org.json.*;
 

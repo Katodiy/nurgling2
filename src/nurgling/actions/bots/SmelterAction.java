@@ -91,7 +91,9 @@ public class SmelterAction implements Action {
                 NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 2));
                 synchronized (NUtils.getGameUI()) {
                     new FreeContainers(containers).run(gui);
+                    NUtils.navigateToArea(smelters);
                     new CollectQuickSilver(containers).run(gui);
+                    NUtils.navigateToArea(smelters);
                     new DropTargets(containers, new NAlias("Slag")).run(gui);
                     res = new FillContainersFromPiles(containers, NContext.findSpec(Specialisation.SpecName.ore.toString()).getRCArea(), ores).run(gui);
                     ArrayList<Container> forFuel = new ArrayList<>();

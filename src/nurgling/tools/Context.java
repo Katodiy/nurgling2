@@ -4,11 +4,7 @@ import haven.*;
 import nurgling.NConfig;
 import nurgling.NMapView;
 import nurgling.NUtils;
-import nurgling.actions.Results;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.areas.NArea;
-import nurgling.routes.RouteGraph;
-import nurgling.routes.RoutePoint;
 
 import java.util.*;
 @Deprecated
@@ -225,29 +221,12 @@ public class Context {
         if(ingredient != null) {
             switch (ingredient.type) {
                 case BARTER:
-                    if(area.getRCArea() == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
-                        RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
-
-                        if(graph.findAreaRoutePoint(area) != null) {
-                            new RoutePointNavigator(graph.findAreaRoutePoint(area), area.id).run(NUtils.getGameUI());
-                        } else {
-                            break;
-                        }
-                    }
 
                     outputs.add(new OutputBarter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
                             Finder.findGob(area, new NAlias("gfx/terobjs/chest")), area.getRCArea(), ingredient.th));
                     break;
                 case CONTAINER: {
-                    if(area.getRCArea() == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
-                        RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
 
-                        if(graph.findAreaRoutePoint(area) != null) {
-                            new RoutePointNavigator(graph.findAreaRoutePoint(area), area.id).run(NUtils.getGameUI());
-                        } else {
-                            break;
-                        }
-                    }
 
                     for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
                         if(!containersInContext.containsKey(gob.ngob.hash)) {
@@ -270,15 +249,6 @@ public class Context {
                     break;
                 }
                 case BARREL: {
-                    if(area.getRCArea() == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
-                        RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
-
-                        if(graph.findAreaRoutePoint(area) != null) {
-                            new RoutePointNavigator(graph.findAreaRoutePoint(area), area.id).run(NUtils.getGameUI());
-                        } else {
-                            break;
-                        }
-                    }
 
                     for (Gob gob : Finder.findGobs(area, new NAlias("barrel"))) {
                         outputs.add(new OutputBarrel(gob, area.getRCArea(), ingredient.th));

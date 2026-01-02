@@ -26,8 +26,7 @@ public class DatabaseManager {
     private ContainerService containerService;
     private StorageItemService storageItemService;
     private AreaService areaService;
-    private RouteService routeService;
-    
+
     // Task queue for retry logic
     private final BlockingQueue<QueuedTask<?>> taskQueue = new LinkedBlockingQueue<>(1000);
     private ScheduledExecutorService queueProcessor;
@@ -194,7 +193,6 @@ public class DatabaseManager {
         this.containerService = new ContainerService(this);
         this.storageItemService = new StorageItemService(this);
         this.areaService = new AreaService(this);
-        this.routeService = new RouteService(this);
     }
 
     /**
@@ -398,13 +396,6 @@ public class DatabaseManager {
      */
     public AreaService getAreaService() {
         return areaService;
-    }
-
-    /**
-     * Get route service
-     */
-    public RouteService getRouteService() {
-        return routeService;
     }
 
     /**

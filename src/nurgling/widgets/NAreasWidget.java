@@ -8,8 +8,9 @@ import haven.render.*;
 import nurgling.*;
 import nurgling.actions.bots.*;
 import nurgling.areas.*;
+import nurgling.navigation.ChunkNavManager;
+import nurgling.navigation.ChunkPath;
 import nurgling.overlays.map.*;
-import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import org.json.*;
 
@@ -496,15 +497,19 @@ public class NAreasWidget extends Window
                             if (option.name.equals("Navigate To"))
                             {
                                 Thread t = new Thread(() -> {
-                                    try {
-                                        RoutePoint targetPoint = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area);
-                                        if(targetPoint == null) {
-                                            NUtils.getGameUI().error("No route point found for area: " + area.name);
-                                            return;
+                                        ChunkNavManager chunkNav = ((NMapView)NUtils.getGameUI().map).getChunkNavManager();
+                                        if (chunkNav != null && chunkNav.isInitialized())
+                                        {
+                                            ChunkPath path = chunkNav.planToArea(area);
+                                            if (path != null)
+                                            {
+                                                try
+                                                {
+                                                    chunkNav.navigateToArea(area, NUtils.getGameUI());
+                                            } catch (InterruptedException ignored)
+                                            {
+                                            }
                                         }
-                                        new RoutePointNavigator(targetPoint, area.id).run(NUtils.getGameUI());
-                                    } catch (InterruptedException e) {
-                                        NUtils.getGameUI().error("Navigation to area interrupted: " + e.getMessage());
                                     }
                                 }, "AreaNavigator");
                                 t.start();

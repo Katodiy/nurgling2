@@ -8,7 +8,8 @@ import haven.res.ui.croster.RosterWindow;
 import mapv4.StatusWdg;
 import nurgling.actions.Results;
 import nurgling.areas.*;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.ChunkNavManager;
+import nurgling.navigation.ChunkPath;
 import nurgling.tasks.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
@@ -738,10 +739,6 @@ public class NUtils
         }
     }
 
-    public static RoutePoint findNearestPoint()
-    {
-        return ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI());
-    }
 
     public static boolean isWorkStationReady(String name, Gob workstation) {
         if (workstation == null) {
@@ -764,5 +761,35 @@ public class NUtils
 
         // For all other workstations, assume they're ready if they exist
         return true;
+    }
+
+    public static boolean navigateToArea(NArea area) throws InterruptedException
+    {
+        ChunkNavManager chunkNav = ((NMapView) NUtils.getGameUI().map).getChunkNavManager();
+        if (chunkNav != null && chunkNav.isInitialized())
+        {
+            ChunkPath path = chunkNav.planToArea(area);
+            if (path != null)
+            {
+                return chunkNav.navigateToArea(area, NUtils.getGameUI()).IsSuccess();
+            }
+        }
+        return false;
+    }
+
+    public static boolean navigateToArea(Specialisation string) throws InterruptedException
+    {
+        ChunkNavManager chunkNav = ((NMapView) NUtils.getGameUI().map).getChunkNavManager();
+        NArea area = NContext.findSpecGlobal(string.toString());
+        if (chunkNav != null && chunkNav.isInitialized() && area!=null)
+        {
+            ChunkPath path = chunkNav.planToArea(area);
+            if (path != null)
+            {
+
+                return chunkNav.navigateToArea(area, NUtils.getGameUI()).IsSuccess();
+            }
+        }
+        return false;
     }
 }
