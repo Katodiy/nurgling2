@@ -404,7 +404,7 @@ public class PortalTraversalTracker {
         if (lower.contains("logcabin")) return 3;
         if (lower.contains("timberhouse")) return 3;
         if (lower.contains("stonestead")) return 4;
-        if (lower.contains("greathall")) return 5;
+        if (lower.contains("greathall")) return 8;
         if (lower.contains("stonetower")) return 3;
         if (lower.contains("windmill")) return 3;
 
