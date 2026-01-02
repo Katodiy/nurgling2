@@ -10,6 +10,7 @@ import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.tasks.GetItems;
 import nurgling.tasks.WaitItems;
+import nurgling.tasks.WaitNoItems;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -46,7 +47,7 @@ public class DropTargets implements Action {
                 {
                     NUtils.drop(item);
                 }
-                NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(container.cap),target,0));
+                NUtils.getUI().core.addTask(new WaitNoItems(gui.getInventory(container.cap),target));
                 new CloseTargetContainer(container).run(gui);
             }
         }

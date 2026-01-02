@@ -3,12 +3,15 @@ package nurgling.actions;
 import haven.Coord;
 import haven.Gob;
 import haven.WItem;
+import haven.Window;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tasks.HandIsFree;
+import nurgling.tasks.WaitFreeHand;
 import nurgling.tasks.WaitTargetSize;
+import nurgling.tasks.WindowIsClosed;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -84,15 +87,20 @@ public class FuelToContainers implements Action
                 pf.run(gui);
                 new OpenTargetContainer(cont).run(gui);
                 fuelLvl = cont.getattr(Container.FuelLvl.class);
+                Window window = NUtils.getGameUI().getWindow(cont.cap);
                 ArrayList<WItem> items = NUtils.getGameUI().getInventory().getItems(ftype);
                 int fueled = Math.max(0, Math.min(fuelLvl.neededFuel(), items.size()));
                 int aftersize = gui.getInventory().getItems().size() - fueled;
                 for (int i = 0; i < fueled; i++) {
                     NUtils.takeItemToHand(items.get(i));
                     NUtils.activateItem(Finder.findGob(cont.gobHash));
-                    NUtils.getUI().core.addTask(new HandIsFree(NUtils.getGameUI().getInventory()));
+                    NUtils.getUI().core.addTask(new WaitFreeHand());
                 }
                 NUtils.getUI().core.addTask(new WaitTargetSize(NUtils.getGameUI().getInventory(), aftersize));
+                if(fueled>0)
+                {
+                    NUtils.getUI().core.addTask(new WindowIsClosed(window));
+                }
                 new OpenTargetContainer(cont).run(gui);
                 new CloseTargetContainer(cont).run(gui);
             }
