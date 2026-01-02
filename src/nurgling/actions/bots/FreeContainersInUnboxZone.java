@@ -5,7 +5,7 @@ import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.NavigationService;
 import nurgling.tools.*;
 import nurgling.widgets.Specialisation;
 
@@ -13,12 +13,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class FreeContainersInUnboxZone implements Action {
-//    RoutePoint closestRoutePoint = null;
-
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-//        this.closestRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui);
-
         // Find the area with "unbox" specialization
         NContext context = new NContext(gui);
         NArea unboxArea = context.getSpecArea(Specialisation.SpecName.unbox);
@@ -39,7 +35,7 @@ public class FreeContainersInUnboxZone implements Action {
                 containers.add(cand);
             }
             if (!containers.isEmpty())
-                new FreeContainers(containers).run(gui);
+                new FreeContainers(containers, unboxArea).run(gui);
         }
 
         ArrayList<Gob> gobs;
@@ -63,9 +59,8 @@ public class FreeContainersInUnboxZone implements Action {
                                     target_size = NUtils.getGameUI().getInventory().getNumberFreeCoord((size != null) ?size:new Coord(1,1));
                                     if (target_size == 0) {
                                         new FreeInventory2(context).run(gui);
-                                        if(Finder.findGob(pile.id)==null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
-                                            context.getSpecArea(Specialisation.SpecName.unbox);
-//                                            new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
+                                        if(Finder.findGob(pile.id)==null) {
+                                            NavigationService.getInstance().navigateToAreaIfNeeded(unboxArea, gui);
                                         }
                                         targets.clear();
                                         if (Finder.findGob(pile.id) != null) {
@@ -85,9 +80,8 @@ public class FreeContainersInUnboxZone implements Action {
                     else
                         {
                             new FreeInventory2(context).run(gui);
-                            if(Finder.findGob(pile.id) == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
-                                context.getSpecArea(Specialisation.SpecName.unbox);
-//                                new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
+                            if(Finder.findGob(pile.id) == null) {
+                                NavigationService.getInstance().navigateToAreaIfNeeded(unboxArea, gui);
                             }
                             if(Finder.findGob(pile.id) != null) {
                                 new PathFinder(pile).run(gui);
