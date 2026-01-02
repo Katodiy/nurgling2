@@ -99,7 +99,7 @@ public class NConfig
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, autoEquipTravellersSacks, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, exploredAreaEnable, chunkNavOverlay, player_box, player_fov, temsmarkdist, tempmark, tempmarkIgnoreDist, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
+        temsmarktime, exploredAreaEnable, chunkNavOverlay, player_box, player_fov, temsmarkdist, tempmark, tempmarkIgnoreDist, gridbox, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
         shortCupboards,
         shortWalls,
         decalsOnTop,
@@ -255,7 +255,6 @@ public class NConfig
         conf.put(Key.cleanupQContainers, false);
         conf.put(Key.autoEquipTravellersSacks, false);
         conf.put(Key.qualityGrindSeedingPatter, "4x1");
-        conf.put(Key.useGlobalPf, false);
         conf.put(Key.useHFinGlobalPF, false);
         conf.put(Key.sqlite, false);
         conf.put(Key.postgres, false);

@@ -3,10 +3,9 @@ package nurgling.actions;
 import haven.Gob;
 import haven.WItem;
 import nurgling.*;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.NavigationService;
 import nurgling.tools.*;
 
 import java.util.ArrayList;
@@ -16,7 +15,9 @@ public class FreeContainers implements Action
 {
     ArrayList<Container> containers;
     NAlias pattern = null;
-    RoutePoint closestRoutePoint = null;
+    NArea workingArea = null;
+    NContext externalContext = null;
+    String workingAreaId = null;
 
     public FreeContainers(ArrayList<Container> containers) {
         this.containers = containers;
@@ -27,14 +28,29 @@ public class FreeContainers implements Action
         this.pattern = pattern;
     }
 
+    public FreeContainers(ArrayList<Container> containers, NArea area) {
+        this.containers = containers;
+        this.workingArea = area;
+    }
+
+    public FreeContainers(ArrayList<Container> containers, NAlias pattern, NArea area) {
+        this.containers = containers;
+        this.pattern = pattern;
+        this.workingArea = area;
+    }
+
+    public FreeContainers(ArrayList<Container> containers, NContext context, String areaId) {
+        this.containers = containers;
+        this.externalContext = context;
+        this.workingAreaId = areaId;
+    }
+
     HashSet<String> targets = new HashSet<>();
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        NContext context = new NContext(gui);
-
-        this.closestRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui);
+        NContext context = externalContext != null ? externalContext : new NContext(gui);
 
         for(Container container: containers)
         {
@@ -45,8 +61,13 @@ public class FreeContainers implements Action
                     continue;
             }
 
-            navigateToTargetContainer(gui, container);
+            navigateToTargetContainer(gui, container, context);
 
+            Gob gob = Finder.findGob(container.gobHash);
+            if (gob == null) {
+                // Container no longer exists, skip it
+                continue;
+            }
             new OpenTargetContainer(container).run(gui);
             for(WItem item : (pattern==null)?gui.getInventory(container.cap).getItems():gui.getInventory(container.cap).getItems(pattern))
             {
@@ -56,7 +77,12 @@ public class FreeContainers implements Action
             while (!new TakeItemsFromContainer(container, targets, pattern).run(gui).isSuccess)
             {
                 new TransferItems2(context, targets).run(gui);
-                navigateToTargetContainer(gui, container);
+                navigateToTargetContainer(gui, container, context);
+                Gob gobCheck = Finder.findGob(container.gobHash);
+                if (gobCheck == null) {
+                    // Container no longer exists after navigation, break out
+                    break;
+                }
                 new OpenTargetContainer(container).run(gui);
             }
             new CloseTargetContainer(container).run(gui);
@@ -65,17 +91,25 @@ public class FreeContainers implements Action
         return Results.SUCCESS();
     }
 
-    private void navigateToTargetContainer(NGameUI gui, Container container) throws InterruptedException {
+    private void navigateToTargetContainer(NGameUI gui, Container container, NContext context) throws InterruptedException {
         PathFinder pf;
 
         Gob gob = Finder.findGob(container.gobHash);
-        if(gob!= null && PathFinder.isAvailable(gob)) {
+        if(gob != null && PathFinder.isAvailable(gob)) {
             pf = new PathFinder(gob);
             pf.isHardMode = true;
             pf.run(gui);
-        } else {
-            new RoutePointNavigator(this.closestRoutePoint).run(NUtils.getGameUI());
-            if((gob = Finder.findGob(container.gobHash))!=null ) {
+        } else if (workingAreaId != null && context != null) {
+            // Use context navigation for user-selected areas
+            context.navigateToAreaIfNeeded(workingAreaId);
+            if((gob = Finder.findGob(container.gobHash)) != null) {
+                pf = new PathFinder(gob);
+                pf.isHardMode = true;
+                pf.run(gui);
+            }
+        } else if (workingArea != null) {
+            NavigationService.getInstance().navigateToArea(workingArea, gui);
+            if((gob = Finder.findGob(container.gobHash)) != null) {
                 pf = new PathFinder(gob);
                 pf.isHardMode = true;
                 pf.run(gui);

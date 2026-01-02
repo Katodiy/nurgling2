@@ -2,22 +2,16 @@ package nurgling.actions;
 
 import haven.*;
 import nurgling.NGameUI;
-import nurgling.NMapView;
 import nurgling.NUtils;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
-import nurgling.tasks.HandIsFree;
 import nurgling.tasks.NTask;
-import nurgling.tasks.WaitTargetSize;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import static nurgling.tools.Finder.findLiftedbyPlayer;
 
