@@ -406,41 +406,55 @@ public class PlantTrellis implements Action {
      * Plants trellis using stacked seeds (from barrels).
      * Takes stack to hand once, then plants multiple trellis until stack depletes.
      * Handles insufficient stack amounts (< 5 seeds) by dropping back to inventory.
+     * Uses local tracking of remaining seeds to avoid race conditions with gui.vhand updates.
      */
     private void plantTrellisWithStackedSeeds(NGameUI gui, ArrayList<Gob> trellisOnTile, Coord tile)
             throws InterruptedException {
+
+        // Track remaining seeds locally to avoid race conditions with gui.vhand
+        int remainingInHand = 0;
 
         // Take first seed stack to hand (if hand empty)
         if (gui.vhand == null) {
             ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
             if (!seeds.isEmpty()) {
+                GItem.Amount amount = ((NGItem) seeds.get(0).item).getInfo(GItem.Amount.class);
+                remainingInHand = amount != null ? amount.itemnum() : 0;
                 NUtils.takeItemToHand(seeds.get(0));
             } else {
                 return; // No seeds available
             }
+        } else {
+            // Hand already has seeds, get current count
+            GItem.Amount amount = ((NGItem) gui.vhand.item).getInfo(GItem.Amount.class);
+            remainingInHand = amount != null ? amount.itemnum() : 0;
         }
 
         // Plant all trellis on this tile
         for (Gob trellis : trellisOnTile) {
-            // Check if hand has enough seeds (need 5 to plant on trellis)
-            if (gui.vhand != null) {
-                GItem.Amount amount = ((NGItem) gui.vhand.item).getInfo(GItem.Amount.class);
-                if (amount != null && amount.itemnum() < 5) {
-                    // Not enough seeds in hand, drop back to inventory
+            // Check if we have enough seeds (need 5 to plant on trellis)
+            if (remainingInHand < 5) {
+                // Not enough seeds in hand, drop back to inventory if hand not empty
+                if (gui.vhand != null) {
                     NUtils.dropToInv();
-                    // Hand is now empty, will pick up next stack below
+                    NUtils.getUI().core.addTask(new HandIsFree(gui.getInventory()));
                 }
-            }
 
-            // Check if hand is empty (stack depleted or dropped due to insufficient amount)
-            if (gui.vhand == null) {
                 // Try to get more seeds
                 ArrayList<WItem> seeds = gui.getInventory().getItems(seedAlias);
                 if (seeds.isEmpty()) {
                     return; // No more seeds, will refetch in outer loop
                 }
-                // Take next stack to hand
+
+                // Take next stack to hand and update local count
+                GItem.Amount amount = ((NGItem) seeds.get(0).item).getInfo(GItem.Amount.class);
+                remainingInHand = amount != null ? amount.itemnum() : 0;
                 NUtils.takeItemToHand(seeds.get(0));
+
+                // Skip if new stack also doesn't have enough
+                if (remainingInHand < 5) {
+                    continue;
+                }
             }
 
             // Count plants before planting
@@ -452,8 +466,14 @@ public class PlantTrellis implements Action {
             // Wait for plant to appear
             NUtils.getUI().core.addTask(new WaitPlantOnTrellis(tile, plantAlias, plantCountBefore + 1));
 
-            // NOTE: Stack stays in hand, will be used for next trellis
-            // When stack depletes to 0, hand becomes free automatically
+            // Update local tracking - 5 seeds consumed
+            remainingInHand -= 5;
+
+            // If we know the stack is depleted, wait for hand to become free
+            // This ensures gui.vhand is properly updated before next iteration
+            if (remainingInHand < 5) {
+                NUtils.getUI().core.addTask(new HandIsFree(gui.getInventory()));
+            }
         }
     }
 
