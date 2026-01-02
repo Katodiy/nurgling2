@@ -89,12 +89,12 @@ public class ClearRacksAndRecordCapacity implements Action {
             // Convert to Container objects
             ArrayList<Container> racks = new ArrayList<>();
             for (Gob rack : rackGobs) {
-                racks.add(new Container(rack, CheeseConstants.RACK_CONTAINER_TYPE));
+                racks.add(new Container(rack, CheeseConstants.RACK_CONTAINER_TYPE, area));
             }
             
             ArrayList<Container> buffers = new ArrayList<>();
             for (Gob buffer : bufferGobs) {
-                buffers.add(new Container(buffer, NContext.contcaps.get(buffer.ngob.name)));
+                buffers.add(new Container(buffer, NContext.contcaps.get(buffer.ngob.name), area));
             }
             
             // Log rack status summary using overlays

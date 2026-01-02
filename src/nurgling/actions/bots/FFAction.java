@@ -39,7 +39,7 @@ public class FFAction implements Action {
             ArrayList<Container> containers = new ArrayList<>();
 
             for (Gob sm : Finder.findGobs(fforges, new NAlias("gfx/terobjs/fineryforge"))) {
-                Container cand = new Container(sm,"Finery Forge" );
+                Container cand = new Container(sm,"Finery Forge", fforges);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);

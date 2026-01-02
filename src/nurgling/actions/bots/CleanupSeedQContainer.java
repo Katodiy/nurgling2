@@ -32,7 +32,7 @@ public class CleanupSeedQContainer implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name), null);
             cand.initattr(Container.Space.class);
             containers.add(cand);
         }

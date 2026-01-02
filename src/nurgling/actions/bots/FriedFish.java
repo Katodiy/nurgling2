@@ -41,7 +41,7 @@ public class FriedFish implements Action {
 
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob sm : Finder.findGobs(outsa.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name), null);
             cand.initattr(Container.Space.class);
             containers.add(cand);
         }

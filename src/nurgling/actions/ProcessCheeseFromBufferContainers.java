@@ -130,7 +130,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 continue;
             }
 
-            Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
+            Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name), null);
             new PathFinder(containerGob).run(gui);
             new OpenTargetContainer(bufferContainer).run(gui);
 
@@ -166,7 +166,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
                     if (containerGob == null) {
                         break; // Skip this container and move to next
                     }
-                    bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
+                    bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name), null);
                     new PathFinder(containerGob).run(gui);
                     new OpenTargetContainer(bufferContainer).run(gui);
                     continue; // Go back to start of while loop with fresh container references
@@ -196,7 +196,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
                     if (containerGob == null) {
                         break;
                     }
-                    bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
+                    bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name), null);
                     new PathFinder(containerGob).run(gui);
                     new OpenTargetContainer(bufferContainer).run(gui);
                 }
@@ -279,7 +279,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
             if ((containerGob.ngob.name.equals("gfx/terobjs/chest") || containerGob.ngob.name.equals("gfx/terobjs/cupboard")) && containerGob.ngob.getModelAttribute() == 2) {
                 continue;
             }
-            Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
+            Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name), null);
             new PathFinder(containerGob).run(gui);
             new OpenTargetContainer(bufferContainer).run(gui);
 
@@ -405,7 +405,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
         new PathFinder(containerGob).run(gui);
 
         // Open container
-        Container container = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name));
+        Container container = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name), null);
         new OpenTargetContainer(container).run(gui);
 
         // Get FRESH WItem references after opening container
@@ -544,7 +544,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 break; // All cheese placed
             }
 
-            Container rack = new Container(rackGob, "Rack");
+            Container rack = new Container(rackGob, "Rack", null);
             new PathFinder(rackGob).run(gui);
             new OpenTargetContainer(rack).run(gui);
 

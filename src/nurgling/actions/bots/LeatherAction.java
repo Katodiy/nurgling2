@@ -32,10 +32,10 @@ public class LeatherAction implements Action {
 
 
             ArrayList<Container> containers = new ArrayList<>();
-
-            for (Gob ttube : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.ttub.toString()),
+            NArea ttubsarea = NContext.findSpec(Specialisation.SpecName.ttub.toString());
+            for (Gob ttube : Finder.findGobs(ttubsarea,
                     new NAlias("gfx/terobjs/ttub"))) {
-                Container cand = new Container(ttube , "Tub");
+                Container cand = new Container(ttube , "Tub",ttubsarea );
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.Tetris.class);

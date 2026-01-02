@@ -138,9 +138,9 @@ public class Context {
     @Deprecated
     public static class InputContainer extends Container implements Input
     {
-        public InputContainer(Gob gob, String name)
+        public InputContainer(Gob gob, String name, NArea area)
         {
-            super(gob,name);
+            super(gob,name, area);
             this.gobid = gob.id;
             this.cap = name;
         }
@@ -230,7 +230,7 @@ public class Context {
 
                     for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
                         if(!containersInContext.containsKey(gob.ngob.hash)) {
-                            OutputContainer container = new OutputContainer(gob, area.getRCArea(), ingredient.th);
+                            OutputContainer container = new OutputContainer(gob, area, ingredient.th);
                             container.initattr(Container.Space.class);
                             containersInContext.put(gob.ngob.hash,container);
                             outputs.add(container);
@@ -258,33 +258,6 @@ public class Context {
         }
         return outputs;
     }
-    @Deprecated
-    public static ArrayList<Output> GetOutput(String item, Pair<Coord2d,Coord2d> area ) throws InterruptedException
-    {
-        ArrayList<Output> outputs = new ArrayList<>();
-        if(area == null)
-            return outputs;
-        for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
-        {
-            OutputContainer container = new OutputContainer(gob, area ,1);
-            container.initattr(Container.Space.class);
-            outputs.add(container);
-        }
-        for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
-        {
-            outputs.add(new OutputPile(gob, area, 1));
-        }
-        for(Gob gob: Finder.findGobs(area, new NAlias ("barrel")))
-        {
-            outputs.add(new OutputBarrel(gob, area, 1));
-        }
-        if(outputs.isEmpty())
-        {
-            outputs.add(new OutputPile(null, area, 1));
-        }
-
-        return outputs;
-    }
 
     @Deprecated
     public static ArrayList<Input> GetInput(String item, NArea area ) throws InterruptedException
@@ -301,7 +274,7 @@ public class Context {
             {
                 for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
                 {
-                        inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name)));
+                        inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name), area));
                 }
                 for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
                 {
@@ -310,61 +283,6 @@ public class Context {
 
             }
         }
-        inputs.sort(new Comparator<Input>() {
-            @Override
-            public int compare(Input o1, Input o2) {
-                if (o1 instanceof InputPile && o2 instanceof InputPile)
-                    return NUtils.d_comp.compare(((InputPile)o1).pile,((InputPile)o2).pile);
-                return 0;
-            }
-        });
-        return inputs;
-    }
-    @Deprecated
-    public static ArrayList<Input> GetInput( Pair<Coord2d,Coord2d> area ) throws InterruptedException
-    {
-        ArrayList<Input> inputs = new ArrayList<>();
-
-        if(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand"))!=null) {
-            inputs.add(new InputBarter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
-                    Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
-        }
-        else
-        {
-            for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
-            {
-                inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name)));
-            }
-            for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
-            {
-                inputs.add(new InputPile(gob));
-            }
-
-        }
-
-        inputs.sort(new Comparator<Input>() {
-            @Override
-            public int compare(Input o1, Input o2) {
-                if (o1 instanceof InputPile && o2 instanceof InputPile)
-                    return NUtils.d_comp.compare(((InputPile)o1).pile,((InputPile)o2).pile);
-                return 0;
-            }
-        });
-        return inputs;
-    }
-    @Deprecated
-    public static ArrayList<Input> GetInput(String item, Pair<Coord2d,Coord2d> area ) throws InterruptedException
-    {
-        ArrayList<Input> inputs = new ArrayList<>();
-        for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
-        {
-            inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name)));
-        }
-        for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
-        {
-            inputs.add(new InputPile(gob));
-        }
-
         inputs.sort(new Comparator<Input>() {
             @Override
             public int compare(Input o1, Input o2) {
@@ -464,9 +382,9 @@ public class Context {
     public static class OutputContainer extends Container implements Output
     {
 
-        public OutputContainer(Gob gob, Pair<Coord2d,Coord2d> area, int th)
+        public OutputContainer(Gob gob, NArea area, int th)
         {
-            super(gob,contcaps.get(gob.ngob.name));
+            super(gob,contcaps.get(gob.ngob.name), area);
             this.gobid = gob.id;
             this.cap = contcaps.get(gob.ngob.name);
             this.area = area;
@@ -475,10 +393,10 @@ public class Context {
 
         @Override
         public  Pair<Coord2d,Coord2d> getArea() {
-            return area;
+            return area.getRCArea();
         }
 
-        Pair<Coord2d,Coord2d> area = null;
+        NArea area = null;
 
         @Override
         public double getTh()

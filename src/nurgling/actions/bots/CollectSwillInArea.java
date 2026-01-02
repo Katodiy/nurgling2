@@ -47,7 +47,7 @@ public class CollectSwillInArea implements Action {
         // Process containers first (like FreeContainers)
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet())))) {
-            Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name));
+            Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name),null);
             containers.add(cand);
         }
 

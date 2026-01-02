@@ -59,7 +59,7 @@ public class CheeseRackManager {
             
             for (Gob rack : racks) {
                 if (moved >= quantity) break;
-                Container rackContainer = new Container(rack, "Rack");
+                Container rackContainer = new Container(rack, "Rack",targetArea);
                 rackContainer.initattr(Container.Space.class);
                 new PathFinder(rack).run(gui);
                 new OpenTargetContainer(rackContainer).run(gui);

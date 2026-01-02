@@ -97,7 +97,7 @@ public class DropOffHoneyAndWax implements Action {
         if (area == null) return null;
         ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
         for (Gob gob : gobs) {
-            return new Container(gob,Context.contcaps.get(gob.ngob.name));
+            return new Container(gob,Context.contcaps.get(gob.ngob.name), area);
         }
         return null;
     }

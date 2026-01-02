@@ -149,7 +149,7 @@ public class SilkProductionBot implements Action {
         ArrayList<Container> containers = new ArrayList<>();
         ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet())));
         for (Gob gob : gobs) {
-            Container cand = new Container(gob, contcaps.get(gob.ngob.name));
+            Container cand = new Container(gob, contcaps.get(gob.ngob.name), area);
             cand.initattr(Container.Space.class);
 
             // Set known space values for herbalist tables (4x4 = 16 slots)

@@ -6,6 +6,7 @@ import haven.Gob;
 import haven.WItem;
 import haven.res.ui.tt.wellmined.WellMined;
 import nurgling.*;
+import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 
 import java.awt.*;
@@ -19,11 +20,13 @@ public class Container implements NContext.ObjectStorage {
     public long gobid;
     public String gobHash;
     public String cap;
+    public NArea parent;
 
-    public Container(Gob gob, String cap) {
+    public Container(Gob gob, String cap, NArea area) {
         this.gobid = gob.id;
         this.gobHash = gob.ngob.hash;
         this.cap = cap;
+        this.parent = area;
     }
 
     public Map<Class<? extends Updater>, Updater> updaters = new HashMap<Class<? extends Updater>, Updater>();

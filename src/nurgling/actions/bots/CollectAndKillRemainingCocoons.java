@@ -39,7 +39,7 @@ public class CollectAndKillRemainingCocoons implements Action {
         ArrayList<Container> feedingContainers = new ArrayList<>();
         
         for (Gob gob : feedingGobs) {
-            Container container = new Container(gob, contcaps.get(gob.ngob.name));
+            Container container = new Container(gob, contcaps.get(gob.ngob.name),feedingArea);
             container.initattr(Container.Space.class);
             feedingContainers.add(container);
         }

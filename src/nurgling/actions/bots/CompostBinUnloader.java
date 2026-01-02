@@ -42,12 +42,12 @@ public class CompostBinUnloader implements Action {
             NUtils.stackSwitch(true);
 
             context.getSpecArea(compostBinSpecName);
-
-            ArrayList<Gob> compostBins = Finder.findGobs(NContext.findSpec(compostBinSpecialization), new NAlias("gfx/terobjs/compostbin"));
+            NArea combinarea = NContext.findSpec(compostBinSpecialization);
+            ArrayList<Gob> compostBins = Finder.findGobs(combinarea, new NAlias("gfx/terobjs/compostbin"));
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob compostBin : compostBins) {
-                Container cand = new Container(compostBin, "Compost Bin");
+                Container cand = new Container(compostBin, "Compost Bin",combinarea);
                 cand.initattr(Container.Space.class);
                 containers.add(cand);
             }

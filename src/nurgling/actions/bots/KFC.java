@@ -97,7 +97,7 @@ public class KFC implements Action {
 
         for (Gob cc : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.chicken.toString()),
                 new NAlias("gfx/terobjs/chickencoop"))) {
-            Container cand = new Container(cc, "Chicken Coop");
+            Container cand = new Container(cc, "Chicken Coop",NContext.findSpec(Specialisation.SpecName.chicken.toString()));
 
             cand.initattr(Container.Space.class);
 
@@ -108,7 +108,7 @@ public class KFC implements Action {
 
         for (Gob cc : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.incubator.toString()),
                 new NAlias("gfx/terobjs/chickencoop"))) {
-            Container cand = new Container(cc, "Chicken Coop");
+            Container cand = new Container(cc, "Chicken Coop", NContext.findSpec(Specialisation.SpecName.incubator.toString()));
 
             cand.initattr(Container.Space.class);
 
@@ -196,7 +196,7 @@ public class KFC implements Action {
 
         ArrayList<Context.Output> outputs = new ArrayList<>();
         for (Container cc :ccontainers) {
-            Context.OutputContainer container = new Context.OutputContainer(Finder.findGob(cc.gobid), NContext.findSpec(Specialisation.SpecName.incubator.toString()).getRCArea(), 1);
+            Context.OutputContainer container = new Context.OutputContainer(Finder.findGob(cc.gobid), NContext.findSpec(Specialisation.SpecName.incubator.toString()), 1);
             container.cap = "Chicken Coop";
             container.initattr(Container.Space.class);
             outputs.add(container);

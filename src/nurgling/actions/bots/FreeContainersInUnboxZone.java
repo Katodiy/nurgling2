@@ -32,7 +32,7 @@ public class FreeContainersInUnboxZone implements Action {
         if(area!=null) {
             // Free containers in the area
             for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet())))) {
-                Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name));
+                Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name), unboxArea);
                 cand.initattr(Container.Space.class);
                 containers.add(cand);
             }

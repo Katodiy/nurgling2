@@ -44,10 +44,10 @@ public class DFrameFishAction implements Action {
         if(new Validator(req, opt).run(gui).IsSuccess()) {
             // Получаем все drying frames
             ArrayList<Container> containers = new ArrayList<>();
-
-            for (Gob dframe : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.dframe.toString()),
+            NArea dframearea = NContext.findSpec(Specialisation.SpecName.dframe.toString());
+            for (Gob dframe : Finder.findGobs(dframearea,
                     new NAlias("gfx/terobjs/dframe"))) {
-                Container cand = new Container(dframe, "Frame");
+                Container cand = new Container(dframe, "Frame",dframearea);
                 cand.initattr(Container.Space.class);
                 containers.add(cand);
             }

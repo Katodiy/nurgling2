@@ -98,7 +98,7 @@ public class Smoking implements Action {
         for (Gob sm : Finder.findGobs(sheds, new NAlias("gfx/terobjs/smokeshed"))) {
             if((sm.ngob.getModelAttribute()&16)==16)
                 continue;
-            Container cand = new Container(sm, "Smoke shed");
+            Container cand = new Container(sm, "Smoke shed", smokeArea);
 
             cand.initattr(Container.Space.class);
             cand.initattr(Container.FuelLvl.class);

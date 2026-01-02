@@ -80,7 +80,7 @@ public class BuildTrellis implements Action {
                 for(Build.Ingredient ingredient: command.ingredients) {
                     if (ingredient.area != null) {
                         for (Gob sm : Finder.findGobs(ingredient.area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+                            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name), null);
                             cand.initattr(Container.Space.class);
                             ingredient.containers.add(cand);
                         }

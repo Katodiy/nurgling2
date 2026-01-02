@@ -70,7 +70,7 @@ public class RabbitMaster implements Action {
     }
 
     private Hutch buildHutch(NGameUI gui, Gob gob) throws InterruptedException {
-        Container container = new Container(gob, HUTCH_NAME);
+        Container container = new Container(gob, HUTCH_NAME, null);
         container.initattr(Container.Space.class);
 
         moveTo(gui, gob);

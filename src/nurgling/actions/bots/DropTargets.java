@@ -38,7 +38,9 @@ public class DropTargets implements Action {
             Container.TargetItems targetItems = container.getattr(Container.TargetItems.class);
             if(targetItems.getTargets(target)!=0)
             {
-                new PathFinder(Finder.findGob(container.gobid)).run(gui);
+                PathFinder pf = new PathFinder(Finder.findGob(container.gobid));
+                pf.isHardMode = true;
+                pf.run(gui);
                 new OpenTargetContainer(container).run(gui);
                 for(WItem item : NUtils.getGameUI().getInventory(container.cap).getItems(target))
                 {

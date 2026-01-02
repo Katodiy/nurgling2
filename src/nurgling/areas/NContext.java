@@ -328,6 +328,19 @@ public class NContext {
         return areas.get(key);
     }
 
+    public NArea getAreaById(String key) throws InterruptedException {
+        if (!areas.containsKey(key)) {
+            NArea area = NUtils.getGameUI().map.glob.map.areas.get(key);
+            if (area != null) {
+                areas.put(key, area);
+            } else {
+                return null;
+            }
+        }
+        navigateToAreaIfNeeded(key);
+        return areas.get(key);
+    }
+
     public ArrayList<ObjectStorage> getSpecStorages(Specialisation.SpecName name) throws InterruptedException {
         return getSpecStorages(name, null);
     }
@@ -355,7 +368,7 @@ public class NContext {
                 inputs.add(containers.get(hash));
             }
             else {
-                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                Container ic = new Container(gob, contcaps.get(gob.ngob.name),area);
                 ic.initattr(Container.Space.class);
                 containers.put(gob.ngob.hash, ic);
                 inputs.add(ic);
@@ -406,7 +419,7 @@ public class NContext {
                                 inputs.add(containers.get(hash));
                             }
                             else {
-                                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                                Container ic = new Container(gob, contcaps.get(gob.ngob.name),area);
                                 containers.put(gob.ngob.hash, ic);
                                 inputs.add(ic);
                             }
@@ -469,7 +482,7 @@ public class NContext {
                                 outputs.add(containers.get(hash));
                             }
                             else {
-                                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                                Container ic = new Container(gob, contcaps.get(gob.ngob.name),area);
                                 ic.initattr(Container.Space.class);
                                 containers.put(gob.ngob.hash, ic);
                                 outputs.add(ic);
@@ -499,7 +512,7 @@ public class NContext {
                         outputs.add(containers.get(hash));
                     }
                     else {
-                        Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                        Container ic = new Container(gob, contcaps.get(gob.ngob.name),area);
                         ic.initattr(Container.Space.class);
                         containers.put(gob.ngob.hash, ic);
                         outputs.add(ic);
@@ -593,18 +606,10 @@ public class NContext {
         // Try ChunkNav first if it has data for the area
         ChunkNavManager chunkNav = (gui.map != null && gui.map instanceof NMapView)
             ? ((NMapView)gui.map).getChunkNavManager() : null;
-        System.out.println("NContext: ChunkNav initialized=" + (chunkNav != null && chunkNav.isInitialized()));
         if (chunkNav != null && chunkNav.isInitialized()) {
             ChunkPath path = chunkNav.planToArea(area);
-            System.out.println("NContext: ChunkNav path=" + (path != null ? path.size() + " waypoints" : "null"));
             if (path != null) {
-                System.out.println("NContext: Using ChunkNav to navigate to " + areaId);
                 nurgling.actions.Results result = chunkNav.navigateToArea(area, gui);
-                System.out.println("NContext: ChunkNav result=" + result.IsSuccess());
-                if (result.IsSuccess()) {
-                    return;
-                }
-                System.out.println("NContext: ChunkNav navigation failed, falling back to routes");
             }
         }
     }

@@ -36,7 +36,7 @@ public class LyeBoiler implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob cm : Finder.findGobs(cauldrons, new NAlias("gfx/terobjs/cauldron"))) {
-                Container cand = new Container(cm, cap);
+                Container cand = new Container(cm, cap, cauldrons);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);

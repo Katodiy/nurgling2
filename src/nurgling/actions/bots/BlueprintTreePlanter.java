@@ -347,7 +347,7 @@ public class BlueprintTreePlanter implements Action {
             
             ArrayList<Container> herbalistTables = new ArrayList<>();
             for (Gob htable : htableGobs) {
-                Container container = new Container(htable, "Herbalist Table");
+                Container container = new Container(htable, "Herbalist Table", htableArea);
                 container.initattr(Container.Space.class);
                 herbalistTables.add(container);
             }

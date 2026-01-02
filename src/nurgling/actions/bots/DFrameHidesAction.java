@@ -35,9 +35,10 @@ public class DFrameHidesAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            for (Gob dframe : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.dframe.toString()),
+            NArea dframesarea = NContext.findSpec(Specialisation.SpecName.dframe.toString());
+            for (Gob dframe : Finder.findGobs(dframesarea,
                     new NAlias("gfx/terobjs/dframe"))) {
-                Container cand = new Container(dframe,"Frame" );
+                Container cand = new Container(dframe,"Frame" , dframesarea);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.Tetris.class);
