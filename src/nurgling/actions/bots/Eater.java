@@ -41,7 +41,7 @@ public class Eater implements Action {
             area = nArea.getRCArea();
         }
         if(area!=null) {
-            Context cnt = new Context();
+            NContext cnt = new NContext(gui);
             new FindAndEatItems(cnt, items, 8000, area).run(gui);
             return NUtils.getEnergy()*10000>8000?Results.SUCCESS():Results.FAIL();
         }
