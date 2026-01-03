@@ -636,6 +636,19 @@ public class NContext {
         return id;
     }
 
+    public String createPlayerLastPos()
+    {
+        String id = "temp"+counter++;
+        NArea tempArea = new NArea(id);
+        Coord2d plc = NUtils.player().rc;
+        tempArea.space = new NArea.Space(plc.sub(MCache.tilehsz).floor(MCache.tilesz),plc.add(MCache.tilehsz).floor(MCache.tilesz));
+        tempArea.lastLocalChange = System.currentTimeMillis();
+        tempArea.grids_id.clear();
+        tempArea.grids_id.addAll(tempArea.space.space.keySet());
+        areas.put(id, tempArea);
+        return id;
+    }
+
     public boolean isInBarrel(String item) {
         NArea area = findIn(item);
         if (area == null) {

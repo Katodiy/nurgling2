@@ -5,9 +5,12 @@ import haven.Gob;
 import haven.MenuSearch;
 import nurgling.NGameUI;
 import nurgling.NUtils;
+import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.tasks.WaitGobModelAttr;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
+import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
@@ -68,6 +71,67 @@ public class LightGob implements Action
             new PlaceObject(litCandelabrum, pos, 0).run(gui);
             return Results.SUCCESS();
         }
+        else
+        {
+            NContext context = new NContext(gui);
+            String lastposid = context.createPlayerLastPos();
+            NArea candArea = context.getSpecArea(Specialisation.SpecName.candelabrum);
+            if (candArea != null)
+            {
+                context.navigateToAreaIfNeeded(Specialisation.SpecName.candelabrum.toString());
+                ArrayList<Gob> gcandelabrums = Finder.findGobs(new NAlias("gfx/terobjs/candelabrum"));
+                if(!gcandelabrums.isEmpty())
+                {
+                    for (Gob candelabrum : gcandelabrums)
+                    {
+                        if (candelabrum != null && candelabrum.ngob.getModelAttribute() == 3)
+                        {
+                            litCandelabrum = candelabrum;
+                            break;
+                        }
+                    }
+                    if (litCandelabrum != null)
+                    {
+                        new LiftObject(litCandelabrum).run(gui);
+                        context.navigateToAreaIfNeeded(lastposid);
+                        for (String gobHash : gobs)
+                        {
+                            Gob gob = Finder.findGob(gobHash);
+                            if (gob != null && (gob.ngob.getModelAttribute() & flame_flag) == 0)
+                            {
+                                PathFinder pf = new PathFinder(gob);
+                                pf.isHardMode = true;
+                                pf.run(gui);
+                                NUtils.activateGob(gob);
+                                NUtils.getUI().core.addTask(new WaitGobModelAttr(gob, flame_flag));
+                            }
+                        }
+                        context.navigateToAreaIfNeeded(Specialisation.SpecName.candelabrum.toString());
+                        Gob lifted = Finder.findLiftedbyPlayer();
+                        if(lifted!=null)
+                        {
+                            Coord2d pos = Finder.getFreePlace(context.getAreaById(Specialisation.SpecName.candelabrum.toString()).getRCArea(), Finder.findLiftedbyPlayer().ngob.hitBox, 0);
+                            new PlaceObject(litCandelabrum, pos, 0).run(gui);
+                        }
+                    }
+
+                }
+                context.navigateToAreaIfNeeded(lastposid);
+                timeFoWork = false;
+                for (String gobHash : gobs) {
+                    Gob gob = Finder.findGob(gobHash);
+                    if (gob != null && (gob.ngob.getModelAttribute() & flame_flag) == 0) {
+                        timeFoWork = true;
+                        break;
+                    }
+                }
+                if(!timeFoWork) {
+                    return Results.SUCCESS();
+                }
+            }
+        }
+
+
         
         // Alternative method: use branches to light fire
         // This is used when no lit candelabrum is available

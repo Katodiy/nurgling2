@@ -3,18 +3,20 @@ package nurgling.tasks;
 import haven.Following;
 import haven.Gob;
 import nurgling.NUtils;
+import nurgling.tools.Finder;
 
 public class WaitPlaced extends NTask {
-    Gob gob;
+    Long gobid;
 
-    public WaitPlaced(Gob gob) {
-        this.gob = gob;
+    public WaitPlaced(Long gob) {
+        this.gobid = gob;
     }
 
 
     @Override
     public boolean check() {
-        return gob.getattr(Following.class)==null;
+        Gob gob = Finder.findGob(gobid);
+        return gob!=null && gob.getattr(Following.class)==null;
     }
 
 }

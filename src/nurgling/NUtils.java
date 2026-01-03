@@ -325,7 +325,7 @@ public class NUtils
         NUtils.activateGob(gob);
         getUI().core.addTask(new WaitPlob());
         getGameUI().map.wdgmsg("place", coord2d.floor(posres), (int)Math.round(a * 32768 / Math.PI), 1, 1);
-        getUI().core.addTask(new WaitPlaced(gob));
+        getUI().core.addTask(new WaitPlaced(gob.id));
     }
 
     public static RosterWindow getRosterWindow(Class<? extends Entry> cattleRoster) throws InterruptedException {
