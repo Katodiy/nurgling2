@@ -1352,9 +1352,9 @@ public class VSpec {
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/carobfruit\",\"name\":\"Carob Pod\"}"));
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/chestnut\",\"name\":\"Chestnut\"}"));
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/hazelnut\",\"name\":\"Hazelnut\"}"));
-        nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-kingsoak\",\"name\":\"King's Oak Seed\"}"));
+        nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-kingsoak\",\"name\":\"King's Acorn\"}"));
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/walnut\",\"name\":\"Walnut\"}"));
-        nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-oak\",\"name\":\"Oak Seed\"}"));
+        nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-oak\",\"name\":\"Oak Acorn\"}"));
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-witherstand\",\"name\":\"Witherstand Seed\"}"));
         nuts.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-beech\",\"name\":\"Beech Nuts\"}"));
         categories.put("Nuts", nuts);
@@ -2702,6 +2702,7 @@ public class VSpec {
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/sorbapplecore\",\"name\":\"Sorb Apple Core\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-maple\",\"name\":\"Maple Samara\"}"));
         seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-willow\",\"name\":\"Willow Catkin\"}"));
+        seedsAndBerries.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-yew\",\"name\":\"Yew Cones\"}"));
         categories.put("Seed of Tree or Bush", seedsAndBerries);
 
         ArrayList<JSONObject> mantle = new ArrayList<>();
@@ -2947,6 +2948,12 @@ public class VSpec {
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lampstalk\",\"name\":\"Lamp Stalk\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/mistletoe\",\"name\":\"Mistletoe\"}"));
         curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/cattailhead\",\"name\":\"Cattail Head\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/yulecracker\",\"name\":\"Yule Cracker\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/rabbitfrost\",\"name\":\"Rabbit Frost\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/whirlingsnowflake\",\"name\":\"Whirling Snowflake\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/precioussnowflake\",\"name\":\"Precious Snowflake\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/ghostapple\",\"name\":\"Ghost Apple\"}"));
+        curio.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/sleighbell\",\"name\":\"Sleighbell\"}"));
         categories.put("Curiosities", curio);
 
         ArrayList<JSONObject> Misc = new ArrayList<>();

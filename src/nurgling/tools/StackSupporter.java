@@ -69,8 +69,6 @@ public class StackSupporter {
         size3.add("Any Brick");
         size3.add("Clay");
         size3.add("Casting Material");
-//        size3.add("Board");   //Boards are not stackable
-//        size3.add("Block of Wood");  //Blocks of Wood are not stackable
         size3.add("Ore");
         size3.add("Stone");
         size3.add("Lures");
@@ -162,6 +160,10 @@ public class StackSupporter {
         catExceptions.add("Clean Chicken");
         catExceptions.add("Clean Pelican");
         catExceptions.add("Dried Filet");
+        catExceptions.add("Rabbit Frost");
+        catExceptions.add("Whirling Snowflake");
+        catExceptions.add("Precious Snowflake");
+        catExceptions.add("Sleighbell");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
     public static boolean isStackable(NInventory inv, String name)
