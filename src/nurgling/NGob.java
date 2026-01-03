@@ -69,6 +69,7 @@ public class NGob
     private static final NAlias GARDEN_POT_ALIAS = new NAlias("gardenpot");
     private static final NAlias MINEBEAM_ALIAS = new NAlias(new ArrayList<>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<>(Arrays.asList("stump", "wrack", "log")));
     private static final NAlias MOUNDBED_ALIAS = new NAlias("gfx/terobjs/moundbed");
+    private static final NAlias IGNORED_ARCH = new NAlias("-door", "arch/hwall");
     private static final NAlias KRITTER_ALIAS = new NAlias("kritter");
     private static final NAlias BORKA_ALIAS_SETDYNAMIC = new NAlias("borka");
     private static final NAlias VEHICLE_ALIAS = new NAlias("vehicle");
@@ -712,7 +713,7 @@ public class NGob
                     }
                 if (hitBox != null)
                 {
-                    if (NParser.checkName(name, MOUNDBED_ALIAS))
+                    if (NParser.checkName(name, MOUNDBED_ALIAS) || NParser.checkName(name, IGNORED_ARCH))
                     {
                         hitBox = null;
                     } else
