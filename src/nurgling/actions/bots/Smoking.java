@@ -3,14 +3,12 @@ package nurgling.actions.bots;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NGameUI;
-import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.*;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.conf.NSmokProp;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.NavigationService;
 import nurgling.tasks.WaitCheckable;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -70,22 +68,21 @@ public class Smoking implements Action {
             return Results.FAIL();
         }
         
-        // Check global route availability
+        // Get global areas
         NArea smokeArea = NContext.findSpecGlobal(ssmokshed);
         NArea logsArea = NContext.findSpecGlobal(slogs);
-        
-        RoutePoint smokeRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(smokeArea);
-        if(smokeRoutePoint == null) {
-            return Results.ERROR("Smokeshed area is not accessible via global routes. Please add route points.");
+
+        // Check if navigation is available to both areas
+        if(!NavigationService.getInstance().isNavigationAvailable(smokeArea)) {
+            return Results.ERROR("Smokeshed area is not accessible via navigation. Please add route points or record chunks.");
         }
-        
-        RoutePoint logsRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(logsArea);
-        if(logsRoutePoint == null) {
-            return Results.ERROR("Logs area is not accessible via global routes. Please add route points.");
+
+        if(!NavigationService.getInstance().isNavigationAvailable(logsArea)) {
+            return Results.ERROR("Logs area is not accessible via navigation. Please add route points or record chunks.");
         }
-        
-        // Navigate to smokeshed area using global pathfinding
-        new RoutePointNavigator(smokeRoutePoint).run(gui);
+
+        // Navigate to smokeshed area
+        NavigationService.getInstance().navigateToArea(smokeArea, gui);
         
         ArrayList<NSmokProp> cands = new ArrayList<>();
         Pair<Coord2d,Coord2d> sheds = smokeArea.getRCArea();

@@ -2,20 +2,15 @@ package nurgling.actions.bots;
 
 import haven.*;
 import haven.res.ui.relcnt.RelCont;
-import nurgling.NConfig;
 import nurgling.NGameUI;
-import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.PathFinder;
 import nurgling.actions.RestoreResources;
 import nurgling.actions.Results;
-import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.tools.NParser;
 
 public class SurveySupport implements Action
 {
@@ -29,7 +24,8 @@ public class SurveySupport implements Action
         }
         long targetid = target.id;
         new PathFinder(target.rc).run(gui);
-        RoutePoint rp = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI());
+        // Save the survey object position for returning
+        haven.Coord2d surveyPos = target.rc;
 
 
 
@@ -41,8 +37,9 @@ public class SurveySupport implements Action
             if (!new RestoreResources().run(gui).IsSuccess()) {
                 return Results.FAIL();
             }
-            if(rp!=null && (rp.toCoord2d(NUtils.getGameUI().map.glob.map)==null || rp.toCoord2d(NUtils.getGameUI().map.glob.map).dist(NUtils.player().rc)>350))
-                new RoutePointNavigator(rp).run(gui);
+            // Navigate back to survey area if too far
+            if(surveyPos.dist(NUtils.player().rc) > 350)
+                new PathFinder(surveyPos).run(gui);
             target = Finder.findGob(targetid);
             if(target == null)
                 return Results.ERROR("Survey object not found");
@@ -89,7 +86,7 @@ public class SurveySupport implements Action
                                 }
                                 targetid = target.id;
                                 new PathFinder(target.rc).run(gui);
-                                rp = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI());
+                                surveyPos = target.rc;
                                 break;
                             }
                     }

@@ -1,6 +1,5 @@
 package nurgling.actions;
 
-import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
@@ -86,7 +85,7 @@ public class TransferItems implements Action
                         transferItemsToAppropriateContainers(item, th, gui);
                     }
                 }
-                if (!outOfReachAreas.isEmpty() && (Boolean) NConfig.get(NConfig.Key.useGlobalPf) && !gui.getInventory().getItems(item).isEmpty()) {
+                if (!outOfReachAreas.isEmpty() && !gui.getInventory().getItems(item).isEmpty()) {
                     ArrayList<Integer> ths = new ArrayList<>(outOfReachAreas.keySet());
                     ListIterator<Integer> listIter = ths.listIterator(outOfReachAreas.size());
                     while (listIter.hasPrevious()) {

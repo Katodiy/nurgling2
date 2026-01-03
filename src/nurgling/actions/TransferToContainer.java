@@ -212,6 +212,7 @@ public class TransferToContainer implements Action
                 }
             }
             container.update();
+            new CloseTargetContainer(container).run(gui);
         }
         return Results.SUCCESS();
     }

@@ -4,12 +4,11 @@ import haven.Coord;
 import haven.Gob;
 import nurgling.NFlowerMenu;
 import nurgling.NGameUI;
-import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.NavigationService;
 import nurgling.tasks.*;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -18,7 +17,6 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class Butcher implements Action {
 
@@ -95,9 +93,8 @@ public class Butcher implements Action {
                             return Results.ERROR("No free coord found for: " + optForSelect + "|" + options.get(optForSelect).size.toString() + "| target size: " + options.get(optForSelect).num);
                         }
 
-                        if (useGlobalPf(area)) {
-                            gob = Finder.findGob(gob.id);
-                        }
+                        NavigationService.getInstance().navigateToAreaIfNeeded(area, gui);
+                        gob = Finder.findGob(gob.id);
                         if (gob != null) {
                             new PathFinder(gob).run(gui);
 
@@ -148,14 +145,4 @@ public class Butcher implements Action {
         return result;
     }
 
-    boolean useGlobalPf(NArea area) throws InterruptedException {
-        if (area.getRCArea() == null) {
-            List<RoutePoint> routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area));
-            if (routePoints != null && !routePoints.isEmpty()) {
-                new RoutePointNavigator(routePoints.get(routePoints.size()-1)).run(NUtils.getGameUI());
-                return true;
-            }
-        }
-        return false;
-    }
 }

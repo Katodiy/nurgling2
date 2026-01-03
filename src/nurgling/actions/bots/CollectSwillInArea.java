@@ -5,7 +5,6 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.NGItem;
 import nurgling.NISBox;
-import nurgling.NConfig;
 import nurgling.actions.Action;
 import nurgling.actions.PathFinder;
 import nurgling.actions.Results;
@@ -13,8 +12,6 @@ import nurgling.actions.TakeItemsFromContainer;
 import nurgling.actions.TakeItemsFromPile;
 import nurgling.actions.OpenTargetContainer;
 import nurgling.actions.TransferToTroughArea;
-import nurgling.NMapView;
-import nurgling.routes.RoutePoint;
 import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -30,18 +27,11 @@ import java.util.*;
  */
 public class CollectSwillInArea implements Action {
 
-    private RoutePoint closestRoutePoint = null;
-
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        // Store closest route point like FreeContainers
-        this.closestRoutePoint = ((NMapView) gui.map).routeGraphManager.getGraph().findNearestPointToPlayer(gui);
-
-        // Simple area selection like FreeContainers
-        SelectArea insa;
-        gui.msg("Please, select area for swill collection");
-        (insa = new SelectArea(Resource.loadsimg("baubles/inputArea"))).run(gui);
-        Pair<Coord2d, Coord2d> area = insa.getRCArea();
+        NContext context = new NContext(gui);
+        String workAreaId = context.createArea("Please, select area for swill collection", Resource.loadsimg("baubles/inputArea"));
+        Pair<Coord2d, Coord2d> area = context.getRCArea(workAreaId);
 
         if (area == null) {
             return Results.ERROR("No area selected");
@@ -74,7 +64,7 @@ public class CollectSwillInArea implements Action {
                         if (!deliverSwillToTrough(gui, swillAlias)) {
                             return Results.SUCCESS(); // Stop collection gracefully
                         }
-                        returnToAreaIfNeeded(gui, area);
+                        context.navigateToAreaIfNeeded(workAreaId);
                     }
                 } catch (InterruptedException e) {
                     throw e;
@@ -103,7 +93,7 @@ public class CollectSwillInArea implements Action {
                                     if (!deliverSwillToTrough(gui, swillAlias)) {
                                         return Results.SUCCESS(); // Stop collection gracefully
                                     }
-                                    returnToAreaIfNeeded(gui, area);
+                                    context.navigateToAreaIfNeeded(workAreaId);
                                     if (Finder.findGob(pile.id) != null) {
                                         new PathFinder(pile).run(gui);
                                         new OpenTargetContainer("Stockpile", pile).run(gui);
@@ -131,7 +121,7 @@ public class CollectSwillInArea implements Action {
                             if (!deliverSwillToTrough(gui, swillAlias)) {
                                 return Results.SUCCESS(); // Stop collection gracefully
                             }
-                            returnToAreaIfNeeded(gui, area);
+                            context.navigateToAreaIfNeeded(workAreaId);
                             if (Finder.findGob(pile.id) != null) {
                                 new PathFinder(pile).run(gui);
                                 new OpenTargetContainer("Stockpile", pile).run(gui);
@@ -213,20 +203,6 @@ public class CollectSwillInArea implements Action {
         }
     }
 
-    /**
-     * Return to collection area if needed using RoutePointNavigator.
-     */
-    private void returnToAreaIfNeeded(NGameUI gui, Pair<Coord2d, Coord2d> area) throws InterruptedException {
-        if (closestRoutePoint != null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
-            // Calculate if we're far from the area
-            Coord2d areaCenter = new Coord2d((area.a.x + area.b.x) / 2, (area.a.y + area.b.y) / 2);
-            double distance = areaCenter.dist(NUtils.player().rc);
-
-            if (distance > 500) {
-                new RoutePointNavigator(closestRoutePoint).run(gui);
-            }
-        }
-    }
 
     /**
      * Check if an item name matches swill criteria.

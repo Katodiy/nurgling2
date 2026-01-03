@@ -5,20 +5,18 @@ import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.NavigationService;
 import nurgling.tools.Context;
 import nurgling.widgets.FoodContainer;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static haven.Coord.of;
 
 public class Eater implements Action {
 
     boolean oz = false;
-    public List<RoutePoint> routePoints = null;
 
     public Eater(boolean oz) {
         this.oz = oz;
@@ -38,25 +36,20 @@ public class Eater implements Action {
         {
             nArea = NContext.findSpecGlobal(Specialisation.SpecName.eat.toString());
             if(nArea!=null) {
-                routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(nArea));
+                // Navigate to global eat area
+                NavigationService.getInstance().navigateToArea(nArea, gui);
+                area = nArea.getRCArea();
             }
         }
         else
         {
             area = nArea.getRCArea();
         }
-        if(routePoints == null) {
-            if (area == null && !oz) {
-                SelectArea insa;
-                NUtils.getGameUI().msg("Please select a food area");
-                (insa = new SelectArea(Resource.loadsimg("baubles/waterRefiller"))).run(gui);
-                area = insa.getRCArea();
-            }
-        }
-        if(routePoints!=null && !routePoints.isEmpty())
-        {
-            new RoutePointNavigator(routePoints.get(routePoints.size()-1)).run(NUtils.getGameUI());
-            area = nArea.getRCArea();
+        if (area == null && !oz) {
+            SelectArea insa;
+            NUtils.getGameUI().msg("Please select a food area");
+            (insa = new SelectArea(Resource.loadsimg("baubles/waterRefiller"))).run(gui);
+            area = insa.getRCArea();
         }
         if(area!=null) {
             Context cnt = new Context();

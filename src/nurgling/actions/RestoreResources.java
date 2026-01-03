@@ -5,13 +5,8 @@ import haven.Coord2d;
 import haven.Gob;
 import haven.MCache;
 import nurgling.NGameUI;
-import nurgling.NGob;
-import nurgling.NHitBox;
 import nurgling.NUtils;
 import nurgling.actions.bots.Eater;
-import nurgling.actions.bots.RoutePointNavigator;
-import nurgling.routes.RoutePoint;
-import nurgling.tools.Finder;
 
 import static haven.MCache.cmaps;
 import static haven.OCache.posres;

@@ -3,23 +3,16 @@ package nurgling.actions;
 import haven.Coord;
 import haven.Gob;
 import haven.WItem;
-import nurgling.NConfig;
 import nurgling.NGameUI;
-import nurgling.NMapView;
 import nurgling.NUtils;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.areas.NArea;
-import nurgling.areas.NContext;
-import nurgling.conf.NPrepBlocksProp;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.NavigationService;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class FuelByLogs implements Action
 {
@@ -27,7 +20,6 @@ public class FuelByLogs implements Action
     ArrayList<Container> conts;
     String name;
     Coord targetCoord = new Coord(1, 2);
-    RoutePoint logsRoutePoint = null;
 
     public FuelByLogs(ArrayList<Container> conts, String name) {
         this.conts = conts;
@@ -40,24 +32,21 @@ public class FuelByLogs implements Action
     public Results run(NGameUI gui) throws InterruptedException {
         int needed_size = 0;
         NArea fuel = null;
-        
+
         for (Container cont : conts) {
             Container.FuelLvl fuelLvl = cont.getattr(Container.FuelLvl.class);
             needed_size += fuelLvl.neededFuel();
-            
+
             // Get fuel area from container
             if(fuel == null) {
                 fuel = fuelLvl.getFuelArea();
             }
         }
-        
+
         if(fuel == null) {
             return Results.ERROR("No fuel area set in containers.");
         }
-        
-        // Find route point for logs area
-        this.logsRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(fuel);
-        
+
         for (Container cont : conts) {
             Container.FuelLvl fuelLvl = cont.getattr(Container.FuelLvl.class);
             while (fuelLvl.neededFuel() != 0) {
@@ -66,11 +55,9 @@ public class FuelByLogs implements Action
 
                     int target_size = needed_size;
                     while (target_size != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(targetCoord) != 0 && NUtils.getGameUI().getInventory().getItems(new NAlias("block", "Block")).size()<needed_size) {
-                        // Navigate to logs area using global pathfinding
-                        if(this.logsRoutePoint != null) {
-                            new RoutePointNavigator(this.logsRoutePoint).run(gui);
-                        }
-                        
+                        // Navigate to logs area using NavigationService
+                        NavigationService.getInstance().navigateToArea(fuel, gui);
+
                         ArrayList<Gob> logs = Finder.findGobs(fuel, new NAlias(name));
                         if (logs.isEmpty()) {
                             if (gui.getInventory().getItems(ftype).isEmpty())
