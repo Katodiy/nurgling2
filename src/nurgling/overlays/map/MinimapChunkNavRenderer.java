@@ -24,7 +24,9 @@ public class MinimapChunkNavRenderer {
     // Section configuration - must match ChunkNavData
     private static final int TOTAL_SECTIONS = ChunkNavData.TOTAL_SECTIONS; // 25
     private static final int SECTIONS_PER_SIDE = ChunkNavData.SECTIONS_PER_SIDE; // 5
-    private static final int TILES_PER_SECTION_SIDE = ChunkNavData.TILES_PER_SECTION_SIDE; // 20
+    // For rendering: overlay image is 100x100 pixels (MCache.cmaps), so section size = 100/5 = 20
+    // Note: ChunkNavData uses 200x200 cells internally, but overlay renders at tile resolution
+    private static final int RENDER_PIXELS_PER_SECTION = MCache.cmaps.x / SECTIONS_PER_SIDE; // 100/5 = 20
 
     // Colors for section states
     private static final Color OBSERVED_COLOR = new Color(0, 200, 0, 100);    // Green, semi-transparent
@@ -85,11 +87,32 @@ public class MinimapChunkNavRenderer {
         }
         if (mcache == null) return;
 
+        // Get current segment ID for filtering
+        long currentSegmentId = map.dloc.seg.id;
+
         try {
             // Iterate MCache grids directly
             synchronized (mcache.grids) {
                 for (MCache.Grid grid : mcache.grids.values()) {
                     if (grid == null || grid.ul == null) {
+                        continue;
+                    }
+
+                    // Filter grids by segment to prevent rendering on wrong position
+                    // Near segment boundaries, mcache can contain grids from different segments.
+                    // Using p2c() with grids from other segments produces incorrect screen positions
+                    // because sessloc.tc offset is computed for one segment only.
+                    MapFile.GridInfo gridInfo = null;
+                    if (map.file.lock.readLock().tryLock()) {
+                        try {
+                            gridInfo = map.file.gridinfo.get(grid.id);
+                        } finally {
+                            map.file.lock.readLock().unlock();
+                        }
+                    }
+
+                    // Skip grids without segment info or from different segments
+                    if (gridInfo == null || gridInfo.seg != currentSegmentId) {
                         continue;
                     }
 
@@ -184,8 +207,10 @@ public class MinimapChunkNavRenderer {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 // Determine which section this pixel is in (5x5 grid)
-                int sx = x / TILES_PER_SECTION_SIDE;  // 0-4
-                int sy = y / TILES_PER_SECTION_SIDE;  // 0-4
+                // Use RENDER_PIXELS_PER_SECTION (20) not CELLS_PER_SECTION (40)
+                // because overlay image is 100x100 pixels, not 200x200 cells
+                int sx = x / RENDER_PIXELS_PER_SECTION;  // 0-4
+                int sy = y / RENDER_PIXELS_PER_SECTION;  // 0-4
                 int section = sy * SECTIONS_PER_SIDE + sx;  // 0-24
 
                 Color col = sectionStates[section] ? OBSERVED_COLOR : UNOBSERVED_COLOR;
