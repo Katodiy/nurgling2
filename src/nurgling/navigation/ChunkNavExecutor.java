@@ -397,7 +397,8 @@ public class ChunkNavExecutor implements Action {
         boolean isLoadingPortal = portalName.contains("cellar") ||
                                    portalName.contains("stairs") ||
                                    portalName.contains("ladder") ||
-                                   portalName.contains("minehole");
+                                   portalName.contains("minehole") ||
+                                   portalName.contains("-door");
 
         if (isLoadingPortal) {
             // Cellar doors, stairs, ladders, mines - use simple right-click to enter
