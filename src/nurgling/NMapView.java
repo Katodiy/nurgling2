@@ -49,11 +49,14 @@ public class NMapView extends MapView
     public NGlobalCoord lastGC = null;
 
     public final List<NMiniMap.TempMark> tempMarkList = new ArrayList<NMiniMap.TempMark>();
-    
+
     // Route point dragging state
     private UI.Grab dragGrab = null;
     // Chunk navigation manager - owned by NMapView, not a singleton
     private ChunkNavManager chunkNavManager;
+
+    // Track areas that were deleted locally to prevent restoration during sync
+    private final Set<Integer> locallyDeletedAreas = new HashSet<>();
     
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
@@ -1348,6 +1351,9 @@ public class NMapView extends MapView
                 area.inWork = true;
                 final int areaId = area.id;
                 glob.map.areas.remove(areaId);
+                // Track locally deleted areas to prevent restoration during sync
+                locallyDeletedAreas.add(areaId);
+                System.out.println("Area deleted locally: " + areaId + " (" + area.name + ")");
                 Gob dummy = dummys.get(area.gid);
                 if(dummy != null) {
                     glob.oc.remove(dummy);
@@ -1369,6 +1375,20 @@ public class NMapView extends MapView
                 break;
             }
         }
+    }
+
+    /**
+     * Check if an area was deleted locally to prevent restoration during sync
+     */
+    public boolean isLocallyDeleted(int areaId) {
+        return locallyDeletedAreas.contains(areaId);
+    }
+
+    /**
+     * Clear the locally deleted areas set (called when areas are reloaded)
+     */
+    public void clearLocallyDeletedAreas() {
+        locallyDeletedAreas.clear();
     }
 
     public void disableArea(String name, String path, boolean val) {

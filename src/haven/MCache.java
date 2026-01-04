@@ -121,6 +121,11 @@ public class MCache implements MapSource {
 	public void loadAreasIfNeeded() {
 		if (areasLoaded) return;
 
+		// Clear locally deleted areas when reloading areas
+		if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getGameUI().map != null) {
+			((nurgling.NMapView)nurgling.NUtils.getGameUI().map).clearLocallyDeletedAreas();
+		}
+
 		// If DB is enabled - ONLY use DB, no fallback to file
 		if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable)) {
 			if (nurgling.NCore.databaseManager != null && nurgling.NCore.databaseManager.isReady()) {
