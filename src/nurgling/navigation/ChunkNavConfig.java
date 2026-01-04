@@ -24,5 +24,6 @@ public class ChunkNavConfig {
     public static final long PORTAL_LOAD_TIMEOUT_MS = 10000;
 
     // Storage
-    public static final String STORAGE_FILENAME = "chunknav.nurgling.json";
+    public static final String STORAGE_FILENAME = "chunknav.nurgling.json";  // Legacy JSON file (for migration)
+    public static final String STORAGE_DIRNAME = "chunknav";                  // Binary chunk directory
 }

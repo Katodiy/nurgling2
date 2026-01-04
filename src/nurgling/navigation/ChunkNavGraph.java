@@ -353,6 +353,23 @@ public class ChunkNavGraph {
     }
 
     /**
+     * Get chunks that were updated within the specified time window.
+     * Used to determine which chunks need to be saved.
+     */
+    public List<ChunkNavData> getRecentlyUpdatedChunks(long windowMs) {
+        List<ChunkNavData> recent = new ArrayList<>();
+        long cutoff = System.currentTimeMillis() - windowMs;
+
+        for (ChunkNavData chunk : chunks.values()) {
+            if (chunk.lastUpdated >= cutoff) {
+                recent.add(chunk);
+            }
+        }
+
+        return recent;
+    }
+
+    /**
      * Get statistics about the graph.
      */
     public String getStats() {
