@@ -3,7 +3,7 @@
 ChunkNav Visualizer - Creates a visual representation of the chunknav navigation data.
 
 Usage:
-    python chunknav_visualizer.py [path_to_chunknav.json] [--layer LAYER] [--path] [-w WORLD]
+    python chunknav_visualizer.py [path_to_chunknav_dir] [--layer LAYER] [--path] [-w WORLD]
 
 Options:
     --layer LAYER    Filter by layer (surface, inside, cellar, mine, etc.)
@@ -14,12 +14,13 @@ Options:
                      2 = c646473983afec09
 
 If no path is provided, it will look in the default location:
-    %APPDATA%/Haven and Hearth/profiles/*/chunknav.nurgling.json
+    %APPDATA%/Haven and Hearth/profiles/*/chunknav/
 """
 
 import json
 import sys
 import os
+import struct
 from pathlib import Path
 
 # Try to import visualization libraries
@@ -37,9 +38,27 @@ except ImportError:
 
 # Constants matching ChunkNavConfig.java
 CHUNK_SIZE = 100  # Tiles per chunk (unchanged)
-# CELLS_PER_EDGE is now determined per-chunk based on data version:
-# Version 1: 100x100 (tile-level)
-# Version 2: 200x200 (half-tile level)
+CELLS_PER_EDGE = 200  # Binary format uses 200x200 (half-tile level)
+TOTAL_CELLS = CELLS_PER_EDGE * CELLS_PER_EDGE  # 40,000
+
+# Binary format constants
+MAGIC = 0x434E4156  # "CNAV" in ASCII
+HEADER_SIZE = 64
+
+# Layer byte mapping
+LAYER_OUTSIDE = 0
+LAYER_INSIDE = 1
+LAYER_CELLAR = 2
+
+LAYER_NAMES = {
+    LAYER_OUTSIDE: 'surface',
+    LAYER_INSIDE: 'inside',
+    LAYER_CELLAR: 'cellar',
+}
+
+# Portal type mapping (must match ChunkPortal.PortalType enum order)
+PORTAL_TYPES = ['DOOR', 'GATE', 'STAIRS_UP', 'STAIRS_DOWN', 'CELLAR',
+                'MINE_ENTRANCE', 'MINEHOLE', 'LADDER', 'UNKNOWN']
 
 
 def get_cells_per_edge(chunk):
@@ -58,13 +77,245 @@ def get_cells_per_edge(chunk):
     return 100  # Default to v1
 
 
-def find_chunknav_files(world=None):
-    """Find chunknav.nurgling.json files in default locations.
+def unpack_walkability(data):
+    """Unpack 2-bit walkability values from bytes to flat array.
+
+    Each byte contains 4 walkability values (2 bits each).
+    Returns list of 40,000 values (0=walkable, 1=partial, 2=blocked).
+    """
+    result = []
+    for byte in data:
+        result.append((byte >> 6) & 0x03)
+        result.append((byte >> 4) & 0x03)
+        result.append((byte >> 2) & 0x03)
+        result.append(byte & 0x03)
+    return result
+
+
+def unpack_observed(data):
+    """Unpack 1-bit observed values from bytes to flat array.
+
+    Each byte contains 8 observed bits.
+    Returns list of 40,000 boolean values.
+    """
+    result = []
+    for byte in data:
+        for bit in range(7, -1, -1):
+            result.append((byte >> bit) & 0x01)
+    return result
+
+
+def unpack_edges(data):
+    """Unpack 1-bit edge values from bytes.
+
+    Each byte contains 8 edge walkability bits.
+    Returns dict with north/south/east/west edge arrays (200 booleans each).
+    """
+    bits = []
+    for byte in data:
+        for bit in range(7, -1, -1):
+            bits.append((byte >> bit) & 0x01)
+
+    # Split into 4 edges of 200 bits each
+    edges = {
+        'north': bits[0:200],
+        'south': bits[200:400],
+        'east': bits[400:600],
+        'west': bits[600:800]
+    }
+    return edges
+
+
+def read_length_prefixed_string(f):
+    """Read a length-prefixed UTF-8 string (2-byte big-endian length prefix)."""
+    length_bytes = f.read(2)
+    if len(length_bytes) < 2:
+        raise EOFError("Unexpected end of file reading string length")
+    length = struct.unpack('>H', length_bytes)[0]
+    if length == 0:
+        return ""
+    string_bytes = f.read(length)
+    if len(string_bytes) < length:
+        raise EOFError("Unexpected end of file reading string")
+    return string_bytes.decode('utf-8')
+
+
+def load_chunk_binary(filepath):
+    """Load a single chunk from binary format.
+
+    Binary format (ChunkNavBinaryFormat.java):
+    - Magic (4 bytes): 0x434E4156 ("CNAV")
+    - Header (60 bytes): version, flags, gridId, timestamps, layer byte, neighbors, padding
+    - Walkability grid (10,000 bytes): 40,000 cells at 2 bits each
+    - Observed grid (5,000 bytes): 40,000 cells at 1 bit each
+    - Edge arrays (100 bytes): 800 booleans at 1 bit each
+    - Portals (variable): count + portal data
+    - Connected chunks (variable): count + gridIds
+    - Reachable areas (variable): count + areaIds
+
+    Returns dict matching the JSON structure for compatibility with existing visualization code.
+    """
+    with open(filepath, 'rb') as f:
+        # Read and verify magic number
+        magic = struct.unpack('>I', f.read(4))[0]
+        if magic != MAGIC:
+            raise ValueError(f"Invalid chunk file: bad magic number (got {hex(magic)}, expected {hex(MAGIC)})")
+
+        # Read header
+        version = struct.unpack('>H', f.read(2))[0]
+        flags = struct.unpack('>H', f.read(2))[0]
+        grid_id = struct.unpack('>q', f.read(8))[0]
+        last_updated = struct.unpack('>q', f.read(8))[0]
+        confidence = struct.unpack('>f', f.read(4))[0]
+        layer_byte = struct.unpack('>B', f.read(1))[0]
+        neighbor_north = struct.unpack('>q', f.read(8))[0]
+        neighbor_south = struct.unpack('>q', f.read(8))[0]
+        neighbor_east = struct.unpack('>q', f.read(8))[0]
+        neighbor_west = struct.unpack('>q', f.read(8))[0]
+
+        # Skip 3 padding bytes to complete 64-byte header
+        f.read(3)
+
+        # Convert layer byte to string
+        layer = LAYER_NAMES.get(layer_byte, 'surface')
+
+        # Read grids
+        walkability_bytes = f.read(10000)  # 40,000 cells / 4 cells per byte
+        observed_bytes = f.read(5000)      # 40,000 cells / 8 cells per byte
+        edge_bytes = f.read(100)           # 800 edge points / 8 per byte
+
+        walkability = unpack_walkability(walkability_bytes)
+        observed = unpack_observed(observed_bytes)
+        edges = unpack_edges(edge_bytes)
+
+        # Read portals
+        portal_count = struct.unpack('>H', f.read(2))[0]
+        portals = []
+        for _ in range(portal_count):
+            gob_name = read_length_prefixed_string(f)
+            gob_hash = read_length_prefixed_string(f)
+            portal_type_byte = struct.unpack('>B', f.read(1))[0]
+            local_x = struct.unpack('>H', f.read(2))[0]
+            local_y = struct.unpack('>H', f.read(2))[0]
+            connects_to = struct.unpack('>q', f.read(8))[0]
+            # exitLocalCoord (2 shorts, can be -1,-1 if null)
+            exit_x = struct.unpack('>h', f.read(2))[0]  # signed short
+            exit_y = struct.unpack('>h', f.read(2))[0]  # signed short
+            last_traversed = struct.unpack('>q', f.read(8))[0]
+
+            portal_type = PORTAL_TYPES[portal_type_byte] if portal_type_byte < len(PORTAL_TYPES) else 'UNKNOWN'
+
+            portals.append({
+                'gobName': gob_name,
+                'gobHash': gob_hash,
+                'type': portal_type,
+                'localX': local_x,
+                'localY': local_y,
+                'connectsToGridId': connects_to,
+                'exitLocalX': exit_x if exit_x >= 0 else None,
+                'exitLocalY': exit_y if exit_y >= 0 else None,
+                'lastTraversed': last_traversed
+            })
+
+        # Read connected chunks
+        connected_count = struct.unpack('>H', f.read(2))[0]
+        connected_chunks = []
+        for _ in range(connected_count):
+            connected_chunks.append(struct.unpack('>q', f.read(8))[0])
+
+        # Read reachable areas
+        area_count = struct.unpack('>H', f.read(2))[0]
+        reachable_areas = []
+        for _ in range(area_count):
+            reachable_areas.append(struct.unpack('>i', f.read(4))[0])
+
+        # Note: worldTileOrigin is NOT stored in binary format (it's session-specific)
+
+        # Build chunk dict compatible with JSON structure
+        chunk = {
+            'version': version,
+            'gridId': grid_id,
+            'lastUpdated': last_updated,
+            'confidence': confidence,
+            'layer': layer,
+            'neighborNorth': neighbor_north,
+            'neighborSouth': neighbor_south,
+            'neighborEast': neighbor_east,
+            'neighborWest': neighbor_west,
+            'walkability': walkability,
+            'observed': observed,
+            'edges': edges,
+            'portals': portals,
+            'connectedChunks': connected_chunks,
+            'reachableAreaIds': reachable_areas,
+        }
+
+        return chunk
+
+
+def load_all_chunks_binary(chunknav_dir):
+    """Load all .chunk files from a directory.
+
+    Returns dict with 'chunks' list matching the JSON structure.
+    """
+    chunks = []
+    chunk_dir = Path(chunknav_dir)
+
+    if not chunk_dir.exists() or not chunk_dir.is_dir():
+        return {'chunks': [], 'genus': 'unknown'}
+
+    chunk_files = list(chunk_dir.glob('*.chunk'))
+    errors = 0
+    bad_magic_count = 0
+
+    for chunk_file in chunk_files:
+        try:
+            chunk = load_chunk_binary(chunk_file)
+            chunks.append(chunk)
+        except ValueError as e:
+            # Bad magic number - likely old format or corrupted
+            errors += 1
+            bad_magic_count += 1
+            if errors <= 3:
+                print(f"Warning: Failed to load {chunk_file.name}: {e}")
+        except Exception as e:
+            errors += 1
+            if errors <= 3:
+                # Show file size to help diagnose
+                try:
+                    file_size = chunk_file.stat().st_size
+                    print(f"Warning: Failed to load {chunk_file.name} ({file_size} bytes): {e}")
+                except:
+                    print(f"Warning: Failed to load {chunk_file.name}: {e}")
+
+    if errors > 3:
+        print(f"... and {errors - 3} more errors")
+
+    if bad_magic_count > 0:
+        print(f"\nNote: {bad_magic_count} files have invalid magic numbers.")
+        print("These may be old format files. Run the game client to migrate them to binary format.")
+        print("Old files will be converted automatically on first load.")
+
+    # Extract genus from parent directory path (profile directory name)
+    genus = chunk_dir.parent.name if chunk_dir.parent else 'unknown'
+
+    return {
+        'chunks': chunks,
+        'genus': genus,
+        'format': 'binary',
+        'chunkCount': len(chunks)
+    }
+
+
+def find_chunknav_directories(world=None):
+    """Find chunknav directories in default locations.
 
     Args:
         world: Optional world number (1 or 2) to select specific profile
+
+    Returns list of (chunknav_dir, profile_dir) tuples
     """
-    files = []
+    dirs = []
 
     # Known world profiles
     WORLD_PROFILES = {
@@ -72,57 +323,99 @@ def find_chunknav_files(world=None):
         2: "c646473983afec09",
     }
 
-    # If world is specified, use that specific profile only - no fallback
+    # If world is specified, use that specific profile only
     if world and world in WORLD_PROFILES:
         profile_id = WORLD_PROFILES[world]
         hardcoded_paths = [
+            Path(rf"C:\Users\imbecil\AppData\Roaming\Haven and Hearth\profiles\{profile_id}\chunknav"),
+            Path(f"/mnt/c/Users/imbecil/AppData/Roaming/Haven and Hearth/profiles/{profile_id}/chunknav"),
+        ]
+        for p in hardcoded_paths:
+            if p.exists() and p.is_dir():
+                dirs.append((p, p.parent))
+                return dirs
+
+        # Fallback: check for old JSON file
+        json_paths = [
             Path(rf"C:\Users\imbecil\AppData\Roaming\Haven and Hearth\profiles\{profile_id}\chunknav.nurgling.json"),
             Path(f"/mnt/c/Users/imbecil/AppData/Roaming/Haven and Hearth/profiles/{profile_id}/chunknav.nurgling.json"),
         ]
-        for p in hardcoded_paths:
+        for p in json_paths:
             if p.exists():
-                files.append(p)
-                return files
-        # World specified but file not found - return empty, don't fall back to other worlds
-        print(f"Error: World {world} profile ({profile_id}) chunknav file not found")
-        return files
+                print(f"Note: Found old JSON file at {p}")
+                print("Run the game client to migrate to binary format, or use the JSON file directly.")
+                return []
+
+        print(f"Error: World {world} profile ({profile_id}) chunknav directory not found")
+        return dirs
 
     # No world specified - scan all profiles
-    # Fallback: Windows AppData location
+    def scan_profiles(profiles_path):
+        if not profiles_path.exists():
+            return
+        for profile_dir in profiles_path.iterdir():
+            if profile_dir.is_dir():
+                chunknav_dir = profile_dir / "chunknav"
+                if chunknav_dir.exists() and chunknav_dir.is_dir():
+                    # Check if directory has any .chunk files
+                    if any(chunknav_dir.glob('*.chunk')):
+                        dirs.append((chunknav_dir, profile_dir))
+
+    # Windows AppData location
     appdata = os.environ.get('APPDATA', '')
     if appdata:
         hh_path = Path(appdata) / "Haven and Hearth" / "profiles"
-        if hh_path.exists():
-            for profile_dir in hh_path.iterdir():
-                if profile_dir.is_dir():
-                    chunknav_file = profile_dir / "chunknav.nurgling.json"
-                    if chunknav_file.exists():
-                        files.append(chunknav_file)
+        scan_profiles(hh_path)
 
-    # Also check WSL path
+    # WSL path
     wsl_path = Path("/mnt/c/Users")
     if wsl_path.exists():
         for user_dir in wsl_path.iterdir():
             hh_path = user_dir / "AppData" / "Roaming" / "Haven and Hearth" / "profiles"
-            if hh_path.exists():
-                for profile_dir in hh_path.iterdir():
-                    if profile_dir.is_dir():
-                        chunknav_file = profile_dir / "chunknav.nurgling.json"
-                        if chunknav_file.exists() and chunknav_file not in files:
-                            files.append(chunknav_file)
+            scan_profiles(hh_path)
 
-    return files
+    # Remove duplicates (same directory via different paths)
+    seen = set()
+    unique_dirs = []
+    for chunknav_dir, profile_dir in dirs:
+        key = str(chunknav_dir.resolve()) if chunknav_dir.exists() else str(chunknav_dir)
+        if key not in seen:
+            seen.add(key)
+            unique_dirs.append((chunknav_dir, profile_dir))
+
+    return unique_dirs
 
 
 def load_chunknav_data(filepath):
-    """Load and parse the chunknav JSON file."""
-    with open(filepath, 'r', encoding='utf-8') as f:
-        return json.load(f)
+    """Load chunknav data from either binary directory or JSON file.
+
+    Args:
+        filepath: Path to chunknav directory (binary) or .json file (legacy)
+    """
+    path = Path(filepath)
+
+    # Binary directory format
+    if path.is_dir():
+        return load_all_chunks_binary(path)
+
+    # Legacy JSON format
+    if path.suffix == '.json' and path.exists():
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
+    raise ValueError(f"Invalid chunknav path: {filepath}")
 
 
-def load_path_data(chunknav_filepath):
+def load_path_data(chunknav_path):
     """Load the path visualization data if it exists."""
-    path_file = Path(chunknav_filepath).parent / "chunknav_path.json"
+    path = Path(chunknav_path)
+
+    # If it's a directory, look for path file in parent
+    if path.is_dir():
+        path_file = path.parent / "chunknav_path.json"
+    else:
+        path_file = path.parent / "chunknav_path.json"
+
     if path_file.exists():
         with open(path_file, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -325,9 +618,9 @@ def visualize_ascii(data, layer_filter='surface'):
     available_layers = get_available_layers(data)
     print(f"\n=== ChunkNav Data Summary ===")
     print(f"World: {data.get('genus', 'unknown')}")
+    print(f"Format: {data.get('format', 'json')}")
     print(f"Total chunks: {len(all_chunks)} (showing {len(chunks)} in layer '{layer_filter}')")
     print(f"Available layers: {', '.join(available_layers)}")
-    print(f"Last saved: {data.get('lastSaved', 'unknown')}")
     print()
 
     # Check how many chunks have neighbor data vs session-based coords
@@ -895,7 +1188,7 @@ def visualize_matplotlib(data, output_file=None, detail_chunk_index=0, layer_fil
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='Visualize ChunkNav navigation data')
-    parser.add_argument('filepath', nargs='?', help='Path to chunknav.nurgling.json')
+    parser.add_argument('filepath', nargs='?', help='Path to chunknav directory or chunknav.nurgling.json')
     parser.add_argument('--world', '-w', type=int, choices=[1, 2],
                         help='Select world profile (1=b7c199a4557503a8, 2=c646473983afec09)')
     parser.add_argument('--layer', '-l', default='surface',
@@ -905,35 +1198,48 @@ def main():
                         help='Show the last calculated path (from chunknav_path.json)')
     args = parser.parse_args()
 
-    # Determine input file
+    # Determine input path
+    filepath = None
     if args.filepath:
         filepath = Path(args.filepath)
         if not filepath.exists():
-            print(f"Error: File not found: {filepath}")
+            print(f"Error: Path not found: {filepath}")
             sys.exit(1)
     else:
-        # Find files automatically
-        files = find_chunknav_files(world=args.world)
-        if not files:
-            print("No chunknav.nurgling.json files found.")
-            print("Usage: python chunknav_visualizer.py [path_to_chunknav.json] [--layer LAYER]")
+        # Find directories automatically
+        dirs = find_chunknav_directories(world=args.world)
+        if not dirs:
+            print("No chunknav directories found.")
+            print("Usage: python chunknav_visualizer.py [path_to_chunknav_dir] [--layer LAYER]")
+            print("\nNote: The game must be run at least once with the new binary format")
+            print("to create the chunknav/ directory with .chunk files.")
             sys.exit(1)
 
-        if len(files) == 1:
-            filepath = files[0]
+        if len(dirs) == 1:
+            filepath = dirs[0][0]
+            print(f"Found profile: {dirs[0][1].name}")
         else:
-            print("Found multiple chunknav files:")
-            for i, f in enumerate(files):
-                print(f"  {i+1}. {f}")
-            choice = input("Select file number: ")
+            print("Found multiple chunknav directories:")
+            for i, (chunknav_dir, profile_dir) in enumerate(dirs):
+                chunk_count = len(list(chunknav_dir.glob('*.chunk')))
+                print(f"  {i+1}. {profile_dir.name} ({chunk_count} chunks)")
+            choice = input("Select profile number: ")
             try:
-                filepath = files[int(choice) - 1]
+                filepath = dirs[int(choice) - 1][0]
             except (ValueError, IndexError):
                 print("Invalid selection.")
                 sys.exit(1)
 
     print(f"Loading: {filepath}")
-    data = load_chunknav_data(filepath)
+
+    try:
+        data = load_chunknav_data(filepath)
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        sys.exit(1)
+
+    chunk_count = len(data.get('chunks', []))
+    print(f"Loaded {chunk_count} chunks")
 
     # Load path data if requested
     path_data = None
