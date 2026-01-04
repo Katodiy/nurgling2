@@ -6,10 +6,10 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.overlays.map.MinimapChunkNavRenderer;
-import nurgling.profiles.ProfileManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
@@ -26,6 +26,7 @@ public class ChunkNavManager {
     private ChunkNavRecorder recorder;
     private ChunkNavPlanner planner;
     private PortalTraversalTracker portalTracker;
+    private ChunkNavFileStore fileStore;
 
     private boolean enabled = true;
     private boolean initialized = false;
@@ -121,8 +122,9 @@ public class ChunkNavManager {
             this.recorder = new ChunkNavRecorder(graph);
             this.planner = new ChunkNavPlanner(graph);
             this.portalTracker = new PortalTraversalTracker(graph, recorder);
+            this.fileStore = new ChunkNavFileStore(genus);
 
-            // Load saved data
+            // Load saved data (with migration if needed)
             load();
 
             this.initialized = true;
@@ -324,8 +326,8 @@ public class ChunkNavManager {
             }
             pathJson.put("segments", segmentsArray);
 
-            // Write to file next to chunknav.nurgling.json
-            Path pathFile = getStoragePath().getParent().resolve("chunknav_path.json");
+            // Write to file next to chunknav directory
+            Path pathFile = fileStore.getChunkDirectory().getParent().resolve("chunknav_path.json");
             Files.write(pathFile, pathJson.toString(2).getBytes(StandardCharsets.UTF_8));
 
         } catch (Exception e) {
@@ -404,40 +406,28 @@ public class ChunkNavManager {
 
     /**
      * Internal save implementation.
+     * Only saves chunks that were updated within the save throttle window.
      */
     private void saveInternal() {
         // Double-check guard flag as extra safety against Bug #3
         if (initializationInProgress) return;
-        if (!initialized || currentGenus == null) return;
+        if (!initialized || currentGenus == null || fileStore == null) return;
 
         try {
-            Path filePath = getStoragePath();
-            Path tempFile = filePath.resolveSibling(filePath.getFileName() + ".tmp");
-            Files.createDirectories(filePath.getParent());
+            // Get chunks updated in the last save window
+            List<ChunkNavData> recentChunks = graph.getRecentlyUpdatedChunks(SAVE_THROTTLE_MS);
 
-            JSONObject root = new JSONObject();
-            root.put("version", 1);
-            root.put("genus", currentGenus);
-            root.put("lastSaved", System.currentTimeMillis());
-
-            // Save chunks
-            JSONArray chunksArray = new JSONArray();
-            for (ChunkNavData chunk : graph.getAllChunks()) {
-                chunksArray.put(chunk.toJson());
+            if (recentChunks.isEmpty()) {
+                return; // Nothing to save
             }
-            root.put("chunks", chunksArray);
 
-            // Write to temp file first (atomic write pattern)
-            byte[] data = root.toString(2).getBytes(StandardCharsets.UTF_8);
-            Files.write(tempFile, data);
-
-            // Atomically rename temp file to real file
-            // This prevents corruption if process crashes mid-write
-            try {
-                Files.move(tempFile, filePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (java.nio.file.AtomicMoveNotSupportedException e) {
-                // Fallback for filesystems that don't support atomic move
-                Files.move(tempFile, filePath, StandardCopyOption.REPLACE_EXISTING);
+            // Save each recently updated chunk
+            for (ChunkNavData chunk : recentChunks) {
+                try {
+                    fileStore.saveChunk(chunk);
+                } catch (IOException e) {
+                    System.err.println("ChunkNav: Failed to save chunk " + chunk.gridId + ": " + e.getMessage());
+                }
             }
 
         } catch (Exception e) {
@@ -448,62 +438,35 @@ public class ChunkNavManager {
 
     /**
      * Load navigation data from disk.
+     * Loads from binary chunk files, with migration from old JSON format if needed.
      */
     public void load() {
-        if (currentGenus == null) {
+        if (currentGenus == null || fileStore == null) {
             return;
         }
 
         try {
-            Path filePath = getStoragePath();
-            if (!Files.exists(filePath)) {
-                System.out.println("ChunkNav: No saved data found at " + filePath);
-                return;
+            // Clean up any orphaned temp files
+            fileStore.cleanupTempFiles();
+
+            // Check if we need to migrate from old JSON format
+            if (fileStore.needsMigration()) {
+                System.out.println("ChunkNav: Migrating from JSON to binary format...");
+                migrateFromJson();
             }
 
-            // Clean up any orphaned temp file from interrupted save
-            Path tempFile = filePath.resolveSibling(filePath.getFileName() + ".tmp");
-            if (Files.exists(tempFile)) {
-                try {
-                    Files.delete(tempFile);
-                    System.out.println("ChunkNav: Cleaned up orphaned temp file");
-                } catch (Exception e) {
-                    System.err.println("ChunkNav: Failed to delete orphaned temp file: " + e.getMessage());
-                }
-            }
+            // Load all chunk files from directory
+            List<ChunkNavData> loadedChunks = fileStore.loadAllChunks();
 
-            String content = new String(Files.readAllBytes(filePath), StandardCharsets.UTF_8);
-            JSONObject root = new JSONObject(content);
-
-            // Verify genus matches
-            String savedGenus = root.optString("genus", "");
-            if (!currentGenus.equals(savedGenus)) {
-                System.err.println("ChunkNav: Genus mismatch! Expected " + currentGenus + " but file has " + savedGenus);
-                return;
-            }
-
-            // Load chunks
-            JSONArray chunksArray = root.getJSONArray("chunks");
-            int loadedCount = 0;
-            int errorCount = 0;
-            for (int i = 0; i < chunksArray.length(); i++) {
-                try {
-                    ChunkNavData chunk = ChunkNavData.fromJson(chunksArray.getJSONObject(i));
-                    graph.addChunk(chunk);
-                    loadedCount++;
-                } catch (Exception e) {
-                    errorCount++;
-                    if (errorCount <= 3) {
-                        System.err.println("ChunkNav: Failed to load chunk " + i + ": " + e.getMessage());
-                    }
-                }
+            // Add chunks to graph
+            for (ChunkNavData chunk : loadedChunks) {
+                graph.addChunk(chunk);
             }
 
             // Rebuild connections after loading all chunks
             graph.rebuildAllConnections();
 
-            System.out.println("ChunkNav: Loaded " + loadedCount + " chunks" +
-                (errorCount > 0 ? " (" + errorCount + " errors)" : ""));
+            System.out.println("ChunkNav: Loaded " + loadedChunks.size() + " chunks from binary format");
 
         } catch (Exception e) {
             System.err.println("ChunkNav: Failed to load data: " + e.getMessage());
@@ -512,11 +475,55 @@ public class ChunkNavManager {
     }
 
     /**
-     * Get the storage path for navigation data.
+     * Migrate from old JSON format to new binary format.
      */
-    private Path getStoragePath() {
-        ProfileManager pm = new ProfileManager(currentGenus);
-        return pm.getConfigPath(STORAGE_FILENAME);
+    private void migrateFromJson() {
+        Path oldJsonPath = fileStore.getOldJsonFilePath();
+        if (!Files.exists(oldJsonPath)) {
+            return;
+        }
+
+        try {
+            String content = new String(Files.readAllBytes(oldJsonPath), StandardCharsets.UTF_8);
+            JSONObject root = new JSONObject(content);
+
+            // Verify genus matches
+            String savedGenus = root.optString("genus", "");
+            if (!currentGenus.equals(savedGenus)) {
+                System.err.println("ChunkNav: Migration skipped - genus mismatch");
+                return;
+            }
+
+            // Load and convert chunks
+            JSONArray chunksArray = root.getJSONArray("chunks");
+            int migratedCount = 0;
+            int errorCount = 0;
+
+            for (int i = 0; i < chunksArray.length(); i++) {
+                try {
+                    ChunkNavData chunk = ChunkNavData.fromJson(chunksArray.getJSONObject(i));
+                    fileStore.saveChunk(chunk);
+                    migratedCount++;
+                } catch (Exception e) {
+                    errorCount++;
+                    if (errorCount <= 3) {
+                        System.err.println("ChunkNav: Failed to migrate chunk " + i + ": " + e.getMessage());
+                    }
+                }
+            }
+
+            System.out.println("ChunkNav: Migrated " + migratedCount + " chunks" +
+                (errorCount > 0 ? " (" + errorCount + " errors)" : ""));
+
+            // Delete old JSON file after successful migration
+            if (migratedCount > 0 && errorCount == 0) {
+                fileStore.deleteOldJsonFile();
+            }
+
+        } catch (Exception e) {
+            System.err.println("ChunkNav: Migration failed: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
