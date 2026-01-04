@@ -47,16 +47,22 @@ public class ChunkNavData {
     // Each section is exactly 40x40 = 1600 cells (200/5 divides evenly)
     public static final int SECTIONS_PER_SIDE = 5;
     public static final int TOTAL_SECTIONS = SECTIONS_PER_SIDE * SECTIONS_PER_SIDE; // 25
-    public static final int TILES_PER_SECTION_SIDE = CELLS_PER_EDGE / SECTIONS_PER_SIDE; // 20
-    public static final int TILES_PER_SECTION = TILES_PER_SECTION_SIDE * TILES_PER_SECTION_SIDE; // 400
+    public static final int CELLS_PER_SECTION_SIDE = CELLS_PER_EDGE / SECTIONS_PER_SIDE; // 200/5 = 40 cells
+    public static final int CELLS_PER_SECTION = CELLS_PER_SECTION_SIDE * CELLS_PER_SECTION_SIDE; // 40*40 = 1600 cells
+    // Legacy names kept for compatibility - these are CELLS not TILES
+    @Deprecated public static final int TILES_PER_SECTION_SIDE = CELLS_PER_SECTION_SIDE;
+    @Deprecated public static final int TILES_PER_SECTION = CELLS_PER_SECTION;
     private int[] sectionObservedCount = new int[TOTAL_SECTIONS];
 
     /**
-     * Get section index (0-24) for a tile coordinate.
+     * Get section index (0-24) for a cell coordinate.
+     * @param cx cell x coordinate (0-199)
+     * @param cy cell y coordinate (0-199)
+     * @return section index (0-24) in row-major order
      */
     private static int getSectionIndex(int cx, int cy) {
-        int sx = cx / TILES_PER_SECTION_SIDE;
-        int sy = cy / TILES_PER_SECTION_SIDE;
+        int sx = cx / CELLS_PER_SECTION_SIDE;
+        int sy = cy / CELLS_PER_SECTION_SIDE;
         return sy * SECTIONS_PER_SIDE + sx;
     }
 
@@ -194,7 +200,7 @@ public class ChunkNavData {
      */
     public boolean isSectionFullyObserved(int section) {
         if (section < 0 || section >= TOTAL_SECTIONS) return false;
-        return sectionObservedCount[section] >= TILES_PER_SECTION;
+        return sectionObservedCount[section] >= CELLS_PER_SECTION;
     }
 
     /**
