@@ -34,6 +34,13 @@ public class FillWaterskins implements Action {
                 NUtils.navigateToArea(nArea);
                 area = nArea.getRCArea();
             }
+            else
+            {
+                SelectArea insa;
+                NUtils.getGameUI().msg("Please, select area with cistern or barrel");
+                (insa = new SelectArea(Resource.loadsimg("baubles/waterRefiller"))).run(gui);
+                area = insa.getRCArea();
+            }
         }
         else
         {
@@ -60,6 +67,10 @@ public class FillWaterskins implements Action {
             }
             if(target==null)
                 return Results.ERROR("No containers with water");
+        }
+        else
+        {
+            return Results.ERROR("no water area");
         }
         WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
         if(wbelt!=null)
