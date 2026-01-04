@@ -489,6 +489,12 @@ public class ChunkNavExecutor implements Action {
             double accessOffset = doorEdgeOffset + MCache.tilesz.x;  // +1 tile in front of door
 
             double angle = portalGob.a;
+
+            // Windmill door is on the left side, not the front
+            if (name.toLowerCase().contains("windmill")) {
+                angle += Math.PI / 2;  // Rotate 90° to left side
+            }
+
             double offsetX = Math.cos(angle) * accessOffset;
             double offsetY = Math.sin(angle) * accessOffset;
             return new Coord2d(portalGob.rc.x + offsetX, portalGob.rc.y + offsetY);
