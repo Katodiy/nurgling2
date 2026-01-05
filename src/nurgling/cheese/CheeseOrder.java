@@ -45,6 +45,7 @@ public class CheeseOrder {
     public int getId() { return id; }
     public String getCheeseType() { return cheeseType; }
     public int getCount() { return count; }
+    public void addToCount(int amount) { this.count += amount; }
     public List<StepStatus> getStatus() { return status; }
 
     // Status for each step in the chain (optional)
