@@ -158,12 +158,14 @@ public class TakeItems2 implements Action
 
     public Results takeFromPile(AtomicInteger left, NGameUI gui, NContext.Pile pile) throws InterruptedException
     {
-        new PathFinder(pile.pile).run(gui);
-        new OpenTargetContainer("Stockpile",  pile.pile).run(gui);
-        TakeItemsFromPile tifp;
-        (tifp = new TakeItemsFromPile(pile.pile, gui.getStockpile(), left.get())).run(gui);
-        new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
-
+        if(PathFinder.isAvailable(pile.pile))
+        {
+            new PathFinder(pile.pile).run(gui);
+            new OpenTargetContainer("Stockpile", pile.pile).run(gui);
+            TakeItemsFromPile tifp;
+            (tifp = new TakeItemsFromPile(pile.pile, gui.getStockpile(), left.get())).run(gui);
+            new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
+        }
         return Results.SUCCESS();
     }
 

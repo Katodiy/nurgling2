@@ -50,8 +50,7 @@ public class TransferToPiles implements Action{
         if (!(witems = getMatchingItems(gui)).isEmpty() ) {
                 Gob target = null;
                 for (Gob gob : Finder.findGobs(out, pileName = getStockpileName(items))) {
-                    while (gob.ngob.getModelAttribute() != 31) {
-                        if(PathFinder.isAvailable(gob)) {
+                    while (gob.ngob.getModelAttribute() != 31 && PathFinder.isAvailable(gob)) {
                             target = gob;
                             PathFinder pf = new PathFinder(target);
                             pf.isHardMode = true;
@@ -78,7 +77,6 @@ public class TransferToPiles implements Action{
                                 return Results.SUCCESS();
                             }
                         }
-                    }
                 }
 
                 while(!getMatchingItems(gui).isEmpty() && out!=null) {
