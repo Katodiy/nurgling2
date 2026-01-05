@@ -403,12 +403,7 @@ public class NMiniMapWnd extends Widget{
         if(buttons.isEmpty()) return;
 
         int btnSpacing = UI.scale(3);
-        // Calculate total width needed for all buttons in one row
-        int totalWidth = 0;
-        for(Widget btn : buttons) {
-            totalWidth += btn.sz.x + btnSpacing;
-        }
-        int maxWidth = Math.max(miniMap.sz.x, totalWidth);
+        int maxWidth = miniMap.sz.x;
         int currentX = 0;
         int currentY = 0;
         int rowHeight = 0;

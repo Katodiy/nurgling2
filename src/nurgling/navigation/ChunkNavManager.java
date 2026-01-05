@@ -34,7 +34,7 @@ public class ChunkNavManager {
 
     // Throttle saves to avoid excessive disk writes
     private long lastSaveTime = 0;
-    private static final long SAVE_THROTTLE_MS = 2000; // Min 2 seconds between saves (for testing)
+    private static final long SAVE_THROTTLE_MS = 60000; // Save to disk once per minute
 
     // Throttle grid recording to avoid excessive CPU usage
     private long lastRecordTime = 0;
