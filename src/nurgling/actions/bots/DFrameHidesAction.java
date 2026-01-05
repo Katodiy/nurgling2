@@ -24,7 +24,7 @@ public class DFrameHidesAction implements Action {
     NAlias raw = new NAlias("Fresh");
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea.Specialisation rdframe = new NArea.Specialisation(Specialisation.SpecName.dframe.toString());
+        NArea.Specialisation rdframe = new NArea.Specialisation(Specialisation.SpecName.dframe.toString(), "Hides");
         NArea.Specialisation rrawhides = new NArea.Specialisation(Specialisation.SpecName.rawhides.toString());
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
@@ -35,7 +35,7 @@ public class DFrameHidesAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            NArea dframesarea = NContext.findSpec(Specialisation.SpecName.dframe.toString());
+            NArea dframesarea = NContext.findSpec(rdframe);
             for (Gob dframe : Finder.findGobs(dframesarea,
                     new NAlias("gfx/terobjs/dframe"))) {
                 Container cand = new Container(dframe,"Frame" , dframesarea);
@@ -53,7 +53,7 @@ public class DFrameHidesAction implements Action {
 
                 containers.add(cand);
             }
-            Pair<Coord2d,Coord2d> rca = NContext.findSpec(Specialisation.SpecName.dframe.toString()).getRCArea();
+            Pair<Coord2d,Coord2d> rca = dframesarea.getRCArea();
             boolean dir = rca.b.x - rca.a.x > rca.b.y - rca.a.y;
             containers.sort(new Comparator<Container>() {
                 @Override

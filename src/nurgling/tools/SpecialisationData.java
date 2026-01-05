@@ -34,5 +34,7 @@ public class SpecialisationData {
         ));
         data.put("plantingGardenPots", gardenPotPlants);
         data.put("gardenPotSeeds", gardenPotPlants);
+        ArrayList<String> dframe = new ArrayList<>(Arrays.asList("Hides", "Fish"));
+        data.put("dframe", dframe);
     }
 }
