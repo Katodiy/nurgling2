@@ -19,8 +19,6 @@ public class GardenPotFarmer implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NContext context = new NContext(gui);
-
         // Find all areas with "Planting Garden Pots" specialization
         ArrayList<NArea> potAreas = NContext.findAllSpec(
             Specialisation.SpecName.plantingGardenPots.toString()
@@ -37,7 +35,7 @@ public class GardenPotFarmer implements Action {
             String plantType = getAreaSubtype(area);
             gui.msg("Processing area: " + area.name + " (plant type: " + (plantType != null ? plantType : "none") + ")");
 
-            Results result = processArea(gui, context, area, plantType);
+            Results result = processArea(gui, area, plantType);
             if (!result.IsSuccess()) {
                 gui.msg("Warning: Failed to process area " + area.name);
                 // Continue to next area
@@ -63,8 +61,10 @@ public class GardenPotFarmer implements Action {
     /**
      * Process a single garden pot area through all phases.
      */
-    private Results processArea(NGameUI gui, NContext context, NArea area, String plantType)
+    private Results processArea(NGameUI gui, NArea area, String plantType)
             throws InterruptedException {
+
+        NContext context = new NContext(gui);
 
         // Step 1: Harvest ready plants (pots with 2 Equed overlays)
         Results harvestResult = new GardenPotHarvester(area, context).run(gui);
