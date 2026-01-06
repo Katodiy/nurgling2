@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import static haven.Inventory.invsq;
-import static haven.Equipory.ecoords;
 import static haven.Equipory.ebgs;
 import static haven.Equipory.etts;
 
@@ -39,8 +38,25 @@ public class EquipmentBotSettings extends Panel implements DTarget {
     private final Map<Integer, String> slotConfig = new HashMap<>();
     private final Map<Integer, Tex> slotTextures = new HashMap<>();
 
-    // Grid offset for drawing equipment slots in editor (must be below the labels which end ~y=94)
-    private static final Coord gridOffset = UI.scale(new Coord(10, 110));
+    // Custom horizontal layout: 2 rows of slots instead of 2 columns
+    // Row 1: slots 0-11, Row 2: slots 12-22
+    private static final int SLOTS_PER_ROW = 12;
+    private static final Coord[] slotCoords;
+    static {
+        int numSlots = haven.Equipory.ecoords.length;
+        slotCoords = new Coord[numSlots];
+        int slotW = Inventory.sqsz.x;
+        int slotH = Inventory.sqsz.y;
+        int gap = UI.scale(2);
+        for (int i = 0; i < numSlots; i++) {
+            int row = i / SLOTS_PER_ROW;
+            int col = i % SLOTS_PER_ROW;
+            slotCoords[i] = new Coord(col * (slotW + gap), row * (slotH + gap));
+        }
+    }
+
+    // Grid offset for drawing equipment slots in editor
+    private static final Coord gridOffset = UI.scale(new Coord(10, 100));
     private static final Coord slotSize = Inventory.sqsz;
 
     public EquipmentBotSettings() {
@@ -154,8 +170,8 @@ public class EquipmentBotSettings extends Panel implements DTarget {
             // Adjust position for editor panel offset
             Coord panelPos = editorPanel.c;
 
-            for (int i = 0; i < ecoords.length; i++) {
-                Coord pos = panelPos.add(gridOffset).add(ecoords[i]);
+            for (int i = 0; i < slotCoords.length; i++) {
+                Coord pos = panelPos.add(gridOffset).add(slotCoords[i]);
 
                 g.image(invsq, pos);
 
@@ -196,7 +212,7 @@ public class EquipmentBotSettings extends Panel implements DTarget {
     public Object tooltip(Coord c, Widget prev) {
         if (editorPanel != null && editorPanel.visible()) {
             int slot = getSlotAt(c);
-            if (slot >= 0 && slot < ecoords.length) {
+            if (slot >= 0 && slot < slotCoords.length) {
                 String slotName = (etts[slot] != null) ? etts[slot].text : "Slot " + slot;
 
                 if (slotConfig.containsKey(slot)) {
@@ -260,8 +276,8 @@ public class EquipmentBotSettings extends Panel implements DTarget {
             return -1;
         }
         Coord panelPos = editorPanel.c;
-        for (int i = 0; i < ecoords.length; i++) {
-            Coord pos = panelPos.add(gridOffset).add(ecoords[i]);
+        for (int i = 0; i < slotCoords.length; i++) {
+            Coord pos = panelPos.add(gridOffset).add(slotCoords[i]);
             if (c.isect(pos, slotSize)) {
                 return i;
             }
