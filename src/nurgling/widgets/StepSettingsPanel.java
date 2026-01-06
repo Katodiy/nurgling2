@@ -6,6 +6,7 @@ import nurgling.areas.NArea;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
 import nurgling.conf.NForagerProp;
+import nurgling.equipment.EquipmentPreset;
 import nurgling.scenarios.BotStep;
 import java.util.*;
 
@@ -145,6 +146,61 @@ public class StepSettingsPanel extends Widget {
                         super.change(item);
                         if (item != null) {
                             step.setSetting("presetName", item);
+                        }
+                    }
+                };
+                if (selectedPreset != null) {
+                    presetDropdown.change(selectedPreset);
+                }
+
+                add(presetDropdown, new Coord(UI.scale(8), y));
+                y += UI.scale(40);
+            }
+        }
+        if (desc.id.equals("equipment_bot")) {
+            hasAnySetting = true;
+            add(new Label("Select Preset:"), new Coord(UI.scale(8), y));
+            y += UI.scale(24);
+
+            // Load presets from EquipmentPresetManager
+            Map<String, EquipmentPreset> presetsMap = NUtils.getUI().core.equipmentPresetManager.getPresets();
+            List<EquipmentPreset> presetList = new ArrayList<>(presetsMap.values());
+            presetList.sort(Comparator.comparing(EquipmentPreset::getName));
+
+            if (presetList.isEmpty()) {
+                add(new Label("No presets available."), new Coord(UI.scale(8), y));
+                add(new Label("Create presets in Equipment"), new Coord(UI.scale(8), y + UI.scale(18)));
+                add(new Label("Bot settings first."), new Coord(UI.scale(8), y + UI.scale(36)));
+                y += UI.scale(60);
+            } else {
+                String currentId = (String) step.getSetting("presetId");
+                EquipmentPreset selectedPreset = null;
+                if (currentId != null) {
+                    selectedPreset = presetsMap.get(currentId);
+                }
+                if (selectedPreset == null && !presetList.isEmpty()) {
+                    selectedPreset = presetList.get(0);
+                }
+
+                final List<EquipmentPreset> finalPresetList = presetList;
+                Dropbox<EquipmentPreset> presetDropdown = new Dropbox<EquipmentPreset>(
+                        UI.scale(160),
+                        Math.min(presetList.size(), 10),
+                        UI.scale(22)
+                ) {
+                    @Override
+                    protected EquipmentPreset listitem(int i) { return finalPresetList.get(i); }
+                    @Override
+                    protected int listitems() { return finalPresetList.size(); }
+                    @Override
+                    protected void drawitem(GOut g, EquipmentPreset item, int i) {
+                        g.text(item.getName(), Coord.z);
+                    }
+                    @Override
+                    public void change(EquipmentPreset item) {
+                        super.change(item);
+                        if (item != null) {
+                            step.setSetting("presetId", item.getId());
                         }
                     }
                 };

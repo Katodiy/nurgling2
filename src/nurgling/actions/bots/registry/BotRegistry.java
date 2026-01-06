@@ -166,6 +166,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("pipeweedq", BotDescriptor.BotType.FARMING_QUALITY, "Pipeweed Farmer Quality", "Automatically harvests and replants pipeweed in X*Y cell patches.", true, true, PipeweedFarmerQ.class, "pipeweedq", false));
 
         // UTILS
+        bots.add(new BotDescriptor("equipment_bot", BotDescriptor.BotType.UTILS, "Equipment Bot", "Equip items from a saved preset.", true, false, EquipmentBot.class, "shieldsword", false));
         bots.add(new BotDescriptor("shieldsword", BotDescriptor.BotType.UTILS, "Equip Shield/Sword", "Equips shield and sword.", true, true, EquipShieldSword.class, "shieldsword", false));
         bots.add(new BotDescriptor("filwater", BotDescriptor.BotType.UTILS, "Fill Waterskins", "Fills waterskins.", true, true, FillWaterskins.class, "filwater", false));
         bots.add(new BotDescriptor("unbox", BotDescriptor.BotType.UTILS, "Free Containers", "Frees containers in area.", false, true, FreeContainersInArea.class, "unbox", false));

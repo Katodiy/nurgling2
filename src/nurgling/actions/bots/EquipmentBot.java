@@ -16,6 +16,7 @@ import java.util.Map;
 public class EquipmentBot implements Action {
 
     private final EquipmentPreset preset;
+    private final String presetId;
 
     private static class ItemLocation {
         final WItem item;
@@ -31,18 +32,39 @@ public class EquipmentBot implements Action {
 
     public EquipmentBot() {
         this.preset = null;
+        this.presetId = null;
     }
 
     public EquipmentBot(EquipmentPreset preset) {
         this.preset = preset;
+        this.presetId = null;
+    }
+
+    public EquipmentBot(Map<String, Object> settings) {
+        this.preset = null;
+        if (settings != null && settings.containsKey("presetId")) {
+            this.presetId = (String) settings.get("presetId");
+        } else {
+            this.presetId = null;
+        }
     }
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         Map<Integer, String> slotConfig;
 
-        if (preset != null) {
-            slotConfig = preset.getSlotConfig();
+        EquipmentPreset effectivePreset = preset;
+
+        // If no preset provided but have presetId (scenario mode), load it
+        if (effectivePreset == null && presetId != null) {
+            effectivePreset = NUtils.getUI().core.equipmentPresetManager.getPreset(presetId);
+            if (effectivePreset == null) {
+                return Results.ERROR("Equipment preset not found: " + presetId);
+            }
+        }
+
+        if (effectivePreset != null) {
+            slotConfig = effectivePreset.getSlotConfig();
         } else {
             return Results.ERROR("No equipment preset provided");
         }
