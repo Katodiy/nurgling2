@@ -235,7 +235,7 @@ public class CheeseOrdersPanel extends Panel {
             final TexI iconTex = new TexI(cheeseIcon);
             w.add(new Widget(new Coord(UI.scale(20), UI.scale(20))) {
                 public void draw(GOut g) {
-                    g.image(iconTex, Coord.z);
+                    g.image(iconTex, Coord.z, new Coord(UI.scale(20), UI.scale(20)));
                 }
             }, new Coord(iconColX + UI.scale(2), (baseHeight - UI.scale(20)) / 2));
         } else {
