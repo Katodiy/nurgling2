@@ -167,7 +167,8 @@ public class NConfig
         studyInfoOverlay,
         progressOverlay,
         volumeOverlay,
-        equipProxySlots
+        equipProxySlots,
+        equipmentBotConfig
     }
 
     public enum BBDisplayMode
