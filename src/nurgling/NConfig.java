@@ -167,7 +167,8 @@ public class NConfig
         studyInfoOverlay,
         progressOverlay,
         volumeOverlay,
-        equipProxySlots
+        equipProxySlots,
+        equipmentBotConfig
     }
 
     public enum BBDisplayMode
@@ -701,6 +702,14 @@ public class NConfig
      */
     public String getScenariosPath() {
         return ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
+    }
+
+    /**
+     * Gets the dynamic path for equipment presets configuration file
+     * Note: equipment presets are always stored globally, not per-profile
+     */
+    public String getEquipmentPresetsPath() {
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "equipment_presets.nurgling.json";
     }
 
     @SuppressWarnings("unchecked")
