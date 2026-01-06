@@ -33,7 +33,7 @@ public class BotRegistry {
                 "Global PF navigate to an area id",
                 true,
                 false,
-                null,
+                GotoArea.class,
                 "goto",
                 false
         ));
