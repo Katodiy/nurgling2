@@ -11,8 +11,9 @@ public class Carrier extends Window implements Checkable {
     public Carrier() {
         super(new Coord(200,200), "Carrier");
         NCarrierProp startprop = NCarrierProp.get(NUtils.getUI().sessInfo);
-        prev = add(new Label("Carrier Settings:"));
-        prev = add(textEntry = new TextEntry(300, startprop == null || startprop.object == null ? "" : startprop.object), prev.pos("bl").add(UI.scale(2,5)));
+        prev = add(new Label("Object name to move:"));
+        prev = add(textEntry = new TextEntry(300, startprop == null || startprop.object == null ? "" : startprop.object), prev.pos("bl").add(UI.scale(0,5)));
+        prev = add(new Label("(leave empty to move all liftable objects)"), prev.pos("bl").add(UI.scale(0, 2)));
         prev = add(new Button(UI.scale(150), "Start"){
             @Override
             public void click() {
