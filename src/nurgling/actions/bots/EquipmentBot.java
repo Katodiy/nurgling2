@@ -10,12 +10,24 @@ import nurgling.tasks.WaitFreeHand;
 import nurgling.widgets.NEquipory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class EquipmentBot implements Action {
 
     private final EquipmentPreset preset;
+
+    private static class ItemLocation {
+        final WItem item;
+        final boolean fromBelt;
+        final Coord beltCoord;
+
+        ItemLocation(WItem item, boolean fromBelt, Coord beltCoord) {
+            this.item = item;
+            this.fromBelt = fromBelt;
+            this.beltCoord = beltCoord;
+        }
+    }
 
     public EquipmentBot() {
         this.preset = null;
@@ -39,12 +51,10 @@ public class EquipmentBot implements Action {
             return Results.ERROR("Equipment configuration is empty");
         }
 
-        // Process each configured slot
         for (Map.Entry<Integer, String> entry : slotConfig.entrySet()) {
             int targetSlot = entry.getKey();
             String targetResName = entry.getValue();
 
-            // Check if item is already equipped in this slot
             WItem currentItem = NUtils.getEquipment().findItem(targetSlot);
             if (currentItem != null) {
                 Resource currentRes = currentItem.item.getres();
@@ -53,25 +63,23 @@ public class EquipmentBot implements Action {
                 }
             }
 
-            // Find the item - check belt first, then inventory
-            WItem itemToEquip = findItemInBelt(targetResName);
-            if (itemToEquip == null) {
-                itemToEquip = findItemInInventory(gui, targetResName);
+            ItemLocation itemLoc = findItemInBelt(targetResName);
+            if (itemLoc == null) {
+                itemLoc = findItemInInventory(gui, targetResName);
             }
 
-            if (itemToEquip == null) {
+            if (itemLoc == null) {
                 gui.msg("Item not found: " + getItemName(targetResName));
                 continue;
             }
 
-            // Equip the item
-            equipItem(gui, itemToEquip, targetSlot);
+            equipItem(gui, itemLoc, targetSlot);
         }
 
         return Results.SUCCESS();
     }
 
-    private WItem findItemInBelt(String resName) throws InterruptedException {
+    private ItemLocation findItemInBelt(String resName) throws InterruptedException {
         WItem beltSlot = NUtils.getEquipment().findItem(NEquipory.Slots.BELT.idx);
         if (beltSlot != null && beltSlot.item.contents instanceof NInventory) {
             NInventory beltInv = (NInventory) beltSlot.item.contents;
@@ -79,38 +87,52 @@ public class EquipmentBot implements Action {
             for (WItem item : items) {
                 Resource res = item.item.getres();
                 if (res != null && matchesResource(res.name, resName)) {
-                    return item;
+                    Coord beltCoord = item.c.div(Inventory.sqsz);
+                    return new ItemLocation(item, true, beltCoord);
                 }
             }
         }
         return null;
     }
 
-    private WItem findItemInInventory(NGameUI gui, String resName) throws InterruptedException {
+    private ItemLocation findItemInInventory(NGameUI gui, String resName) throws InterruptedException {
         NInventory inv = gui.getInventory();
         if (inv != null) {
             ArrayList<WItem> items = inv.getItems();
             for (WItem item : items) {
                 Resource res = item.item.getres();
                 if (res != null && matchesResource(res.name, resName)) {
-                    return item;
+                    return new ItemLocation(item, false, null);
                 }
             }
         }
         return null;
     }
 
-    private void equipItem(NGameUI gui, WItem item, int targetSlot) throws InterruptedException {
-        // Check if target slot is occupied and free it
-        WItem currentItem = NUtils.getEquipment().findItem(targetSlot);
-        if (currentItem != null) {
-            freeSlot(gui, currentItem);
+    private void equipItem(NGameUI gui, ItemLocation itemLoc, int targetSlot) throws InterruptedException {
+        boolean isTwoHanded = isTwoHanded(itemLoc.item);
+
+        // If two-handed, need to free BOTH hand slots
+        if (isTwoHanded && (targetSlot == NEquipory.Slots.HAND_LEFT.idx || targetSlot == NEquipory.Slots.HAND_RIGHT.idx)) {
+            int otherHandSlot = (targetSlot == NEquipory.Slots.HAND_LEFT.idx)
+                ? NEquipory.Slots.HAND_RIGHT.idx
+                : NEquipory.Slots.HAND_LEFT.idx;
+
+            WItem otherHandItem = NUtils.getEquipment().findItem(otherHandSlot);
+            if (otherHandItem != null) {
+                freeSlot(gui, otherHandItem, itemLoc.fromBelt, itemLoc.beltCoord);
+            }
         }
 
-        // Send take message to pick up item
-        item.item.wdgmsg("take", Coord.z);
+        // Free target slot if occupied
+        WItem currentItem = NUtils.getEquipment().findItem(targetSlot);
+        if (currentItem != null) {
+            freeSlot(gui, currentItem, itemLoc.fromBelt, itemLoc.beltCoord);
+        }
 
-        // Wait for item in hand
+        // Pick up item
+        itemLoc.item.item.wdgmsg("take", Coord.z);
+
         NUtils.getUI().core.addTask(new NTask() {
             @Override
             public boolean check() {
@@ -127,16 +149,13 @@ public class EquipmentBot implements Action {
         // Drop on equipment slot
         NUtils.getEquipment().wdgmsg("drop", targetSlot);
 
-        // Wait for item to appear in target slot or leave hand
         final int slot = targetSlot;
         NUtils.getUI().core.addTask(new NTask() {
             @Override
             public boolean check() {
-                // Success if item appeared in slot (direct array access, no exception)
                 if (NUtils.getEquipment().quickslots[slot] != null) {
                     return true;
                 }
-                // Also done if hand is empty (item went somewhere)
                 return NUtils.getGameUI().vhand == null;
             }
         });
@@ -155,11 +174,9 @@ public class EquipmentBot implements Action {
         }
     }
 
-    private void freeSlot(NGameUI gui, WItem slotItem) throws InterruptedException {
-        // Pick up item from slot
+    private void freeSlot(NGameUI gui, WItem slotItem, boolean sourceFromBelt, Coord sourceBeltCoord) throws InterruptedException {
         slotItem.item.wdgmsg("take", Coord.z);
 
-        // Wait for item in hand
         NUtils.getUI().core.addTask(new NTask() {
             @Override
             public boolean check() {
@@ -167,7 +184,24 @@ public class EquipmentBot implements Action {
             }
         });
 
-        // Put in inventory
+        if (NUtils.getGameUI().vhand == null) {
+            return;
+        }
+
+        // Try to put on belt first
+        WItem beltSlot = NUtils.getEquipment().findItem(NEquipory.Slots.BELT.idx);
+        if (beltSlot != null && beltSlot.item.contents instanceof NInventory) {
+            NInventory beltInv = (NInventory) beltSlot.item.contents;
+            int freeSpace = beltInv.getFreeSpace();
+
+            if (freeSpace > 0) {
+                if (tryTransferToBelt()) {
+                    return;
+                }
+            }
+        }
+
+        // Fall back to inventory
         NInventory inv = gui.getInventory();
         if (inv != null) {
             Coord pos = inv.getFreeCoord(NUtils.getGameUI().vhand);
@@ -178,6 +212,28 @@ public class EquipmentBot implements Action {
         }
     }
 
+    private boolean tryTransferToBelt() throws InterruptedException {
+        if (NUtils.getGameUI().vhand == null) {
+            return false;
+        }
+
+        NUtils.transferToBelt();
+
+        NUtils.getUI().core.addTask(new NTask() {
+            private int ticks = 0;
+            @Override
+            public boolean check() {
+                ticks++;
+                if (NUtils.getGameUI().vhand == null) {
+                    return true;
+                }
+                return ticks > 30;
+            }
+        });
+
+        return NUtils.getGameUI().vhand == null;
+    }
+
     private String getItemName(String resName) {
         if (resName.contains("/")) {
             return resName.substring(resName.lastIndexOf("/") + 1);
@@ -185,9 +241,6 @@ public class EquipmentBot implements Action {
         return resName;
     }
 
-    /**
-     * Matches resource names accounting for the /small/ variant used in belt/equipment.
-     */
     private boolean matchesResource(String actualRes, String configuredRes) {
         if (actualRes == null || configuredRes == null) {
             return false;
@@ -195,13 +248,33 @@ public class EquipmentBot implements Action {
         if (actualRes.equals(configuredRes)) {
             return true;
         }
-        // Check /small/ variant
         String smallVariant = configuredRes.replace("gfx/invobjs/", "gfx/invobjs/small/");
         if (actualRes.equals(smallVariant)) {
             return true;
         }
-        // Check reverse
         String normalVariant = configuredRes.replace("gfx/invobjs/small/", "gfx/invobjs/");
         return actualRes.equals(normalVariant);
+    }
+
+    private static final HashSet<String> TWO_HANDED_ITEMS = new HashSet<>();
+    static {
+        TWO_HANDED_ITEMS.add("Scythe");
+        TWO_HANDED_ITEMS.add("Pickaxe");
+        TWO_HANDED_ITEMS.add("Glass Blowing Rod");
+        TWO_HANDED_ITEMS.add("Boar Spear");
+        TWO_HANDED_ITEMS.add("Metal Shovel");
+        TWO_HANDED_ITEMS.add("Tinker's Shovel");
+        TWO_HANDED_ITEMS.add("Wooden Shovel");
+        TWO_HANDED_ITEMS.add("Dowsing Rod");
+        TWO_HANDED_ITEMS.add("Battle Axe of the Twelfth Bay");
+        TWO_HANDED_ITEMS.add("Cutblade");
+    }
+
+    private boolean isTwoHanded(WItem item) {
+        if (item == null || item.item == null) {
+            return false;
+        }
+        String name = ((NGItem) item.item).name();
+        return TWO_HANDED_ITEMS.contains(name);
     }
 }
