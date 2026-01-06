@@ -71,7 +71,7 @@ public class StepSettingsPanel extends Widget {
                 selectedArea = areaList.get(0);
             }
 
-            Dropbox<NArea> areaDropdown = new Dropbox<NArea>(
+            NDropbox<NArea> areaDropdown = new NDropbox<NArea>(
                     UI.scale(160),
                     Math.min(areaList.size(), 10),
                     UI.scale(22)
@@ -127,7 +127,7 @@ public class StepSettingsPanel extends Widget {
                 }
 
                 final List<String> finalPresetNames = presetNames;
-                Dropbox<String> presetDropdown = new Dropbox<String>(
+                NDropbox<String> presetDropdown = new NDropbox<String>(
                         UI.scale(160),
                         Math.min(presetNames.size(), 10),
                         UI.scale(22)
