@@ -11,8 +11,8 @@ public class ParasiteSettings extends Panel {
     private Dropbox<String> leechActionDropbox;
     private Dropbox<String> tickActionDropbox;
 
-    private static final List<String> ACTIONS = Arrays.asList("ground", "inventory");
-    private static final List<String> ACTION_LABELS = Arrays.asList("Drop to ground", "Move to inventory");
+    private static final List<String> ACTIONS = Arrays.asList("nothing", "ground", "inventory");
+    private static final List<String> ACTION_LABELS = Arrays.asList("Do nothing", "Drop to ground", "Move to inventory");
 
     public ParasiteSettings() {
         super("Parasite Bot Settings");
