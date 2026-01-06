@@ -1,12 +1,20 @@
 package nurgling.widgets.nsettings;
 
 import haven.*;
-import nurgling.NConfig;
+import nurgling.NStyle;
 import nurgling.NUtils;
-import nurgling.widgets.NEquipory;
+import nurgling.actions.bots.EquipmentBot;
+import nurgling.equipment.EquipmentPreset;
+import nurgling.equipment.EquipmentPresetIcons;
+import nurgling.equipment.EquipmentPresetManager;
+import nurgling.widgets.NEquipmentPresetButton;
+import nurgling.widgets.TextInputWindow;
 
-import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static haven.Inventory.invsq;
@@ -16,90 +24,169 @@ import static haven.Equipory.etts;
 
 public class EquipmentBotSettings extends Panel implements DTarget {
 
-    // Slot configuration: slot index -> resource name
-    private final Map<Integer, String> slotConfig = new HashMap<>();
+    private EquipmentPresetManager manager;
+    private final int margin = UI.scale(10);
 
-    // Cached textures for configured items (scaled to fit slot)
+    private final Widget listPanel;
+    private Widget editorPanel = null;
+
+    private final SListBox<EquipmentPreset, Widget> presetList;
+    private final TextEntry presetNameEntry;
+
+    private EquipmentPreset editingPreset = null;
+
+    // Slot configuration for editor
+    private final Map<Integer, String> slotConfig = new HashMap<>();
     private final Map<Integer, Tex> slotTextures = new HashMap<>();
 
-    // Grid offset for drawing
-    private static final Coord gridOffset = UI.scale(new Coord(10, 70));
-
-    // Slot size (same as inventory slot)
+    // Grid offset for drawing equipment slots in editor (must be below the labels which end ~y=94)
+    private static final Coord gridOffset = UI.scale(new Coord(10, 110));
     private static final Coord slotSize = Inventory.sqsz;
 
     public EquipmentBotSettings() {
-        super("Equipment Bot Settings");
+        super("");
 
-        // Buttons positioned below the equipment slots (slots go to row 10, ~11 rows total)
-        int y = UI.scale(480);
+        int btnWidth = UI.scale(120);
+        int btnHeight = UI.scale(28);
+        int titleY = UI.scale(40);
 
-        add(new Label("Drag items from inventory onto slots to configure."), UI.scale(10, 36));
-        add(new Label("Right-click a slot to clear it."), UI.scale(10, 52));
+        int contentWidth = sz.x - margin * 2;
+        int contentHeight = sz.y - titleY;
+        int slistHeight = UI.scale(400);
 
-        // Add clear all button
-        add(new Button(UI.scale(100), "Clear All") {
+        // List Panel
+        listPanel = add(new Widget(new Coord(contentWidth, contentHeight)), new Coord(margin, margin));
+        listPanel.add(new Label("Equipment Presets:"), new Coord(0, 0));
+        listPanel.add(new Label("Drag buttons to quick actions bar"), new Coord(0, UI.scale(16)));
+
+        int slistWidth = contentWidth - margin * 2;
+        SListBox<EquipmentPreset, Widget> presetListBox = new SListBox<EquipmentPreset, Widget>(new Coord(slistWidth, slistHeight), UI.scale(40)) {
+            private NEquipmentPresetButton drag = null;
+            private UI.Grab grab = null;
+
             @Override
-            public void click() {
-                slotConfig.clear();
-                slotTextures.clear();
+            protected List<EquipmentPreset> items() {
+                return manager != null ? new ArrayList<>(manager.getPresets().values()) : Collections.emptyList();
             }
-        }, new Coord(UI.scale(10), y));
 
-        // Add equip now button
-        add(new Button(UI.scale(100), "Equip Now") {
             @Override
-            public void click() {
-                equipConfiguredItems();
+            public void draw(GOut g, boolean strict) {
+                super.draw(g, strict);
+                if (drag != null) {
+                    BufferedImage ds = drag.up;
+                    Coord dssz = new Coord(ds.getWidth(), ds.getHeight());
+                    ui.drawafter(new UI.AfterDraw() {
+                        public void draw(GOut g) {
+                            g.reclip(ui.mc.sub(dssz.div(2)), dssz);
+                            g.image(new TexI(ds), ui.mc);
+                        }
+                    });
+                }
             }
-        }, new Coord(UI.scale(120), y));
+
+            public void drag(NEquipmentPresetButton btn) {
+                if (grab == null)
+                    grab = ui.grabmouse(this);
+                drag = btn;
+            }
+
+            @Override
+            public boolean mouseup(MouseUpEvent ev) {
+                if ((grab != null) && (ev.b == 1)) {
+                    grab.remove();
+                    grab = null;
+                    if (drag != null) {
+                        DropTarget.dropthing(ui.root, ev.c.add(rootpos()), drag);
+                        drag = null;
+                    }
+                    return true;
+                }
+                return super.mouseup(ev);
+            }
+
+            @Override
+            protected Widget makeitem(EquipmentPreset item, int idx, Coord sz) {
+                return new PresetItemWidget(this, sz, item);
+            }
+        };
+        presetList = listPanel.add(presetListBox, new Coord(margin, margin + UI.scale(36)));
+
+        int bottomY = contentHeight - margin - btnHeight;
+
+        listPanel.add(
+            new Button(btnWidth, "Add Preset", this::addPreset),
+            new Coord((contentWidth - btnWidth) / 2, bottomY - btnHeight - UI.scale(8))
+        );
+
+        // Editor Panel
+        editorPanel = add(new Widget(new Coord(contentWidth, contentHeight)), new Coord(margin, margin));
+        editorPanel.hide();
+
+        int y = margin;
+        editorPanel.add(new Label("Edit Preset:"), new Coord(0, 0));
+        y += UI.scale(22);
+
+        presetNameEntry = editorPanel.add(new TextEntry(contentWidth - margin * 2 - 10, ""), new Coord(margin, y));
+        y += UI.scale(36);
+
+        editorPanel.add(new Label("Drag items from inventory onto slots:"), new Coord(margin, y));
+        y += UI.scale(18);
+        editorPanel.add(new Label("Right-click a slot to clear it."), new Coord(margin, y));
+
+        // Equipment slots are drawn in draw() method
+
+        // Buttons at bottom
+        int btnY = bottomY - btnHeight - UI.scale(8);
+        editorPanel.add(new Button(btnWidth, "Equip Now", this::equipNow), new Coord(margin, btnY));
+
+        editorPanel.pack();
+        pack();
+
+        showListPanel();
     }
 
     @Override
     public void draw(GOut g) {
         super.draw(g);
 
-        // Draw all equipment slots using the same layout as Equipory
-        for (int i = 0; i < ecoords.length; i++) {
-            Coord pos = gridOffset.add(ecoords[i]);
+        // Draw equipment slots only in editor panel
+        if (editorPanel != null && editorPanel.visible()) {
+            // Adjust position for editor panel offset
+            Coord panelPos = editorPanel.c;
 
-            // Draw slot background (inventory square)
-            g.image(invsq, pos);
+            for (int i = 0; i < ecoords.length; i++) {
+                Coord pos = panelPos.add(gridOffset).add(ecoords[i]);
 
-            // Draw slot type indicator (the little icon showing what type of slot)
-            if (ebgs[i] != null) {
-                g.image(ebgs[i], pos);
-            }
+                g.image(invsq, pos);
 
-            // Draw configured item if any
-            if (slotConfig.containsKey(i)) {
-                Tex itemTex = slotTextures.get(i);
-                if (itemTex != null) {
-                    // Scale and center the item texture to fit in slot
-                    Coord texSz = itemTex.sz();
-                    Coord targetSz = slotSize.sub(2, 2); // Leave 1px border
+                if (ebgs[i] != null) {
+                    g.image(ebgs[i], pos);
+                }
 
-                    // Calculate scale factor to fit in slot
-                    double scale = Math.min(
-                        (double) targetSz.x / texSz.x,
-                        (double) targetSz.y / texSz.y
-                    );
+                if (slotConfig.containsKey(i)) {
+                    Tex itemTex = slotTextures.get(i);
+                    if (itemTex != null) {
+                        Coord texSz = itemTex.sz();
+                        Coord targetSz = slotSize.sub(2, 2);
 
-                    if (scale < 1.0) {
-                        // Need to scale down
-                        Coord scaledSz = new Coord((int)(texSz.x * scale), (int)(texSz.y * scale));
-                        Coord drawPos = pos.add(1, 1).add(targetSz.sub(scaledSz).div(2));
-                        g.image(itemTex, drawPos, scaledSz);
+                        double scale = Math.min(
+                            (double) targetSz.x / texSz.x,
+                            (double) targetSz.y / texSz.y
+                        );
+
+                        if (scale < 1.0) {
+                            Coord scaledSz = new Coord((int)(texSz.x * scale), (int)(texSz.y * scale));
+                            Coord drawPos = pos.add(1, 1).add(targetSz.sub(scaledSz).div(2));
+                            g.image(itemTex, drawPos, scaledSz);
+                        } else {
+                            Coord drawPos = pos.add(slotSize.div(2)).sub(texSz.div(2));
+                            g.image(itemTex, drawPos);
+                        }
                     } else {
-                        // No scaling needed, just center
-                        Coord drawPos = pos.add(slotSize.div(2)).sub(texSz.div(2));
-                        g.image(itemTex, drawPos);
+                        g.chcolor(100, 150, 100, 180);
+                        g.frect(pos.add(2, 2), slotSize.sub(4, 4));
+                        g.chcolor();
                     }
-                } else {
-                    // Draw placeholder if texture not loaded
-                    g.chcolor(100, 150, 100, 180);
-                    g.frect(pos.add(2, 2), slotSize.sub(4, 4));
-                    g.chcolor();
                 }
             }
         }
@@ -107,28 +194,28 @@ public class EquipmentBotSettings extends Panel implements DTarget {
 
     @Override
     public Object tooltip(Coord c, Widget prev) {
-        int slot = getSlotAt(c);
-        if (slot >= 0 && slot < ecoords.length) {
-            // Use the actual slot tooltip from Equipory
-            String slotName = (etts[slot] != null) ? etts[slot].text : "Slot " + slot;
+        if (editorPanel != null && editorPanel.visible()) {
+            int slot = getSlotAt(c);
+            if (slot >= 0 && slot < ecoords.length) {
+                String slotName = (etts[slot] != null) ? etts[slot].text : "Slot " + slot;
 
-            if (slotConfig.containsKey(slot)) {
-                String resName = slotConfig.get(slot);
-                // Extract just the item name from resource path
-                String itemName = resName;
-                if (resName.contains("/")) {
-                    itemName = resName.substring(resName.lastIndexOf("/") + 1);
+                if (slotConfig.containsKey(slot)) {
+                    String resName = slotConfig.get(slot);
+                    String itemName = resName;
+                    if (resName.contains("/")) {
+                        itemName = resName.substring(resName.lastIndexOf("/") + 1);
+                    }
+                    return slotName + ": " + itemName;
                 }
-                return slotName + ": " + itemName;
+                return slotName + " (empty)";
             }
-            return slotName + " (empty)";
         }
         return super.tooltip(c, prev);
     }
 
     @Override
     public boolean mousedown(MouseDownEvent ev) {
-        if (ev.b == 3) { // Right-click to clear
+        if (editorPanel != null && editorPanel.visible() && ev.b == 3) {
             int slot = getSlotAt(ev.c);
             if (slot >= 0) {
                 slotConfig.remove(slot);
@@ -141,21 +228,22 @@ public class EquipmentBotSettings extends Panel implements DTarget {
 
     @Override
     public boolean drop(Coord cc, Coord ul) {
-        int slot = getSlotAt(cc);
-        if (slot >= 0) {
-            WItem handItem = NUtils.getGameUI().vhand;
-            if (handItem != null && handItem.item != null) {
-                Resource res = handItem.item.getres();
-                if (res != null) {
-                    String resName = res.name;
-                    slotConfig.put(slot, resName);
+        if (editorPanel != null && editorPanel.visible()) {
+            int slot = getSlotAt(cc);
+            if (slot >= 0) {
+                WItem handItem = NUtils.getGameUI().vhand;
+                if (handItem != null && handItem.item != null) {
+                    Resource res = handItem.item.getres();
+                    if (res != null) {
+                        String resName = res.name;
+                        slotConfig.put(slot, resName);
 
-                    // Cache the item texture
-                    Resource.Image img = res.layer(Resource.imgc);
-                    if (img != null) {
-                        slotTextures.put(slot, new TexI(img.scaled()));
+                        Resource.Image img = res.layer(Resource.imgc);
+                        if (img != null) {
+                            slotTextures.put(slot, new TexI(img.scaled()));
+                        }
+                        return true;
                     }
-                    return true;
                 }
             }
         }
@@ -168,8 +256,12 @@ public class EquipmentBotSettings extends Panel implements DTarget {
     }
 
     private int getSlotAt(Coord c) {
+        if (editorPanel == null || !editorPanel.visible()) {
+            return -1;
+        }
+        Coord panelPos = editorPanel.c;
         for (int i = 0; i < ecoords.length; i++) {
-            Coord pos = gridOffset.add(ecoords[i]);
+            Coord pos = panelPos.add(gridOffset).add(ecoords[i]);
             if (c.isect(pos, slotSize)) {
                 return i;
             }
@@ -178,59 +270,110 @@ public class EquipmentBotSettings extends Panel implements DTarget {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void load() {
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            this.manager = NUtils.getUI().core.equipmentPresetManager;
+            presetList.update();
+        }
+        showListPanel();
+    }
+
+    @Override
+    public void save() {
+        savePreset();
+    }
+
+    @Override
+    public void show() {
+        super.show();
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+            this.manager = NUtils.getUI().core.equipmentPresetManager;
+            presetList.update();
+        }
+        showListPanel();
+    }
+
+    private void showListPanel() {
+        listPanel.show();
+        editorPanel.hide();
+        presetList.update();
+    }
+
+    private void showEditorPanel() {
+        listPanel.hide();
+        editorPanel.show();
+        presetNameEntry.settext(editingPreset != null ? editingPreset.getName() : "");
+
+        // Load slot config from editing preset
         slotConfig.clear();
         slotTextures.clear();
-
-        Object configObj = NConfig.get(NConfig.Key.equipmentBotConfig);
-        if (configObj instanceof Map) {
-            Map<String, Object> config = (Map<String, Object>) configObj;
-            for (Map.Entry<String, Object> entry : config.entrySet()) {
+        if (editingPreset != null) {
+            for (Map.Entry<Integer, String> entry : editingPreset.getSlotConfig().entrySet()) {
+                slotConfig.put(entry.getKey(), entry.getValue());
                 try {
-                    int slot = Integer.parseInt(entry.getKey());
-                    String resName = (String) entry.getValue();
-                    slotConfig.put(slot, resName);
-
-                    // Try to load texture
-                    try {
-                        Resource res = Resource.remote().loadwait(resName);
-                        if (res != null) {
-                            Resource.Image img = res.layer(Resource.imgc);
-                            if (img != null) {
-                                slotTextures.put(slot, new TexI(img.scaled()));
-                            }
+                    Resource res = Resource.remote().loadwait(entry.getValue());
+                    if (res != null) {
+                        Resource.Image img = res.layer(Resource.imgc);
+                        if (img != null) {
+                            slotTextures.put(entry.getKey(), new TexI(img.scaled()));
                         }
-                    } catch (Exception e) {
-                        // Resource not available, will show placeholder
                     }
-                } catch (NumberFormatException e) {
-                    // Skip invalid entries
+                } catch (Exception e) {
+                    // Resource not available
                 }
             }
         }
     }
 
-    @Override
-    public void save() {
-        Map<String, String> config = new HashMap<>();
-        for (Map.Entry<Integer, String> entry : slotConfig.entrySet()) {
-            config.put(String.valueOf(entry.getKey()), entry.getValue());
-        }
-        NConfig.set(NConfig.Key.equipmentBotConfig, config);
-        NConfig.needUpdate();
+    private void editPreset(EquipmentPreset preset) {
+        editingPreset = new EquipmentPreset(preset.toJson());
+        showEditorPanel();
     }
 
-    private void equipConfiguredItems() {
+    private void addPreset() {
+        if (manager == null) {
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+                this.manager = NUtils.getUI().core.equipmentPresetManager;
+            } else {
+                return;
+            }
+        }
+        editingPreset = new EquipmentPreset("New Preset");
+        showEditorPanel();
+    }
+
+    private void deletePreset(EquipmentPreset preset) {
+        if (manager != null) {
+            manager.deletePreset(preset.getId());
+            manager.writePresets(null);
+            presetList.update();
+        }
+    }
+
+    private void savePreset() {
+        if (manager != null && editingPreset != null) {
+            editingPreset.setName(presetNameEntry.text());
+            editingPreset.setSlotConfig(new HashMap<>(slotConfig));
+            manager.addOrUpdatePreset(editingPreset);
+            manager.writePresets(null);
+        }
+        editingPreset = null;
+        showListPanel();
+    }
+
+    private void equipNow() {
         if (slotConfig.isEmpty()) {
-            NUtils.getGameUI().msg("No equipment configured!", Color.YELLOW);
+            NUtils.getGameUI().msg("No equipment configured!");
             return;
         }
 
-        // Run the equipment bot
+        // Create a temporary preset with current config
+        EquipmentPreset tempPreset = new EquipmentPreset("Temp");
+        tempPreset.setSlotConfig(new HashMap<>(slotConfig));
+
         Thread t = new Thread(() -> {
             try {
-                new nurgling.actions.bots.EquipmentBot().run(NUtils.getGameUI());
+                new EquipmentBot(tempPreset).run(NUtils.getGameUI());
             } catch (InterruptedException e) {
                 NUtils.getGameUI().msg("Equipment bot stopped.");
             }
@@ -238,5 +381,84 @@ public class EquipmentBotSettings extends Panel implements DTarget {
 
         NUtils.getGameUI().biw.addObserve(t);
         t.start();
+    }
+
+    private class PresetItemWidget extends Widget {
+        private final Object parentList;
+        private final EquipmentPreset preset;
+        private NEquipmentPresetButton presetBtn;
+        private Coord dp;
+
+        PresetItemWidget(Object parentList, Coord sz, EquipmentPreset preset) {
+            super(sz);
+            this.parentList = parentList;
+            this.preset = preset;
+
+            Label label = new Label(preset.getName());
+
+            int btnW = UI.scale(60);
+            int btnS = UI.scale(8);
+            int rightPad = UI.scale(10);
+            int presetBtnSize = UI.scale(32);
+            int presetBtnSpacing = UI.scale(12);
+
+            // Add draggable preset button at the far left
+            presetBtn = new NEquipmentPresetButton(preset);
+            add(presetBtn, new Coord(margin, (sz.y - presetBtnSize) / 2));
+
+            int editBtnX = sz.x - rightPad - btnW * 2 - btnS;
+            int deleteBtnX = sz.x - rightPad - btnW;
+
+            int labelX = margin + presetBtnSize + presetBtnSpacing;
+
+            add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
+            int itemBtnHeight = UI.scale(28);
+            add(new Button(btnW, "Edit", () -> editPreset(preset)), new Coord(editBtnX, (sz.y - itemBtnHeight) / 2));
+            add(new Button(btnW, "Delete", () -> deletePreset(preset)), new Coord(deleteBtnX, (sz.y - itemBtnHeight) / 2));
+        }
+
+        @Override
+        public boolean mousedown(MouseDownEvent ev) {
+            Coord btnPos = presetBtn.c;
+            Coord btnSz = presetBtn.sz;
+            if (ev.c.isect(btnPos, btnSz)) {
+                if (ev.b == 1) {
+                    dp = ev.c;
+                    return true;
+                }
+            }
+            return super.mousedown(ev);
+        }
+
+        @Override
+        public void mousemove(MouseMoveEvent ev) {
+            if ((dp != null) && (ev.c.dist(dp) > 5)) {
+                dp = null;
+                try {
+                    java.lang.reflect.Method dragMethod = parentList.getClass().getMethod("drag", NEquipmentPresetButton.class);
+                    dragMethod.invoke(parentList, presetBtn);
+                } catch (Exception e) {
+                    // Fallback
+                }
+            }
+            super.mousemove(ev);
+        }
+
+        @Override
+        public boolean mouseup(MouseUpEvent ev) {
+            if (dp != null) {
+                Coord btnPos = presetBtn.c;
+                Coord btnSz = presetBtn.sz;
+                if (ev.c.isect(btnPos, btnSz) && ev.c.dist(dp) <= 5) {
+                    dp = null;
+                    presetBtn.click();
+                    return true;
+                } else {
+                    dp = null;
+                    return true;
+                }
+            }
+            return super.mouseup(ev);
+        }
     }
 }

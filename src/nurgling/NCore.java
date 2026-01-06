@@ -11,6 +11,7 @@ import monitoring.NGlobalSearchItems;
 import nurgling.actions.AutoDrink;
 import nurgling.actions.AutoSaveTableware;
 import nurgling.iteminfo.NFoodInfo;
+import nurgling.equipment.EquipmentPresetManager;
 import nurgling.scenarios.ScenarioManager;
 import nurgling.tasks.*;
 import nurgling.tools.NSearchItem;
@@ -30,6 +31,7 @@ public class NCore extends Widget
     public AutoDrink autoDrink = null;
     public AutoSaveTableware autoSaveTableware = null;
     public ScenarioManager scenarioManager = new ScenarioManager();
+    public EquipmentPresetManager equipmentPresetManager = new EquipmentPresetManager();
 
     public static volatile nurgling.db.DatabaseManager databaseManager = null;
     public boolean isInspectMode()

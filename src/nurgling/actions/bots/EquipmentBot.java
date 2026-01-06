@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.*;
 import nurgling.actions.Action;
 import nurgling.actions.Results;
+import nurgling.equipment.EquipmentPreset;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitFreeHand;
 import nurgling.widgets.NEquipory;
@@ -14,34 +15,28 @@ import java.util.Map;
 
 public class EquipmentBot implements Action {
 
+    private final EquipmentPreset preset;
+
+    public EquipmentBot() {
+        this.preset = null;
+    }
+
+    public EquipmentBot(EquipmentPreset preset) {
+        this.preset = preset;
+    }
+
     @Override
-    @SuppressWarnings("unchecked")
     public Results run(NGameUI gui) throws InterruptedException {
-        // Load configuration
-        Object configObj = NConfig.get(NConfig.Key.equipmentBotConfig);
-        if (!(configObj instanceof Map)) {
-            return Results.ERROR("No equipment configuration found");
+        Map<Integer, String> slotConfig;
+
+        if (preset != null) {
+            slotConfig = preset.getSlotConfig();
+        } else {
+            return Results.ERROR("No equipment preset provided");
         }
 
-        Map<String, Object> config = (Map<String, Object>) configObj;
-        if (config.isEmpty()) {
+        if (slotConfig == null || slotConfig.isEmpty()) {
             return Results.ERROR("Equipment configuration is empty");
-        }
-
-        // Parse configuration into slot -> resource name map
-        Map<Integer, String> slotConfig = new HashMap<>();
-        for (Map.Entry<String, Object> entry : config.entrySet()) {
-            try {
-                int slot = Integer.parseInt(entry.getKey());
-                String resName = (String) entry.getValue();
-                slotConfig.put(slot, resName);
-            } catch (NumberFormatException e) {
-                // Skip invalid entries
-            }
-        }
-
-        if (slotConfig.isEmpty()) {
-            return Results.ERROR("No valid slot configurations found");
         }
 
         // Process each configured slot
