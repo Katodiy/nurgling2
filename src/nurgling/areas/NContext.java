@@ -930,6 +930,16 @@ public class NContext {
         return Double.MAX_VALUE;
     }
 
+    /**
+     * Calculate distance to an area by areaId using ChunkNav.
+     * Returns Double.MAX_VALUE if area is unreachable.
+     */
+    public double getDistanceToAreaById(String areaId, NGameUI gui) {
+        NArea area = areas.get(areaId);
+        if (area == null) return Double.MAX_VALUE;
+        return getDistanceToArea(area, gui);
+    }
+
     public static NArea findInGlobal(String name) {
         return findInGlobal(new NAlias(name));
     }
