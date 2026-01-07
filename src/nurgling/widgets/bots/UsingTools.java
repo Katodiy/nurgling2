@@ -120,14 +120,14 @@ public class UsingTools extends Widget {
 
         public Tool(String path, String name)
         {
-            this.img = new TexI(Resource.remote().loadwait(path).layer(Resource.imgc).scaled());
+            this.img = new TexI(Resource.remote().loadwait(path).layer(Resource.imgc).img);
             this.path = path;
             this.name = name;
         }
 
         public Tool(String path, String name, String apath)
         {
-            this.img = new TexI(Resource.remote().loadwait(apath).layer(Resource.imgc).scaled());
+            this.img = new TexI(Resource.remote().loadwait(apath).layer(Resource.imgc).img);
             this.name = name;
             this.path = path;
         }
@@ -160,7 +160,7 @@ public class UsingTools extends Widget {
             for(Tool ing: data)
             {
                 GOut sg = g.reclip(pos, invsq.sz());
-                sg.image(ing.img, Coord.z, UI.scale(Inventory.sqsz));
+                sg.image(ing.img, Coord.z, Inventory.sqsz);
                 if(shift.x<5)
                 {
                     pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);
