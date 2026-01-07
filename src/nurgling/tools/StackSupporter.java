@@ -164,6 +164,10 @@ public class StackSupporter {
         catExceptions.add("Whirling Snowflake");
         catExceptions.add("Precious Snowflake");
         catExceptions.add("Sleighbell");
+        catExceptions.add("Billygoat Horn");
+        catExceptions.add("Ant Chitin");
+        catExceptions.add("Bee Chitin");
+        catExceptions.add("Cave Louse Chitin");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
     public static boolean isStackable(NInventory inv, String name)
