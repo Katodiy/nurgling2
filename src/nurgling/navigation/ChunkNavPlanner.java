@@ -173,8 +173,9 @@ public class ChunkNavPlanner {
         int maxY = Math.min(CHUNK_SIZE - 1, varea.area.br.y);
 
         // Search around the edges of the area for walkable tiles
-        // Check tiles just outside the area bounds first
-        for (int dist = 0; dist <= 5; dist++) {
+        // Prefer outside (dist=2,1) then fallback to inside (dist=0)
+        int[] distances = {2, 1, 0};
+        for (int dist : distances) {
             // Check around the perimeter at this distance
             for (int x = minX - dist; x <= maxX + dist; x++) {
                 for (int y = minY - dist; y <= maxY + dist; y++) {
