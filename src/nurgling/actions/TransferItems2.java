@@ -125,28 +125,21 @@ public class TransferItems2 implements Action
         }
 
         // Step 3: Process each threshold group in order (highest first)
-        // Within each group, optimize area visit order by distance
         for (ThresholdGroup group : thresholdGroups.values()) {
 
-            for (String areaId : group.itemsByArea.keySet()) {
-                List<ItemTransfer> itemsForArea = group.itemsByArea.get(areaId);
-
-                for (ItemTransfer itemTransfer : itemsForArea) {
-                    ArrayList<NContext.ObjectStorage> storages = cnt.getOutStorages(itemTransfer.itemName, itemTransfer.quality);
-                    for (NContext.ObjectStorage output : storages) {
-                        if (output instanceof NContext.Pile) {
-                            new TransferToPiles(cnt.getRCArea(areaId), itemTransfer.itemName,
-                                (int)itemTransfer.quality).run(gui);
-                        }
-                        if (output instanceof Container) {
-                            new TransferToContainer((Container) output, itemTransfer.itemName,
-                                (int)itemTransfer.quality).run(gui);
-                        }
-                        if (output instanceof NContext.Barrel) {
-                            new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),
-                                itemTransfer.itemName).run(gui);
-                        }
-                    }
+            if (group.threshold > 1) {
+                // Items with thresholds: process in arbitrary order (no optimization needed)
+                for (String areaId : group.itemsByArea.keySet()) {
+                    processAreaTransfers(areaId, group.itemsByArea.get(areaId), gui);
+                }
+            } else {
+                // Items without thresholds (threshold <= 1): use greedy nearest neighbor
+                Map<String, List<ItemTransfer>> remaining = new HashMap<>(group.itemsByArea);
+                while (!remaining.isEmpty()) {
+                    String nearestAreaId = findNearestArea(remaining.keySet(), gui);
+                    if (nearestAreaId == null) break;
+                    processAreaTransfers(nearestAreaId, remaining.get(nearestAreaId), gui);
+                    remaining.remove(nearestAreaId);
                 }
             }
         }
@@ -154,6 +147,53 @@ public class TransferItems2 implements Action
         return Results.SUCCESS();
     }
 
+
+    /**
+     * Process all item transfers for a specific area.
+     */
+    private void processAreaTransfers(String areaId, List<ItemTransfer> itemsForArea, NGameUI gui) throws InterruptedException {
+        for (ItemTransfer itemTransfer : itemsForArea) {
+            ArrayList<NContext.ObjectStorage> storages = cnt.getOutStorages(itemTransfer.itemName, itemTransfer.quality);
+            for (NContext.ObjectStorage output : storages) {
+                if (output instanceof NContext.Pile) {
+                    new TransferToPiles(cnt.getRCArea(areaId), itemTransfer.itemName,
+                        (int)itemTransfer.quality).run(gui);
+                }
+                if (output instanceof Container) {
+                    new TransferToContainer((Container) output, itemTransfer.itemName,
+                        (int)itemTransfer.quality).run(gui);
+                }
+                if (output instanceof NContext.Barrel) {
+                    new TransferToBarrel(Finder.findGob(((NContext.Barrel) output).barrel),
+                        itemTransfer.itemName).run(gui);
+                }
+            }
+        }
+    }
+
+    /**
+     * Find the nearest area from a set of area IDs using ChunkNav path cost.
+     * Recalculates from current player position for greedy optimization.
+     */
+    private String findNearestArea(Set<String> areaIds, NGameUI gui) {
+        String nearest = null;
+        double minDist = Double.MAX_VALUE;
+
+        for (String areaId : areaIds) {
+            double dist = cnt.getDistanceToAreaById(areaId, gui);
+            if (dist < minDist) {
+                minDist = dist;
+                nearest = areaId;
+            }
+        }
+
+        // Fallback if no path found for any area
+        if (nearest == null && !areaIds.isEmpty()) {
+            nearest = areaIds.iterator().next();
+        }
+
+        return nearest;
+    }
 
     /**
      * Gets items from inventory with exact name match only.
