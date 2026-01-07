@@ -34,6 +34,11 @@ public class StarvationAlertWidget extends Widget {
     public void tick(double dt) {
         super.tick(dt);
 
+        // Check if game UI is available
+        if (NUtils.getGameUI() == null) {
+            return;
+        }
+
         // Check if system is enabled
         Boolean enabled = (Boolean) NConfig.get(NConfig.Key.starvationAlertEnabled);
         if (enabled == null || !enabled) {
