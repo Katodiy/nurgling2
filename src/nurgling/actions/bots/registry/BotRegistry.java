@@ -198,6 +198,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("autoflaction", BotDescriptor.BotType.UTILS, "Drop Soil", "Drops soil from stockpile until there is 10 soil left in the stockpile..", false, true, SoilStockpileDropper.class, "dropsoil", false));
         bots.add(new BotDescriptor("measure_length", BotDescriptor.BotType.UTILS, "Zone Measure Tool", "Measure and mark zones on the ground. Select areas, view dimensions, and manage multiple selections.", false, true, ZoneMeasureTool.class, "measuring_length", false));
         bots.add(new BotDescriptor("sortcontainer", BotDescriptor.BotType.UTILS, "Sort Container", "Sorts items in an open container by quality. Groups items by type and stacks optimally. Requires empty player inventory.", false, true, SortContainerByQuality.class, "test45", false));
+        bots.add(new BotDescriptor("takebyquality", BotDescriptor.BotType.UTILS, "Take By Quality", "Takes items from open container to inventory by quality (highest first). Stacks items when possible. Stops when inventory full.", false, true, TakeItemsByQuality.class, "test46", false));
 
         // BUILD
         bots.add(new BotDescriptor("dframe", BotDescriptor.BotType.BUILD, "Build Drying Frame", "Builds drying frame.", false, true, BuildDryingFrame.class, "dframe", true));

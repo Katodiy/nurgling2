@@ -103,7 +103,7 @@ public class SortContainerByQuality implements Action {
             totalItems += entry.stackSize;
         }
 
-        int maxStackSize = StackSupporter.getMaxStackSize(itemType);
+        int maxStackSize = StackSupporter.getFullStackSize(itemType);
         if (maxStackSize <= 1) {
             return totalItems;
         }
