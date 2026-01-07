@@ -101,6 +101,7 @@ public class NSettingsWindow extends Widget {
         bots.addChild(new SettingsItem("Pickling Settings", new PicklingSettings(), container));
         bots.addChild(new SettingsItem("Parasite Bot", new ParasiteSettings(), container));
         bots.addChild(new SettingsItem("Equipment Bot", new EquipmentBotSettings(), container));
+        bots.addChild(new SettingsItem("Starvation Alert", new StarvationAlertSettings(), container));
 
         list.addCategory(general);
         list.addCategory(gameenvironment);
