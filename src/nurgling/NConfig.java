@@ -168,7 +168,15 @@ public class NConfig
         progressOverlay,
         volumeOverlay,
         equipProxySlots,
-        equipmentBotConfig
+        equipmentBotConfig,
+        // Starvation alert settings
+        starvationAlertEnabled,
+        starvationPopup1Threshold,
+        starvationPopup2Threshold,
+        starvationVignetteStartThreshold,
+        starvationVignetteCriticalThreshold,
+        starvationSoundThreshold,
+        starvationSoundInterval
     }
 
     public enum BBDisplayMode
@@ -482,6 +490,15 @@ public class NConfig
         defaultEquipProxySlots.add(7);  // HAND_RIGHT
         defaultEquipProxySlots.add(5);  // BELT
         conf.put(Key.equipProxySlots, defaultEquipProxySlots);
+
+        // Starvation alert settings
+        conf.put(Key.starvationAlertEnabled, true);
+        conf.put(Key.starvationPopup1Threshold, 2700);  // First warning popup (0 to disable)
+        conf.put(Key.starvationPopup2Threshold, 2500);  // Critical warning popup (0 to disable)
+        conf.put(Key.starvationVignetteStartThreshold, 2300);  // Vignette starts (0 to disable)
+        conf.put(Key.starvationVignetteCriticalThreshold, 2000);  // Vignette intensifies (0 to disable)
+        conf.put(Key.starvationSoundThreshold, 2000);  // Sound alarm threshold (0 to disable)
+        conf.put(Key.starvationSoundInterval, 10000);  // Sound interval in milliseconds
     }
 
 
