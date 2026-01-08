@@ -251,29 +251,30 @@ public class ChunkNavManager {
     }
 
     /**
-     * Force a fresh recording of the player's current chunk.
-     * Only records if chunk already exists (refreshes stale data).
+     * Force synchronous recording of all visible grids.
      * Used before planning and after navigation to ensure fresh data.
+     * No overlay check, no throttle - immediate recording.
      */
-    private void forceRecordPlayerChunk() {
+    public void forceRecordVisibleGrids() {
         try {
             NGameUI gui = NUtils.getGameUI();
             if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null) {
                 return;
             }
 
-            Gob player = NUtils.player();
-            if (player == null) return;
-
             MCache mcache = gui.map.glob.map;
-            Coord tileCoord = player.rc.floor(MCache.tilesz);
-            MCache.Grid playerGrid = mcache.getgridt(tileCoord);
 
-            if (playerGrid == null) return;
+            List<MCache.Grid> gridsToRecord = new ArrayList<>();
+            synchronized (mcache.grids) {
+                for (MCache.Grid grid : mcache.grids.values()) {
+                    if (grid != null && grid.ul != null) {
+                        gridsToRecord.add(grid);
+                    }
+                }
+            }
 
-            // Only refresh if chunk already exists (has data to update)
-            if (graph.hasChunk(playerGrid.id)) {
-                recorder.recordGrid(playerGrid);
+            for (MCache.Grid grid : gridsToRecord) {
+                recorder.recordGrid(grid);
             }
         } catch (Exception e) {
             // Ignore - best effort
@@ -287,9 +288,8 @@ public class ChunkNavManager {
     public ChunkPath planToArea(NArea area) {
         if (!enabled || !initialized) return null;
 
-        // Ensure chunk exists if completely new, then refresh if exists
-        ensurePlayerChunkRecorded();
-        forceRecordPlayerChunk();
+        // Record all visible grids to ensure fresh data before planning
+        forceRecordVisibleGrids();
 
         ChunkPath path = planner.planToArea(area);
         if (path == null) {
@@ -384,8 +384,7 @@ public class ChunkNavManager {
         nurgling.actions.Results result = executor.run(gui);
 
         if (result.IsSuccess()) {
-            ensurePlayerChunkRecorded();
-            forceRecordPlayerChunk();
+            forceRecordVisibleGrids();
         }
 
         return result;

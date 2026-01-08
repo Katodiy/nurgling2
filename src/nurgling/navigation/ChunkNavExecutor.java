@@ -125,6 +125,11 @@ public class ChunkNavExecutor implements Action {
             if (sameLayer) {
                 SegmentWalkResult segResult = followSegmentTiles(segment, gui, targetGridId);
                 if (!segResult.result.IsSuccess()) {
+                    if (replanAttempts < MAX_REPLAN_ATTEMPTS) {
+                        replanAttempts++;
+                        gui.msg("ChunkNav: Replanning after segment failure");
+                        return replanAndContinue(gui);
+                    }
                     return Results.FAIL();
                 }
                 portalGobFromWalk = segResult.portalGob;
@@ -134,6 +139,11 @@ public class ChunkNavExecutor implements Action {
                 // Cross-layer WALK segment - we likely just traversed a portal and are already in target layer
                 SegmentWalkResult segResult = followSegmentTiles(segment, gui, -1);
                 if (!segResult.result.IsSuccess()) {
+                    if (replanAttempts < MAX_REPLAN_ATTEMPTS) {
+                        replanAttempts++;
+                        gui.msg("ChunkNav: Replanning after cross-layer walk failure");
+                        return replanAndContinue(gui);
+                    }
                     return Results.FAIL();
                 }
             }
@@ -1130,6 +1140,9 @@ public class ChunkNavExecutor implements Action {
         if (targetArea == null) {
             return Results.FAIL();
         }
+
+        // Force record all visible grids before replanning to ensure fresh data
+        manager.forceRecordVisibleGrids();
 
         long currentChunkId = graph.getPlayerChunkId();
         if (currentChunkId == -1) {
