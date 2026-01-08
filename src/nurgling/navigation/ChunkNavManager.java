@@ -251,15 +251,45 @@ public class ChunkNavManager {
     }
 
     /**
+     * Force a fresh recording of the player's current chunk.
+     * Only records if chunk already exists (refreshes stale data).
+     * Used before planning and after navigation to ensure fresh data.
+     */
+    private void forceRecordPlayerChunk() {
+        try {
+            NGameUI gui = NUtils.getGameUI();
+            if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null) {
+                return;
+            }
+
+            Gob player = NUtils.player();
+            if (player == null) return;
+
+            MCache mcache = gui.map.glob.map;
+            Coord tileCoord = player.rc.floor(MCache.tilesz);
+            MCache.Grid playerGrid = mcache.getgridt(tileCoord);
+
+            if (playerGrid == null) return;
+
+            // Only refresh if chunk already exists (has data to update)
+            if (graph.hasChunk(playerGrid.id)) {
+                recorder.recordGrid(playerGrid);
+            }
+        } catch (Exception e) {
+            // Ignore - best effort
+        }
+    }
+
+    /**
      * Plan a path to an area.
      * Returns the chunk-level path. PathFinder handles actual navigation within grids.
      */
     public ChunkPath planToArea(NArea area) {
         if (!enabled || !initialized) return null;
 
-        // Ensure player's current chunk is recorded before planning
-        // This handles cases where the player teleported to an unrecorded chunk
+        // Ensure chunk exists if completely new, then refresh if exists
         ensurePlayerChunkRecorded();
+        forceRecordPlayerChunk();
 
         ChunkPath path = planner.planToArea(area);
         if (path == null) {
@@ -351,7 +381,14 @@ public class ChunkNavManager {
         // Note: path.isEmpty() is valid when we're already in the target chunk
         // The executor handles this case by navigating directly to the area
         ChunkNavExecutor executor = new ChunkNavExecutor(path, area, this);
-        return executor.run(gui);
+        nurgling.actions.Results result = executor.run(gui);
+
+        if (result.IsSuccess()) {
+            ensurePlayerChunkRecorded();
+            forceRecordPlayerChunk();
+        }
+
+        return result;
     }
 
     /**
