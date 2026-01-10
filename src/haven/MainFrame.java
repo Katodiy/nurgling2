@@ -28,6 +28,7 @@ package haven;
 
 import nurgling.NConfig;
 import nurgling.headless.Headless;
+import nurgling.headless.HeadlessConfig;
 import nurgling.headless.HeadlessMain;
 
 import java.awt.*;
@@ -501,7 +502,19 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
     public static void main(final String[] args) {
 	// Check for headless mode FIRST, before any other initialization
 	if (Headless.hasHeadlessFlag(args)) {
-	    HeadlessMain.main(args);
+	    // Set headless mode before any AWT classes load
+	    Headless.setHeadless(true);
+
+	    // Check if -bots config file is also provided
+	    String botsConfigPath = extractBotsPath(args);
+	    if (botsConfigPath != null) {
+		// Headless mode with bot config file (from electron-hh-autorunner)
+		HeadlessConfig config = HeadlessConfig.parseFromFile(botsConfigPath);
+		HeadlessMain.runWithConfig(config);
+	    } else {
+		// Headless mode with CLI args
+		HeadlessMain.main(args);
+	    }
 	    return;
 	}
 
@@ -542,7 +555,20 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 	Thread main = new HackThread(g, () -> main2(args), "Haven main thread");
 	main.start();
     }
-	
+
+    /**
+     * Extract the -bots config file path from command line arguments.
+     * Returns null if -bots flag is not present.
+     */
+    private static String extractBotsPath(String[] args) {
+	for (int i = 0; i < args.length; i++) {
+	    if (args[i].equals("-bots") && i + 1 < args.length) {
+		return args[i + 1];
+	    }
+	}
+	return null;
+    }
+
     private static void dumplist(Collection<Resource> list, Path fn) {
 	try {
 	    if(fn != null) {

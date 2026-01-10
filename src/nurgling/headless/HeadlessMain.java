@@ -32,19 +32,19 @@ public class HeadlessMain {
     }
 
     /**
-     * Main entry point for headless mode.
+     * Main entry point for headless mode (CLI args).
      */
     public static void main(String[] args) {
         // Set headless mode FIRST, before any widget classes load
         Headless.setHeadless(true);
 
+        // Set up resource loading BEFORE NConfig (fonts need resources)
+        MainFrame.setupres();
+
         // Initialize NConfig (required for fonts, settings, etc.)
         NConfig nconfig = new NConfig();
         nconfig.read();
         MainFrame.config = nconfig;
-
-        // Set up resource loading (local cache + remote server)
-        MainFrame.setupres();
 
         // Initialize Widget names (required for widget factory)
         Widget.initnames();
@@ -52,9 +52,9 @@ public class HeadlessMain {
         // Parse configuration
         HeadlessConfig config = HeadlessConfig.parse(args);
 
-        // Check for help flag
+        // Check for help flag (but not -h which is now headless flag)
         for (String arg : args) {
-            if (arg.equals("--help") || arg.equals("-h")) {
+            if (arg.equals("--help")) {
                 HeadlessConfig.printUsage();
                 System.exit(EXIT_SUCCESS);
                 return;
@@ -71,6 +71,44 @@ public class HeadlessMain {
         }
 
         log("Starting headless mode");
+        log("Config: " + config);
+
+        HeadlessMain main = new HeadlessMain(config);
+        int exitCode = main.run();
+
+        log("Exiting with code: " + exitCode);
+        System.exit(exitCode);
+    }
+
+    /**
+     * Entry point for headless mode with pre-built config (from -bots file).
+     * Called by MainFrame when -h and -bots flags are both present.
+     */
+    public static void runWithConfig(HeadlessConfig config) {
+        // Headless should already be set by MainFrame, but ensure it
+        if (!Headless.isHeadless()) {
+            Headless.setHeadless(true);
+        }
+
+        // Set up resource loading BEFORE NConfig (fonts need resources)
+        MainFrame.setupres();
+
+        // Initialize NConfig (required for fonts, settings, etc.)
+        NConfig nconfig = new NConfig();
+        nconfig.read();
+        MainFrame.config = nconfig;
+
+        // Initialize Widget names (required for widget factory)
+        Widget.initnames();
+
+        // Validate configuration
+        if (!config.isValid()) {
+            System.err.println("Error: " + config.getValidationError());
+            System.exit(EXIT_CONFIG_ERROR);
+            return;
+        }
+
+        log("Starting headless mode (from bot config file)");
         log("Config: " + config);
 
         HeadlessMain main = new HeadlessMain(config);
@@ -140,6 +178,11 @@ public class HeadlessMain {
             config.character,
             config.scenarioId
         );
+
+        // Set stack trace file for autorunner debugging
+        if (config.stackTraceFile != null) {
+            settings.stackTraceFile = config.stackTraceFile;
+        }
 
         // Set the botmod configuration
         NConfig.botmod = settings;

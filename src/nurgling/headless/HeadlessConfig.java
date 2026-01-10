@@ -1,8 +1,12 @@
 package nurgling.headless;
 
+import org.json.JSONObject;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 /**
  * Configuration for headless mode.
- * Parses from command-line arguments and environment variables.
+ * Parses from command-line arguments, environment variables, or bot config file.
  */
 public class HeadlessConfig {
     // Required
@@ -17,6 +21,7 @@ public class HeadlessConfig {
     public int gamePort = 1870;
     public boolean loop = false;
     public boolean verbose = false;
+    public String stackTraceFile; // For autorunner debugging
 
     /**
      * Parse configuration from command-line arguments and environment variables.
@@ -60,6 +65,43 @@ public class HeadlessConfig {
             } else if (arg.equals("--verbose") || arg.equals("-v")) {
                 config.verbose = true;
             }
+        }
+
+        return config;
+    }
+
+    /**
+     * Parse configuration from a JSON bot config file (used with -bots flag).
+     * This is the format used by electron-hh-autorunner.
+     */
+    public static HeadlessConfig parseFromFile(String path) {
+        HeadlessConfig config = new HeadlessConfig();
+
+        try {
+            String jsonString = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
+            JSONObject json = new JSONObject(jsonString);
+
+            config.user = json.optString("user", null);
+            config.password = json.optString("password", null);
+            config.character = json.optString("character", null);
+
+            if (json.has("scenarioId")) {
+                config.scenarioId = json.getInt("scenarioId");
+            }
+
+            if (json.has("stackTraceFile")) {
+                config.stackTraceFile = json.getString("stackTraceFile");
+            }
+
+            // Server settings from environment (file doesn't contain these)
+            String envServer = System.getenv("NURGLING_SERVER");
+            if (envServer != null && !envServer.isEmpty()) {
+                config.server = envServer;
+            }
+
+        } catch (Exception e) {
+            System.err.println("Failed to parse bot config file: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return config;

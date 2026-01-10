@@ -47,7 +47,7 @@ public class Headless {
      */
     public static boolean hasHeadlessFlag(String[] args) {
         for (String arg : args) {
-            if (arg.equals("--headless") || arg.equals("-H")) {
+            if (arg.equals("--headless") || arg.equals("-H") || arg.equals("-h")) {
                 return true;
             }
         }
