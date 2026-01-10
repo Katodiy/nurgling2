@@ -3021,6 +3021,7 @@ public class VSpec {
         Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/frog\",\"name\":\"Frog\"}"));
         Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/toad\",\"name\":\"Toad\"}"));
         Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/batwingsdried\",\"name\":\"Dried Batwings\"}"));
+        Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/dream\",\"name\":\"A Beautiful Dream\"}"));
         categories.put("Miscellaneous", Misc);
 
         ArrayList<JSONObject> weavableGrass = new ArrayList<>();
