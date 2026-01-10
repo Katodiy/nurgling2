@@ -8,6 +8,7 @@ import nurgling.areas.NContext;
 import nurgling.tools.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 
 public class FreeContainers implements Action
@@ -43,7 +44,15 @@ public class FreeContainers implements Action
             navigateToTargetContainer(gui, container);
 
             new OpenTargetContainer(container).run(gui);
-            for (WItem item : (pattern == null) ? gui.getInventory(container.cap).getItems() : gui.getInventory(container.cap).getItems(pattern))
+            ArrayList<WItem> items = (pattern == null) ? gui.getInventory(container.cap).getItems() : gui.getInventory(container.cap).getItems(pattern);
+            items.sort((o1, o2) -> {
+                Float q1 = ((NGItem)o1.item).quality;
+                Float q2 = ((NGItem)o2.item).quality;
+                if(q1 == null || q2 == null)
+                    return 0;
+                return Float.compare(q2, q1);
+            });
+            for (WItem item : items)
             {
                 if (context.addOutItem(((NGItem) item.item).name(), null, ((NGItem) item.item).quality != null ? ((NGItem) item.item).quality : 1))
                     targets.add(((NGItem) item.item).name());
