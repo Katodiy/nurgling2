@@ -31,22 +31,43 @@ public class ClearRacksAndRecordCapacity implements Action {
         lastRecordedCapacity = new HashMap<>();
         bufferEmptinessMap = new HashMap<>();
         Map<CheeseBranch.Place, Integer> rackCapacity = new HashMap<>();
-        
+
         CheeseBranch.Place[] places = {
                 CheeseBranch.Place.inside,
                 CheeseBranch.Place.cellar,
                 CheeseBranch.Place.outside,
                 CheeseBranch.Place.mine
         };
-        
-        for (CheeseBranch.Place place : places) {
-            // Step 1: Clear ready cheese from racks to buffer containers and get capacity
-            int capacity = clearReadyCheeseFromArea(gui, place);
-            rackCapacity.put(place, capacity);
 
-            // Step 2: Check buffer emptiness in this area
-            boolean allBuffersEmpty = checkBufferEmptiness(gui, place);
-            bufferEmptinessMap.put(place, allBuffersEmpty);
+        for (CheeseBranch.Place place : places) {
+            // Get ALL areas for this place type (supports multiple cellars, multiple inside areas, etc.)
+            ArrayList<NArea> areasForPlace = CheeseAreaManager.getAllCheeseAreas(place);
+
+            if (areasForPlace.isEmpty()) {
+                gui.msg("No cheese racks area found for " + place);
+                rackCapacity.put(place, 0);
+                bufferEmptinessMap.put(place, true);
+                continue;
+            }
+
+            // Aggregate capacity and buffer emptiness across all areas of this place type
+            int totalCapacity = 0;
+            boolean allBuffersEmptyForPlace = true;
+
+            for (NArea area : areasForPlace) {
+                // Step 1: Clear ready cheese from racks to buffer containers and get capacity
+                int areaCapacity = clearReadyCheeseFromArea(gui, area, place);
+                totalCapacity += areaCapacity;
+
+                // Step 2: Check buffer emptiness in this area
+                boolean areaBuffersEmpty = checkBufferEmptinessForArea(gui, area, place);
+                if (!areaBuffersEmpty) {
+                    allBuffersEmptyForPlace = false;
+                }
+            }
+
+            rackCapacity.put(place, totalCapacity);
+            bufferEmptinessMap.put(place, allBuffersEmptyForPlace);
         }
 
         lastRecordedCapacity = rackCapacity;
@@ -72,70 +93,63 @@ public class ClearRacksAndRecordCapacity implements Action {
     /**
      * Clear ready cheese from a specific area's racks to its buffer containers
      * Uses the new MoveReadyCheeseToBuffers action for efficient batch processing
+     * @param gui The game UI
+     * @param area The specific area to process
+     * @param place The place type (for logging)
      * @return total capacity of all racks in the area
      */
-    private int clearReadyCheeseFromArea(NGameUI gui, CheeseBranch.Place place) throws InterruptedException {
-            // Get cheese area using centralized manager
-            NArea area = CheeseAreaManager.getCheeseArea(gui, place);
-            if (area == null) {
-                gui.msg("No cheese racks area found for " + place);
-                return 0;
-            }
-            
-            // Find all cheese racks and buffer containers in this area
-            ArrayList<Gob> rackGobs = Finder.findGobs(area, new NAlias(CheeseConstants.CHEESE_RACK_RESOURCE));
-            ArrayList<Gob> bufferGobs = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
-            
-            // Convert to Container objects
-            ArrayList<Container> racks = new ArrayList<>();
-            for (Gob rack : rackGobs) {
-                racks.add(new Container(rack, CheeseConstants.RACK_CONTAINER_TYPE, area));
-            }
-            
-            ArrayList<Container> buffers = new ArrayList<>();
-            for (Gob buffer : bufferGobs) {
-                buffers.add(new Container(buffer, NContext.contcaps.get(buffer.ngob.name), area));
-            }
-            
-            // Log rack status summary using overlays
-            String rackStatusSummary = CheeseRackOverlayUtils.getRackStatusSummary(rackGobs);
-            
-            // Use the new efficient action to move ready cheese and get capacity data
-            MoveReadyCheeseToBuffers moveAction = new MoveReadyCheeseToBuffers(racks, buffers, place);
-            MoveReadyCheeseToBuffers.ResultWithCapacity result = moveAction.runWithCapacity(gui);
-            
-            // Calculate total capacity from all racks
-            int totalCapacity = 0;
-            for (Integer capacity : result.rackCapacities.values()) {
-                totalCapacity += capacity;
-            }
+    private int clearReadyCheeseFromArea(NGameUI gui, NArea area, CheeseBranch.Place place) throws InterruptedException {
+        // Navigate to the area first
+        NContext context = new NContext(gui);
+        context.getAreaById(area.id);
 
-            return totalCapacity;
+        // Find all cheese racks and buffer containers in this area
+        ArrayList<Gob> rackGobs = Finder.findGobs(area, new NAlias(CheeseConstants.CHEESE_RACK_RESOURCE));
+        ArrayList<Gob> bufferGobs = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
+
+        // Convert to Container objects
+        ArrayList<Container> racks = new ArrayList<>();
+        for (Gob rack : rackGobs) {
+            racks.add(new Container(rack, CheeseConstants.RACK_CONTAINER_TYPE, area));
+        }
+
+        ArrayList<Container> buffers = new ArrayList<>();
+        for (Gob buffer : bufferGobs) {
+            buffers.add(new Container(buffer, NContext.contcaps.get(buffer.ngob.name), area));
+        }
+
+        // Log rack status summary using overlays
+        String rackStatusSummary = CheeseRackOverlayUtils.getRackStatusSummary(rackGobs);
+
+        // Use the new efficient action to move ready cheese and get capacity data
+        MoveReadyCheeseToBuffers moveAction = new MoveReadyCheeseToBuffers(racks, buffers, place);
+        MoveReadyCheeseToBuffers.ResultWithCapacity result = moveAction.runWithCapacity(gui);
+
+        // Calculate total capacity from all racks
+        int totalCapacity = 0;
+        for (Integer capacity : result.rackCapacities.values()) {
+            totalCapacity += capacity;
+        }
+
+        return totalCapacity;
     }
     
     /**
-     * Check if all buffer containers in an area are empty
+     * Check if all buffer containers in a specific area are empty
      * Uses the same condition as line 123 of ProcessCheeseFromBufferContainers
      * @param gui Game UI
-     * @param place Area to check
+     * @param area The specific area to check
+     * @param place Place type (for logging)
      * @return true if ALL buffers are empty, false otherwise
      */
-    private boolean checkBufferEmptiness(NGameUI gui, CheeseBranch.Place place) throws InterruptedException {
-        // Get cheese area using centralized manager
-        NArea area = CheeseAreaManager.getCheeseArea(gui, place);
-        if (area == null) {
-            gui.msg("No cheese area found for " + place + " - considering empty");
+    private boolean checkBufferEmptinessForArea(NGameUI gui, NArea area, CheeseBranch.Place place) throws InterruptedException {
+        // Find all buffer containers in this area
+        ArrayList<Gob> bufferGobs = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
+
+        if (bufferGobs.isEmpty()) {
             return true;
         }
 
-        // Find all buffer containers in this area
-        ArrayList<Gob> bufferGobs = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
-        
-        if (bufferGobs.isEmpty()) {
-            gui.msg("No buffer containers found in " + place + " - considering empty");
-            return true;
-        }
-        
         // Check each buffer using the same condition as ProcessCheeseFromBufferContainers line 123
         for (Gob containerGob : bufferGobs) {
             // Skip checking empty containers - same condition as line 123
@@ -147,7 +161,7 @@ public class ClearRacksAndRecordCapacity implements Action {
                 return false;
             }
         }
-        
+
         // All buffers passed the empty test
         return true;
     }

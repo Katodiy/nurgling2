@@ -65,7 +65,18 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 continue;
             }
 
-            processBufferContainers(gui, place);
+            // Get ALL areas for this place type (supports multiple cellars, multiple inside areas, etc.)
+            ArrayList<NArea> areasForPlace = CheeseAreaManager.getAllCheeseAreas(place);
+
+            if (areasForPlace.isEmpty()) {
+                gui.msg("No cheese area found for " + place);
+                continue;
+            }
+
+            // Process each area of this place type
+            for (NArea area : areasForPlace) {
+                processBufferContainersForArea(gui, area, place);
+            }
         }
 
         // Batch save all order updates at the end - much more efficient than writing after every tray
@@ -92,35 +103,39 @@ public class ProcessCheeseFromBufferContainers implements Action {
      * 1. First pass: collect ready-to-slice cheese to inventory
      * 2. Free inventory when full (FreeInventory2)
      * 3. Second pass: move remaining cheese to next aging stage
+     *
+     * @param gui The game UI
+     * @param area The specific area to process
+     * @param place The place type (for context and navigation back)
      */
-    private void processBufferContainers(NGameUI gui, CheeseBranch.Place place) throws InterruptedException {
-        // Get cheese area using centralized manager
-        NArea area = CheeseAreaManager.getCheeseArea(gui, place);
-        if (area == null) {
-            gui.msg("No cheese area found for " + place);
-            return;
-        }
+    private void processBufferContainersForArea(NGameUI gui, NArea area, CheeseBranch.Place place) throws InterruptedException {
+        // Navigate to the area first
+        NContext context = new NContext(gui);
+        context.getAreaById(area.id);
 
         // Find buffer containers in this area
         ArrayList<Gob> containers = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
 
         // Phase 1: Collect ready-to-slice cheese
-        collectReadyToSliceCheese(gui, containers, place);
+        collectReadyToSliceCheeseFromArea(gui, containers, area, place);
 
-        area = CheeseAreaManager.getCheeseArea(gui, place);
-        if (area == null) {
-            gui.msg("No cheese area found for " + place);
-            return;
-        }
+        // Re-navigate to area after potential FreeInventory2 calls
+        context = new NContext(gui);
+        context.getAreaById(area.id);
 
         // Phase 2: Move remaining cheese to next stages
-        moveRemainingCheeseToNextStage(gui, containers, place);
+        moveRemainingCheeseToNextStageFromArea(gui, containers, area, place);
     }
 
     /**
      * Phase 1: Collect ready-to-slice cheese from buffer containers and slice them
+     *
+     * @param gui The game UI
+     * @param containers The buffer containers in this area
+     * @param area The specific area being processed
+     * @param place The place type (for navigation back after FreeInventory2)
      */
-    private void collectReadyToSliceCheese(NGameUI gui, ArrayList<Gob> containers, CheeseBranch.Place place) throws InterruptedException {
+    private void collectReadyToSliceCheeseFromArea(NGameUI gui, ArrayList<Gob> containers, NArea area, CheeseBranch.Place place) throws InterruptedException {
         // Use centralized constants for sizes
         NContext freshContext = new NContext(gui);
 
@@ -138,7 +153,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
             while (true) {
                 // Get cheese trays from this container (only re-fetch after FreeInventory2)
                 ArrayList<WItem> trays = CheeseInventoryOperations.getCheeseTraysFromContainer(gui, bufferContainer);
-                
+
                 // Find first ready-to-slice tray in this container
                 WItem readyTray = null;
                 for (WItem tray : trays) {
@@ -147,13 +162,13 @@ public class ProcessCheeseFromBufferContainers implements Action {
                         break;
                     }
                 }
-                
+
                 // If no ready trays found, this container is done
                 if (readyTray == null) {
                     new CloseTargetContainer(bufferContainer).run(gui);
                     break; // Move to next container
                 }
-                
+
                 // Check if inventory has space for slicing (tray + up to 5 cheese pieces = 7 slots)
                 if (!CheeseInventoryOperations.hasSpaceForSlicing(gui)) {
                     new CloseTargetContainer(bufferContainer).run(gui);
@@ -162,7 +177,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
                     // CRITICAL FIX: After FreeInventory2, we need to re-find the area and containers
                     // because the character could be very far from the original location
-                    containerGob = refindContainerAfterFreeInventory(gui, place, containerGob);
+                    containerGob = refindContainerAfterFreeInventoryInArea(gui, area, containerGob);
                     if (containerGob == null) {
                         break; // Skip this container and move to next
                     }
@@ -192,7 +207,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
                     new FreeInventory2(freshContext).run(gui);
 
                     // CRITICAL FIX: After FreeInventory2, re-find the container
-                    containerGob = refindContainerAfterFreeInventory(gui, place, containerGob);
+                    containerGob = refindContainerAfterFreeInventoryInArea(gui, area, containerGob);
                     if (containerGob == null) {
                         break;
                     }
@@ -200,10 +215,10 @@ public class ProcessCheeseFromBufferContainers implements Action {
                     new PathFinder(containerGob).run(gui);
                     new OpenTargetContainer(bufferContainer).run(gui);
                 }
-                
+
                 // Continue processing this container (loop back, but don't need to re-fetch trays unless we called FreeInventory2)
             }
-            
+
             new CloseTargetContainer(bufferContainer).run(gui);
         }
         new FreeInventory2(freshContext).run(gui);
@@ -214,22 +229,19 @@ public class ProcessCheeseFromBufferContainers implements Action {
      * This is critical because after FreeInventory2, the original gob references may be out of range
      *
      * @param gui         The game UI
-     * @param place       The cheese area place where the container should be
+     * @param area        The specific area where the container should be
      * @param originalGob The original container gob (used for matching by ID)
      * @return The re-found container gob, or null if not found
      */
-    private Gob refindContainerAfterFreeInventory(NGameUI gui, CheeseBranch.Place place, Gob originalGob) throws InterruptedException {
-        // Step 1: Navigate back to the cheese area
-        NArea area = CheeseAreaManager.getCheeseArea(gui, place);
-        if (area == null) {
-            gui.msg("Could not find cheese area for " + place + " after FreeInventory2");
-            return null;
-        }
+    private Gob refindContainerAfterFreeInventoryInArea(NGameUI gui, NArea area, Gob originalGob) throws InterruptedException {
+        // Step 1: Navigate back to the specific area
+        NContext context = new NContext(gui);
+        context.getAreaById(area.id);
 
         // Step 2: Find containers in the area again
         ArrayList<Gob> containers = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
         if (containers.isEmpty()) {
-            gui.msg("No containers found in " + place + " area after FreeInventory2");
+            gui.msg("No containers found in area " + area.name + " after FreeInventory2");
             return null;
         }
 
@@ -256,13 +268,18 @@ public class ProcessCheeseFromBufferContainers implements Action {
     /**
      * Phase 2: Move remaining cheese to next aging stages
      * Process one cheese type at a time for efficient batching
+     *
+     * @param gui The game UI
+     * @param containers The buffer containers in this area
+     * @param area The specific area being processed
+     * @param place The place type
      */
-    private void moveRemainingCheeseToNextStage(NGameUI gui, ArrayList<Gob> containers, CheeseBranch.Place place) throws InterruptedException {
+    private void moveRemainingCheeseToNextStageFromArea(NGameUI gui, ArrayList<Gob> containers, NArea area, CheeseBranch.Place place) throws InterruptedException {
         // Step 1: Collect all cheese locations and destinations in a single pass
         CheeseCollectionResult collectionResult = collectCheeseLocationsFromContainers(gui, containers, place);
 
         // Step 2: Process each cheese type efficiently
-        processCollectedCheeseByType(gui, collectionResult, place);
+        processCollectedCheeseByType(gui, collectionResult, area, place);
     }
 
     /**
@@ -304,8 +321,13 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
     /**
      * Process each collected cheese type efficiently
+     *
+     * @param gui The game UI
+     * @param collectionResult The collected cheese data
+     * @param area The specific area being processed (for navigation back)
+     * @param place The place type
      */
-    private void processCollectedCheeseByType(NGameUI gui, CheeseCollectionResult collectionResult, CheeseBranch.Place place) throws InterruptedException {
+    private void processCollectedCheeseByType(NGameUI gui, CheeseCollectionResult collectionResult, NArea area, CheeseBranch.Place place) throws InterruptedException {
         for (Map.Entry<String, CheeseBranch.Place> entry : collectionResult.cheeseTypeToDestination.entrySet()) {
             String cheeseType = entry.getKey();
             CheeseBranch.Place destination = entry.getValue();
@@ -325,13 +347,13 @@ public class ProcessCheeseFromBufferContainers implements Action {
             }
 
             // Collect cheese from containers to inventory
-            collectCheeseFromContainersToInventory(gui, cheeseLocations, destination, cheeseType, place);
+            collectCheeseFromContainersToInventory(gui, cheeseLocations, destination, cheeseType, area, place);
 
             // Only navigate to destination if we actually collected something
             ArrayList<WItem> collectedCheese = gui.getInventory().getItems(new NAlias("Cheese Tray"));
             if (!collectedCheese.isEmpty()) {
                 // Move collected cheese to final destination
-                moveCollectedCheeseToDestination(gui, destination, cheeseType, place);
+                moveCollectedCheeseToDestination(gui, destination, cheeseType, area, place);
             }
         }
     }
@@ -339,14 +361,21 @@ public class ProcessCheeseFromBufferContainers implements Action {
     /**
      * Collect cheese from containers to inventory, handling inventory space efficiently
      * Continues collecting until all containers are empty or destination capacity is reached
+     *
+     * @param gui The game UI
+     * @param cheeseLocations The cheese locations to collect from
+     * @param destination The destination place type
+     * @param cheeseType The cheese type being collected
+     * @param area The specific area being processed (for navigation back)
+     * @param place The place type of the source area
      */
     private void collectCheeseFromContainersToInventory(NGameUI gui, ArrayList<CheeseLocation> cheeseLocations,
-                                                        CheeseBranch.Place destination, String cheeseType, CheeseBranch.Place place) throws InterruptedException {
+                                                        CheeseBranch.Place destination, String cheeseType, NArea area, CheeseBranch.Place place) throws InterruptedException {
         // Calculate total destination capacity limits once
         int destinationCapacity = calculateDestinationCapacity(gui, destination);
         int alreadyMovedToDestination = traysMovedToAreas.getOrDefault(destination, 0);
         int remainingDestinationCapacity = Math.max(0, destinationCapacity - alreadyMovedToDestination);
-        
+
         // Get list of container gobs to process
         ArrayList<Gob> containers = new ArrayList<>();
         for (CheeseLocation location : cheeseLocations) {
@@ -354,11 +383,11 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 containers.add(location.containerGob);
             }
         }
-        
+
         // Continue collecting until all containers are empty or destination capacity reached
         while (remainingDestinationCapacity > 0) {
             boolean foundAnyTrays = false;
-            
+
             // Check each container for remaining trays
             for (Gob containerGob : containers) {
                 // Check if we've reached destination capacity limit
@@ -369,8 +398,10 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 // Check if inventory has space
                 int availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
                 if (availableSpace <= 0) {
-                    moveInventoryCheeseToDestination(gui, destination, cheeseType, place);
-                    CheeseAreaManager.getCheeseArea(gui, place); // Navigate back
+                    moveInventoryCheeseToDestination(gui, destination, cheeseType, area, place);
+                    // Navigate back to source area
+                    NContext context = new NContext(gui);
+                    context.getAreaById(area.id);
                     availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
                 }
 
@@ -387,7 +418,7 @@ public class ProcessCheeseFromBufferContainers implements Action {
                     foundAnyTrays = true;
                 }
             }
-            
+
             // If no trays were found in any container, all containers are empty
             if (!foundAnyTrays) {
                 break;
@@ -462,38 +493,71 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
     /**
      * Move all collected cheese of a specific type to its destination
+     *
+     * @param gui The game UI
+     * @param destination The destination place type
+     * @param cheeseType The cheese type being moved
+     * @param area The source area (for navigation back)
+     * @param place The source place type
      */
-    private void moveCollectedCheeseToDestination(NGameUI gui, CheeseBranch.Place destination, String cheeseType, CheeseBranch.Place place) throws InterruptedException {
+    private void moveCollectedCheeseToDestination(NGameUI gui, CheeseBranch.Place destination, String cheeseType, NArea area, CheeseBranch.Place place) throws InterruptedException {
         ArrayList<WItem> cheeseToMove = CheeseInventoryOperations.getCheeseTrays(gui);
         if (!cheeseToMove.isEmpty()) {
-            moveInventoryCheeseToDestination(gui, destination, cheeseType, place);
-            CheeseAreaManager.getCheeseArea(gui, place); // Navigate back for next cheese type
+            moveInventoryCheeseToDestination(gui, destination, cheeseType, area, place);
+            // Navigate back to source area for next cheese type
+            NContext context = new NContext(gui);
+            context.getAreaById(area.id);
         }
     }
 
     /**
-     * Move cheese currently in inventory to a specific destination area with order updating
+     * Move cheese currently in inventory to destination area(s) with order updating
+     * Supports multiple destination areas - fills one completely before moving to next
+     *
+     * @param gui The game UI
+     * @param destination The destination place type
+     * @param cheeseType The cheese type being moved
+     * @param sourceArea The source area (for context)
+     * @param fromPlace The source place type
      */
-    private void moveInventoryCheeseToDestination(NGameUI gui, CheeseBranch.Place destination, String cheeseType, CheeseBranch.Place fromPlace) throws InterruptedException {
+    private void moveInventoryCheeseToDestination(NGameUI gui, CheeseBranch.Place destination, String cheeseType, NArea sourceArea, CheeseBranch.Place fromPlace) throws InterruptedException {
         ArrayList<WItem> cheeseTrays = CheeseInventoryOperations.getCheeseTrays(gui);
         if (cheeseTrays.isEmpty()) {
             return;
         }
 
-        // Get destination area and validate
-        NArea destinationArea = getValidatedDestinationArea(gui, destination);
-        if (destinationArea == null) {
-            return; // Error handled in getValidatedDestinationArea
+        // Get ALL destination areas for this place type
+        ArrayList<NArea> destinationAreas = CheeseAreaManager.getAllCheeseAreas(destination);
+        if (destinationAreas.isEmpty()) {
+            gui.msg("No cheese racks area found for " + destination + ". Using FreeInventory2 as fallback.");
+            NContext freshContext = new NContext(gui);
+            new FreeInventory2(freshContext).run(gui);
+            return;
         }
 
-        // Find and filter available racks
-        ArrayList<Gob> availableRacks = findAvailableRacksInArea(gui, destinationArea, destination);
-        if (availableRacks.isEmpty()) {
-            return; // Error handled in findAvailableRacksInArea
+        // Process each destination area until all cheese is placed
+        for (NArea destinationArea : destinationAreas) {
+            cheeseTrays = CheeseInventoryOperations.getCheeseTrays(gui);
+            if (cheeseTrays.isEmpty()) {
+                break; // All cheese placed
+            }
+
+            // Navigate to this destination area
+            NContext context = new NContext(gui);
+            context.getAreaById(destinationArea.id);
+
+            // Find and filter available racks in this area
+            ArrayList<Gob> availableRacks = findAvailableRacksInArea(gui, destinationArea, destination);
+            if (availableRacks.isEmpty()) {
+                continue; // No space in this area, try next
+            }
+
+            // Place cheese on racks with order updating
+            placeCheeseOnRacksWithOrderUpdates(gui, availableRacks, destination, cheeseType, fromPlace);
         }
 
-        // Place cheese on racks with order updating
-        placeCheeseOnRacksWithOrderUpdates(gui, availableRacks, destination, cheeseType, fromPlace);
+        // Handle any remaining cheese that couldn't be placed in any destination area
+        handleRemainingCheeseTrays(gui);
     }
 
     /**
