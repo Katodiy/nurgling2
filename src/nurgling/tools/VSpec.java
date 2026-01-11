@@ -1725,6 +1725,11 @@ public class VSpec {
         snails.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lakesnail\",\"name\":\"Lake Snail\"}"));
         categories.put("Snail", snails);
 
+        ArrayList<JSONObject> deadAnimalCarcasses = new ArrayList<>();
+        deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/rooster-dead\",\"name\":\"Dead Cock\"}"));
+        deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/hen-dead\",\"name\":\"Dead Hen\"}"));
+        categories.put("Dead Animal Carcass", deadAnimalCarcasses);
+
         ArrayList<JSONObject> cleanCarcasses = new ArrayList<>();
         cleanCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/adder-clean\",\"name\":\"Clean Adder Carcass\"}"));
         cleanCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehog-clean\",\"name\":\"Clean Hedgehog Carcass\"}"));
