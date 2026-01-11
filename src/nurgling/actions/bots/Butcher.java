@@ -58,7 +58,7 @@ public class Butcher implements Action {
         req.add(kritter_corpse);
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
-        NContext context = new NContext(gui);
+
         if (new Validator(req, opt).run(gui).IsSuccess()) {
             NUtils.navigateToArea(area);
             ArrayList<Gob> gobs = getGobs(area);
@@ -66,7 +66,7 @@ public class Butcher implements Action {
             while (!gobs.isEmpty()) {
                 gobs.sort(NUtils.d_comp);
                 Gob gob = gobs.get(0);
-
+                NContext context = new NContext(gui);
                 while (Finder.findGob(gob.id) != null) {
                     NUtils.rclickGob(gob);
                     NFlowerMenu fm = NUtils.getFlowerMenu();
@@ -96,7 +96,8 @@ public class Butcher implements Action {
                         }
 
                         if (NUtils.navigateToArea(area)) {
-                            gob = Finder.findGob(gob.id);
+                            if(gob!=null)
+                                gob = Finder.findGob(gob.id);
                         }
                         if (gob != null) {
                             new PathFinder(gob).run(gui);
@@ -128,7 +129,7 @@ public class Butcher implements Action {
                 context.getSpecArea(Specialisation.SpecName.deadkritter);
                 gobs = getGobs(area);
             }
-            new FreeInventory2(context).run(gui);
+            new FreeInventory2(new NContext(gui)).run(gui);
         }
 
         return Results.SUCCESS();
