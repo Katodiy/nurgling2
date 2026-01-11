@@ -3,6 +3,8 @@ package nurgling.actions.bots;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
+import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.overlays.NCustomBauble;
 import nurgling.overlays.TrellisGhostPreview;
 import nurgling.pf.NHitBoxD;
@@ -16,11 +18,13 @@ import static haven.OCache.posres;
 public class BuildTrellis implements Action {
 
     private static final int TRELLIS_PER_TILE = 3;
+    private NContext context;
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
             Build.Command command = new Build.Command();
             command.name = "Trellis";
+            context = new NContext(gui);
 
             Gob player = null;
             SelectAreaWithRotation buildarea = null;
@@ -66,26 +70,10 @@ public class BuildTrellis implements Action {
                 // Rotate for EW orientations: 2, 3, and 5
                 boolean needRotate = (orientation == 2 || orientation == 3 || orientation == 5);
 
-                // Now select resource areas
-                NUtils.getGameUI().msg("Please, select area for blocks");
-                SelectArea blockarea = new SelectArea(Resource.loadsimg("baubles/blockIng"));
-                blockarea.run(NUtils.getGameUI());
-                command.ingredients.add(new Build.Ingredient(new Coord(1,2), blockarea.getRCArea(), new NAlias("Block"), 3));
-
-                NUtils.getGameUI().msg("Please, select area for strings");
-                SelectArea stringarea = new SelectArea(Resource.loadsimg("baubles/stringsIng"));
-                stringarea.run(NUtils.getGameUI());
-                command.ingredients.add(new Build.Ingredient(new Coord(1,1), stringarea.getRCArea(), new NAlias("Flax Fibres", "Hemp Fibres", "Spindly Taproot", "Cattail Fibres", "Stinging Nettle","Grass Twine", "Hide Strap", "Straw Twine", "Bark Cordage", "Toadflax"), 1));
-
-                for(Build.Ingredient ingredient: command.ingredients) {
-                    if (ingredient.area != null) {
-                        for (Gob sm : Finder.findGobs(ingredient.area, new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name), null);
-                            cand.initattr(Container.Space.class);
-                            ingredient.containers.add(cand);
-                        }
-                    }
-                }
+                // Use BuildMaterialHelper for auto-zone lookup
+                BuildMaterialHelper helper = new BuildMaterialHelper(context, gui);
+                command.ingredients.add(helper.getBlocks(3));
+                command.ingredients.add(helper.getStrings(1));
 
                 HashMap<Coord, Integer> tileCount = new HashMap<>();
                 Coord2d pos = Coord2d.z;
@@ -98,7 +86,7 @@ public class BuildTrellis implements Action {
                         if(size > 0) {
                             isExist = true;
                         }
-                        Build.Ingredient copy = new Build.Ingredient(ingredient.coord, ingredient.area, ingredient.name, ingredient.count - size, ingredient.specialWay);
+                        Build.Ingredient copy = new Build.Ingredient(ingredient.coord, ingredient.nArea, ingredient.name, ingredient.count - size, ingredient.specialWay);
                         copy.containers = ingredient.containers;
                         copy.left = Math.max(0, size - copy.count);
                         curings.add(copy);
@@ -347,6 +335,29 @@ public class BuildTrellis implements Action {
     private boolean refillIng(NGameUI gui, ArrayList<Build.Ingredient> curings) throws InterruptedException {
             for(Build.Ingredient ingredient: curings) {
                 if(ingredient.specialWay == null) {
+                    if (ingredient.nArea == null) {
+                        NUtils.getGameUI().msg("No area defined for " + ingredient.name.getKeys().get(0));
+                        continue;
+                    }
+                    
+                    // Navigate to ingredient area
+                    context.navigateToAreaIfNeeded(ingredient.nArea);
+                    Pair<Coord2d, Coord2d> ingredientArea = ingredient.nArea.getRCArea();
+                    if (ingredientArea == null) {
+                        NUtils.getGameUI().msg("Cannot access ingredient area for " + ingredient.name.getKeys().get(0));
+                        continue;
+                    }
+                    
+                    // Populate containers after navigation if not done yet
+                    if (ingredient.containers.isEmpty()) {
+                        for (Gob sm : Finder.findGobs(ingredientArea, new NAlias(new ArrayList<>(NContext.contcaps.keySet()))))
+                        {
+                            Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name), null);
+                            cand.initattr(Container.Space.class);
+                            ingredient.containers.add(cand);
+                        }
+                    }
+                    
                     if(!ingredient.containers.isEmpty()) {
                         for (Container container : ingredient.containers) {
                             Container.Space space = container.getattr(Container.Space.class);
@@ -372,7 +383,7 @@ public class BuildTrellis implements Action {
                         }
                     } else {
                         while (ingredient.count != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(ingredient.coord) != 0) {
-                            ArrayList<Gob> piles = Finder.findGobs(ingredient.area, new NAlias("stockpile"));
+                            ArrayList<Gob> piles = Finder.findGobs(ingredientArea, new NAlias("stockpile"));
                             if (piles.isEmpty()) {
                                 if(NUtils.getGameUI().getInventory().getItems(ingredient.name).size() != ingredient.count)
                                     return false;

@@ -36,5 +36,12 @@ public class SpecialisationData {
         data.put("gardenPotSeeds", gardenPotPlants);
         ArrayList<String> dframe = new ArrayList<>(Arrays.asList("Hides", "Fish"));
         data.put("dframe", dframe);
+        
+        // Construction materials subtypes
+        ArrayList<String> buildMaterials = new ArrayList<>(Arrays.asList(
+            "Block", "Board", "Stone", "String", "Nugget", "Metal Bar", 
+            "Clay", "Brick", "Thatch", "Branch", "Bough", "Log"
+        ));
+        data.put("buildMaterials", buildMaterials);
     }
 }

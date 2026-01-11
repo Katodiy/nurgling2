@@ -177,25 +177,44 @@ public class BuildGhostPreview extends GAttrib {
 
     public void dispose() {
         System.out.println("[BuildGhostPreview] dispose() called, removing " + ghostGobs.size() + " ghosts");
-        // Use deferred removal on dispose to avoid ConcurrentModificationException
         List<Gob> toRemove;
         synchronized (ghostGobs) {
             toRemove = new ArrayList<>(ghostGobs);
             ghostGobs.clear();
         }
         
-        if (!toRemove.isEmpty() && glob != null && glob.loader != null) {
+        if (toRemove.isEmpty()) {
+            System.out.println("[BuildGhostPreview] No ghosts to remove");
+            return;
+        }
+        
+        // Always do immediate removal first
+        for (Gob ghost : toRemove) {
+            try {
+                if (glob != null && glob.oc != null) {
+                    glob.oc.remove(ghost);
+                }
+            } catch (Exception e) {
+                System.out.println("[BuildGhostPreview] Error removing ghost: " + e.getMessage());
+            }
+        }
+        
+        // Also schedule deferred removal as backup
+        if (glob != null && glob.loader != null) {
+            final List<Gob> deferredRemove = new ArrayList<>(toRemove);
             glob.loader.defer(() -> {
-                for (Gob ghost : toRemove) {
+                for (Gob ghost : deferredRemove) {
                     try {
                         glob.oc.remove(ghost);
                     } catch (Exception e) {
-                        // Silently ignore
+                        // Already removed or error - ignore
                     }
                 }
                 return null;
             });
         }
+        
+        System.out.println("[BuildGhostPreview] dispose() completed");
     }
 
     /**
@@ -248,22 +267,25 @@ public class BuildGhostPreview extends GAttrib {
         synchronized (ghostGobs) {
             System.out.println("[BuildGhostPreview] removeGhost called for position: " + pos + ", total ghosts: " + ghostGobs.size());
             Gob toRemove = null;
+            double minDist = Double.MAX_VALUE;
+            // Find the closest ghost within tolerance
             for (Gob ghost : ghostGobs) {
-                if (ghost.rc.dist(pos) < 1.0) {
+                double dist = ghost.rc.dist(pos);
+                if (dist < 5.0 && dist < minDist) {  // Increased tolerance to 5 units
+                    minDist = dist;
                     toRemove = ghost;
-                    break;
                 }
             }
             if (toRemove != null) {
                 ghostGobs.remove(toRemove);
-                System.out.println("[BuildGhostPreview] Removed ghost at " + toRemove.rc + ", remaining: " + ghostGobs.size());
+                System.out.println("[BuildGhostPreview] Removed ghost at " + toRemove.rc + " (dist=" + minDist + "), remaining: " + ghostGobs.size());
                 try {
                     glob.oc.remove(toRemove);
                 } catch (Exception e) {
                     System.out.println("[BuildGhostPreview] Error removing ghost from glob.oc: " + e.getMessage());
                 }
             } else {
-                System.out.println("[BuildGhostPreview] No ghost found at position " + pos);
+                System.out.println("[BuildGhostPreview] No ghost found near position " + pos);
             }
         }
     }

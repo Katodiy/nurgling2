@@ -8,6 +8,7 @@ import nurgling.navigation.ChunkPath;
 import nurgling.tools.*;
 import nurgling.tools.Container;
 import nurgling.widgets.Specialisation;
+import nurgling.conf.ConstructionMaterialsRegistry;
 import org.json.*;
 
 import java.awt.image.BufferedImage;
@@ -294,21 +295,91 @@ public class NContext {
     }
 
     public NArea getSpecArea(Specialisation.SpecName name, String sub) throws InterruptedException {
-        if(!areas.containsKey(name.toString())) {
+        String key = name.toString() + (sub != null ? "_" + sub : "");
+        if(!areas.containsKey(key)) {
             NArea area = findSpec(name.toString(),sub);
             if (area == null) {
                 area = findSpecGlobal(name.toString(),sub);
             }
             if (area != null) {
-                areas.put(String.valueOf(name.toString()), area);
+                areas.put(key, area);
             }
             else
             {
                 return null;
             }
         }
-        navigateToAreaIfNeeded(name.toString());
-        return areas.get(name.toString());
+        navigateToAreaIfNeeded(key);
+        return areas.get(key);
+    }
+
+    /**
+     * Find construction materials zone for a specific material type WITHOUT navigating.
+     * Only finds and caches the area, navigation happens later when needed.
+     * @param materialType The type of material (BLOCK, BOARD, STONE, etc.)
+     * @return The area containing the material, or null if not found
+     */
+    public NArea getBuildMaterialArea(ConstructionMaterialsRegistry.MaterialType materialType) throws InterruptedException {
+        return findSpecAreaNoNavigate(Specialisation.SpecName.buildMaterials, materialType.getSubtype());
+    }
+
+    /**
+     * Find construction materials zone for a specific item alias WITHOUT navigating.
+     * Only finds and caches the area, navigation happens later when needed.
+     * @param itemAlias The alias of the item (e.g., "Block", "Board", "Flax Fibres")
+     * @return The area containing the material, or null if not found
+     */
+    public NArea getBuildMaterialArea(NAlias itemAlias) throws InterruptedException {
+        ConstructionMaterialsRegistry.MaterialType materialType = 
+            ConstructionMaterialsRegistry.getMaterialType(itemAlias);
+        if (materialType != null) {
+            return getBuildMaterialArea(materialType);
+        }
+        return null;
+    }
+    
+    /**
+     * Find a specialization area WITHOUT navigating to it.
+     * Use this when you just need to check if a zone exists or get a reference.
+     * @param name Specialization name
+     * @param sub Subtype (can be null)
+     * @return The area or null if not found
+     */
+    public NArea findSpecAreaNoNavigate(Specialisation.SpecName name, String sub) throws InterruptedException {
+        String key = name.toString() + (sub != null ? "_" + sub : "");
+        if (!areas.containsKey(key)) {
+            NArea area = findSpec(name.toString(), sub);
+            if (area == null) {
+                area = findSpecGlobal(name.toString(), sub);
+            }
+            if (area != null) {
+                areas.put(key, area);
+            } else {
+                return null;
+            }
+        }
+        // NO navigation - just return the cached area
+        return areas.get(key);
+    }
+
+    /**
+     * Check if a construction materials zone exists for the given material type.
+     * Does not navigate to the zone.
+     * @param materialType The type of material
+     * @return true if a zone exists, false otherwise
+     */
+    public boolean hasBuildMaterialArea(ConstructionMaterialsRegistry.MaterialType materialType) {
+        return ConstructionMaterialsRegistry.hasMaterialZone(materialType);
+    }
+
+    /**
+     * Check if a construction materials zone exists for the given item alias.
+     * Does not navigate to the zone.
+     * @param itemAlias The alias of the item
+     * @return true if a zone exists, false otherwise
+     */
+    public boolean hasBuildMaterialArea(NAlias itemAlias) {
+        return ConstructionMaterialsRegistry.hasMaterialZone(itemAlias);
     }
 
     /**
@@ -595,6 +666,17 @@ public class NContext {
             gui.msg(areaId + " Not found!");
             return;
         }
+        navigateToAreaIfNeeded(area);
+    }
+
+    /**
+     * Navigate to an NArea using global pathfinding if needed.
+     * @param area The area to navigate to
+     */
+    public void navigateToAreaIfNeeded(NArea area) throws InterruptedException {
+        if (area == null) {
+            return;
+        }
 
         // Check if we need to navigate (area not visible or too far)
         boolean needsNavigation = !area.isVisible() || area.getCenter2d() == null ||
@@ -628,6 +710,19 @@ public class NContext {
         String id = "temp"+counter++;
         NArea tempArea = new NArea(id);
         tempArea.space = insa.result;
+        tempArea.lastLocalChange = System.currentTimeMillis();
+        tempArea.grids_id.clear();
+        tempArea.grids_id.addAll(tempArea.space.space.keySet());
+        areas.put(id, tempArea);
+        return id;
+    }
+
+    public String createAreaWithGhost(nurgling.tasks.SelectAreaWithLiveGhosts sa) throws InterruptedException {
+        if(sa == null)
+            return null;
+        String id = "temp"+counter++;
+        NArea tempArea = new NArea(id);
+        tempArea.space = sa.getResult();
         tempArea.lastLocalChange = System.currentTimeMillis();
         tempArea.grids_id.clear();
         tempArea.grids_id.addAll(tempArea.space.space.keySet());

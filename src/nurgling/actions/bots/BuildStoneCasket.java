@@ -10,9 +10,9 @@ import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Build;
 import nurgling.actions.Results;
+import nurgling.areas.NContext;
 import nurgling.overlays.BuildGhostPreview;
 import nurgling.overlays.NCustomBauble;
-import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
 
@@ -22,20 +22,16 @@ public class BuildStoneCasket implements Action {
         try {
             Build.Command command = new Build.Command();
             command.name = "Stone Casket";
+            NContext context = new NContext(gui);
 
             NUtils.getGameUI().msg("Please, select build area");
-            SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Stone Casket");
+            SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(context, Resource.loadsimg("baubles/buildArea"), "Stone Casket");
             buildarea.run(NUtils.getGameUI());
 
-            NUtils.getGameUI().msg("Please, select area for stone");
-            SelectArea stoneArea = new SelectArea(Resource.loadsimg("baubles/chipperPiles"));
-            stoneArea.run(NUtils.getGameUI());
-            command.ingredients.add(new Build.Ingredient(new Coord(1,1),stoneArea.getRCArea(),new NAlias("Stone"),20));
-
-            NUtils.getGameUI().msg("Please, select area for nuggets");
-            SelectArea bougharea = new SelectArea(Resource.loadsimg("baubles/nugget"));
-            bougharea.run(NUtils.getGameUI());
-            command.ingredients.add(new Build.Ingredient(new Coord(1,1),bougharea.getRCArea(),new NAlias("Nugget"),2));
+            // Use BuildMaterialHelper for auto-zone lookup
+            BuildMaterialHelper helper = new BuildMaterialHelper(context, gui);
+            command.ingredients.add(helper.getStone(20));
+            command.ingredients.add(helper.getNuggets(2));
 
             // Get ghost positions from BuildGhostPreview if available
             ArrayList<Coord2d> ghostPositions = null;
@@ -48,7 +44,7 @@ public class BuildStoneCasket implements Action {
                 }
             }
 
-            new Build(command, buildarea.getRCArea(), buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
+            new Build(context, command, buildarea.ghostArea, buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
             return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted

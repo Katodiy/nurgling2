@@ -70,7 +70,7 @@ public class FireStarterAction implements Action {
         // Ask user to click on target object
         SelectGob selgob;
         NUtils.getGameUI().msg("Click on the object to ignite");
-        (selgob = new SelectGob(Resource.loadsimg("baubles/selectItem"))).run(gui);
+        (selgob = new SelectGob(Resource.loadsimg("baubles/ignite"))).run(gui);
         
         Gob target = selgob.getResult();
         if (target == null) {

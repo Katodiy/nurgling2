@@ -5,6 +5,7 @@ import nurgling.*;
 import nurgling.actions.Action;
 import nurgling.actions.Results;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.overlays.BuildGhostPreview;
 import nurgling.overlays.NCustomBauble;
 import nurgling.tasks.WaitPlob;
@@ -15,16 +16,19 @@ public class SelectAreaWithLiveGhosts extends SelectArea {
     private String buildingName;
     private int rotationCount = 0;
     private NHitBox customHitBox = null;
-
-    public SelectAreaWithLiveGhosts(BufferedImage image, String buildingName) {
+    public NArea ghostArea;
+    NContext context;
+    public SelectAreaWithLiveGhosts(NContext context, BufferedImage image, String buildingName) {
         super(image);
         this.buildingName = buildingName;
+        this.context = context;
     }
     
-    public SelectAreaWithLiveGhosts(BufferedImage image, String buildingName, NHitBox customHitBox) {
+    public SelectAreaWithLiveGhosts(NContext context, BufferedImage image, String buildingName, NHitBox customHitBox) {
         super(image);
         this.buildingName = buildingName;
         this.customHitBox = customHitBox;
+        this.context = context;
     }
     
     public int getRotationCount() {
@@ -136,12 +140,14 @@ public class SelectAreaWithLiveGhosts extends SelectArea {
 
         if (sa.getResult() != null)
         {
-            result = sa.getResult();
             rotationCount = sa.getRotationCount();
+            String insaId = context.createAreaWithGhost(sa);
+            ghostArea = context.getAreaById(insaId);
         } else
         {
             return Results.FAIL();
         }
+
 
         return Results.SUCCESS();
     }
