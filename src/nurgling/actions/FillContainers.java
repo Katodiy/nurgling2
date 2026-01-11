@@ -95,5 +95,18 @@ public class FillContainers implements Action
             pf.isHardMode = true;
             pf.run(gui);
         }
+        else
+        {
+            if(container.parent!=null)
+            {
+                NUtils.navigateToArea(container.parent);
+                gob = Finder.findGob(container.gobHash);
+                if(gob!= null && PathFinder.isAvailable(gob)) {
+                    pf = new PathFinder(gob);
+                    pf.isHardMode = true;
+                    pf.run(gui);
+                }
+            }
+        }
     }
 }
