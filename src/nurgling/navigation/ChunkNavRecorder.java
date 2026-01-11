@@ -475,14 +475,14 @@ public class ChunkNavRecorder {
 
             // Process WITHOUT holding the lock
             boolean hasCellarStairs = false;
-            boolean hasDoor = false;
+            boolean hasInsideIndicator = false;
             boolean hasBuildingExterior = false;
 
             for (String name : gobNames) {
                 if (name.contains("cellarstairs")) {
                     hasCellarStairs = true;
-                } else if (name.endsWith("-door") || name.endsWith("door")) {
-                    hasDoor = true;
+                } else if (name.endsWith("-door") || name.contains("downstairs")) {
+                    hasInsideIndicator = true;
                 } else if (isBuildingExterior(name)) {
                     hasBuildingExterior = true;
                 }
@@ -490,7 +490,7 @@ public class ChunkNavRecorder {
 
             if (hasCellarStairs) {
                 chunk.layer = "cellar";
-            } else if (hasDoor && !hasBuildingExterior) {
+            } else if (hasInsideIndicator && !hasBuildingExterior) {
                 chunk.layer = "inside";
             } else {
                 chunk.layer = "outside";

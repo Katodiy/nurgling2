@@ -604,7 +604,6 @@ public class NContext {
             return;
         }
 
-        // Try ChunkNav first if it has data for the area
         ChunkNavManager chunkNav = (gui.map != null && gui.map instanceof NMapView)
             ? ((NMapView)gui.map).getChunkNavManager() : null;
         if (chunkNav != null && chunkNav.isInitialized()) {
