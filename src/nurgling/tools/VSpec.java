@@ -1725,6 +1725,11 @@ public class VSpec {
         snails.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lakesnail\",\"name\":\"Lake Snail\"}"));
         categories.put("Snail", snails);
 
+        ArrayList<JSONObject> deadAnimalCarcasses = new ArrayList<>();
+        deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/rooster-dead\",\"name\":\"Dead Cock\"}"));
+        deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/hen-dead\",\"name\":\"Dead Hen\"}"));
+        categories.put("Dead Animal Carcass", deadAnimalCarcasses);
+
         ArrayList<JSONObject> cleanCarcasses = new ArrayList<>();
         cleanCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/adder-clean\",\"name\":\"Clean Adder Carcass\"}"));
         cleanCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehog-clean\",\"name\":\"Clean Hedgehog Carcass\"}"));
@@ -1903,8 +1908,6 @@ public class VSpec {
         poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-seagull\"], \"name\": \"Seagull Meat\"}"));
         poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-swan\"], \"name\": \"Swan Meat\"}"));
         poultry.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-poultry\", \"gfx/invobjs/meat-woodgrouse\"], \"name\": \"Wood Grouse Meat\"}"));
-        poultry.add(new JSONObject("{\"static\":\"gfx/invobjs/rooster-dead\",\"name\":\"Dead Cock\"}"));
-        poultry.add(new JSONObject("{\"static\":\"gfx/invobjs/hen-dead\",\"name\":\"Dead Hen\"}"));
         categories.put("Poultry", poultry);
 
         ArrayList<JSONObject> weirdMeat = new ArrayList<>();
