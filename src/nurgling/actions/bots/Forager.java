@@ -109,8 +109,10 @@ public class Forager implements Action {
             return Results.ERROR("Cannot get start position - waypoint not in current segment");
         }
         
-        new PathFinder(startPos).run(gui);
-        
+        PathFinder pf = new PathFinder(startPos);
+        pf.waterMode = preset.waterMode;
+        pf.run(gui);
+
         // Check inventory before starting
         if (isInventoryFull(gui) && !preset.onFullInventoryAction.equals("nothing")) {
             performSafetyAction(gui, preset.onFullInventoryAction);
@@ -153,12 +155,15 @@ public class Forager implements Action {
             if (targetGob != null)
             {
                 // Go to the object if found within 1 tile
-                new PathFinder(targetGob).run(gui);
-
+                PathFinder pfGob = new PathFinder(targetGob);
+                pfGob.waterMode = preset.waterMode;
+                pfGob.run(gui);
             } else
             {
                 // Go to the endpoint if no objects found nearby
-                new PathFinder(sectionEnd).run(gui);
+                PathFinder pfEnd = new PathFinder(sectionEnd);
+                pfEnd.waterMode = preset.waterMode;
+                pfEnd.run(gui);
             }
 
             // Process actions for this section
@@ -230,7 +235,9 @@ public class Forager implements Action {
                         break;
                     }
 
-                    new PathFinder(gob).run(gui);
+                    PathFinder pfPick = new PathFinder(gob);
+                    pfPick.waterMode = preset.waterMode;
+                    pfPick.run(gui);
                     new SelectFlowerAction("Pick", gob).run(gui);
                     NUtils.getUI().core.addTask(new nurgling.tasks.WaitGobRemoval(gob.id));
                     
@@ -241,7 +248,9 @@ public class Forager implements Action {
                 
             case FLOWER_ACTION:
                 for (Gob gob : gobs) {
-                    new PathFinder(gob).run(gui);
+                    PathFinder pfFlower = new PathFinder(gob);
+                    pfFlower.waterMode = preset.waterMode;
+                    pfFlower.run(gui);
                     new SelectFlowerAction(action.actionName, gob).run(gui);
                     
                     // Wait for pose change
