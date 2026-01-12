@@ -1251,7 +1251,6 @@ public class VSpec {
 
         ArrayList<JSONObject> salads = new ArrayList<>();
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/beetleaves\",\"name\":\"Beetroot Leaves\"}"));
-        salads.add(new JSONObject("{\"static\":\"gfx/invobjs/driftkelp\",\"name\":\"Driftkelp\"}"));
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/duskfern\",\"name\":\"Dusk Fern\"}"));
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/greenkelp\",\"name\":\"Green Kelp\"}"));
         salads.add(new JSONObject("{\"static\":\"gfx/invobjs/leaf-heartwood\",\"name\":\"Heartwood Leaves\"}"));
@@ -1293,6 +1292,7 @@ public class VSpec {
         ArrayList<JSONObject> cropsOther = new ArrayList<>();
         cropsOther.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lettucehead\",\"name\":\"Head of Lettuce\"}"));
         cropsOther.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/pumpkinflesh\",\"name\":\"Pumpkin Flesh\"}"));
+        cropsOther.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/pumpkin\",\"name\":\"Pumpkin\"}"));
         categories.put("Crops - other", cropsOther);
 
         ArrayList<JSONObject> eggs = new ArrayList<>();
@@ -1735,6 +1735,7 @@ public class VSpec {
         deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/rooster-dead\",\"name\":\"Dead Cock\"}"));
         deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/hen-dead\",\"name\":\"Dead Hen\"}"));
         deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehog-dead\",\"name\":\"Dead Hedgehog\"}"));
+        deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/stoat-dead\",\"name\":\"Dead Stoat\"}"));
         categories.put("Dead Animal Carcass", deadAnimalCarcasses);
 
         ArrayList<JSONObject> cleanCarcasses = new ArrayList<>();
@@ -3041,9 +3042,16 @@ public class VSpec {
         Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/forestlizard\",\"name\":\"Forest Lizard\"}"));
         Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/frog\",\"name\":\"Frog\"}"));
         Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/toad\",\"name\":\"Toad\"}"));
-        Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/batwingsdried\",\"name\":\"Dried Batwings\"}"));
-        Misc.add(new JSONObject("{\"static\":\"gfx/invobjs/dream\",\"name\":\"A Beautiful Dream\"}"));
         categories.put("Miscellaneous", Misc);
+
+        ArrayList<JSONObject> nonStackable = new ArrayList<>();
+        nonStackable.add(new JSONObject("{\"static\":\"gfx/invobjs/batwingsdried\",\"name\":\"Dried Batwings\"}"));
+        nonStackable.add(new JSONObject("{\"static\":\"gfx/invobjs/dream\",\"name\":\"A Beautiful Dream\"}"));
+        nonStackable.add(new JSONObject("{\"static\":\"gfx/invobjs/suckmaw\",\"name\":\"Suckling's Maw\"}"));
+        nonStackable.add(new JSONObject("{\"static\":\"gfx/invobjs/driftkelp\",\"name\":\"Driftkelp\"}"));
+        nonStackable.add(new JSONObject("{\"static\":\"gfx/invobjs/curiousneedle\",\"name\":\"Curious Needle\"}"));
+        nonStackable.add(new JSONObject("{\"static\":\"gfx/invobjs/antwing\",\"name\":\"Ant Wing\"}"));
+        categories.put("NonStackable", nonStackable);
 
         ArrayList<JSONObject> weavableGrass = new ArrayList<>();
         weavableGrass.add(new JSONObject("{\"static\":\"gfx/invobjs/standinggrass\",\"name\":\"Standing Grass\"}"));
