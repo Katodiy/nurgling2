@@ -158,6 +158,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("flaxq", BotDescriptor.BotType.FARMING_QUALITY, "Flax Farmer Quality", "Automatically harvests and replants flax in X*Y cell patches.", true, true, FlaxFarmerQ.class, "flaxq", false));
         bots.add(new BotDescriptor("green_kaleq", BotDescriptor.BotType.FARMING_QUALITY, "Green Kale Farmer Quality", "Automatically harvests and replants green kale in X*Y cell patches.", true, true, GreenKaleFarmerQ.class, "green_kaleq", false));
         bots.add(new BotDescriptor("lettuceq", BotDescriptor.BotType.FARMING_QUALITY, "Lettuce Farmer Quality", "Automatically harvests and replants lettuce in X*Y cell patches.", true, true, LettuceFarmerQ.class, "lettuceq", false));
+        bots.add(new BotDescriptor("pumpkinq", BotDescriptor.BotType.FARMING_QUALITY, "Pumpkin Farmer Quality", "Automatically harvests and replants pumpkins in X*Y cell patches.", true, true, PumpkinFarmerQ.class, "pumpkinq", false));
 
         bots.add(new BotDescriptor("barleyq", BotDescriptor.BotType.FARMING_QUALITY, "Barley Farmer Quality", "Automatically harvests and replants barley in X*Y cell patches.", true, true, BarleyFarmerQ.class, "barleyq", false));
         bots.add(new BotDescriptor("milletq", BotDescriptor.BotType.FARMING_QUALITY, "Millet Farmer Quality", "Automatically harvests and replants millet in X*Y cell patches.", true, true, MilletFarmerQ.class, "milletq", false));
@@ -197,6 +198,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("autoflaction", BotDescriptor.BotType.UTILS, "Auto Flower Action", "Perform the specified flower pop-up menu action for all objects in the area.", false, true, AutoFlowerActionBot.class, "autoflaction", false));
         bots.add(new BotDescriptor("autoflaction", BotDescriptor.BotType.UTILS, "Drop Soil", "Drops soil from stockpile until there is 10 soil left in the stockpile..", false, true, SoilStockpileDropper.class, "dropsoil", false));
         bots.add(new BotDescriptor("measure_length", BotDescriptor.BotType.UTILS, "Zone Measure Tool", "Measure and mark zones on the ground. Select areas, view dimensions, and manage multiple selections.", false, true, ZoneMeasureTool.class, "measuring_length", false));
+        bots.add(new BotDescriptor("fire", BotDescriptor.BotType.UTILS, "Fire Starter", "Ignites objects (Ovens, Smelters, Kilns, etc.) and refuels them if needed.", false, true, FireStarterAction.class, "fire", true));
 
         // BUILD
         bots.add(new BotDescriptor("dframe", BotDescriptor.BotType.BUILD, "Build Drying Frame", "Builds drying frame.", false, true, BuildDryingFrame.class, "dframe", true));
@@ -207,7 +209,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("kiln", BotDescriptor.BotType.BUILD, "Build Kiln", "Builds kiln.", false, true, BuildKiln.class, "kiln", false));
         bots.add(new BotDescriptor("barrel", BotDescriptor.BotType.BUILD, "Build Barrel", "Builds barrel.", false, true, BuildBarrel.class, "barrel", false));
         bots.add(new BotDescriptor("chest", BotDescriptor.BotType.BUILD, "Build Chest", "Builds chest.", false, true, BuildChest.class, "chest", false));
-        bots.add(new BotDescriptor("chest", BotDescriptor.BotType.BUILD, "Build Stone Casket", "Builds stone casket.", false, true, BuildStoneCasket.class, "chest", false));
+        bots.add(new BotDescriptor("stone_casket", BotDescriptor.BotType.BUILD, "Build Stone Casket", "Builds stone casket.", false, true, BuildStoneCasket.class, "stonecasket", false));
         bots.add(new BotDescriptor("lchest", BotDescriptor.BotType.BUILD, "Build Large Chest", "Builds large chest.", false, true, BuildLargeChest.class, "lchest", true));
         bots.add(new BotDescriptor("tarkilnb", BotDescriptor.BotType.BUILD, "Build Tar Kiln", "Builds tar kiln.", false, true, BuildTarKiln.class, "tarkilnb", false));
         bots.add(new BotDescriptor("smoke_shed", BotDescriptor.BotType.BUILD, "Build Smoke Shed", "Builds smoke shed.", false, true, BuildSmokeShed.class, "smoke_shed", false));

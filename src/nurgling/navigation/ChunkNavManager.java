@@ -251,15 +251,45 @@ public class ChunkNavManager {
     }
 
     /**
+     * Force synchronous recording of all visible grids.
+     * Used before planning and after navigation to ensure fresh data.
+     * No overlay check, no throttle - immediate recording.
+     */
+    public void forceRecordVisibleGrids() {
+        try {
+            NGameUI gui = NUtils.getGameUI();
+            if (gui == null || gui.map == null || gui.map.glob == null || gui.map.glob.map == null) {
+                return;
+            }
+
+            MCache mcache = gui.map.glob.map;
+
+            List<MCache.Grid> gridsToRecord = new ArrayList<>();
+            synchronized (mcache.grids) {
+                for (MCache.Grid grid : mcache.grids.values()) {
+                    if (grid != null && grid.ul != null) {
+                        gridsToRecord.add(grid);
+                    }
+                }
+            }
+
+            for (MCache.Grid grid : gridsToRecord) {
+                recorder.recordGrid(grid);
+            }
+        } catch (Exception e) {
+            // Ignore - best effort
+        }
+    }
+
+    /**
      * Plan a path to an area.
      * Returns the chunk-level path. PathFinder handles actual navigation within grids.
      */
     public ChunkPath planToArea(NArea area) {
         if (!enabled || !initialized) return null;
 
-        // Ensure player's current chunk is recorded before planning
-        // This handles cases where the player teleported to an unrecorded chunk
-        ensurePlayerChunkRecorded();
+        // Record all visible grids to ensure fresh data before planning
+        forceRecordVisibleGrids();
 
         ChunkPath path = planner.planToArea(area);
         if (path == null) {
@@ -351,7 +381,13 @@ public class ChunkNavManager {
         // Note: path.isEmpty() is valid when we're already in the target chunk
         // The executor handles this case by navigating directly to the area
         ChunkNavExecutor executor = new ChunkNavExecutor(path, area, this);
-        return executor.run(gui);
+        nurgling.actions.Results result = executor.run(gui);
+
+        if (result.IsSuccess()) {
+            forceRecordVisibleGrids();
+        }
+
+        return result;
     }
 
     /**

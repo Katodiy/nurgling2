@@ -21,7 +21,8 @@ public class FFAction implements Action {
 
 
     @Override
-    public Results run(NGameUI gui) throws InterruptedException {
+    public Results run(NGameUI gui) throws InterruptedException
+    {
 
         NArea.Specialisation rfuelc = new NArea.Specialisation(Specialisation.SpecName.fuel.toString(), "coal");
         NArea.Specialisation rfforge = new NArea.Specialisation(Specialisation.SpecName.fforge.toString());
@@ -32,14 +33,16 @@ public class FFAction implements Action {
         req.add(rfuelc);
         req.add(ranvil);
 
-        if(new Validator(req, new ArrayList<>()).run(gui).IsSuccess()) {
+        if (new Validator(req, new ArrayList<>()).run(gui).IsSuccess())
+        {
 
             NArea fforges = NContext.findSpec(Specialisation.SpecName.fforge.toString());
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            for (Gob sm : Finder.findGobs(fforges, new NAlias("gfx/terobjs/fineryforge"))) {
-                Container cand = new Container(sm,"Finery Forge", fforges);
+            for (Gob sm : Finder.findGobs(fforges, new NAlias("gfx/terobjs/fineryforge")))
+            {
+                Container cand = new Container(sm, "Finery Forge", fforges);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -52,20 +55,24 @@ public class FFAction implements Action {
 
 
             ArrayList<String> lighted = new ArrayList<>();
-            for (Container cont : containers) {
+            for (Container cont : containers)
+            {
                 lighted.add(cont.gobHash);
 
             }
-            if(containers.isEmpty())
+            if (containers.isEmpty())
                 return Results.ERROR("NO Forges");
 
             Results res = null;
-            NContext context = new NContext(gui);
-            context.workstation = new NContext.Workstation("gfx/terobjs/anvil", null);
-            context.workstation.selected = Finder.findGob(NContext.findSpec(Specialisation.SpecName.anvil.toString()), new NAlias("anvil")).id;
-            while (res == null || res.IsSuccess()) {
+            while (res == null || res.IsSuccess())
+            {
                 NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 8));
-                synchronized (NUtils.getGameUI()) {
+                synchronized (NUtils.getGameUI())
+                {
+                    NContext context = new NContext(gui);
+                    context.workstation = new NContext.Workstation("gfx/terobjs/anvil", null);
+                    context.workstation.selected = Finder.findGob(NContext.findSpec(Specialisation.SpecName.anvil.toString()), new NAlias("anvil")).id;
+
                     new FreeContainers(containers).run(gui);
 
                     new DropTargets(containers, new NAlias("Dross")).run(gui);
@@ -74,7 +81,8 @@ public class FFAction implements Action {
                     res = new FillContainers(containers, "Bar of Cast Iron", context).run(gui);
                     ArrayList<Container> forFuel = new ArrayList<>();
 
-                    for (Container container : containers) {
+                    for (Container container : containers)
+                    {
                         Container.Space space = container.getattr(Container.Space.class);
                         if (!space.isEmpty())
                             forFuel.add(container);
@@ -84,7 +92,8 @@ public class FFAction implements Action {
                         return Results.ERROR("NO FUEL");
 
                     ArrayList<String> flighted = new ArrayList<>();
-                    for (Container cont : forFuel) {
+                    for (Container cont : forFuel)
+                    {
                         flighted.add(cont.gobHash);
                     }
 

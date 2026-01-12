@@ -4,6 +4,7 @@ import haven.Coord;
 import haven.WItem;
 import nurgling.NGItem;
 import nurgling.NGameUI;
+import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Results;
@@ -11,12 +12,11 @@ import nurgling.tasks.WaitItemInEquip;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 import nurgling.widgets.NEquipory;
-import nurgling.NInventory;
 
 import java.util.ArrayList;
 
 public class EquipTravellersSacksFromBelt implements Action {
-    private static final NAlias sackAlias = new NAlias("Traveller's Sack", "Traveler's Sack");
+    private static final NAlias sackAlias = new NAlias("Traveller's Sack", "Traveler's Sack", "Wanderer's Bindle");
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {

@@ -32,7 +32,8 @@ public class Forager extends Window implements Checkable {
     Dropbox<String> afterFinishAction = null;
     Dropbox<String> onFullInventoryAction = null;
     CheckBox ignoreBatsCheckbox = null;
-    
+    CheckBox waterModeCheckbox = null;
+
     private static final String[] PLAYER_ACTIONS = {"nothing", "logout", "travel hearth"};
     private static final String[] ANIMAL_ACTIONS = {"logout", "travel hearth"};
     private static final String[] AFTER_FINISH_ACTIONS = {"nothing", "logout", "travel hearth"};
@@ -371,7 +372,10 @@ public class Forager extends Window implements Checkable {
         
         // Ignore bats checkbox
         prev = add(ignoreBatsCheckbox = new CheckBox("Ignore bats"), prev.pos("bl").add(UI.scale(0, 5)));
-        
+
+        // Water mode checkbox
+        prev = add(waterModeCheckbox = new CheckBox("Water mode (for boats)"), prev.pos("bl").add(UI.scale(0, 5)));
+
         // Start button
         prev = startButton = add(new Button(UI.scale(150), "Start") {
             @Override
@@ -450,8 +454,9 @@ public class Forager extends Window implements Checkable {
         }
         
         ignoreBatsCheckbox.a = preset.ignoreBats;
+        waterModeCheckbox.a = preset.waterMode;
     }
-    
+
     private void loadAvailablePresets() {
         availablePresets.clear();
         prop = NForagerProp.get(NUtils.getUI().sessInfo);
@@ -502,9 +507,10 @@ public class Forager extends Window implements Checkable {
                 if (onFullInventoryAction.sel != null)
                     oldPreset.onFullInventoryAction = onFullInventoryAction.sel;
                 oldPreset.ignoreBats = ignoreBatsCheckbox.a;
+                oldPreset.waterMode = waterModeCheckbox.a;
             }
         }
-        
+
         prop.currentPreset = presetName;
         lastPresetName = presetName;
         
@@ -678,7 +684,8 @@ public class Forager extends Window implements Checkable {
             preset.onFullInventoryAction = "nothing";
             
         preset.ignoreBats = ignoreBatsCheckbox.a;
-        
+        preset.waterMode = waterModeCheckbox.a;
+
         NForagerProp.set(prop);
         isReady = true;
     }
