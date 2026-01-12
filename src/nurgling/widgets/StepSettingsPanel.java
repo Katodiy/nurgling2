@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.actions.bots.WaitBot;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
 import nurgling.conf.NForagerProp;
@@ -211,6 +212,49 @@ public class StepSettingsPanel extends Widget {
                 add(presetDropdown, new Coord(UI.scale(8), y));
                 y += UI.scale(40);
             }
+        }
+        if (desc.id.equals("wait_bot")) {
+            hasAnySetting = true;
+            add(new Label("Wait Duration (hh:mm:ss):"), new Coord(UI.scale(8), y));
+            y += UI.scale(24);
+
+            Object currentMs = step.getSetting("waitDurationMs");
+            String currentTime = "00:00:10";  // Default 10 seconds
+            if (currentMs != null) {
+                long ms;
+                if (currentMs instanceof Long) {
+                    ms = (Long) currentMs;
+                } else if (currentMs instanceof Integer) {
+                    ms = ((Integer) currentMs).longValue();
+                } else if (currentMs instanceof Number) {
+                    ms = ((Number) currentMs).longValue();
+                } else {
+                    ms = 10000;
+                }
+                currentTime = WaitBot.formatMsToTime(ms);
+            }
+
+            TextEntry timeEntry = new TextEntry(UI.scale(100), currentTime) {
+                @Override
+                protected void changed() {
+                    long ms = WaitBot.parseTimeToMs(text());
+                    if (ms > 0) {
+                        step.setSetting("waitDurationMs", ms);
+                    }
+                }
+            };
+            // Set initial value
+            long initialMs = WaitBot.parseTimeToMs(currentTime);
+            if (initialMs > 0) {
+                step.setSetting("waitDurationMs", initialMs);
+            }
+
+            add(timeEntry, new Coord(UI.scale(8), y));
+            y += UI.scale(30);
+
+            add(new Label("Format: hh:mm:ss, mm:ss, or ss"), new Coord(UI.scale(8), y));
+            y += UI.scale(20);
+            add(new Label("Examples: 01:30:00, 05:00, 30"), new Coord(UI.scale(8), y));
         }
         if (!hasAnySetting) {
             add(new Label("No settings for this step."), new Coord(UI.scale(8), y));

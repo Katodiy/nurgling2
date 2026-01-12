@@ -48,6 +48,17 @@ public class BotRegistry {
                 "tohome",
                 false
         ));
+        bots.add(new BotDescriptor(
+                "wait_bot",
+                BotDescriptor.BotType.UTILS,
+                "Wait",
+                "Waits for a specified duration (hh:mm:ss)",
+                true,
+                false,
+                WaitBot.class,
+                "test30",
+                false
+        ));
 
         // RESOURCES
         bots.add(new BotDescriptor("choper", BotDescriptor.BotType.RESOURCES, "Chopper", "Chops trees.", false, true, Chopper.class, "choper", false));
