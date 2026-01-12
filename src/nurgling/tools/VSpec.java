@@ -1290,6 +1290,11 @@ public class VSpec {
         seeds.add(new JSONObject("{\"static\":\"gfx/invobjs/seed-barleygerm\",\"name\":\"Sprouted Barley\"}"));
         categories.put("Crop Seeds", seeds);
 
+        ArrayList<JSONObject> cropsOther = new ArrayList<>();
+        cropsOther.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lettucehead\",\"name\":\"Head of Lettuce\"}"));
+        cropsOther.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/pumpkinflesh\",\"name\":\"Pumpkin Flesh\"}"));
+        categories.put("Crops - other", cropsOther);
+
         ArrayList<JSONObject> eggs = new ArrayList<>();
         eggs.add(new JSONObject("{\"static\":\"gfx/invobjs/egg-bullfinch\",\"name\":\"Bullfinch Egg\"}"));
         eggs.add(new JSONObject("{\"static\":\"gfx/invobjs/egg-chicken\",\"name\":\"Chicken Egg\"}"));
@@ -1729,6 +1734,7 @@ public class VSpec {
         ArrayList<JSONObject> deadAnimalCarcasses = new ArrayList<>();
         deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/rooster-dead\",\"name\":\"Dead Cock\"}"));
         deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/hen-dead\",\"name\":\"Dead Hen\"}"));
+        deadAnimalCarcasses.add(new JSONObject("{\"static\":\"gfx/invobjs/hedgehog-dead\",\"name\":\"Dead Hedgehog\"}"));
         categories.put("Dead Animal Carcass", deadAnimalCarcasses);
 
         ArrayList<JSONObject> cleanCarcasses = new ArrayList<>();
@@ -3014,6 +3020,9 @@ public class VSpec {
         NoneStackableCurio.add(new JSONObject("{\"static\":\"gfx/invobjs/feathertrinket\",\"name\":\"Feather Trinket\"}"));
         NoneStackableCurio.add(new JSONObject("{\"static\":\"gfx/invobjs/barkboat\",\"name\":\"Barkboat\"}"));
         NoneStackableCurio.add(new JSONObject("{\"static\":\"gfx/invobjs/reedship\",\"name\":\"Reed Ship\"}"));
+        NoneStackableCurio.add(new JSONObject("{\"static\":\"gfx/invobjs/flotsam\",\"name\":\"Peculiar Flotsam\"}"));
+        NoneStackableCurio.add(new JSONObject("{\"static\":\"gfx/invobjs/frogspawn\",\"name\":\"Frogspawn\"}"));
+        NoneStackableCurio.add(new JSONObject("{\"static\":\"gfx/invobjs/foetus\",\"name\":\"Beast Unborn\"}"));
         categories.put("Curiosities", NoneStackableCurio);
 
         ArrayList<JSONObject> NaturalResources = new ArrayList<>();
