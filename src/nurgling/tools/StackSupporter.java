@@ -34,6 +34,7 @@ public class StackSupporter {
         customStackSizes.put("Waybroad", 4);
         customStackSizes.put("Green Kelp", 4);
         customStackSizes.put("Cattail Roots", 4);
+        customStackSizes.put("Heartwood Leaves", 4);
 
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
@@ -168,6 +169,8 @@ public class StackSupporter {
         catExceptions.add("Ant Chitin");
         catExceptions.add("Bee Chitin");
         catExceptions.add("Cave Louse Chitin");
+        catExceptions.add("Driftkelp");
+        catExceptions.add("A Beautiful Dream");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
     public static boolean isStackable(NInventory inv, String name)
