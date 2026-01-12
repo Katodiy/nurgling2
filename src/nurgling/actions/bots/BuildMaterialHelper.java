@@ -198,5 +198,35 @@ public class BuildMaterialHelper {
             "Please, select area for metal bars"
         );
     }
+
+    /**
+     * Get plant fibre ingredient (auto-zone or user selection)
+     * This includes Finer Plant Fibre, Plant Fibre, Prepared Tree Bast
+     */
+    public Build.Ingredient getFibres(int count) throws InterruptedException {
+        NAlias fibreAlias = new NAlias(
+            "Finer Plant Fibre", "Plant Fibre", "Prepared Tree Bast"
+        );
+        return getIngredient(
+            new Coord(1, 1),
+            fibreAlias,
+            count,
+            "baubles/stringsIng",
+            "Please, select area for plant fibre"
+        );
+    }
+
+    /**
+     * Get finer plant fibre specifically (auto-zone or user selection)
+     */
+    public Build.Ingredient getFinerPlantFibre(int count) throws InterruptedException {
+        return getIngredient(
+            new Coord(1, 1),
+            new NAlias("Finer Plant Fibre"),
+            count,
+            "baubles/stringsIng",
+            "Please, select area for finer plant fibre"
+        );
+    }
 }
 

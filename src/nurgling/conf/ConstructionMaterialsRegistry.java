@@ -34,7 +34,8 @@ public class ConstructionMaterialsRegistry {
         THATCH("Thatch"),       // Straw, Dried Bush, etc.
         BRANCH("Branch"),
         BOUGH("Bough"),
-        LOG("Log");
+        LOG("Log"),
+        FIBRE("Fibre");       // Plant Fibre, Finer Plant Fibre, etc.
 
         private final String subtype;
 
@@ -94,6 +95,11 @@ public class ConstructionMaterialsRegistry {
         
         // Log
         MATERIAL_ALIASES.put(MaterialType.LOG, new NAlias("Log"));
+        
+        // Fibre (plant fibres - different from string/cordage)
+        MATERIAL_ALIASES.put(MaterialType.FIBRE, new NAlias(
+            "Finer Plant Fibre", "Plant Fibre", "Prepared Tree Bast"
+        ));
     }
 
     /**

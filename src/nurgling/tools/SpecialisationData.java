@@ -40,7 +40,7 @@ public class SpecialisationData {
         // Construction materials subtypes
         ArrayList<String> buildMaterials = new ArrayList<>(Arrays.asList(
             "Block", "Board", "Stone", "String", "Nugget", "Metal Bar", 
-            "Clay", "Brick", "Thatch", "Branch", "Bough", "Log"
+            "Clay", "Brick", "Thatch", "Branch", "Bough", "Log", "Fibre"
         ));
         data.put("buildMaterials", buildMaterials);
     }

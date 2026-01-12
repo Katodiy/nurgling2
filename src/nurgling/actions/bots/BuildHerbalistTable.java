@@ -33,14 +33,8 @@ public class BuildHerbalistTable implements Action {
             BuildMaterialHelper helper = new BuildMaterialHelper(context, gui);
             command.ingredients.add(helper.getBlocks(4));
             command.ingredients.add(helper.getBoards(4));
-            // Finer Plant Fibre - use custom ingredient since it's specific
-            command.ingredients.add(helper.getIngredient(
-                new Coord(1, 1),
-                new NAlias("Finer Plant Fibre"),
-                8,
-                "baubles/stringsIng",
-                "Please, select area for finer plant fibre"
-            ));
+            // Finer Plant Fibre - uses Fibre zone if available
+            command.ingredients.add(helper.getFinerPlantFibre(8));
 
             // Get ghost positions from BuildGhostPreview if available
             ArrayList<Coord2d> ghostPositions = null;
