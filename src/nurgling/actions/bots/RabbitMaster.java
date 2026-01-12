@@ -216,6 +216,7 @@ public class RabbitMaster implements Action {
 
                 if (gui.getInventory().getFreeSpace() < 2) {
                     freeInv.run(gui);
+                    context.getSpecArea(Specialisation.SpecName.rabbit);
                     moveTo(gui, Finder.findGob(h.container.gobid));
                     openContainer(gui, h.container);
                     invHolder[0] = gui.getInventory(HUTCH_NAME);
@@ -236,6 +237,7 @@ public class RabbitMaster implements Action {
 
                 if (gui.getInventory().getFreeSpace() < 1) {
                     freeInv.run(gui);
+                    context.getSpecArea(Specialisation.SpecName.rabbit);
                     moveTo(gui, Finder.findGob(h.container.gobid));
                     openContainer(gui, h.container);
                     invHolder[0] = gui.getInventory(HUTCH_NAME);
@@ -256,6 +258,7 @@ public class RabbitMaster implements Action {
 
                 if (gui.getInventory().getFreeSpace() < 5) {
                     freeInv.run(gui);
+                    context.getSpecArea(Specialisation.SpecName.rabbit);
                     moveTo(gui, Finder.findGob(h.container.gobid));
                     openContainer(gui, h.container);
                     invHolder[0] = gui.getInventory(HUTCH_NAME);
@@ -280,13 +283,20 @@ public class RabbitMaster implements Action {
             closeContainer(gui, h.container);
         }
         freeInv.run(gui);
+        context.getSpecArea(Specialisation.SpecName.rabbit);
     }
 
     private void moveBunniesToIncubators(NGameUI gui, List<Hutch> breeders, List<Hutch> incubators) throws InterruptedException {
         int breederIndex = 0;
 
+        int totalBunnies = Stream.concat(breeders.stream(), incubators.stream())
+                .mapToInt(h -> h.bunnies.size())
+                .sum();
+        int calcNeed = (totalBunnies + incubators.size() - 1) / incubators.size();
+
+
         for (Hutch incubator : incubators) {
-            int need = 42 - incubator.bunnies.size();
+            int need = Math.min(42, calcNeed) - incubator.bunnies.size();
             if (need <= 0)
                 continue;
 
@@ -298,7 +308,6 @@ public class RabbitMaster implements Action {
                     continue;
                 }
                 int moveCount = Math.min(need, Math.min(breeder.bunnies.size(), gui.getInventory().getFreeSpace()));
-                NUtils.getGameUI().msg("moveCount "+moveCount);
 
                 transferBunniesBatch(gui, breeder, incubator, moveCount);
 
@@ -326,7 +335,6 @@ public class RabbitMaster implements Action {
         moveTo(gui, Finder.findGob(from.container.gobid));
         openContainer(gui, from.container);
 
-        NUtils.getGameUI().msg("Taking count of bunnies "+count);
         for (int i = 0; i < count; i++) {
             takeAnyBunny(gui);
         }
@@ -337,10 +345,8 @@ public class RabbitMaster implements Action {
         moveTo(gui, Finder.findGob(to.container.gobid));
         openContainer(gui, to.container);
 
-        NUtils.getGameUI().msg("Drop count of bunnies "+count);
         for (int i = 0; i < count; i++) {
             dropBunny(gui);
-            NUtils.getGameUI().msg("Dropped bunny #"+i);
         }
 
         closeContainer(gui, to.container);
