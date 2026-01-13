@@ -64,77 +64,74 @@ public class AutocraftBot implements Action {
         }
 
         // Load the resource and find the pagina
-        try {
-            Indir<Resource> res = Resource.remote().load(recipeResource);
-            MenuGrid.Pagina pag = gui.menu.paginafor(res);
+        Indir<Resource> res = Resource.remote().load(recipeResource);
+        MenuGrid.Pagina pag = gui.menu.paginafor(res);
 
-            if (pag == null) {
-                return Results.ERROR("Could not find recipe in menu: " + recipeResource);
-            }
-
-            // Activate the recipe via menu
-            gui.menu.use(pag.button(), new MenuGrid.Interaction(), false);
-
-            // Wait for the crafting window to appear
-            NUtils.addTask(new NTask() {
-                @Override
-                public boolean check() {
-                    return gui.craftwnd != null && gui.craftwnd.makeWidget != null;
-                }
-            });
-
-            // Small delay to ensure window is fully loaded
-            Thread.sleep(200);
-
-            NMakewindow mwnd = gui.craftwnd.makeWidget;
-            if (mwnd == null) {
-                return Results.ERROR("Crafting window did not open");
-            }
-
-            // Verify recipe name matches
-            if (preset.getRecipeName() != null && !preset.getRecipeName().isEmpty()) {
-                if (!preset.getRecipeName().equals(mwnd.rcpnm)) {
-                    gui.msg("Warning: Recipe name mismatch. Expected: " + preset.getRecipeName() + ", Got: " + mwnd.rcpnm);
-                }
-            }
-
-            // Configure ingredients from preset
-            configureIngredients(mwnd, preset);
-
-            // Enable auto mode and run craft
-            mwnd.autoMode = true;
-            if (mwnd.noTransfer != null) {
-                mwnd.noTransfer.visible = true;
-            }
-
-            // Run the craft
-            Craft craft = new Craft(mwnd, quantity);
-            Results result = craft.run(gui);
-
-            gui.msg("Autocraft completed: " + preset.getName());
-            return result;
-
-        } catch (Loading l) {
-            return Results.ERROR("Failed to load recipe resource: " + recipeResource);
+        if (pag == null) {
+            return Results.ERROR("Could not find recipe in menu: " + recipeResource);
         }
+
+        // Activate the recipe via menu
+        gui.menu.use(pag.button(), new MenuGrid.Interaction(), false);
+
+        // Wait for the crafting window to appear with makeWidget initialized
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+                return gui.craftwnd != null && gui.craftwnd.makeWidget != null;
+            }
+        });
+
+        NMakewindow mwnd = gui.craftwnd.makeWidget;
+        if (mwnd == null) {
+            return Results.ERROR("Crafting window did not open");
+        }
+
+        // Wait for inputs to be populated and specs to be fully loaded
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+                if (mwnd.inputs == null || mwnd.inputs.isEmpty()) {
+                    return false;
+                }
+                // Also ensure specs have their names loaded
+                for (NMakewindow.Spec spec : mwnd.inputs) {
+                    if (spec.name == null) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+
+        // Verify recipe name matches
+        if (preset.getRecipeName() != null && !preset.getRecipeName().isEmpty()) {
+            if (!preset.getRecipeName().equals(mwnd.rcpnm)) {
+                gui.msg("Warning: Recipe name mismatch. Expected: " + preset.getRecipeName() + ", Got: " + mwnd.rcpnm);
+            }
+        }
+
+        // Configure ingredients from preset
+        configureIngredients(mwnd, preset);
+
+        // Enable auto mode and run craft
+        mwnd.autoMode = true;
+        if (mwnd.noTransfer != null) {
+            mwnd.noTransfer.visible = true;
+        }
+
+        // Run the craft
+        Craft craft = new Craft(mwnd, quantity);
+        Results result = craft.run(gui);
+
+        gui.msg("Autocraft completed: " + preset.getName());
+        return result;
     }
 
     /**
      * Configures the NMakewindow ingredients based on preset preferences.
      */
     private void configureIngredients(NMakewindow mwnd, CraftPreset preset) {
-        // Wait for inputs to be populated
-        int attempts = 0;
-        while ((mwnd.inputs == null || mwnd.inputs.isEmpty()) && attempts < 10) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
-            }
-            attempts++;
-        }
-
         // Match preset inputs to mwnd inputs and set ingredient preferences
         for (CraftPreset.InputSpec presetInput : preset.getInputs()) {
             if (!presetInput.isCategory()) {
@@ -171,8 +168,14 @@ public class AutocraftBot implements Action {
         }
 
         for (JSONObject obj : categoryItems) {
-            String itemName = (String) obj.get("name");
-            if (itemName.equals(preferredName)) {
+            if (obj == null) {
+                continue;
+            }
+            if (!obj.has("name")) {
+                continue;
+            }
+            String itemName = obj.getString("name");
+            if (itemName != null && itemName.equals(preferredName)) {
                 spec.ing = mwnd.new Ingredient(obj);
                 return;
             }

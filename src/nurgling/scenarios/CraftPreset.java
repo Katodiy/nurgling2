@@ -86,9 +86,6 @@ public class CraftPreset {
     public String getRecipeResource() { return recipeResource; }
     public void setRecipeResource(String recipeResource) { this.recipeResource = recipeResource; }
 
-    public String getWorkstationType() { return workstationType; }
-    public void setWorkstationType(String workstationType) { this.workstationType = workstationType; }
-
     public List<InputSpec> getInputs() { return inputs; }
     public void setInputs(List<InputSpec> inputs) { this.inputs = inputs; }
 

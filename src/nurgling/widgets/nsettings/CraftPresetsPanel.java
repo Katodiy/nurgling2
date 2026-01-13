@@ -211,7 +211,7 @@ public class CraftPresetsPanel extends Panel {
             return null;
         }
 
-        BufferedImage icon = null;
+        BufferedImage icon;
 
         // First try: Search VSpec categories for the item
         if (itemName != null) {
