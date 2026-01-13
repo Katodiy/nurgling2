@@ -91,6 +91,7 @@ public class NSettingsWindow extends Widget {
 
         SettingsCategory scenarios = new SettingsCategory("Autorunner", new Panel("Autorunner scenarios"), container);
         scenarios.addChild(new SettingsItem("Scenarios", new ScenarioPanel(), container));
+        scenarios.addChild(new SettingsItem("Craft Presets", new CraftPresetsPanel(), container));
 
         SettingsCategory bots = new SettingsCategory("Bots", new Panel("Bots"), container);
         bots.addChild(new SettingsItem("Feed Clover", new FeedClover(), container));

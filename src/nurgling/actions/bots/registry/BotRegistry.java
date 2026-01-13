@@ -59,6 +59,17 @@ public class BotRegistry {
                 "test30",
                 false
         ));
+        bots.add(new BotDescriptor(
+                "autocraft_bot",
+                BotDescriptor.BotType.UTILS,
+                "Autocraft",
+                "Automatically crafts items using a saved preset",
+                true,
+                false,
+                AutocraftBot.class,
+                "test31",
+                false
+        ));
 
         // RESOURCES
         bots.add(new BotDescriptor("choper", BotDescriptor.BotType.RESOURCES, "Chopper", "Chops trees.", false, true, Chopper.class, "choper", false));
