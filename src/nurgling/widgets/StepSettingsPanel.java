@@ -282,7 +282,7 @@ public class StepSettingsPanel extends Widget {
 
                 final List<CraftPreset> finalPresetList = presetList;
                 NDropbox<CraftPreset> presetDropdown = new NDropbox<CraftPreset>(
-                        UI.scale(180),
+                        UI.scale(160),
                         Math.min(presetList.size(), 10),
                         UI.scale(22)
                 ) {
