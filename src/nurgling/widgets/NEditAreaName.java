@@ -24,6 +24,7 @@ public class NEditAreaName extends Window
                 {
                     ((NMapView) NUtils.getGameUI().map).changeAreaName(area.id, te.text());
                     item.text.settext(te.text());
+                    item.settip(te.text());
                     NConfig.needAreasUpdate();
                     Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(area.gid);
                     if(dummy != null) {

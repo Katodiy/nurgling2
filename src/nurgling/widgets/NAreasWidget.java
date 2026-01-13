@@ -232,6 +232,10 @@ public class NAreasWidget extends Window
     }
 
     public void showPath(String path) {
+        showPath(path, -1);
+    }
+    
+    public void showPath(String path, int selectAreaId) {
         synchronized (items) {
             items.clear();
             currentPath = path;
@@ -271,7 +275,20 @@ public class NAreasWidget extends Window
             items.addAll(areas);
         }
             if(!items.isEmpty()) {
-                al.sel = items.get(items.size() - 1);
+                // Try to select the specified area, otherwise select last item
+                AreaItem selectedItem = null;
+                if(selectAreaId >= 0) {
+                    for(AreaItem item : items) {
+                        if(item.area != null && item.area.id == selectAreaId) {
+                            selectedItem = item;
+                            break;
+                        }
+                    }
+                }
+                if(selectedItem == null) {
+                    selectedItem = items.get(items.size() - 1);
+                }
+                al.sel = selectedItem;
                 if (al.sel.area != null) {
                     select(al.sel.area.id);
                 }
@@ -281,6 +298,16 @@ public class NAreasWidget extends Window
                 }
             }
 
+    }
+    
+    public void selectAreaById(int areaId) {
+        for(AreaItem item : items) {
+            if(item.area != null && item.area.id == areaId) {
+                al.sel = item;
+                select(areaId);
+                return;
+            }
+        }
     }
 
     private void updateFilteredList() {
@@ -371,6 +398,7 @@ public class NAreasWidget extends Window
         public AreaItem(String text, NArea area){
             this.text = add(new Label(text));
             this.area = area;
+            this.settip(text);
             hide = add(new CheckBox(""){
                 @Override
                 public void changed(boolean val) {
@@ -537,16 +565,25 @@ public class NAreasWidget extends Window
 
                                         float old = NUtils.getUI().gprefs.bghz.val;
                                         NUtils.getUI().gprefs.bghz.val = NUtils.getUI().gprefs.hz.val;
+                                        final int areaId = area.id;
                                         JDialog chooser = JColorChooser.createDialog(null, "SelectColor", true, colorChooser, new AbstractAction() {
                                             @Override
                                             public void actionPerformed(ActionEvent e) {
-                                                area.color = colorChooser.getColor();
-                                                area.lastLocalChange = System.currentTimeMillis();
-                                                if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
-                                                {
-                                                    NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
-                                                    nol.remove();
-                                                    NUtils.getGameUI().map.nols.remove(area.id);
+                                                NArea theArea = NUtils.getArea(areaId);
+                                                if(theArea != null) {
+                                                    theArea.color = colorChooser.getColor();
+                                                    theArea.lastLocalChange = System.currentTimeMillis();
+                                                    if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
+                                                    {
+                                                        NOverlay nol = NUtils.getGameUI().map.nols.get(areaId);
+                                                        if(nol != null) {
+                                                            nol.remove();
+                                                            NUtils.getGameUI().map.nols.remove(areaId);
+                                                        }
+                                                    }
+                                                    NConfig.needAreasUpdate();
+                                                    // Retain selection on this area
+                                                    NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath, areaId);
                                                 }
                                             }
                                         }, new ActionListener() {
@@ -837,8 +874,31 @@ public class NAreasWidget extends Window
                             {
                                 if(option!=null)
                                 {
-                                    SpecialisationItem.this.text.settext(item.name + "(" + option.name + ")");
+                                    Specialisation.SpecialisationItem specItem = findSpecialisation(item.name);
+                                    String prettyName = specItem != null ? specItem.prettyName : item.name;
+                                    SpecialisationItem.this.text.settext(prettyName + "(" + option.name + ")");
                                     item.subtype = option.name;
+                                    
+                                    // Auto-rename area if its name matches the specialisation prettyName
+                                    if(al.sel != null && al.sel.area != null) {
+                                        NArea area = al.sel.area;
+                                        if(area.name.equals(prettyName)) {
+                                            String newName = prettyName + "(" + option.name + ")";
+                                            ((NMapView)NUtils.getGameUI().map).changeAreaName(area.id, newName);
+                                            al.sel.text.settext(newName);
+                                            al.sel.settip(newName);
+                                            // Update area label on map
+                                            Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(area.gid);
+                                            if(dummy != null) {
+                                                Gob.Overlay ol = dummy.findol(nurgling.overlays.NAreaLabel.class);
+                                                if(ol != null && ol.spr instanceof nurgling.overlays.NAreaLabel) {
+                                                    nurgling.overlays.NAreaLabel tl = (nurgling.overlays.NAreaLabel) ol.spr;
+                                                    tl.update();
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
                                     NConfig.needAreasUpdate();
                                 }
                                 uimsg("cancel");

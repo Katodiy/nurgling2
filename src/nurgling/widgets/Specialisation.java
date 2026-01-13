@@ -349,9 +349,9 @@ public class Specialisation extends Window
             }
         }
         
-        // Update area list if visible
+        // Update area list if visible, retaining selection on current area
         if(NUtils.getGameUI().areas != null) {
-            NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath);
+            NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath, area.id);
         }
     }
 }
