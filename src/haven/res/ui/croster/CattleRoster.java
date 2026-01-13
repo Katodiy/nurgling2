@@ -28,7 +28,7 @@ import java.awt.image.BufferedImage;
 public abstract class CattleRoster <T extends Entry> extends Widget {
     public static final int WIDTH = UI.scale(980);
     public static final Comparator<Entry> namecmp = (a, b) -> a.name.compareTo(b.name);
-    public static final int HEADH = UI.scale(40);
+    public static final int HEADH = UI.scale(50);
     public final Map<UID, T> entries = new HashMap<>();
     public final Scrollbar sb;
     public final Widget entrycont;
@@ -85,20 +85,22 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 			areas.clear();
 			areas.add(new AreaEntry(-1, "All areas"));
 			
-			// Collect area ids that have animals
-			java.util.Set<Integer> zonesWithAnimals = new java.util.HashSet<>();
-			for(Entry entry : entries.values()) {
-				if(entry.areaId >= 0) {
-					zonesWithAnimals.add(entry.areaId);
-				}
-			}
+			// Get animal type name for this roster
+			String animalType = getAnimalTypeName();
 			
 			if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
 				NMapView map = (NMapView) NUtils.getGameUI().map;
 				if (map.glob != null && map.glob.map != null && map.glob.map.areas != null) {
 					for (NArea area : map.glob.map.areas.values()) {
-						// Show only areas that have animals
-						if(zonesWithAnimals.contains(area.id)) {
+						// Show areas with specialization for this animal type
+						boolean hasSpec = false;
+						for (NArea.Specialisation spec : area.spec) {
+							if (spec.name.equals(animalType)) {
+								hasSpec = true;
+								break;
+							}
+						}
+						if (hasSpec) {
 							areas.add(new AreaEntry(area.id, area.name));
 						}
 					}
@@ -439,6 +441,19 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
     private final Class<T> type;
     public Class<T> getGenType() {
 	return this.type;
+    }
+
+    /**
+     * Get animal type name for NConfig preset lookups
+     */
+    protected String getAnimalTypeName() {
+        if (type == Ochs.class) return "cows";
+        if (type == Goat.class) return "goats";
+        if (type == Sheep.class) return "sheeps";
+        if (type == Pig.class) return "pigs";
+        if (type == Horse.class) return "horses";
+        if (type == Teimdeer.class) return "deers";
+        return "unknown";
     }
 
     @Override

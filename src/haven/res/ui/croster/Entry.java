@@ -5,6 +5,8 @@ import haven.*;
 import haven.render.*;
 import java.util.*;
 import java.util.function.*;
+import java.util.Set;
+import java.util.HashSet;
 import haven.MenuGrid.Pagina;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -39,6 +41,9 @@ public class Entry extends Widget {
     public static final Tex ownedo = Loading.waitfor(Resource.classres(Entry.class).pool.load("gfx/hud/rosters/owned-o", 1)::get).layer(Resource.imgc).tex();
     public static final Tex ownedm = Loading.waitfor(Resource.classres(Entry.class).pool.load("gfx/hud/rosters/owned-m", 1)::get).layer(Resource.imgc).tex();
     public static final Function<Integer, Tex> ownrend = v -> ((v == 3) ? ownedm : ((v == 1) ? ownedo : ownedn));
+    public static final Color markedForKill = new Color(200, 50, 50, 100);
+    public static final Set<UID> killList = new HashSet<>();
+    
     public final UID id;
     public String name;
     public int grp;
@@ -55,7 +60,11 @@ public class Entry extends Widget {
     }
 
     protected void drawbg(GOut g) {
-	g.chcolor(((idx & 1) == 0) ? every : other);
+	if(killList.contains(id)) {
+	    g.chcolor(markedForKill);
+	} else {
+	    g.chcolor(((idx & 1) == 0) ? every : other);
+	}
 	g.frect(Coord.z, sz);
 	g.chcolor();
     }

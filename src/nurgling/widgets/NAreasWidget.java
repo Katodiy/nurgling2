@@ -860,28 +860,13 @@ public class NAreasWidget extends Window
         // Get current preset for area and animal type
         private String getCurrentPreset(NArea area, String specName) {
             if(area == null) return null;
-            switch(specName) {
-                case "cows": return area.cowsPreset;
-                case "goats": return area.goatsPreset;
-                case "sheeps": return area.sheepsPreset;
-                case "pigs": return area.pigsPreset;
-                case "horses": return area.horsesPreset;
-                case "deer": return area.deersPreset;
-                default: return null;
-            }
+            return NConfig.getAreaRankPreset(area.id, specName);
         }
         
         // Set preset for area and animal type
         private void setPreset(NArea area, String specName, String presetName) {
             if(area == null) return;
-            switch(specName) {
-                case "cows": area.cowsPreset = presetName; break;
-                case "goats": area.goatsPreset = presetName; break;
-                case "sheeps": area.sheepsPreset = presetName; break;
-                case "pigs": area.pigsPreset = presetName; break;
-                case "horses": area.horsesPreset = presetName; break;
-                case "deer": area.deersPreset = presetName; break;
-            }
+            NConfig.setAreaRankPreset(area.id, specName, presetName);
         }
         
         public SpecialisationItem(NArea.Specialisation item)

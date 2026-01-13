@@ -99,6 +99,7 @@ public class NConfig
         questNotified, lpassistent, fishingsettings,
         serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, autoEquipTravellersSacks, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
         temsmarktime, exploredAreaEnable, chunkNavOverlay, player_box, player_fov, temsmarkdist, tempmark, tempmarkIgnoreDist, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
+        areaRankPresets,  // Map of areaId -> Map of animalType -> presetName
         shortCupboards,
         shortWalls,
         decalsOnTop,
@@ -601,6 +602,52 @@ public class NConfig
         }
     }
 
+    // Area rank preset bindings - stored separately from areas (which sync from DB)
+    @SuppressWarnings("unchecked")
+    public static String getAreaRankPreset(int areaId, String animalType) {
+        Map<Integer, Map<String, String>> presets = (Map<Integer, Map<String, String>>) get(Key.areaRankPresets);
+        if (presets == null) return null;
+        Map<String, String> areaPresets = presets.get(areaId);
+        if (areaPresets == null) return null;
+        return areaPresets.get(animalType);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void setAreaRankPreset(int areaId, String animalType, String presetName) {
+        Map<Integer, Map<String, String>> presets = (Map<Integer, Map<String, String>>) get(Key.areaRankPresets);
+        if (presets == null) {
+            presets = new HashMap<>();
+        }
+        Map<String, String> areaPresets = presets.computeIfAbsent(areaId, k -> new HashMap<>());
+        if (presetName == null || presetName.isEmpty()) {
+            areaPresets.remove(animalType);
+            if (areaPresets.isEmpty()) {
+                presets.remove(areaId);
+            }
+        } else {
+            areaPresets.put(animalType, presetName);
+        }
+        set(Key.areaRankPresets, presets);
+    }
+
+    /**
+     * Get all area IDs that have a rank preset configured for a specific animal type
+     * @param animalType Animal type (cows, goats, sheeps, pigs, horses, deers)
+     * @return Set of area IDs with configured presets
+     */
+    @SuppressWarnings("unchecked")
+    public static Set<Integer> getAreasWithRankPreset(String animalType) {
+        Set<Integer> result = new HashSet<>();
+        Map<Integer, Map<String, String>> presets = (Map<Integer, Map<String, String>>) get(Key.areaRankPresets);
+        if (presets == null) return result;
+        for (Map.Entry<Integer, Map<String, String>> entry : presets.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().containsKey(animalType)) {
+                result.add(entry.getKey());
+            }
+        }
+        return result;
+    }
+
     public static NConfig current;
 
     // Profile management - World-specific configurations
@@ -897,6 +944,25 @@ public class NConfig
                                     conf.put(Key.valueOf(entry.getKey()), entry.getValue());
                                     break;
                             }
+                        } else if (entry.getKey().equals(Key.areaRankPresets.name())) {
+                            // Special handling for areaRankPresets: convert String keys to Integer
+                            Map<Integer, Map<String, String>> converted = new HashMap<>();
+                            for (Map.Entry<String, Object> areaEntry : hobj.entrySet()) {
+                                try {
+                                    int areaId = Integer.parseInt(areaEntry.getKey());
+                                    if (areaEntry.getValue() instanceof Map) {
+                                        Map<String, String> animalPresets = new HashMap<>();
+                                        Map<String, Object> rawPresets = (Map<String, Object>) areaEntry.getValue();
+                                        for (Map.Entry<String, Object> presetEntry : rawPresets.entrySet()) {
+                                            if (presetEntry.getValue() instanceof String) {
+                                                animalPresets.put(presetEntry.getKey(), (String) presetEntry.getValue());
+                                            }
+                                        }
+                                        converted.put(areaId, animalPresets);
+                                    }
+                                } catch (NumberFormatException ignore) {}
+                            }
+                            conf.put(Key.areaRankPresets, converted);
                         } else {
                             conf.put(Key.valueOf(entry.getKey()), entry.getValue());
                         }

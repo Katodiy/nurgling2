@@ -166,6 +166,25 @@ public class NUtils
         return getGameUI().map.glob.map.areas.get(id);
     }
 
+    /**
+     * Get area that contains the given position
+     * @param pos Position in world coordinates
+     * @return NArea that contains the position, or null if not in any area
+     */
+    public static NArea getAreaByPosition(Coord2d pos)
+    {
+        if (getGameUI() == null || getGameUI().map == null || 
+            getGameUI().map.glob == null || getGameUI().map.glob.map == null || pos == null) {
+            return null;
+        }
+        for (NArea area : getGameUI().map.glob.map.areas.values()) {
+            if (area.isVisible() && area.checkHit(pos)) {
+                return area;
+            }
+        }
+        return null;
+    }
+
     public static Gob player()
     {
         if(getGameUI()== null || getGameUI().map ==null)

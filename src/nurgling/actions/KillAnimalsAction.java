@@ -87,8 +87,21 @@ public class KillAnimalsAction<C extends Entry> implements Action {
             forkill.addAll(targets);
         }
 
-        while (!forkill.isEmpty()) {
-            kill(forkill, gui);
+        // Mark animals for kill in roster (red highlight)
+        for(Gob gob : forkill) {
+            CattleId cattleId = gob.getattr(CattleId.class);
+            if(cattleId != null && cattleId.entry() != null) {
+                Entry.killList.add(cattleId.entry().id);
+            }
+        }
+
+        try {
+            while (!forkill.isEmpty()) {
+                kill(forkill, gui);
+            }
+        } finally {
+            // Clear kill list when done
+            Entry.killList.clear();
         }
 
         return Results.SUCCESS();
@@ -109,8 +122,11 @@ public class KillAnimalsAction<C extends Entry> implements Action {
         }
         new LiftObject(target).run(gui);
         new FindPlaceAndAction(target, NContext.findSpec("deadkritter"), true).run(gui);
+        CattleId cattleId = (CattleId) target.getattr(CattleId.class);
         Collection<Object> args = new ArrayList<>();
-        args.add(((CattleId) target.getattr(CattleId.class)).entry().id);
+        args.add(cattleId.entry().id);
+        // Remove from kill list highlight
+        Entry.killList.remove(cattleId.entry().id);
         NUtils.getRosterWindow(cattleRoster).roster(cattleRoster).wdgmsg("rm", args.toArray(new Object[0]));
         forkill.remove(target);
     }

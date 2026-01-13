@@ -202,18 +202,18 @@ public class GoatsHerd implements JConf {
     }
 
     /**
-     * Получить пресет для зоны по её ID
-     * @param areaId ID зоны
-     * @return Пресет привязанный к зоне или null если не найден
+     * Get preset for area by its ID
+     * @param areaId Area ID
+     * @return Preset bound to area or null if not found
      */
     public static GoatsHerd getForArea(int areaId)
     {
         if(areaId < 0)
             return null;
-        nurgling.areas.NArea area = nurgling.NUtils.getArea(areaId);
-        if(area != null && area.goatsPreset != null && !area.goatsPreset.isEmpty())
+        String presetName = nurgling.NConfig.getAreaRankPreset(areaId, "goats");
+        if(presetName != null && !presetName.isEmpty())
         {
-            return get(area.goatsPreset);
+            return get(presetName);
         }
         return null;
     }

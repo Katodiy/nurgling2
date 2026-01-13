@@ -183,18 +183,18 @@ public class CowsHerd implements JConf {
     }
 
     /**
-     * Получить пресет для зоны по её ID
-     * @param areaId ID зоны
-     * @return Пресет привязанный к зоне или null если не найден
+     * Get preset for area by its ID
+     * @param areaId Area ID
+     * @return Preset bound to area or null if not found
      */
     public static CowsHerd getForArea(int areaId)
     {
         if(areaId < 0)
             return null;
-        nurgling.areas.NArea area = nurgling.NUtils.getArea(areaId);
-        if(area != null && area.cowsPreset != null && !area.cowsPreset.isEmpty())
+        String presetName = NConfig.getAreaRankPreset(areaId, "cows");
+        if(presetName != null && !presetName.isEmpty())
         {
-            return get(area.cowsPreset);
+            return get(presetName);
         }
         return null;
     }
