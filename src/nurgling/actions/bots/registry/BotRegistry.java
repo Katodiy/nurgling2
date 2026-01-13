@@ -56,7 +56,7 @@ public class BotRegistry {
                 true,
                 false,
                 WaitBot.class,
-                "test30",
+                "pause",
                 false
         ));
         bots.add(new BotDescriptor(
@@ -67,7 +67,7 @@ public class BotRegistry {
                 true,
                 false,
                 AutocraftBot.class,
-                "test31",
+                "autocraft",
                 false
         ));
 
