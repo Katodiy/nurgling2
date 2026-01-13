@@ -1,13 +1,14 @@
 package nurgling.widgets.nsettings;
 
 import haven.*;
+import haven.res.lib.itemtex.ItemTex;
 import nurgling.scenarios.CraftPreset;
 import nurgling.scenarios.CraftPresetManager;
+import nurgling.tools.VSpec;
+import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.awt.image.BufferedImage;
+import java.util.*;
 
 /**
  * Panel for managing craft presets in the settings window.
@@ -18,6 +19,10 @@ public class CraftPresetsPanel extends Panel {
     private Scrollport presetListContainer;
     private Widget presetListContent;
     private final Set<String> expandedPresets = new HashSet<>();
+
+    // Icon cache
+    private final Map<String, BufferedImage> iconCache = new HashMap<>();
+    private final Set<String> failedIcons = new HashSet<>();
 
     public CraftPresetsPanel() {
         super("");
@@ -83,7 +88,9 @@ public class CraftPresetsPanel extends Panel {
         // Column positions
         int expandBtnX = margin;
         int expandBtnW = UI.scale(30);
-        int nameX = expandBtnX + expandBtnW + UI.scale(8);
+        int iconX = expandBtnX + expandBtnW + UI.scale(5);
+        int iconW = UI.scale(24);
+        int nameX = iconX + iconW + UI.scale(8);
         int btnW = UI.scale(60);
         int delBtnX = sz.x - margin - btnW;
 
@@ -107,6 +114,28 @@ public class CraftPresetsPanel extends Panel {
             rebuildPresetList();
         });
         w.add(expandBtn, new Coord(expandBtnX, (baseHeight - expandBtn.sz.y) / 2));
+
+        // Item icon (use first output item)
+        String iconName = null;
+        String iconResPath = null;
+        if (!preset.getOutputs().isEmpty()) {
+            iconName = preset.getOutputs().get(0).getName();
+            iconResPath = preset.getOutputs().get(0).getResourcePath();
+        } else if (!preset.getInputs().isEmpty()) {
+            iconName = preset.getInputs().get(0).getName();
+            iconResPath = preset.getInputs().get(0).getResourcePath();
+        }
+        if (iconName != null || iconResPath != null) {
+            BufferedImage icon = getItemIcon(iconName, iconResPath);
+            if (icon != null) {
+                final TexI iconTex = new TexI(icon);
+                w.add(new Widget(new Coord(UI.scale(20), UI.scale(20))) {
+                    public void draw(GOut g) {
+                        g.image(iconTex, Coord.z, new Coord(UI.scale(20), UI.scale(20)));
+                    }
+                }, new Coord(iconX, (baseHeight - UI.scale(20)) / 2));
+            }
+        }
 
         // Preset name
         Label nameLabel = new Label(preset.getName());
@@ -165,5 +194,71 @@ public class CraftPresetsPanel extends Panel {
     public void load() {
         CraftPresetManager.getInstance().loadPresets();
         rebuildPresetList();
+    }
+
+    /**
+     * Get item icon - first try VSpec categories, then try loading from resource path.
+     */
+    private BufferedImage getItemIcon(String itemName, String resourcePath) {
+        String cacheKey = itemName != null ? itemName : resourcePath;
+        if (cacheKey == null) return null;
+
+        if (iconCache.containsKey(cacheKey)) {
+            return iconCache.get(cacheKey);
+        }
+
+        if (failedIcons.contains(cacheKey)) {
+            return null;
+        }
+
+        BufferedImage icon = null;
+
+        // First try: Search VSpec categories for the item
+        if (itemName != null) {
+            try {
+                JSONObject itemRes = null;
+                for (Map.Entry<String, ArrayList<JSONObject>> entry : VSpec.categories.entrySet()) {
+                    for (JSONObject obj : entry.getValue()) {
+                        if (obj.getString("name").equals(itemName)) {
+                            itemRes = obj;
+                            break;
+                        }
+                    }
+                    if (itemRes != null) break;
+                }
+
+                if (itemRes != null) {
+                    icon = ItemTex.create(itemRes);
+                    if (icon != null) {
+                        iconCache.put(cacheKey, icon);
+                        return icon;
+                    }
+                }
+            } catch (Exception e) {
+                // Continue to next method
+            }
+        }
+
+        // Second try: Load directly from resource path
+        if (resourcePath != null && !resourcePath.isEmpty()) {
+            try {
+                Resource res = Resource.remote().loadwait(resourcePath);
+                if (res != null) {
+                    Resource.Image img = res.layer(Resource.imgc);
+                    if (img != null) {
+                        icon = img.img;
+                        if (icon != null) {
+                            iconCache.put(cacheKey, icon);
+                            return icon;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Silent failure
+            }
+        }
+
+        failedIcons.add(cacheKey);
+        return null;
     }
 }
