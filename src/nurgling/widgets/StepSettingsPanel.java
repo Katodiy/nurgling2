@@ -9,6 +9,8 @@ import nurgling.actions.bots.registry.BotRegistry;
 import nurgling.conf.NForagerProp;
 import nurgling.equipment.EquipmentPreset;
 import nurgling.scenarios.BotStep;
+import nurgling.scenarios.CraftPreset;
+import nurgling.scenarios.CraftPresetManager;
 import java.util.*;
 
 public class StepSettingsPanel extends Widget {
@@ -255,6 +257,92 @@ public class StepSettingsPanel extends Widget {
             add(new Label("Format: hh:mm:ss, mm:ss, or ss"), new Coord(UI.scale(8), y));
             y += UI.scale(20);
             add(new Label("Examples: 01:30:00, 05:00, 30"), new Coord(UI.scale(8), y));
+        }
+        if (desc.id.equals("autocraft_bot")) {
+            hasAnySetting = true;
+            add(new Label("Select Craft Preset:"), new Coord(UI.scale(8), y));
+            y += UI.scale(24);
+
+            List<CraftPreset> presetList = CraftPresetManager.getInstance().getPresetList();
+
+            if (presetList.isEmpty()) {
+                add(new Label("No presets available."), new Coord(UI.scale(8), y));
+                add(new Label("Open a crafting window and"), new Coord(UI.scale(8), y + UI.scale(18)));
+                add(new Label("click 'Save Preset' first."), new Coord(UI.scale(8), y + UI.scale(36)));
+                y += UI.scale(60);
+            } else {
+                String currentPresetId = (String) step.getSetting("presetId");
+                CraftPreset selectedPreset = null;
+                if (currentPresetId != null) {
+                    selectedPreset = CraftPresetManager.getInstance().getPreset(currentPresetId);
+                }
+                if (selectedPreset == null && !presetList.isEmpty()) {
+                    selectedPreset = presetList.get(0);
+                }
+
+                final List<CraftPreset> finalPresetList = presetList;
+                NDropbox<CraftPreset> presetDropdown = new NDropbox<CraftPreset>(
+                        UI.scale(160),
+                        Math.min(presetList.size(), 10),
+                        UI.scale(22)
+                ) {
+                    @Override
+                    protected CraftPreset listitem(int i) { return finalPresetList.get(i); }
+                    @Override
+                    protected int listitems() { return finalPresetList.size(); }
+                    @Override
+                    protected void drawitem(GOut g, CraftPreset item, int i) {
+                        g.text(item.getName(), Coord.z);
+                    }
+                    @Override
+                    public void change(CraftPreset item) {
+                        super.change(item);
+                        if (item != null) {
+                            step.setSetting("presetId", item.getId());
+                        }
+                    }
+                };
+                if (selectedPreset != null) {
+                    presetDropdown.change(selectedPreset);
+                }
+
+                add(presetDropdown, new Coord(UI.scale(8), y));
+                y += UI.scale(40);
+            }
+
+            // Quantity input
+            add(new Label("Quantity (crafts):"), new Coord(UI.scale(8), y));
+            y += UI.scale(24);
+
+            Object currentQty = step.getSetting("quantity");
+            int qty = 1;
+            if (currentQty != null) {
+                if (currentQty instanceof Integer) {
+                    qty = (Integer) currentQty;
+                } else if (currentQty instanceof Long) {
+                    qty = ((Long) currentQty).intValue();
+                } else if (currentQty instanceof Number) {
+                    qty = ((Number) currentQty).intValue();
+                }
+            }
+
+            TextEntry qtyEntry = new TextEntry(UI.scale(60), String.valueOf(qty)) {
+                @Override
+                protected void changed() {
+                    try {
+                        int q = Integer.parseInt(text().trim());
+                        if (q > 0) {
+                            step.setSetting("quantity", q);
+                        }
+                    } catch (NumberFormatException e) {
+                        // Ignore invalid input
+                    }
+                }
+            };
+            step.setSetting("quantity", qty);
+
+            add(qtyEntry, new Coord(UI.scale(8), y));
+            y += UI.scale(30);
         }
         if (!hasAnySetting) {
             add(new Label("No settings for this step."), new Coord(UI.scale(8), y));

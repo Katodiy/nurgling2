@@ -32,6 +32,7 @@ public class NMakewindow extends Widget {
     public static final Text tooll = fnd.render(("Tools:"));
     public static final Coord boff = UI.scale(new Coord(7, 9));
     public String rcpnm;
+    public String recipeResource;
     public List<Spec> inputs = Collections.emptyList();
     public List<Spec> outputs = Collections.emptyList();
     public List<Indir<Resource>> qmod = Collections.emptyList();
@@ -43,6 +44,7 @@ public class NMakewindow extends Widget {
     private static Tex softTexLabel = null;
     public CheckBox noTransfer = null;
     public boolean autoMode = false;
+    private Button savePresetBtn = null;
 
     private static final OwnerContext.ClassResolver<NMakewindow> ctxr = new OwnerContext.ClassResolver<NMakewindow>()
             .add(Glob.class, wdg -> wdg.ui.sess.glob)
@@ -227,6 +229,24 @@ public class NMakewindow extends Widget {
             cat.raise();
             cat.tick(dt);
         }
+
+        // Update Save Preset button visibility
+        if (savePresetBtn != null) {
+            savePresetBtn.visible = autoMode && allInputsConfigured();
+        }
+    }
+
+    /**
+     * Check if all category inputs have their ingredient selected.
+     */
+    private boolean allInputsConfigured() {
+        for (Spec s : inputs) {
+            // If it's a category input, it needs to have an ingredient selected (or be ignored)
+            if (s.categories && s.ing == null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -295,8 +315,31 @@ public class NMakewindow extends Widget {
             }
         }, new Coord(336, 35));
         noTransfer.visible = false;
+
+        // Save Preset button - only visible in auto mode when all inputs are configured
+        savePresetBtn = add(new Button(UI.scale(85), "Save Preset") {
+            @Override
+            public void click() {
+                openSavePresetDialog();
+            }
+        }, UI.scale(new Coord(325, 38)));
+        savePresetBtn.visible = false;
+
         pack();
         this.rcpnm = rcpnm;
+
+        // Capture recipe resource from MenuGrid.lastPagina while it's still valid
+        if (MenuGrid.lastPagina != null) {
+            try {
+                this.recipeResource = MenuGrid.lastPagina.res().name;
+            } catch (Loading l) {
+                // Resource not loaded yet
+            }
+        }
+    }
+
+    private void openSavePresetDialog() {
+        NUtils.getGameUI().add(new SaveCraftPresetDialog(this), UI.scale(new Coord(200, 200)));
     }
 
     public void uimsg(String msg, Object... args) {

@@ -776,6 +776,14 @@ public class NConfig
         return ((HashDirCache) ResCache.global).base + "\\..\\" + "equipment_presets.nurgling.json";
     }
 
+    /**
+     * Gets the dynamic path for craft presets configuration file
+     * Note: craft presets are always stored globally, not per-profile
+     */
+    public String getCraftPresetsPath() {
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "craft_presets.nurgling.json";
+    }
+
     @SuppressWarnings("unchecked")
     private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs)
     {
