@@ -457,6 +457,40 @@ public class NCore extends Widget
                 }
             }
 
+            // Add smoking wood info to hash so different smoking materials create different recipes
+            // Format matches regular ingredients: resName/name + (val * 100), where val=1.0 for smoking (100%)
+            try {
+                for (ItemInfo info : item.info) {
+                    if (info.getClass().getName().contains("Smoke")) {
+                        try {
+                            // Try to get resource name first, then fall back to name
+                            String woodIdentifier = null;
+                            try {
+                                java.lang.reflect.Field resNameField = info.getClass().getDeclaredField("resName");
+                                resNameField.setAccessible(true);
+                                woodIdentifier = (String) resNameField.get(info);
+                            } catch (NoSuchFieldException e) {
+                                // resName field doesn't exist
+                            }
+                            if (woodIdentifier == null || woodIdentifier.isEmpty()) {
+                                java.lang.reflect.Field nameField = info.getClass().getDeclaredField("name");
+                                nameField.setAccessible(true);
+                                woodIdentifier = (String) nameField.get(info);
+                            }
+                            if (woodIdentifier != null && !woodIdentifier.isEmpty()) {
+                                hashInput.append(woodIdentifier);
+                                hashInput.append(1.0 * 100); // Smoking wood is always 100%
+                            }
+                        } catch (NoSuchFieldException | IllegalAccessException e) {
+                            // Could not extract smoking wood info
+                        }
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore errors in smoking wood extraction
+            }
+
             return NUtils.calculateSHA256(hashInput.toString());
         }
 

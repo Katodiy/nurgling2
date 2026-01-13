@@ -666,34 +666,7 @@ public class NContext {
             gui.msg(areaId + " Not found!");
             return;
         }
-        navigateToAreaIfNeeded(area);
-    }
-
-    /**
-     * Navigate to an NArea using global pathfinding if needed.
-     * @param area The area to navigate to
-     */
-    public void navigateToAreaIfNeeded(NArea area) throws InterruptedException {
-        if (area == null) {
-            return;
-        }
-
-        // Check if we need to navigate (area not visible or too far)
-        boolean needsNavigation = !area.isVisible() || area.getCenter2d() == null ||
-                                  area.getCenter2d().dist(NUtils.player().rc) > 450;
-
-        if (!needsNavigation) {
-            return;
-        }
-
-        ChunkNavManager chunkNav = (gui.map != null && gui.map instanceof NMapView)
-            ? ((NMapView)gui.map).getChunkNavManager() : null;
-        if (chunkNav != null && chunkNav.isInitialized()) {
-            ChunkPath path = chunkNav.planToArea(area);
-            if (path != null) {
-                nurgling.actions.Results result = chunkNav.navigateToArea(area, gui);
-            }
-        }
+        NUtils.navigateToArea(area);
     }
 
     public String createArea(String msg, BufferedImage bauble) throws InterruptedException {

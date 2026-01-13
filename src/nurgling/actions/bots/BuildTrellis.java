@@ -341,7 +341,7 @@ public class BuildTrellis implements Action {
                     }
                     
                     // Navigate to ingredient area
-                    context.navigateToAreaIfNeeded(ingredient.nArea);
+                    NUtils.navigateToArea(ingredient.nArea);
                     Pair<Coord2d, Coord2d> ingredientArea = ingredient.nArea.getRCArea();
                     if (ingredientArea == null) {
                         NUtils.getGameUI().msg("Cannot access ingredient area for " + ingredient.name.getKeys().get(0));

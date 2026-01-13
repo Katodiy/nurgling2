@@ -92,7 +92,7 @@ public class Build implements Action
         public Pair<Coord2d, Coord2d> navigateAndGetArea(NContext context) throws InterruptedException {
             if (nArea != null) {
                 // Navigate to the area if needed
-                context.navigateToAreaIfNeeded(nArea);
+                NUtils.navigateToArea(nArea);
                 // Now get the RC area
                 return nArea.getRCArea();
             }
@@ -162,7 +162,7 @@ public class Build implements Action
         Pair<Coord2d,Coord2d> area = null;
         // Navigate to build area if using NArea and resolve the RC area
         if (buildArea != null) {
-            context.navigateToAreaIfNeeded(buildArea);
+            NUtils.navigateToArea(buildArea);
             area = buildArea.getRCArea();
             if (area == null) {
                 return Results.ERROR("Cannot get build area coordinates");
@@ -512,7 +512,7 @@ public class Build implements Action
                 }
                 
                 // Navigate to ingredient area
-                context.navigateToAreaIfNeeded(ingredient.nArea);
+                NUtils.navigateToArea(ingredient.nArea);
                 Pair<Coord2d, Coord2d> ingredientArea = ingredient.nArea.getRCArea();
                 if (ingredientArea == null) {
                     NUtils.getGameUI().msg("Cannot access ingredient area for " + ingredient.name.getKeys().get(0));
@@ -585,7 +585,7 @@ public class Build implements Action
         
         // Navigate back to build area
         if (buildArea != null) {
-            context.navigateToAreaIfNeeded(buildArea);
+            NUtils.navigateToArea(buildArea);
         }
         
         return !needRefill(curings);

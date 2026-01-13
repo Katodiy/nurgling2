@@ -67,6 +67,7 @@ public class KillAnimalsAction<C extends Entry> implements Action {
         if (forpred != null) {
             int c = 0;
             Gob last = null;
+            // Select best adults (those matching forpred) up to flcount
             for (Gob gob : targets) {
                 if (forpred.test(gob)) {
                     if (c < flcount) {
@@ -76,17 +77,8 @@ public class KillAnimalsAction<C extends Entry> implements Action {
                     }
                 }
             }
-            if(forlife.size()<flcount) {
-                for (Gob gob : targets) {
-                    if (!forlife.contains(gob)) {
-                        if (c < flcount) {
-                            forlife.add(gob);
-                            c++;
-                            last = gob;
-                        }
-                    }
-                }
-            }
+            // Kill all animals that are worse than the worst kept adult
+            // This preserves young females that are better than the worst adult female
             for (Gob gob : targets) {
                 if (!forlife.contains(gob) && last != null && comp.compare(last, gob) <= 0)
                     forkill.add(gob);
