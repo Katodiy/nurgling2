@@ -266,6 +266,19 @@ public class NArea
         {
             this.version = obj.getInt("version");
         }
+        // Load rank preset bindings
+        if(obj.has("cowsPreset"))
+            this.cowsPreset = obj.getString("cowsPreset");
+        if(obj.has("goatsPreset"))
+            this.goatsPreset = obj.getString("goatsPreset");
+        if(obj.has("sheepsPreset"))
+            this.sheepsPreset = obj.getString("sheepsPreset");
+        if(obj.has("pigsPreset"))
+            this.pigsPreset = obj.getString("pigsPreset");
+        if(obj.has("horsesPreset"))
+            this.horsesPreset = obj.getString("horsesPreset");
+        if(obj.has("deersPreset"))
+            this.deersPreset = obj.getString("deersPreset");
     }
     public Space space;
     public String name;
@@ -277,6 +290,14 @@ public class NArea
 
     public ArrayList<Specialisation> spec = new ArrayList<>();
     public boolean inWork = false;
+    
+    // Animal rank preset bindings for this area
+    public String cowsPreset = null;
+    public String goatsPreset = null;
+    public String sheepsPreset = null;
+    public String pigsPreset = null;
+    public String horsesPreset = null;
+    public String deersPreset = null;
 
     public Area getArea()
     {
@@ -387,6 +408,19 @@ public class NArea
         res.put("spec",jspec);
         res.put("version", version);
         this.jspec = jspec;
+        // Save rank preset bindings
+        if(cowsPreset != null)
+            res.put("cowsPreset", cowsPreset);
+        if(goatsPreset != null)
+            res.put("goatsPreset", goatsPreset);
+        if(sheepsPreset != null)
+            res.put("sheepsPreset", sheepsPreset);
+        if(pigsPreset != null)
+            res.put("pigsPreset", pigsPreset);
+        if(horsesPreset != null)
+            res.put("horsesPreset", horsesPreset);
+        if(deersPreset != null)
+            res.put("deersPreset", deersPreset);
         return res;
     }
     

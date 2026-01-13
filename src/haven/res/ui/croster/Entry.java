@@ -45,6 +45,7 @@ public class Entry extends Widget {
     public double q;
     public int idx;
     public CheckBox mark;
+    public int areaId = -1;  // Area ID the animal is bound to (-1 = not bound)
 
     public Entry(Coord sz, UID id, String name) {
 	super(sz);

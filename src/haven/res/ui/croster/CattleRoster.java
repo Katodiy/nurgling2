@@ -14,8 +14,10 @@ import haven.res.gfx.hud.rosters.horse.Horse;
 import haven.res.gfx.hud.rosters.pig.Pig;
 import haven.res.gfx.hud.rosters.sheep.Sheep;
 import haven.res.gfx.hud.rosters.teimdeer.Teimdeer;
+import nurgling.NMapView;
 import nurgling.NStyle;
 import nurgling.NUtils;
+import nurgling.areas.NArea;
 import nurgling.widgets.NKinSettings;
 import nurgling.widgets.settings.*;
 
@@ -39,6 +41,8 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 
     ICheckBox settings;
     final Coord shift = UI.scale(16,5);
+    NAreaDropbox areaFilter;
+    int filterAreaId = -1;  // -1 = show all animals
     public CattleRoster() {
 	super(new Coord(WIDTH, UI.scale(400)));
 	this.type = (Class<T>) ((ParameterizedType) getClass()
@@ -64,6 +68,49 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	    }
 	    wdgmsg("rm", args.toArray(new Object[0]));
 	}), entrycont.pos("br").adds(0, 5), 1, 0);
+	// Area filter - top right, left of settings button
+	int settingsBtnWidth = NStyle.settingsi[0].sz().x;
+	add(areaFilter = new NAreaDropbox(UI.scale(150)) {
+		@Override
+		public void change(AreaEntry item) {
+			super.change(item);
+			if(item != null) {
+				filterAreaId = item.id;
+				dirty = true;
+			}
+		}
+		
+		@Override
+		public void reloadAreas() {
+			areas.clear();
+			areas.add(new AreaEntry(-1, "All areas"));
+			
+			// Collect area ids that have animals
+			java.util.Set<Integer> zonesWithAnimals = new java.util.HashSet<>();
+			for(Entry entry : entries.values()) {
+				if(entry.areaId >= 0) {
+					zonesWithAnimals.add(entry.areaId);
+				}
+			}
+			
+			if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+				NMapView map = (NMapView) NUtils.getGameUI().map;
+				if (map.glob != null && map.glob.map != null && map.glob.map.areas != null) {
+					for (NArea area : map.glob.map.areas.values()) {
+						// Show only areas that have animals
+						if(zonesWithAnimals.contains(area.id)) {
+							areas.add(new AreaEntry(area.id, area.name));
+						}
+					}
+					areas.subList(1, areas.size()).sort(java.util.Comparator.comparing(a -> a.name));
+				}
+			}
+			
+			if (sel == null && !areas.isEmpty()) {
+				sel = areas.get(0);
+			}
+		}
+	}, new Coord(sz.x - settingsBtnWidth - UI.scale(150), UI.scale(2)));
 	add(settings = new ICheckBox(NStyle.settingsi[0], NStyle.settingsi[1], NStyle.settingsi[2], NStyle.settingsi[3])
 	{
 		@Override
@@ -249,7 +296,13 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 
     public void tick(double dt) {
 	if(dirty) {
-	    List<T> ndisp = new ArrayList<>(entries.values());
+	    List<T> ndisp = new ArrayList<>();
+	    for(T entry : entries.values()) {
+		// Filter by area if selected
+		if(filterAreaId < 0 || entry.areaId == filterAreaId) {
+		    ndisp.add(entry);
+		}
+	    }
 	    ndisp.sort(order);
 	    redisplay(ndisp);
 	    dirty = false;

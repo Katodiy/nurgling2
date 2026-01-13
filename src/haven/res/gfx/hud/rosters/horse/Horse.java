@@ -74,7 +74,7 @@ public class Horse extends Entry {
     }
 
 	public double rang() {
-		HorseHerd herd = HorseHerd.getCurrent();
+		HorseHerd herd = HorseHerd.getForArea(areaId);
 		if(herd != null) {
 			double ql = (!herd.ignoreBD || stallion) ? (q > (seedq - herd.breedingGap)) ? (q + seedq - herd.breedingGap) / 2. : q + ((seedq - herd.breedingGap) - q) * herd.coverbreed : q;
 			double m = (herd.disable_q_percentage ? (herd.meatq * meatq) : (ql * herd.meatq * meatq / 100.));

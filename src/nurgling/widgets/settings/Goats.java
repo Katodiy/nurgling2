@@ -90,7 +90,6 @@ public class Goats extends Window {
                     gh.disable_q_percentage = ignoreqp.a;
                     gh.skipMilking = skipMilkingBox.a;
                     gh.skipShearing = skipShearingBox.a;
-
                 }
                 GoatsHerd.set(gh);
             }

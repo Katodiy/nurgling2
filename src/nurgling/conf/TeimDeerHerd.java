@@ -161,6 +161,23 @@ public class TeimDeerHerd implements JConf {
         return get(current);
     }
 
+    /**
+     * Получить пресет для зоны по её ID
+     * @param areaId ID зоны
+     * @return Пресет привязанный к зоне или null если не найден
+     */
+    public static TeimDeerHerd getForArea(int areaId)
+    {
+        if(areaId < 0)
+            return null;
+        nurgling.areas.NArea area = nurgling.NUtils.getArea(areaId);
+        if(area != null && area.deersPreset != null && !area.deersPreset.isEmpty())
+        {
+            return get(area.deersPreset);
+        }
+        return null;
+    }
+
     public static HashSet<String> getKeySet()
     {
         HashSet<String> res = new HashSet<>();

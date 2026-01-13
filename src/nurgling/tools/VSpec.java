@@ -1347,7 +1347,7 @@ public class VSpec {
         mushrooms.add(new JSONObject("{\"static\":\"gfx/invobjs/trollshrooms\",\"name\":\"Troll Mushrooms\"}"));
         mushrooms.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/yellowfoot\",\"name\":\"Yellowfeet\"}"));
         mushrooms.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lorchel\",\"name\":\"Morels\"}"));
-        mushrooms.add(new JSONObject("{\"static\":\"gfx/invobjs/herbs/lorcheldried\",\"name\":\"Dried Morels\"}"));
+        mushrooms.add(new JSONObject("{\"static\":\"gfx/invobjs/lorcheldried\",\"name\":\"Dried Morels\"}"));
         categories.put("Edible Mushroom", mushrooms);
 
         ArrayList<JSONObject> nuts = new ArrayList<>();

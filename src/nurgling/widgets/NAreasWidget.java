@@ -466,10 +466,10 @@ public class NAreasWidget extends Window
         public void draw(GOut g) {
             if (rootPath!=null) {
                 g.image(openfolderIcon, Coord.z, UI.scale(16,16));
-                g.text(text.text(), new Coord(UI.scale(21), 0)); // Текст рядом с иконкой
+                g.text(text.text(), new Coord(UI.scale(21), 0)); // Text next to icon
             }else if (area == null) {
                 g.image(folderIcon, Coord.z, UI.scale(16,16));
-                g.text(text.text(), new Coord(UI.scale(21), 0)); // Текст рядом с иконкой
+                g.text(text.text(), new Coord(UI.scale(21), 0)); // Text next to icon
             } else {
                 super.draw(g);
             }
@@ -833,8 +833,57 @@ public class NAreasWidget extends Window
         Label text;
         NArea.Specialisation item;
         IButton spec = null;
+        IButton rankPresetBtn = null;
         NFlowerMenu menu;
+        NFlowerMenu rankMenu;
         TexI icon;
+        
+        // Check if specialisation is for animals
+        private boolean isAnimalSpec(String name) {
+            return name.equals("cows") || name.equals("goats") || name.equals("sheeps") || 
+                   name.equals("pigs") || name.equals("horses") || name.equals("deer");
+        }
+        
+        // Get list of presets for animal type
+        private java.util.HashSet<String> getPresetNames(String specName) {
+            switch(specName) {
+                case "cows": return nurgling.conf.CowsHerd.getKeySet();
+                case "goats": return nurgling.conf.GoatsHerd.getKeySet();
+                case "sheeps": return nurgling.conf.SheepsHerd.getKeySet();
+                case "pigs": return nurgling.conf.PigsHerd.getKeySet();
+                case "horses": return nurgling.conf.HorseHerd.getKeySet();
+                case "deer": return nurgling.conf.TeimDeerHerd.getKeySet();
+                default: return new java.util.HashSet<>();
+            }
+        }
+        
+        // Get current preset for area and animal type
+        private String getCurrentPreset(NArea area, String specName) {
+            if(area == null) return null;
+            switch(specName) {
+                case "cows": return area.cowsPreset;
+                case "goats": return area.goatsPreset;
+                case "sheeps": return area.sheepsPreset;
+                case "pigs": return area.pigsPreset;
+                case "horses": return area.horsesPreset;
+                case "deer": return area.deersPreset;
+                default: return null;
+            }
+        }
+        
+        // Set preset for area and animal type
+        private void setPreset(NArea area, String specName, String presetName) {
+            if(area == null) return;
+            switch(specName) {
+                case "cows": area.cowsPreset = presetName; break;
+                case "goats": area.goatsPreset = presetName; break;
+                case "sheeps": area.sheepsPreset = presetName; break;
+                case "pigs": area.pigsPreset = presetName; break;
+                case "horses": area.horsesPreset = presetName; break;
+                case "deer": area.deersPreset = presetName; break;
+            }
+        }
+        
         public SpecialisationItem(NArea.Specialisation item)
         {
             this.item = item;
@@ -849,6 +898,9 @@ public class NAreasWidget extends Window
             if(specialisationItem != null) {
                 icon = new TexI(specialisationItem.image);
             }
+            
+            int btnX = UI.scale(135);
+            
             if(SpecialisationData.data.get(item.name)!=null)
             {
                 add(spec = new IButton("nurgling/hud/buttons/settingsnf/","u","d","h"){
@@ -914,7 +966,77 @@ public class NAreasWidget extends Window
                         }
                         ui.root.add(menu, pos);
                     }
-                },UI.scale(new Coord(135,4)));
+                },UI.scale(new Coord(btnX,4)));
+                btnX += UI.scale(18);
+            }
+            
+            // Add rank preset selection button for animal specialisations
+            if(isAnimalSpec(item.name))
+            {
+                add(rankPresetBtn = new IButton("nurgling/hud/buttons/settingsnf/","u","d","h"){
+                    @Override
+                    public void click() {
+                        super.click();
+                        java.util.HashSet<String> presets = getPresetNames(item.name);
+                        if(presets.isEmpty()) {
+                            NUtils.getGameUI().msg("No presets available for " + item.name);
+                            return;
+                        }
+                        
+                        // Add reset option
+                        String[] options = new String[presets.size() + 1];
+                        options[0] = "-- None --";
+                        int i = 1;
+                        for(String preset : presets) {
+                            options[i++] = preset;
+                        }
+                        
+                        rankMenu = new NFlowerMenu(options) {
+                            @Override
+                            public boolean mousedown(MouseDownEvent ev) {
+                                if(super.mousedown(ev))
+                                    nchoose(null);
+                                return true;
+                            }
+
+                            public void destroy() {
+                                rankMenu = null;
+                                super.destroy();
+                            }
+
+                            @Override
+                            public void nchoose(NPetal option) {
+                                if(option != null && al.sel != null && al.sel.area != null) {
+                                    String presetName = option.name.equals("-- None --") ? null : option.name;
+                                    setPreset(al.sel.area, item.name, presetName);
+                                    NConfig.needAreasUpdate();
+                                    if(presetName != null) {
+                                        NUtils.getGameUI().msg("Rank preset set to: " + presetName);
+                                    } else {
+                                        NUtils.getGameUI().msg("Rank preset cleared");
+                                    }
+                                }
+                                uimsg("cancel");
+                            }
+                        };
+                        Widget par = parent;
+                        Coord pos = c.add(UI.scale(32,43));
+                        while(par!=null && !(par instanceof GameUI)) {
+                            pos = pos.add(par.c);
+                            par = par.parent;
+                        }
+                        ui.root.add(rankMenu, pos);
+                    }
+                    
+                    @Override
+                    public Object tooltip(Coord c, Widget prev) {
+                        if(al.sel != null && al.sel.area != null) {
+                            String current = getCurrentPreset(al.sel.area, item.name);
+                            return "Rank preset: " + (current != null ? current : "Default");
+                        }
+                        return "Select rank preset";
+                    }
+                },UI.scale(new Coord(btnX, 4)));
             }
             pack();
             sz.y = UI.scale(24);
