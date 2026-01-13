@@ -189,6 +189,20 @@ public class SaveCraftPresetDialog extends Window {
                 // Resource not loaded
             }
 
+            // Capture item size in inventory squares
+            try {
+                if (spec.spr != null) {
+                    Coord sprSz = spec.spr.sz();
+                    // Convert pixel size to inventory squares (sqsz is ~33x33 scaled)
+                    int width = Math.max(1, (sprSz.x + Inventory.sqsz.x - 1) / Inventory.sqsz.x);
+                    int height = Math.max(1, (sprSz.y + Inventory.sqsz.y - 1) / Inventory.sqsz.y);
+                    outputSpec.setWidth(width);
+                    outputSpec.setHeight(height);
+                }
+            } catch (Loading l) {
+                // Sprite not loaded, use default 1x1
+            }
+
             outputs.add(outputSpec);
         }
         preset.setOutputs(outputs);

@@ -70,6 +70,17 @@ public class BotRegistry {
                 "autocraft",
                 false
         ));
+        bots.add(new BotDescriptor(
+                "maintain_stock_bot",
+                BotDescriptor.BotType.UTILS,
+                "Maintain Stock",
+                "Maintains a target stock level by counting items in an area and crafting as needed",
+                true,
+                false,
+                MaintainStockBot.class,
+                "test32",
+                false
+        ));
 
         // RESOURCES
         bots.add(new BotDescriptor("choper", BotDescriptor.BotType.RESOURCES, "Chopper", "Chops trees.", false, true, Chopper.class, "choper", false));
