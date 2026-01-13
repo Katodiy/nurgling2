@@ -506,6 +506,11 @@ public class Build implements Action
         {
             if (ingredient.specialWay == null)
             {
+                // Skip if we don't need any more of this ingredient
+                if (ingredient.count <= 0) {
+                    continue;
+                }
+                
                 if (ingredient.nArea == null) {
                     NUtils.getGameUI().msg("No area defined for " + ingredient.name.getKeys().get(0));
                     continue;
