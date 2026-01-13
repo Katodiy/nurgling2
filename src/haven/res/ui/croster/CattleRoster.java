@@ -28,7 +28,8 @@ import java.awt.image.BufferedImage;
 public abstract class CattleRoster <T extends Entry> extends Widget {
     public static final int WIDTH = UI.scale(980);
     public static final Comparator<Entry> namecmp = (a, b) -> a.name.compareTo(b.name);
-    public static final int HEADH = UI.scale(50);
+    public static final int TOOLBAR_H = UI.scale(25);  // Height for top toolbar (combobox, settings button)
+    public static final int HEADH = UI.scale(55);  // Total header height (toolbar + column headers)
     public final Map<UID, T> entries = new HashMap<>();
     public final Scrollbar sb;
     public final Widget entrycont;
@@ -53,10 +54,12 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	    }, sz.x, HEADH);
 	Widget prev;
 	prev = add(new Button(UI.scale(100), "Select all", false).action(() -> {
-		    for(Entry entry : this.entries.values())
+		    // Select only animals in current filtered display
+		    for(Entry entry : this.display)
 			entry.mark.set(true);
 		}), entrycont.pos("bl").adds(0, 5));
 	prev = add(new Button(UI.scale(100), "Select none", false).action(() -> {
+		    // Deselect all animals
 		    for(Entry entry : this.entries.values())
 			entry.mark.set(false);
 		}), prev.pos("ur").adds(5, 0));
@@ -78,6 +81,13 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 				filterAreaId = item.id;
 				dirty = true;
 			}
+		}
+		
+		@Override
+		public boolean mousedown(MouseDownEvent ev) {
+			// Reload areas before showing dropdown to pick up new zones
+			reloadAreas();
+			return super.mousedown(ev);
 		}
 		
 		@Override
@@ -112,7 +122,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 				sel = areas.get(0);
 			}
 		}
-	}, new Coord(sz.x - settingsBtnWidth - UI.scale(150), UI.scale(2)));
+	}, new Coord(sz.x - settingsBtnWidth - UI.scale(155), UI.scale(5)));
 	add(settings = new ICheckBox(NStyle.settingsi[0], NStyle.settingsi[1], NStyle.settingsi[2], NStyle.settingsi[3])
 	{
 		@Override
@@ -251,7 +261,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 			}
 			super.tick(dt);
 		}
-	}, new Coord(sz.x - NStyle.settingsi[0].sz().x / 2, NStyle.settingsi[0].sz().y / 2).sub(shift));
+	}, new Coord(sz.x - NStyle.settingsi[0].sz().x, UI.scale(5)));
 	pack();
     }
 
@@ -320,21 +330,21 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	    if((prev != null) && !prev.r) {
 		g.chcolor(255, 255, 0, 64);
 		int x = (prev.x + prev.w + col.x) / 2;
-		g.line(new Coord(x, 0), new Coord(x, sz.y), 1);
+		g.line(new Coord(x, TOOLBAR_H), new Coord(x, sz.y), 1);
 		g.chcolor();
 	    }
 	    if((col == mousecol) && (col.order != null)) {
 		g.chcolor(255, 255, 0, 16);
-		g.frect2(new Coord(col.x, 0), new Coord(col.x + col.w, sz.y));
+		g.frect2(new Coord(col.x, TOOLBAR_H), new Coord(col.x + col.w, sz.y));
 		g.chcolor();
 	    }
 	    if(col == ordercol) {
 		g.chcolor(255, 255, 0, 16);
-		g.frect2(new Coord(col.x, 0), new Coord(col.x + col.w, sz.y));
+		g.frect2(new Coord(col.x, TOOLBAR_H), new Coord(col.x + col.w, sz.y));
 		g.chcolor();
 	    }
 	    Tex head = col.head();
-	    g.aimage(head, new Coord(col.x + (col.w / 2), HEADH / 2), 0.5, 0.5);
+	    g.aimage(head, new Coord(col.x + (col.w / 2), TOOLBAR_H + (HEADH - TOOLBAR_H) / 2), 0.5, 0.5);
 	    prev = col;
 	}
     }
@@ -345,7 +355,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
     }
 
     public Column<? super T> onhead(Coord c) {
-	if((c.y < 0) || (c.y >= HEADH))
+	if((c.y < TOOLBAR_H) || (c.y >= HEADH))
 	    return(null);
 	for(Column<? super T> col : cols()) {
 	    if((c.x >= col.x) && (c.x < col.x + col.w))
