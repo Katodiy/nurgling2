@@ -7,6 +7,7 @@ import nurgling.actions.Action;
 import nurgling.actions.Results;
 import nurgling.scenarios.CraftPreset;
 import nurgling.scenarios.CraftPresetManager;
+import nurgling.areas.NContext;
 import nurgling.tasks.NTask;
 import nurgling.tools.VSpec;
 import nurgling.widgets.NMakewindow;
@@ -63,40 +64,57 @@ public class AutocraftBot implements Action {
             return Results.ERROR("No recipe resource in preset");
         }
 
-        // Load the resource and find the pagina
-        Indir<Resource> res = Resource.remote().load(recipeResource);
-        MenuGrid.Pagina pag = gui.menu.paginafor(res);
-
-        if (pag == null) {
-            return Results.ERROR("Could not find recipe in menu: " + recipeResource);
+        // Check if craft window is already open with the correct recipe
+        boolean needToOpenRecipe = true;
+        if (gui.craftwnd != null && gui.craftwnd.makeWidget != null) {
+            NMakewindow existingMwnd = gui.craftwnd.makeWidget;
+            if (existingMwnd.recipeResource != null && existingMwnd.recipeResource.equals(recipeResource)) {
+                needToOpenRecipe = false;
+            }
         }
 
-        // Activate the recipe via menu
-        gui.menu.use(pag.button(), new MenuGrid.Interaction(), false);
+        if (needToOpenRecipe) {
+            // Load the resource and find the pagina
+            Indir<Resource> res = Resource.remote().load(recipeResource);
+            MenuGrid.Pagina pag = gui.menu.paginafor(res);
 
-        // Wait for the crafting window to appear with makeWidget initialized
-        NUtils.addTask(new NTask() {
-            @Override
-            public boolean check() {
-                return gui.craftwnd != null && gui.craftwnd.makeWidget != null;
+            if (pag == null) {
+                return Results.ERROR("Could not find recipe in menu: " + recipeResource);
             }
-        });
+
+            // Activate the recipe via menu
+            gui.menu.use(pag.button(), new MenuGrid.Interaction(), false);
+
+            // Wait for the crafting window to appear with makeWidget initialized
+            NUtils.addTask(new NTask() {
+                @Override
+                public boolean check() {
+                    return gui.craftwnd != null && gui.craftwnd.makeWidget != null;
+                }
+            });
+        }
 
         NMakewindow mwnd = gui.craftwnd.makeWidget;
         if (mwnd == null) {
             return Results.ERROR("Crafting window did not open");
         }
 
-        // Wait for inputs to be populated and specs to be fully loaded
+        // Enable auto mode FIRST - this is needed for tick() to populate categories
+        mwnd.autoMode = true;
+        if (mwnd.noTransfer != null) {
+            mwnd.noTransfer.visible = true;
+        }
+
+        // Wait for inputs to be fully populated (names loaded and categories checked)
         NUtils.addTask(new NTask() {
             @Override
             public boolean check() {
                 if (mwnd.inputs == null || mwnd.inputs.isEmpty()) {
                     return false;
                 }
-                // Also ensure specs have their names loaded
+                // Ensure all specs have their names loaded and sprites initialized
                 for (NMakewindow.Spec spec : mwnd.inputs) {
-                    if (spec.name == null) {
+                    if (spec.name == null || spec.spr == null) {
                         return false;
                     }
                 }
@@ -113,12 +131,6 @@ public class AutocraftBot implements Action {
 
         // Configure ingredients from preset
         configureIngredients(mwnd, preset);
-
-        // Enable auto mode and run craft
-        mwnd.autoMode = true;
-        if (mwnd.noTransfer != null) {
-            mwnd.noTransfer.visible = true;
-        }
 
         // Run the craft
         Craft craft = new Craft(mwnd, quantity);
@@ -160,6 +172,8 @@ public class AutocraftBot implements Action {
 
     /**
      * Sets the preferred ingredient for a category spec.
+     * Only sets the ingredient if an area is defined for it, otherwise leaves it
+     * for Craft.java to auto-select an ingredient that has an area.
      */
     private void setPreferredIngredient(NMakewindow mwnd, NMakewindow.Spec spec, String preferredName) {
         ArrayList<JSONObject> categoryItems = VSpec.categories.get(spec.name);
@@ -176,7 +190,11 @@ public class AutocraftBot implements Action {
             }
             String itemName = obj.getString("name");
             if (itemName != null && itemName.equals(preferredName)) {
-                spec.ing = mwnd.new Ingredient(obj);
+                // Only set the ingredient if an area exists for it
+                if (NContext.findIn(itemName) != null || NContext.findInGlobal(itemName) != null) {
+                    spec.ing = mwnd.new Ingredient(obj);
+                }
+                // If no area, leave spec.ing null so Craft.java can auto-select
                 return;
             }
         }
