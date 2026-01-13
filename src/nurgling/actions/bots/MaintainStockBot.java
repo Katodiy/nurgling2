@@ -87,16 +87,11 @@ public class MaintainStockBot implements Action {
 
         gui.msg("MaintainStock: Checking " + outputItemName + " (target: " + targetQuantity + ")");
 
-        // Get the area
-        NArea area = NUtils.getArea(areaId);
+        // Get the area and navigate to it using NContext
+        NContext ncontext = new NContext(gui);
+        NArea area = ncontext.getAreaById(areaId);
         if (area == null) {
             return Results.ERROR("Area not found: " + areaId);
-        }
-
-        // Navigate to area
-        Coord2d areaCenter = area.getCenter2d();
-        if (areaCenter != null) {
-            new PathFinder(areaCenter).run(gui);
         }
 
         // Find containers in area
