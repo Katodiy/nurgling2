@@ -169,6 +169,12 @@ public class NStyle {
             new TexI(Resource.loadsimg("nurgling/hud/buttons/fire/h")),
     };
 
+    public static final TexI[] savei = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/save/u")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/save/d")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/save/h")),
+    };
+
     public static final TexI[] upSquareArrow = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v1/UP/u")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/arrows/v1/UP/d")),
