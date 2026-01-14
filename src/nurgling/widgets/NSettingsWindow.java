@@ -104,6 +104,7 @@ public class NSettingsWindow extends Widget {
         bots.addChild(new SettingsItem(L10n.get("nsettings.item.parasite"), new ParasiteSettings(), container));
         bots.addChild(new SettingsItem(L10n.get("nsettings.item.equipment"), new EquipmentBotSettings(), container));
         bots.addChild(new SettingsItem(L10n.get("nsettings.item.starvation"), new StarvationAlertSettings(), container));
+        bots.addChild(new SettingsItem("Icon Generator", new IconGeneratorPanel(), container));
 
         list.addCategory(general);
         list.addCategory(gameenvironment);
