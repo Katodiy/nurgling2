@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static haven.OCache.posres;
+import nurgling.tools.StackSupporter;
 
 
 public class Craft implements Action {
@@ -202,7 +203,8 @@ public class Craft implements Action {
         if (size == 0) {
             for_craft = left.get();
         } else {
-            for_craft = Math.min(left.get(), freeSpace / size);
+            // Use stack-aware calculation for better inventory utilization
+            for_craft = calculateMaxCraftsWithStacking(ncontext, freeSpace, left.get());
         }
         
 
@@ -467,6 +469,93 @@ public class Craft implements Action {
         if (gui.craftwnd != null && gui.craftwnd.makeWidget != null) {
             mwnd = gui.craftwnd.makeWidget;
         }
+    }
+
+    /**
+     * Calculate the number of slots needed for a given number of crafts, considering stacking.
+     * @param ncontext The crafting context
+     * @param numCrafts Number of crafts to calculate for
+     * @return Total number of inventory slots needed
+     */
+    private int calculateSlotsNeeded(NContext ncontext, int numCrafts) {
+        int totalSlots = 0;
+        
+        // Calculate slots for inputs
+        for (NMakewindow.Spec s : mwnd.inputs) {
+            // Skip ignored optional ingredients
+            if (s.ing != null && s.ing.isIgnored) {
+                continue;
+            }
+            
+            String itemName = s.ing != null ? s.ing.name : s.name;
+            
+            // Skip items stored in barrels
+            if (ncontext.isInBarrel(itemName)) {
+                continue;
+            }
+            
+            int itemsNeeded = s.count * numCrafts;
+            int stackSize = StackSupporter.getFullStackSize(itemName);
+            
+            // Calculate slots needed: ceil(itemsNeeded / stackSize)
+            int slotsForItem = (itemsNeeded + stackSize - 1) / stackSize;
+            totalSlots += slotsForItem;
+        }
+        
+        // Calculate slots for outputs (if noTransfer is not enabled)
+        if (!mwnd.noTransfer.a) {
+            for (NMakewindow.Spec s : mwnd.outputs) {
+                String itemName = s.ing != null ? s.ing.name : s.name;
+                
+                // Skip items stored in barrels
+                if (ncontext.isInBarrel(itemName)) {
+                    continue;
+                }
+                
+                int outputMultiplier = NContext.getOutputMultiplier(itemName);
+                int itemsProduced = s.count * numCrafts * outputMultiplier;
+                int stackSize = StackSupporter.getFullStackSize(itemName);
+                
+                // Calculate slots needed: ceil(itemsProduced / stackSize)
+                int slotsForItem = (itemsProduced + stackSize - 1) / stackSize;
+                totalSlots += slotsForItem;
+            }
+        }
+        
+        return totalSlots;
+    }
+
+    /**
+     * Calculate the maximum number of crafts that can fit in the inventory, considering stacking.
+     * Uses binary search to find the optimal number.
+     * @param ncontext The crafting context
+     * @param freeSpace Available inventory slots
+     * @param maxCrafts Maximum number of crafts desired
+     * @return Maximum number of crafts that can fit
+     */
+    private int calculateMaxCraftsWithStacking(NContext ncontext, int freeSpace, int maxCrafts) {
+        if (freeSpace <= 0) {
+            return 0;
+        }
+        
+        // Binary search for the maximum number of crafts
+        int low = 0;
+        int high = maxCrafts;
+        int result = 0;
+        
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            int slotsNeeded = calculateSlotsNeeded(ncontext, mid);
+            
+            if (slotsNeeded <= freeSpace) {
+                result = mid;
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
+        
+        return result;
     }
 
 }
