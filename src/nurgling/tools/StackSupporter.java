@@ -8,11 +8,16 @@ import nurgling.NUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 public class StackSupporter {
-    private static final HashMap<HashSet<String>,Integer> catSize = new HashMap<>();
+
+    // category -> stack size
+    private static final Map<String, Integer> categorySize = new HashMap<>();
+
     private static final HashSet<String> catExceptions = new HashSet<>();
     private static final HashMap<String, Integer> customStackSizes = new HashMap<>();
+
     static {
         // Custom stack sizes for items that differ from their category defaults
         customStackSizes.put("Earthworm", 5);
@@ -36,114 +41,53 @@ public class StackSupporter {
         customStackSizes.put("Cattail Roots", 4);
         customStackSizes.put("Heartwood Leaves", 4);
 
-        HashSet<String> size3 = new HashSet<>();
-        size3.add("Tuber");
-        size3.add("Onion");
-        size3.add("Beetroot");
-        size3.add("Carrot");
-        size3.add("Cucumber");
-        size3.add("Salad Greens");
-        size3.add("Malted Grains");
-        size3.add("Millable Seed");
-        size3.add("Egg");
-        size3.add("Gellant");
-        size3.add("Stuffing");
-        size3.add("Dried Fruit");
-        size3.add("Flour");
-        size3.add("Giant Ant");
-        size3.add("Royal Ant");
-        size3.add("Fishline");
-        size3.add("Sweetener");
-        size3.add("Thatching Material");
-        size3.add("Vegetable Oil");
-        size3.add("Solid Fat");
-        size3.add("Snail");
-        size3.add("Edible Seashell");
-        size3.add("Candle");
-        size3.add("Pearl");
-        size3.add("Finer Plant Fibre");
-        size3.add("Wicker");
-        size3.add("Cloth");
-        size3.add("Pigment");
-        size3.add("Fine Clay");
-        size3.add("Any Brick");
-        size3.add("Clay");
-        size3.add("Casting Material");
-        size3.add("Ore");
-        size3.add("Stone");
-        size3.add("Lures");
-        size3.add("Hooks");
-        size3.add("Dried Fish");
-        size3.add("Medicine");
-        size3.add("Intestines");
-        size3.add("Bait");
-        size3.add("Pipeweed");
-        catSize.put(size3,3);
+        putAll(3,
+                "Tuber", "Onion", "Beetroot", "Carrot", "Cucumber",
+                "Salad Greens", "Malted Grains", "Millable Seed", "Egg",
+                "Gellant", "Stuffing", "Dried Fruit", "Flour",
+                "Giant Ant", "Royal Ant", "Fishline", "Sweetener",
+                "Thatching Material", "Vegetable Oil", "Solid Fat",
+                "Snail", "Edible Seashell", "Candle", "Pearl",
+                "Finer Plant Fibre", "Wicker", "Cloth", "Pigment",
+                "Fine Clay", "Any Brick", "Clay", "Casting Material",
+                "Ore", "Stone", "Lures", "Hooks", "Dried Fish",
+                "Medicine", "Intestines", "Bait", "Pipeweed"
+        );
 
-        HashSet<String> size4 = new HashSet<>();
-        size4.add("Hide Fresh");
-        size4.add("Prepared Animal Hide");
-        size4.add("Bone Material");
-        size4.add("Coal");
-        size4.add("Wool");
-        size4.add("Leaf");
-        size4.add("Flower");
-        size4.add("String");
-        size4.add("Berry");
-        size4.add("Edible Mushroom");
-        size4.add("Spices");
-        size4.add("Fruit");
-        size4.add("Fruit or Berry");
-        size4.add("Mantle");
-        size4.add("Seed of Tree or Bush");
-        size4.add("Decent-sized Conifer Cone");
-        size4.add("Tree Bough");
-        size4.add("Forageable");
-        size4.add("Bug");
-        size4.add("Miscellaneous");
-        size4.add("Bark");
-        size4.add("Shellfish");
-        size4.add("Fish Fresh Water");
-        size4.add("Fish Ocean");
-        size4.add("Fish Cave");
-        size4.add("Fish");
-        size4.add("Cured Tea");
-        size4.add("Stackable Curiosities");
-        size4.add("Chitin");
-        catSize.put(size4,4);
+        putAll(4,
+                "Hide Fresh", "Prepared Animal Hide", "Bone Material",
+                "Coal", "Wool", "Leaf", "Flower", "String", "Berry",
+                "Edible Mushroom", "Spices", "Fruit", "Fruit or Berry",
+                "Mantle", "Seed of Tree or Bush",
+                "Decent-sized Conifer Cone", "Tree Bough",
+                "Forageable", "Bug", "Miscellaneous",
+                "Bark", "Shellfish", "Fish Fresh Water", "Fish Ocean",
+                "Fish Cave", "Fish", "Cured Tea", "Stackable Curiosities",
+                "Chitin"
+        );
 
-        HashSet<String> size5 = new HashSet<>();
+        putAll(5,
+                "Entrails", "Feather", "Fine Feather", " Meat",
+                "Raw Meat", "Bollock", "Filet of ", "Raw Chevon",
+                "Raw Beef", "Raw Mutton", "Raw Pork", "Raw Horse",
+                "Raw ", "Crab Meat", "Poultry", "Soil", "Nuts"
+        );
 
-        size5.add("Entrails");
-        size5.add("Feather");
-        size5.add("Fine Feather");
-        size5.add(" Meat");
-        size5.add("Raw Meat");
-        size5.add("Bollock");
-        size5.add("Filet of ");
-        size5.add("Raw Chevon");
-        size5.add("Raw Beef");
-        size5.add("Raw Mutton");
-        size5.add("Raw Pork");
-        size5.add("Raw Horse");
-        size5.add("Raw ");
-        size5.add("Crab Meat");
-        size5.add("Poultry");
-        size5.add("Soil");
-        size5.add("Nuts");
-
-        catSize.put(size5,5);
-
-        HashSet<String> size10 = new HashSet<>();
-        size10.add("Nugget of a Precious Metal");
-        size10.add("Nugget of Bronze, Iron or Steel");
-        size10.add("Nugget of Any Common Metal");
-        size10.add("Nugget of Any Metal");
-        catSize.put(size10,10);
+        putAll(10,
+                "Nugget of a Precious Metal",
+                "Nugget of Bronze, Iron or Steel",
+                "Nugget of Any Common Metal",
+                "Nugget of Any Metal"
+        );
     }
 
-    static
-    {
+    private static void putAll(int size, String... cats) {
+        for (String c : cats) {
+            categorySize.put(c, size);
+        }
+    }
+
+    static {
         catExceptions.add("Moose Antlers");
         catExceptions.add("Red Deer Antlers");
         catExceptions.add("Reindeer Antlers");
@@ -165,27 +109,26 @@ public class StackSupporter {
         catExceptions.add("Driftkelp");
         catExceptions.add("A Beautiful Dream");
     }
-    private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
-    public static boolean isStackable(NInventory inv, String name)
-    {
+
+    private static final NAlias unstackableContainers = new NAlias(
+            "Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub",
+            "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace"
+    );
+
+    public static boolean isStackable(NInventory inv, String name) {
         Window win = inv.getparent(Window.class);
-        if(win!=null)
-        {
-            if(NParser.checkName(win.cap,unstackableContainers) || NParser.checkName(name, new NAlias("Lynx Claws")) || name.equals("Silkworm") || name.contains("Dried Filet") || catExceptions.contains(name))
-            {
+        if (win != null) {
+            if (NParser.checkName(win.cap, unstackableContainers)
+                || NParser.checkName(name, new NAlias("Lynx Claws"))
+                || name.equals("Silkworm")
+                || name.contains("Dried Filet")
+                || catExceptions.contains(name)) {
                 return false;
-            }
-            else
-            {
+            } else {
                 ArrayList<String> categories = VSpec.getCategory(name);
-                for(String cat: categories)
-                {
-                    for(HashSet<String> set: catSize.keySet())
-                    {
-                        if(set.contains(cat))
-                        {
-                            return true;
-                        }
+                for (String cat : categories) {
+                    if (categorySize.containsKey(cat)) {
+                        return true;
                     }
                 }
             }
@@ -193,50 +136,44 @@ public class StackSupporter {
         return false;
     }
 
-    public static int getFullStackSize(String name)
-    {
-        // Check custom stack sizes first
-        if(customStackSizes.containsKey(name))
-        {
-            return customStackSizes.get(name);
+    public static int getFullStackSize(String name) {
+        Integer custom = customStackSizes.get(name);
+        if (custom != null) {
+            return custom;
         }
-        
-        if(catExceptions.contains(name))
-        {
+
+        if (catExceptions.contains(name)) {
             return 1;
         }
+
         ArrayList<String> categories = VSpec.getCategory(name);
-        for(String cat: categories)
-        {
-            for(HashSet<String> set: catSize.keySet())
-            {
-                if(set.contains(cat))
-                {
-                    return catSize.get(set);
-                }
+        for (String cat : categories) {
+            Integer size = categorySize.get(cat);
+            if (size != null) {
+                return size;
             }
         }
+
         return 1;
     }
 
     public static boolean isSameExist(NAlias items, NInventory inv) throws InterruptedException {
-        if(items.keys.size()>1)
-        {
+        if (items.keys.size() > 1) {
             return false;
         }
+
         ArrayList<String> categories = VSpec.getCategory(items.getDefault());
-        if(categories.contains("Hide Fresh"))
+        if (categories.contains("Hide Fresh"))
             categories.add("Prepared Animal Hide");
-        else if(categories.contains("Prepared Animal Hide"))
+        else if (categories.contains("Prepared Animal Hide"))
             categories.add("Hide Fresh");
-        for(String cat: categories)
-        {
+
+        for (String cat : categories) {
             ArrayList<String> categoryContent = new ArrayList<>(VSpec.getCategoryContent(cat));
             categoryContent.removeAll(items.keys);
-            if(!categoryContent.isEmpty())
-            {
+            if (!categoryContent.isEmpty()) {
                 NAlias same = new NAlias(categoryContent);
-                if(!inv.getItems(same).isEmpty())
+                if (!inv.getItems(same).isEmpty())
                     return true;
             }
         }
@@ -245,24 +182,16 @@ public class StackSupporter {
 
     /**
      * Universal method to calculate optimal item capacity considering stacking
-     * @param inventory The target inventory
-     * @param itemName Name of the item to be placed
-     * @param itemSize Size coordinate of the item
-     * @param targetCount Maximum desired count
-     * @return Optimal number of items that can fit, considering stacking
      */
     public static int getOptimalItemCapacity(NInventory inventory, String itemName, Coord itemSize, int targetCount) throws InterruptedException {
-        // Get base free slots
         int freeSlots = inventory.getNumberFreeCoord(itemSize);
 
-        // Check if stacking is globally enabled AND item is stackable in this inventory
         if (((NInventory) NUtils.getGameUI().maininv).bundle.a && isStackable(inventory, itemName)) {
             int maxStackSize = getFullStackSize(itemName);
             int maxCapacity = freeSlots * maxStackSize;
             return Math.min(targetCount, maxCapacity);
         }
 
-        // Stacking disabled or item not stackable - use original logic
         return Math.min(targetCount, freeSlots);
     }
 }
