@@ -78,7 +78,7 @@ public class BotRegistry {
                 true,
                 false,
                 MaintainStockBot.class,
-                "test32",
+                "maintainstock",
                 false
         ));
 
