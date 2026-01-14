@@ -4,6 +4,7 @@ import haven.Coord;
 import haven.Window;
 import nurgling.NInventory;
 import nurgling.NUtils;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +35,6 @@ public class StackSupporter {
         customStackSizes.put("Waybroad", 4);
         customStackSizes.put("Green Kelp", 4);
         customStackSizes.put("Cattail Roots", 4);
-        customStackSizes.put("Heartwood Leaves", 4);
 
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
@@ -101,7 +101,6 @@ public class StackSupporter {
         size4.add("Tree Bough");
         size4.add("Forageable");
         size4.add("Bug");
-        size4.add("Curiosities");
         size4.add("Miscellaneous");
         size4.add("Bark");
         size4.add("Shellfish");
@@ -109,6 +108,7 @@ public class StackSupporter {
         size4.add("Fish Ocean");
         size4.add("Fish Cave");
         size4.add("Fish");
+        size4.add("Stackable Curiosities");
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
@@ -153,23 +153,9 @@ public class StackSupporter {
         catExceptions.add("Female Silkmoth");
         catExceptions.add("Male Silkmoth");
         catExceptions.add("Bog Turtle Shell");
-        catExceptions.add("Cleaned Bat");
         catExceptions.add("Mole's Pawbone");
         catExceptions.add("Lobster");
         catExceptions.add("Leech");
-        catExceptions.add("Clean Adder Carcass");
-        catExceptions.add("Clean Chicken");
-        catExceptions.add("Clean Pelican");
-        catExceptions.add("Dried Filet");
-        catExceptions.add("Rabbit Frost");
-        catExceptions.add("Whirling Snowflake");
-        catExceptions.add("Precious Snowflake");
-        catExceptions.add("Sleighbell");
-        catExceptions.add("Billygoat Horn");
-        catExceptions.add("Ant Chitin");
-        catExceptions.add("Bee Chitin");
-        catExceptions.add("Cave Louse Chitin");
-        catExceptions.add("Driftkelp");
         catExceptions.add("A Beautiful Dream");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
