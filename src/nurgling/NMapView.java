@@ -20,6 +20,8 @@ import nurgling.navigation.ChunkNavData;
 import nurgling.navigation.ChunkNavManager;
 import nurgling.navigation.ChunkPortal;
 import nurgling.scenarios.Scenario;
+import nurgling.headless.Headless;
+import nurgling.tasks.WaitForMapGridLoad;
 import nurgling.tasks.WaitForMapLoadNoCoord;
 import nurgling.tools.*;
 import nurgling.widgets.NAreasWidget;
@@ -778,29 +780,56 @@ public class NMapView extends MapView
         super.tick(dt);
 
         if(NConfig.botmod != null && !botsInit) {
+            System.out.println("[NMapView] botmod check: scenarioId=" + NConfig.botmod.scenarioId + ", gui=" + (NUtils.getGameUI() != null));
             Scenario scenario = NUtils.getUI().core.scenarioManager.getScenarios().getOrDefault(NConfig.botmod.scenarioId, null);
+            System.out.println("[NMapView] Scenario lookup: " + (scenario != null ? scenario.getName() : "null") + ", available scenarios: " + NUtils.getUI().core.scenarioManager.getScenarios().keySet());
             if (scenario != null || !(NUtils.getGameUI() == null)) {
+                System.out.println("[NMapView] Starting bot thread, scenario=" + (scenario != null));
                 botsInit = true;
                 Thread t;
                 t = new Thread(() -> {
                     try {
+                        System.out.println("[NMapView] Bot thread started, waiting " + BOT_DELAY_MS + "ms...");
                         Thread.sleep(BOT_DELAY_MS);
+                        System.out.println("[NMapView] Wait complete, starting bot initialization...");
                         NConfig.botmod = null;
-                        NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+                        // In headless mode, use grid-only wait (no mesh/fog rendering checks)
+                        if (Headless.isHeadless()) {
+                            System.out.println("[NMapView] Headless mode - waiting for map grid data only...");
+                            NUtils.getUI().core.addTask(new WaitForMapGridLoad(NUtils.getGameUI()));
+                            System.out.println("[NMapView] Map grid data loaded");
+                        } else {
+                            System.out.println("[NMapView] Adding WaitForMapLoadNoCoord task...");
+                            NUtils.getUI().core.addTask(new WaitForMapLoadNoCoord(NUtils.getGameUI()));
+                            System.out.println("[NMapView] WaitForMapLoadNoCoord completed");
+                        }
 
                         // Switch to System chat for autorunner
+                        System.out.println("[NMapView] Looking for system chat...");
                         ChatUI.Channel systemChat = NUtils.getGameUI().chat.findSystemChat();
                         if (systemChat != null) {
                             NUtils.getGameUI().chat.select(systemChat, false);
+                            System.out.println("[NMapView] System chat selected");
+                        } else {
+                            System.out.println("[NMapView] No system chat found");
                         }
 
+                        if (scenario == null) {
+                            System.err.println("[NMapView] ERROR: Scenario is null! Cannot run bot.");
+                            return;
+                        }
+                        System.out.println("[NMapView] Running scenario: " + scenario.getName());
                         ScenarioRunner runner = new ScenarioRunner(scenario);
                         runner.run(NUtils.getGameUI());
+                        System.out.println("[NMapView] Scenario completed, logging out...");
 
                         NUtils.getGameUI().act("lo");
                         System.exit(0);
                     } catch (InterruptedException e) {
-                        System.out.println("Bot interrupted");
+                        System.out.println("[NMapView] Bot interrupted");
+                    } catch (Exception e) {
+                        System.err.println("[NMapView] ERROR in bot thread: " + e.getMessage());
+                        e.printStackTrace();
                     }
                 });
                 NUtils.getGameUI().biw.addObserve(t);
