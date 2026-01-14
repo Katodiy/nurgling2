@@ -101,7 +101,6 @@ public class StackSupporter {
         size4.add("Tree Bough");
         size4.add("Forageable");
         size4.add("Bug");
-        size4.add("Curiosities");
         size4.add("Miscellaneous");
         size4.add("Bark");
         size4.add("Shellfish");
@@ -109,6 +108,8 @@ public class StackSupporter {
         size4.add("Fish Ocean");
         size4.add("Fish Cave");
         size4.add("Fish");
+        size4.add("Stackable Curiosities");
+        size4.add("Chitin");
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
@@ -153,21 +154,13 @@ public class StackSupporter {
         catExceptions.add("Female Silkmoth");
         catExceptions.add("Male Silkmoth");
         catExceptions.add("Bog Turtle Shell");
-        catExceptions.add("Cleaned Bat");
         catExceptions.add("Mole's Pawbone");
         catExceptions.add("Lobster");
         catExceptions.add("Leech");
-        catExceptions.add("Clean Adder Carcass");
-        catExceptions.add("Clean Chicken");
-        catExceptions.add("Clean Pelican");
         catExceptions.add("Dried Filet");
-        catExceptions.add("Rabbit Frost");
-        catExceptions.add("Whirling Snowflake");
-        catExceptions.add("Precious Snowflake");
-        catExceptions.add("Sleighbell");
         catExceptions.add("Billygoat Horn");
+        catExceptions.add("Wildgoat Horn");
         catExceptions.add("Ant Chitin");
-        catExceptions.add("Bee Chitin");
         catExceptions.add("Cave Louse Chitin");
         catExceptions.add("Driftkelp");
         catExceptions.add("A Beautiful Dream");
