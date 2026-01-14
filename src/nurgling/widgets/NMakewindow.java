@@ -44,7 +44,7 @@ public class NMakewindow extends Widget {
     private static Tex softTexLabel = null;
     public CheckBox noTransfer = null;
     public boolean autoMode = false;
-    private Button savePresetBtn = null;
+    private IButton savePresetBtn = null;
 
     private static final OwnerContext.ClassResolver<NMakewindow> ctxr = new OwnerContext.ClassResolver<NMakewindow>()
             .add(Glob.class, wdg -> wdg.ui.sess.glob)
@@ -317,12 +317,19 @@ public class NMakewindow extends Widget {
         noTransfer.visible = false;
 
         // Save Preset button - only visible in auto mode when all inputs are configured
-        savePresetBtn = add(new Button(UI.scale(85), "Save Preset") {
+        // Scale icons to 2/3 size and position left of quantity input
+        int scaledW = NStyle.savei[0].back.getWidth() * 2 / 3;
+        int scaledH = NStyle.savei[0].back.getHeight() * 2 / 3;
+        Coord scaledSz = new Coord(scaledW, scaledH);
+        BufferedImage scaledUp = PUtils.convolve(NStyle.savei[0].back, scaledSz, CharWnd.iconfilter);
+        BufferedImage scaledDown = PUtils.convolve(NStyle.savei[1].back, scaledSz, CharWnd.iconfilter);
+        BufferedImage scaledHover = PUtils.convolve(NStyle.savei[2].back, scaledSz, CharWnd.iconfilter);
+        savePresetBtn = add(new IButton(scaledUp, scaledDown, scaledHover) {
             @Override
             public void click() {
                 openSavePresetDialog();
             }
-        }, UI.scale(new Coord(325, 38)));
+        }, UI.scale(new Coord(340, 5)));
         savePresetBtn.visible = false;
 
         pack();
