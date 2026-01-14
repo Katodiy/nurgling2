@@ -57,7 +57,6 @@ public class StackSupporter {
         size3.add("Thatching Material");
         size3.add("Vegetable Oil");
         size3.add("Solid Fat");
-        size3.add("Cured Tea");
         size3.add("Snail");
         size3.add("Edible Seashell");
         size3.add("Candle");
@@ -108,6 +107,7 @@ public class StackSupporter {
         size4.add("Fish Ocean");
         size4.add("Fish Cave");
         size4.add("Fish");
+        size4.add("Cured Tea");
         size4.add("Stackable Curiosities");
         size4.add("Chitin");
         catSize.put(size4,4);

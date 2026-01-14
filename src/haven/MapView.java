@@ -26,21 +26,26 @@
 
 package haven;
 
+import haven.MCache.OverlayInfo;
+import haven.render.*;
+import haven.render.sl.Type;
+import haven.render.sl.Uniform;
+import nurgling.NConfig;
+import nurgling.NMapView;
+import nurgling.NUtils;
+import nurgling.overlays.map.NOverlay;
+import nurgling.tools.CheckGridsState;
+
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import static haven.MCache.tilesz;
 import static haven.OCache.posres;
-import java.awt.Color;
-import java.awt.event.KeyEvent;
-import java.util.*;
-import java.util.function.*;
-import java.lang.reflect.*;
-import haven.render.*;
-import haven.MCache.OverlayInfo;
-import haven.render.sl.Uniform;
-import haven.render.sl.Type;
-import nurgling.*;
-import nurgling.areas.*;
-import nurgling.overlays.map.*;
-import nurgling.tools.CheckGridsState;
 
 public class MapView extends PView implements DTarget, Console.Directory {
     public static boolean clickdb = false;
@@ -2507,4 +2512,46 @@ public class MapView extends PView implements DTarget, Console.Directory {
 			return ( true );
 		}
 	}
+
+	public class RSTCam extends Camera {
+		public float dist = 1000.0f;
+		private float elev = (float)Math.PI / 2.0f;
+		private float angl = -(float)Math.PI / 2.0f;
+		private Coord dragorig = null;
+		private float elevorig, anglorig;
+
+		public void tick(double dt) {
+			Coord3f cc = getcc().invy();
+			view = haven.render.Camera.pointed(cc.add(camoff).add(0.0f, 0.0f, 15f), dist, elev, angl);
+		}
+
+		public float angle() {
+			return(angl);
+		}
+
+		public boolean click(Coord c) {
+			elevorig = elev;
+			anglorig = angl;
+			dragorig = c;
+			return(true);
+		}
+
+		public void drag(Coord c) {
+			c = inversion(c, dragorig);
+			elev = elevorig - ((float)(c.y - dragorig.y) / 100.0f);
+			if(elev < 0.0f) elev = 0.0f;
+			if(elev > (Math.PI / 2.0)) elev = (float)Math.PI / 2.0f;
+			angl = anglorig + ((float)(c.x - dragorig.x) / 100.0f);
+			angl = angl % ((float)Math.PI * 2.0f);
+		}
+
+		public boolean wheel(Coord c, int amount) {
+			float d = dist + (amount * 25);
+			if(d < 5)
+				d = 5;
+			dist = d;
+			return(true);
+		}
+	}
+	static {camtypes.put("RTS", RSTCam.class);}
 }
