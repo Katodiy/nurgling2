@@ -64,6 +64,7 @@ public class Specialisation extends Window
         eat,
         safe,
         sorting,
+        carrierout,
         fforge,
         anvil,
         rabbit,
@@ -91,7 +92,10 @@ public class Specialisation extends Window
         waterForTrees,
         soilForTrees,
         plantingGardenPots,
-        gardenPotSeeds;
+        gardenPotSeeds,
+        rawfish,
+        candelabrum,
+        buildMaterials;
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -138,6 +142,8 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.rabbitIncubator.toString(),"Rabbit Incubator",Resource.loadsimg("nurgling/categories/bunny")));
         specialisation.add(new SpecialisationItem(SpecName.safe.toString(),"Safe area",Resource.loadsimg("nurgling/categories/safety")));
         specialisation.add(new SpecialisationItem(SpecName.sorting.toString(),"Sorting area",Resource.loadsimg("nurgling/categories/sorting")));
+        specialisation.add(new SpecialisationItem(SpecName.carrierout.toString(),"Carrier Output",Resource.loadsimg("nurgling/categories/sorting")));
+        specialisation.add(new SpecialisationItem(SpecName.candelabrum.toString(),"Candelabrum",Resource.loadsimg("mm/candelabrum")));
         specialisation.add(new SpecialisationItem(SpecName.fforge.toString(),"Finery Forge",Resource.loadsimg("nurgling/categories/fineryforge")));
         specialisation.add(new SpecialisationItem(SpecName.anvil.toString(),"Anvil",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.dreamcatcher.toString(),"Dream Catcher",Resource.loadsimg("nurgling/categories/dream-catcher")));
@@ -176,6 +182,12 @@ public class Specialisation extends Window
         // Garden pot filling
         specialisation.add(new SpecialisationItem(SpecName.plantingGardenPots.toString(),"Planting Garden Pots",Resource.loadsimg("nurgling/categories/gardenpotplanted")));
         specialisation.add(new SpecialisationItem(SpecName.gardenPotSeeds.toString(),"Garden Pot Seeds",Resource.loadsimg("nurgling/categories/gardenpot")));
+        
+        // Raw fish piles
+        specialisation.add(new SpecialisationItem(SpecName.rawfish.toString(),"Piles of raw fish",Resource.loadsimg("nurgling/categories/fishpile")));
+
+        // Construction materials (with subtypes: Block, Board, Stone, String, Nugget, etc.)
+        specialisation.add(new SpecialisationItem(SpecName.buildMaterials.toString(),"Construction Materials",Resource.loadsimg("nurgling/categories/consmaterials")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
@@ -337,9 +349,9 @@ public class Specialisation extends Window
             }
         }
         
-        // Update area list if visible
+        // Update area list if visible, retaining selection on current area
         if(NUtils.getGameUI().areas != null) {
-            NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath);
+            NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath, area.id);
         }
     }
 }

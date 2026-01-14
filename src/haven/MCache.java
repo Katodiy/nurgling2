@@ -111,7 +111,7 @@ public class MCache implements MapSource {
         return null;
     }
 
-	private boolean areasLoaded = false;
+	public boolean areasLoaded = false;
 
 	void init()
 	{
@@ -121,7 +121,34 @@ public class MCache implements MapSource {
 	public void loadAreasIfNeeded() {
 		if (areasLoaded) return;
 
-		// Get the appropriate areas path based on current profile
+		// Clear locally deleted areas when reloading areas
+		if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getGameUI().map != null) {
+			((nurgling.NMapView)nurgling.NUtils.getGameUI().map).clearLocallyDeletedAreas();
+		}
+
+		// If DB is enabled - ONLY use DB, no fallback to file
+		if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable)) {
+			if (nurgling.NCore.databaseManager != null && nurgling.NCore.databaseManager.isReady()) {
+				try {
+					String profile = getCurrentGenus();
+					if (profile == null || profile.isEmpty()) {
+						profile = "global";
+					}
+					java.util.Map<Integer, NArea> dbAreas = nurgling.NCore.databaseManager.getAreaService().loadAreas(profile);
+					if (dbAreas != null) {
+						areas.putAll(dbAreas);
+						System.out.println("Loaded " + dbAreas.size() + " areas from database");
+					}
+				} catch (Exception e) {
+					System.err.println("Failed to load areas from database: " + e.getMessage());
+				}
+			}
+			// DB enabled - mark as loaded even if DB not ready (sync will handle it later)
+			areasLoaded = true;
+			return;
+		}
+
+		// DB not enabled - load from file (legacy support)
 		String areasPath = getAreasPath();
 
 		if(new File(areasPath).exists())
@@ -146,6 +173,7 @@ public class MCache implements MapSource {
 						NArea a = new NArea((JSONObject) array.get(i));
 						areas.put(a.id, a);
 					}
+					System.out.println("Loaded " + areas.size() + " areas from file");
 				} catch (org.json.JSONException e) {
 					// Ignore invalid JSON files
 				}

@@ -86,11 +86,11 @@ public class NCookBook extends Window {
                 boolean res = super.keydown(e);
                 if(e.code==10)
                 {
-                    if (ui.core.poolManager == null || !ui.core.poolManager.isConnectionReady()) {
+                    if (ui.core.databaseManager == null || !ui.core.databaseManager.isReady()) {
                         return res; // Database not ready
                     }
-                    rhf = new RecipeHashFetcher(ui.core.poolManager, searchF.text());
-                    ui.core.poolManager.submitTask(rhf);
+                    rhf = new RecipeHashFetcher(ui.core.databaseManager, searchF.text());
+                    ui.core.databaseManager.submitTask(rhf);
                     disable();
                 }
                 return res;
@@ -428,13 +428,13 @@ public class NCookBook extends Window {
 
     @Override
     public boolean show(boolean show) {
-        if (show && (Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.poolManager!=null && ui.core.poolManager.isConnectionReady()) {
+        if (show && (Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.databaseManager!=null && ui.core.databaseManager.isReady()) {
             if (favoriteManager == null) {
-                favoriteManager = new FavoriteRecipeManager(ui.core.poolManager);
+                favoriteManager = new FavoriteRecipeManager(ui.core.databaseManager);
             }
-            rhf = new RecipeHashFetcher(ui.core.poolManager,
+            rhf = new RecipeHashFetcher(ui.core.databaseManager,
                     RecipeHashFetcher.genFep(currentSortType, currentSortDesc));
-            ui.core.poolManager.submitTask(rhf);
+            ui.core.databaseManager.submitTask(rhf);
             disable();
         }
         return super.show(show);

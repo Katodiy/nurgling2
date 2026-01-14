@@ -152,23 +152,58 @@ public class CheeseOrdersPanel extends Panel {
             return;
         }
 
-        int id = getNextOrderId();
-
         List<CheeseBranch.Cheese> chain = CheeseBranch.getChainToProduct(cheeseType);
         if (chain == null || chain.isEmpty()) {
             NUtils.getGameUI().msg("Could not find a recipe chain for: " + cheeseType);
             return;
         }
-        List<CheeseOrder.StepStatus> status = new ArrayList<>();
         CheeseBranch.Cheese firstStep = chain.get(0);
-        status.add(new CheeseOrder.StepStatus(firstStep.name, firstStep.place.name(), count));
 
-        CheeseOrder order = new CheeseOrder(id, cheeseType, count, status);
-        manager.addOrUpdateOrder(order);
-        manager.writeOrders();
+        // Check for existing order of same cheese type and merge if found
+        CheeseOrder existingOrder = null;
+        for (CheeseOrder order : manager.getOrders().values()) {
+            if (order.getCheeseType().equals(cheeseType)) {
+                existingOrder = order;
+                break;
+            }
+        }
 
-        showListPanel();
-        NUtils.getGameUI().msg("Order added: " + cheeseType + " x" + count);
+        if (existingOrder != null) {
+            // Merge with existing order: add to start step and update total count
+            CheeseOrder.StepStatus startStep = null;
+            for (CheeseOrder.StepStatus step : existingOrder.getStatus()) {
+                if (step.name.equals(firstStep.name) && step.place.equals(firstStep.place.name())) {
+                    startStep = step;
+                    break;
+                }
+            }
+
+            if (startStep != null) {
+                startStep.left += count;
+            } else {
+                // Start step missing (shouldn't happen), create it at beginning
+                existingOrder.getStatus().add(0, new CheeseOrder.StepStatus(firstStep.name, firstStep.place.name(), count));
+            }
+
+            existingOrder.addToCount(count);
+            manager.addOrUpdateOrder(existingOrder);
+            manager.writeOrders();
+
+            showListPanel();
+            NUtils.getGameUI().msg("Added " + count + " to existing " + cheeseType + " order (total: " + existingOrder.getCount() + ")");
+        } else {
+            // Create new order
+            int id = getNextOrderId();
+            List<CheeseOrder.StepStatus> status = new ArrayList<>();
+            status.add(new CheeseOrder.StepStatus(firstStep.name, firstStep.place.name(), count));
+
+            CheeseOrder order = new CheeseOrder(id, cheeseType, count, status);
+            manager.addOrUpdateOrder(order);
+            manager.writeOrders();
+
+            showListPanel();
+            NUtils.getGameUI().msg("Order added: " + cheeseType + " x" + count);
+        }
     }
 
     private int getNextOrderId() {
@@ -235,7 +270,7 @@ public class CheeseOrdersPanel extends Panel {
             final TexI iconTex = new TexI(cheeseIcon);
             w.add(new Widget(new Coord(UI.scale(20), UI.scale(20))) {
                 public void draw(GOut g) {
-                    g.image(iconTex, Coord.z);
+                    g.image(iconTex, Coord.z, new Coord(UI.scale(20), UI.scale(20)));
                 }
             }, new Coord(iconColX + UI.scale(2), (baseHeight - UI.scale(20)) / 2));
         } else {

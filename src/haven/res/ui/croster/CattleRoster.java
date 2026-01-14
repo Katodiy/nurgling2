@@ -14,8 +14,10 @@ import haven.res.gfx.hud.rosters.horse.Horse;
 import haven.res.gfx.hud.rosters.pig.Pig;
 import haven.res.gfx.hud.rosters.sheep.Sheep;
 import haven.res.gfx.hud.rosters.teimdeer.Teimdeer;
+import nurgling.NMapView;
 import nurgling.NStyle;
 import nurgling.NUtils;
+import nurgling.areas.NArea;
 import nurgling.widgets.NKinSettings;
 import nurgling.widgets.settings.*;
 
@@ -26,7 +28,8 @@ import java.awt.image.BufferedImage;
 public abstract class CattleRoster <T extends Entry> extends Widget {
     public static final int WIDTH = UI.scale(980);
     public static final Comparator<Entry> namecmp = (a, b) -> a.name.compareTo(b.name);
-    public static final int HEADH = UI.scale(40);
+    public static final int TOOLBAR_H = UI.scale(25);  // Height for top toolbar (combobox, settings button)
+    public static final int HEADH = UI.scale(55);  // Total header height (toolbar + column headers)
     public final Map<UID, T> entries = new HashMap<>();
     public final Scrollbar sb;
     public final Widget entrycont;
@@ -39,6 +42,8 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 
     ICheckBox settings;
     final Coord shift = UI.scale(16,5);
+    NAreaDropbox areaFilter;
+    int filterAreaId = -1;  // -1 = show all animals
     public CattleRoster() {
 	super(new Coord(WIDTH, UI.scale(400)));
 	this.type = (Class<T>) ((ParameterizedType) getClass()
@@ -49,10 +54,12 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	    }, sz.x, HEADH);
 	Widget prev;
 	prev = add(new Button(UI.scale(100), "Select all", false).action(() -> {
-		    for(Entry entry : this.entries.values())
+		    // Select only animals in current filtered display
+		    for(Entry entry : this.display)
 			entry.mark.set(true);
 		}), entrycont.pos("bl").adds(0, 5));
 	prev = add(new Button(UI.scale(100), "Select none", false).action(() -> {
+		    // Deselect all animals
 		    for(Entry entry : this.entries.values())
 			entry.mark.set(false);
 		}), prev.pos("ur").adds(5, 0));
@@ -64,6 +71,58 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	    }
 	    wdgmsg("rm", args.toArray(new Object[0]));
 	}), entrycont.pos("br").adds(0, 5), 1, 0);
+	// Area filter - top right, left of settings button
+	int settingsBtnWidth = NStyle.settingsi[0].sz().x;
+	add(areaFilter = new NAreaDropbox(UI.scale(150)) {
+		@Override
+		public void change(AreaEntry item) {
+			super.change(item);
+			if(item != null) {
+				filterAreaId = item.id;
+				dirty = true;
+			}
+		}
+		
+		@Override
+		public boolean mousedown(MouseDownEvent ev) {
+			// Reload areas before showing dropdown to pick up new zones
+			reloadAreas();
+			return super.mousedown(ev);
+		}
+		
+		@Override
+		public void reloadAreas() {
+			areas.clear();
+			areas.add(new AreaEntry(-1, "All areas"));
+			
+			// Get animal type name for this roster
+			String animalType = getAnimalTypeName();
+			
+			if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
+				NMapView map = (NMapView) NUtils.getGameUI().map;
+				if (map.glob != null && map.glob.map != null && map.glob.map.areas != null) {
+					for (NArea area : map.glob.map.areas.values()) {
+						// Show areas with specialization for this animal type
+						boolean hasSpec = false;
+						for (NArea.Specialisation spec : area.spec) {
+							if (spec.name.equals(animalType)) {
+								hasSpec = true;
+								break;
+							}
+						}
+						if (hasSpec) {
+							areas.add(new AreaEntry(area.id, area.name));
+						}
+					}
+					areas.subList(1, areas.size()).sort(java.util.Comparator.comparing(a -> a.name));
+				}
+			}
+			
+			if (sel == null && !areas.isEmpty()) {
+				sel = areas.get(0);
+			}
+		}
+	}, new Coord(sz.x - settingsBtnWidth - UI.scale(155), UI.scale(5)));
 	add(settings = new ICheckBox(NStyle.settingsi[0], NStyle.settingsi[1], NStyle.settingsi[2], NStyle.settingsi[3])
 	{
 		@Override
@@ -202,7 +261,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 			}
 			super.tick(dt);
 		}
-	}, new Coord(sz.x - NStyle.settingsi[0].sz().x / 2, NStyle.settingsi[0].sz().y / 2).sub(shift));
+	}, new Coord(sz.x - NStyle.settingsi[0].sz().x, UI.scale(5)));
 	pack();
     }
 
@@ -249,7 +308,13 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 
     public void tick(double dt) {
 	if(dirty) {
-	    List<T> ndisp = new ArrayList<>(entries.values());
+	    List<T> ndisp = new ArrayList<>();
+	    for(T entry : entries.values()) {
+		// Filter by area if selected
+		if(filterAreaId < 0 || entry.areaId == filterAreaId) {
+		    ndisp.add(entry);
+		}
+	    }
 	    ndisp.sort(order);
 	    redisplay(ndisp);
 	    dirty = false;
@@ -265,21 +330,21 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	    if((prev != null) && !prev.r) {
 		g.chcolor(255, 255, 0, 64);
 		int x = (prev.x + prev.w + col.x) / 2;
-		g.line(new Coord(x, 0), new Coord(x, sz.y), 1);
+		g.line(new Coord(x, TOOLBAR_H), new Coord(x, sz.y), 1);
 		g.chcolor();
 	    }
 	    if((col == mousecol) && (col.order != null)) {
 		g.chcolor(255, 255, 0, 16);
-		g.frect2(new Coord(col.x, 0), new Coord(col.x + col.w, sz.y));
+		g.frect2(new Coord(col.x, TOOLBAR_H), new Coord(col.x + col.w, sz.y));
 		g.chcolor();
 	    }
 	    if(col == ordercol) {
 		g.chcolor(255, 255, 0, 16);
-		g.frect2(new Coord(col.x, 0), new Coord(col.x + col.w, sz.y));
+		g.frect2(new Coord(col.x, TOOLBAR_H), new Coord(col.x + col.w, sz.y));
 		g.chcolor();
 	    }
 	    Tex head = col.head();
-	    g.aimage(head, new Coord(col.x + (col.w / 2), HEADH / 2), 0.5, 0.5);
+	    g.aimage(head, new Coord(col.x + (col.w / 2), TOOLBAR_H + (HEADH - TOOLBAR_H) / 2), 0.5, 0.5);
 	    prev = col;
 	}
     }
@@ -290,7 +355,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
     }
 
     public Column<? super T> onhead(Coord c) {
-	if((c.y < 0) || (c.y >= HEADH))
+	if((c.y < TOOLBAR_H) || (c.y >= HEADH))
 	    return(null);
 	for(Column<? super T> col : cols()) {
 	    if((c.x >= col.x) && (c.x < col.x + col.w))
@@ -386,6 +451,19 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
     private final Class<T> type;
     public Class<T> getGenType() {
 	return this.type;
+    }
+
+    /**
+     * Get animal type name for NConfig preset lookups
+     */
+    protected String getAnimalTypeName() {
+        if (type == Ochs.class) return "cows";
+        if (type == Goat.class) return "goats";
+        if (type == Sheep.class) return "sheeps";
+        if (type == Pig.class) return "pigs";
+        if (type == Horse.class) return "horses";
+        if (type == Teimdeer.class) return "deers";
+        return "unknown";
     }
 
     @Override

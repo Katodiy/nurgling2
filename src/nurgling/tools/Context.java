@@ -1,14 +1,8 @@
 package nurgling.tools;
 
 import haven.*;
-import nurgling.NConfig;
-import nurgling.NMapView;
 import nurgling.NUtils;
-import nurgling.actions.Results;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.areas.NArea;
-import nurgling.routes.RouteGraph;
-import nurgling.routes.RoutePoint;
 
 import java.util.*;
 @Deprecated
@@ -40,6 +34,7 @@ public class Context {
         contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
         contcaps.put("gfx/terobjs/htable", "Herbalist Table");
         contcaps.put("gfx/terobjs/thatchbasket", "Basket");
+        contcaps.put("gfx/terobjs/map/stonekist", "Stonekist");
     }
 
     @Deprecated
@@ -142,9 +137,9 @@ public class Context {
     @Deprecated
     public static class InputContainer extends Container implements Input
     {
-        public InputContainer(Gob gob, String name)
+        public InputContainer(Gob gob, String name, NArea area)
         {
-            super(gob,name);
+            super(gob,name, area);
             this.gobid = gob.id;
             this.cap = name;
         }
@@ -225,33 +220,16 @@ public class Context {
         if(ingredient != null) {
             switch (ingredient.type) {
                 case BARTER:
-                    if(area.getRCArea() == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
-                        RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
-
-                        if(graph.findAreaRoutePoint(area) != null) {
-                            new RoutePointNavigator(graph.findAreaRoutePoint(area), area.id).run(NUtils.getGameUI());
-                        } else {
-                            break;
-                        }
-                    }
 
                     outputs.add(new OutputBarter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
                             Finder.findGob(area, new NAlias("gfx/terobjs/chest")), area.getRCArea(), ingredient.th));
                     break;
                 case CONTAINER: {
-                    if(area.getRCArea() == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
-                        RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
 
-                        if(graph.findAreaRoutePoint(area) != null) {
-                            new RoutePointNavigator(graph.findAreaRoutePoint(area), area.id).run(NUtils.getGameUI());
-                        } else {
-                            break;
-                        }
-                    }
 
                     for (Gob gob : Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()), new ArrayList<>()))) {
                         if(!containersInContext.containsKey(gob.ngob.hash)) {
-                            OutputContainer container = new OutputContainer(gob, area.getRCArea(), ingredient.th);
+                            OutputContainer container = new OutputContainer(gob, area, ingredient.th);
                             container.initattr(Container.Space.class);
                             containersInContext.put(gob.ngob.hash,container);
                             outputs.add(container);
@@ -270,15 +248,6 @@ public class Context {
                     break;
                 }
                 case BARREL: {
-                    if(area.getRCArea() == null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
-                        RouteGraph graph = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph();
-
-                        if(graph.findAreaRoutePoint(area) != null) {
-                            new RoutePointNavigator(graph.findAreaRoutePoint(area), area.id).run(NUtils.getGameUI());
-                        } else {
-                            break;
-                        }
-                    }
 
                     for (Gob gob : Finder.findGobs(area, new NAlias("barrel"))) {
                         outputs.add(new OutputBarrel(gob, area.getRCArea(), ingredient.th));
@@ -286,33 +255,6 @@ public class Context {
                 }
             }
         }
-        return outputs;
-    }
-    @Deprecated
-    public static ArrayList<Output> GetOutput(String item, Pair<Coord2d,Coord2d> area ) throws InterruptedException
-    {
-        ArrayList<Output> outputs = new ArrayList<>();
-        if(area == null)
-            return outputs;
-        for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
-        {
-            OutputContainer container = new OutputContainer(gob, area ,1);
-            container.initattr(Container.Space.class);
-            outputs.add(container);
-        }
-        for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
-        {
-            outputs.add(new OutputPile(gob, area, 1));
-        }
-        for(Gob gob: Finder.findGobs(area, new NAlias ("barrel")))
-        {
-            outputs.add(new OutputBarrel(gob, area, 1));
-        }
-        if(outputs.isEmpty())
-        {
-            outputs.add(new OutputPile(null, area, 1));
-        }
-
         return outputs;
     }
 
@@ -331,7 +273,7 @@ public class Context {
             {
                 for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
                 {
-                        inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name)));
+                        inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name), area));
                 }
                 for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
                 {
@@ -340,61 +282,6 @@ public class Context {
 
             }
         }
-        inputs.sort(new Comparator<Input>() {
-            @Override
-            public int compare(Input o1, Input o2) {
-                if (o1 instanceof InputPile && o2 instanceof InputPile)
-                    return NUtils.d_comp.compare(((InputPile)o1).pile,((InputPile)o2).pile);
-                return 0;
-            }
-        });
-        return inputs;
-    }
-    @Deprecated
-    public static ArrayList<Input> GetInput( Pair<Coord2d,Coord2d> area ) throws InterruptedException
-    {
-        ArrayList<Input> inputs = new ArrayList<>();
-
-        if(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand"))!=null) {
-            inputs.add(new InputBarter(Finder.findGob(area, new NAlias("gfx/terobjs/barterstand")),
-                    Finder.findGob(area, new NAlias("gfx/terobjs/chest"))));
-        }
-        else
-        {
-            for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
-            {
-                inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name)));
-            }
-            for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
-            {
-                inputs.add(new InputPile(gob));
-            }
-
-        }
-
-        inputs.sort(new Comparator<Input>() {
-            @Override
-            public int compare(Input o1, Input o2) {
-                if (o1 instanceof InputPile && o2 instanceof InputPile)
-                    return NUtils.d_comp.compare(((InputPile)o1).pile,((InputPile)o2).pile);
-                return 0;
-            }
-        });
-        return inputs;
-    }
-    @Deprecated
-    public static ArrayList<Input> GetInput(String item, Pair<Coord2d,Coord2d> area ) throws InterruptedException
-    {
-        ArrayList<Input> inputs = new ArrayList<>();
-        for(Gob gob: Finder.findGobs(area, new NAlias(new ArrayList<String>(contcaps.keySet()),new ArrayList<>())))
-        {
-            inputs.add(new InputContainer(gob, contcaps.get(gob.ngob.name)));
-        }
-        for(Gob gob: Finder.findGobs(area, new NAlias ("stockpile")))
-        {
-            inputs.add(new InputPile(gob));
-        }
-
         inputs.sort(new Comparator<Input>() {
             @Override
             public int compare(Input o1, Input o2) {
@@ -494,9 +381,9 @@ public class Context {
     public static class OutputContainer extends Container implements Output
     {
 
-        public OutputContainer(Gob gob, Pair<Coord2d,Coord2d> area, int th)
+        public OutputContainer(Gob gob, NArea area, int th)
         {
-            super(gob,contcaps.get(gob.ngob.name));
+            super(gob,contcaps.get(gob.ngob.name), area);
             this.gobid = gob.id;
             this.cap = contcaps.get(gob.ngob.name);
             this.area = area;
@@ -505,10 +392,10 @@ public class Context {
 
         @Override
         public  Pair<Coord2d,Coord2d> getArea() {
-            return area;
+            return area.getRCArea();
         }
 
-        Pair<Coord2d,Coord2d> area = null;
+        NArea area = null;
 
         @Override
         public double getTh()

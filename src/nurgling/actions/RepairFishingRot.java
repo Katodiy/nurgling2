@@ -3,6 +3,7 @@ package nurgling.actions;
 import haven.*;
 import nurgling.*;
 
+import nurgling.areas.NContext;
 import nurgling.conf.NFishingSettings;
 import nurgling.tasks.NTask;
 import nurgling.tools.Context;
@@ -12,10 +13,10 @@ public class RepairFishingRot implements Action {
     NFishingSettings prop;
     Pair<Coord2d, Coord2d> repArea;
     Pair<Coord2d, Coord2d> baitArea;
-    Context context;
+    NContext context;
 
 
-    public RepairFishingRot(Context context, NFishingSettings prop, Pair<Coord2d, Coord2d> repArea, Pair<Coord2d, Coord2d> bait) {
+    public RepairFishingRot(NContext context, NFishingSettings prop, Pair<Coord2d, Coord2d> repArea, Pair<Coord2d, Coord2d> bait) {
         this.prop = prop;
         this.repArea = repArea;
         this.baitArea = bait;
@@ -50,7 +51,7 @@ public class RepairFishingRot implements Action {
         WItem fl = NUtils.getGameUI().getInventory().getItem(item);
         if(fl == null) {
             if(area!=null) {
-                new TakeItems(context,item,count).run(gui);
+                new TakeItems2(context,item,count).run(gui);
             }
             fl = NUtils.getGameUI().getInventory().getItem(item);
         }

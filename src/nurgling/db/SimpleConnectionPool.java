@@ -28,6 +28,7 @@ public class SimpleConnectionPool {
 
     private static final long BORROW_TIMEOUT_MS = 5000; // 5 seconds timeout for borrowing
     private static final int VALIDATION_TIMEOUT_SECONDS = 2;
+    private static final int MAX_TOTAL_CONNECTIONS = 20; // Safety limit to prevent connection leaks
 
     /**
      * Creates a new connection pool.
@@ -43,8 +44,9 @@ public class SimpleConnectionPool {
         this.isPostgres = (Boolean) NConfig.get(NConfig.Key.postgres);
 
         if (isPostgres) {
+            // Increased timeouts: connectTimeout=10s, socketTimeout=60s for slow operations
             this.jdbcUrl = "jdbc:postgresql://" + NConfig.get(NConfig.Key.serverNode)
-                         + "/nurgling_db?connectTimeout=5&socketTimeout=10";
+                         + "/nurgling_db?connectTimeout=10&socketTimeout=60";
             this.user = (String) NConfig.get(NConfig.Key.serverUser);
             this.password = (String) NConfig.get(NConfig.Key.serverPass);
         } else {
@@ -80,12 +82,18 @@ public class SimpleConnectionPool {
         }
 
         // Try to create a new connection if below max size
-        if (currentSize.get() < maxSize) {
+        // Use atomic increment-then-check to prevent race condition
+        int newSize = currentSize.incrementAndGet();
+        if (newSize <= maxSize) {
             conn = createConnection();
             if (conn != null) {
-                currentSize.incrementAndGet();
                 return conn;
             }
+            // Failed to create connection, decrement counter
+            currentSize.decrementAndGet();
+        } else {
+            // Over limit, decrement and wait for available connection
+            currentSize.decrementAndGet();
         }
 
         // Pool is at max capacity, wait for a connection to be returned
@@ -101,6 +109,7 @@ public class SimpleConnectionPool {
             Thread.currentThread().interrupt();
         }
 
+        System.err.println("[ConnectionPool] Failed to borrow connection after " + BORROW_TIMEOUT_MS + "ms wait");
         return null;
     }
 
@@ -194,6 +203,20 @@ public class SimpleConnectionPool {
                 conn.close();
             } catch (SQLException ignore) {
             }
+        }
+    }
+    
+    /**
+     * Close a broken connection and decrement the counter.
+     * Use this when a connection has experienced an I/O error during use.
+     *
+     * @param conn The broken connection to close
+     */
+    public void closeBrokenConnection(Connection conn) {
+        if (conn != null) {
+            closeQuietly(conn);
+            currentSize.decrementAndGet();
+            System.out.println("[ConnectionPool] Closed broken connection, total now: " + currentSize.get() + "/" + maxSize);
         }
     }
 

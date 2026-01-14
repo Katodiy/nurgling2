@@ -9,6 +9,8 @@ import haven.MenuGrid.Pagina;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import nurgling.overlays.NCattleMarkRing;
+import nurgling.NUtils;
+import nurgling.areas.NArea;
 
 @haven.FromResource(name = "ui/croster", version = 76)
 public class CattleId extends GAttrib implements RenderTree.Node, PView.Render2D {
@@ -45,8 +47,16 @@ public class CattleId extends GAttrib implements RenderTree.Node, PView.Render2D
 		    }
 		}
 	    }
-	    if(roster != null)
+	    if(roster != null) {
 		this.entry = roster.entries.get(this.id);
+		// Set areaId based on gob position if not set
+		if(this.entry != null && this.entry.areaId < 0 && gob.rc != null) {
+		    NArea area = NUtils.getAreaByPosition(gob.rc);
+		    if(area != null) {
+			this.entry.areaId = area.id;
+		    }
+		}
+	    }
 	}
 	return(entry);
     }

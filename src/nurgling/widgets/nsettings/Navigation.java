@@ -2,6 +2,8 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.NConfig;
+import nurgling.widgets.NColorWidget;
+import java.awt.Color;
 
 public class Navigation extends Panel {
     // Temporary settings structure
@@ -9,12 +11,13 @@ public class Navigation extends Panel {
         // Safety settings
         boolean autoHearthOnUnknown;
         boolean autoLogoutOnUnknown;
-        
+
         // Navigation settings
         boolean useGlobalPf;
         boolean waypointRetryOnStuck;
-        boolean showFullPathLines;
         boolean showPathLine;
+        int pathLineWidth = 4;
+        Color pathLineColor = new Color(255, 255, 0);
         boolean showSpeedometer;
     }
 
@@ -28,8 +31,10 @@ public class Navigation extends Panel {
     // Navigation checkboxes
     private CheckBox useGlobalPf;
     private CheckBox waypointRetryOnStuck;
-    private CheckBox showFullPathLines;
     private CheckBox showPathLine;
+    private NColorWidget pathLineColorWidget;
+    private HSlider pathLineWidthSlider;
+    private Label pathLineWidthLabel;
     private CheckBox showSpeedometer;
     
     private Scrollport scrollport;
@@ -92,13 +97,6 @@ public class Navigation extends Panel {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-        
-        prev = showFullPathLines = content.add(new CheckBox("Show full path lines to destinations") {
-            public void set(boolean val) {
-                tempSettings.showFullPathLines = val;
-                a = val;
-            }
-        }, prev.pos("bl").adds(0, 5));
 
         // Visual indicators section
         prev = content.add(new Label("● Visual indicators"), prev.pos("bl").adds(0, 15));
@@ -109,7 +107,20 @@ public class Navigation extends Panel {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-        
+
+        // Path line color
+        prev = pathLineColorWidget = content.add(new NColorWidget("Path line color"), prev.pos("bl").adds(10, 5));
+        pathLineColorWidget.color = tempSettings.pathLineColor;
+
+        // Path line thickness
+        prev = pathLineWidthLabel = content.add(new Label("Path line thickness: 4"), prev.pos("bl").adds(0, 5));
+        prev = pathLineWidthSlider = content.add(new HSlider(UI.scale(100), 1, 10, tempSettings.pathLineWidth) {
+            public void changed() {
+                tempSettings.pathLineWidth = val;
+                pathLineWidthLabel.settext("Path line thickness: " + val);
+            }
+        }, prev.pos("bl").adds(0, 5));
+
         prev = showSpeedometer = content.add(new CheckBox("Show speedometer") {
             public void set(boolean val) {
                 tempSettings.showSpeedometer = val;
@@ -133,9 +144,13 @@ public class Navigation extends Panel {
         // Load navigation settings
         tempSettings.useGlobalPf = (Boolean) NConfig.get(NConfig.Key.useGlobalPf);
         tempSettings.waypointRetryOnStuck = (Boolean) NConfig.get(NConfig.Key.waypointRetryOnStuck);
-        tempSettings.showFullPathLines = (Boolean) NConfig.get(NConfig.Key.showFullPathLines);
         tempSettings.showPathLine = (Boolean) NConfig.get(NConfig.Key.showPathLine);
         tempSettings.showSpeedometer = (Boolean) NConfig.get(NConfig.Key.showSpeedometer);
+
+        // Load path line settings
+        Object pathLineWidthObj = NConfig.get(NConfig.Key.pathLineWidth);
+        tempSettings.pathLineWidth = (pathLineWidthObj instanceof Number) ? ((Number) pathLineWidthObj).intValue() : 4;
+        tempSettings.pathLineColor = NConfig.getColor(NConfig.Key.pathLineColor, new Color(255, 255, 0));
 
         // Update UI components
         autoHearthOnUnknown.a = tempSettings.autoHearthOnUnknown;
@@ -143,8 +158,10 @@ public class Navigation extends Panel {
         alarmDelayFramesEntry.settext(String.valueOf(((Number) NConfig.get(NConfig.Key.alarmDelayFrames)).intValue()));
         useGlobalPf.a = tempSettings.useGlobalPf;
         waypointRetryOnStuck.a = tempSettings.waypointRetryOnStuck;
-        showFullPathLines.a = tempSettings.showFullPathLines;
         showPathLine.a = tempSettings.showPathLine;
+        pathLineColorWidget.color = tempSettings.pathLineColor;
+        pathLineWidthSlider.val = tempSettings.pathLineWidth;
+        pathLineWidthLabel.settext("Path line thickness: " + tempSettings.pathLineWidth);
         showSpeedometer.a = tempSettings.showSpeedometer;
     }
 
@@ -163,8 +180,12 @@ public class Navigation extends Panel {
         // Save navigation settings
         NConfig.set(NConfig.Key.useGlobalPf, tempSettings.useGlobalPf);
         NConfig.set(NConfig.Key.waypointRetryOnStuck, tempSettings.waypointRetryOnStuck);
-        NConfig.set(NConfig.Key.showFullPathLines, tempSettings.showFullPathLines);
         NConfig.set(NConfig.Key.showPathLine, tempSettings.showPathLine);
         NConfig.set(NConfig.Key.showSpeedometer, tempSettings.showSpeedometer);
+
+        // Save path line settings
+        tempSettings.pathLineColor = pathLineColorWidget.color;
+        NConfig.set(NConfig.Key.pathLineWidth, tempSettings.pathLineWidth);
+        NConfig.setColor(NConfig.Key.pathLineColor, tempSettings.pathLineColor);
     }
 }

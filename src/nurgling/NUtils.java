@@ -8,7 +8,8 @@ import haven.res.ui.croster.RosterWindow;
 import mapv4.StatusWdg;
 import nurgling.actions.Results;
 import nurgling.areas.*;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.ChunkNavManager;
+import nurgling.navigation.ChunkPath;
 import nurgling.tasks.*;
 import nurgling.tools.*;
 import nurgling.widgets.*;
@@ -100,6 +101,30 @@ public class NUtils
         return NParser.checkName(name, new NAlias(new ArrayList<>(Arrays.asList("gfx/terobjs/tree", "gfx/terobjs/bumlings","gfx/terobjs/bushes","gfx/terobjs/stonepillar")), new ArrayList<>(Arrays.asList("log", "oldtrunk"))));
     }
 
+    public static boolean isEarthworm(String name)
+    {
+        return name != null && name.contains("earthworm");
+    }
+
+    public static void showHideEarthworm() {
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc) {
+            if((Boolean) NConfig.get(NConfig.Key.hideEarthworm))
+                for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
+                    if (gob.ngob.name!=null && isEarthworm(gob.ngob.name))
+                    {
+                        gob.show();
+                    }
+                }
+            else
+                for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
+                    if (gob.ngob.name!=null && isEarthworm(gob.ngob.name))
+                    {
+                        gob.hide();
+                    }
+                }
+        }
+    }
+
     public static WItem takeItemToHand(WItem item) throws InterruptedException
     {
         if(item == null)
@@ -134,7 +159,30 @@ public class NUtils
 
     public static NArea getArea(int id)
     {
+        if (getGameUI() == null || getGameUI().map == null || 
+            getGameUI().map.glob == null || getGameUI().map.glob.map == null) {
+            return null;
+        }
         return getGameUI().map.glob.map.areas.get(id);
+    }
+
+    /**
+     * Get area that contains the given position
+     * @param pos Position in world coordinates
+     * @return NArea that contains the position, or null if not in any area
+     */
+    public static NArea getAreaByPosition(Coord2d pos)
+    {
+        if (getGameUI() == null || getGameUI().map == null || 
+            getGameUI().map.glob == null || getGameUI().map.glob.map == null || pos == null) {
+            return null;
+        }
+        for (NArea area : getGameUI().map.glob.map.areas.values()) {
+            if (area.isVisible() && area.checkHit(pos)) {
+                return area;
+            }
+        }
+        return null;
     }
 
     public static Gob player()
@@ -296,7 +344,7 @@ public class NUtils
         NUtils.activateGob(gob);
         getUI().core.addTask(new WaitPlob());
         getGameUI().map.wdgmsg("place", coord2d.floor(posres), (int)Math.round(a * 32768 / Math.PI), 1, 1);
-        getUI().core.addTask(new WaitPlaced(gob));
+        getUI().core.addTask(new WaitPlaced(gob.id));
     }
 
     public static RosterWindow getRosterWindow(Class<? extends Entry> cattleRoster) throws InterruptedException {
@@ -710,10 +758,6 @@ public class NUtils
         }
     }
 
-    public static RoutePoint findNearestPoint()
-    {
-        return ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI());
-    }
 
     public static boolean isWorkStationReady(String name, Gob workstation) {
         if (workstation == null) {
@@ -736,5 +780,35 @@ public class NUtils
 
         // For all other workstations, assume they're ready if they exist
         return true;
+    }
+
+    public static boolean navigateToArea(NArea area) throws InterruptedException
+    {
+        ChunkNavManager chunkNav = ((NMapView) NUtils.getGameUI().map).getChunkNavManager();
+        if (chunkNav != null && chunkNav.isInitialized())
+        {
+            ChunkPath path = chunkNav.planToArea(area);
+            if (path != null)
+            {
+                return chunkNav.navigateToArea(area, NUtils.getGameUI()).IsSuccess();
+            }
+        }
+        return false;
+    }
+
+    public static boolean navigateToArea(Specialisation string) throws InterruptedException
+    {
+        ChunkNavManager chunkNav = ((NMapView) NUtils.getGameUI().map).getChunkNavManager();
+        NArea area = NContext.findSpecGlobal(string.toString());
+        if (chunkNav != null && chunkNav.isInitialized() && area!=null)
+        {
+            ChunkPath path = chunkNav.planToArea(area);
+            if (path != null)
+            {
+
+                return chunkNav.navigateToArea(area, NUtils.getGameUI()).IsSuccess();
+            }
+        }
+        return false;
     }
 }

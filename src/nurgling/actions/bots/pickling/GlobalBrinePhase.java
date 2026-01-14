@@ -281,7 +281,7 @@ public class GlobalBrinePhase implements Action {
         for (String resource : NContext.contcaps.keySet()) {
             String type = NContext.contcaps.get(resource);
             for (Gob gob : Finder.findGobs(jarArea, new NAlias(resource))) {
-                containers.add(new Container(gob, type));
+                containers.add(new Container(gob, type, jarArea));
             }
         }
         return containers;

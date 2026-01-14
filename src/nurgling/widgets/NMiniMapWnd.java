@@ -206,6 +206,15 @@ public class NMiniMapWnd extends Widget{
         });
         buttons.add(timer);
 
+        // ChunkNav exploration overlay toggle
+        ACheckBox chunkNav = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/gridnav", kb_grid, "ChunkNav Exploration");
+        chunkNav.changed(a -> {
+            NConfig.set(NConfig.Key.chunkNavOverlay, a);
+            NConfig.needUpdate();
+        });
+        chunkNav.a = (Boolean) NConfig.get(NConfig.Key.chunkNavOverlay);
+        buttons.add(chunkNav);
+
         // Layout buttons with wrapping
         layoutButtons(buttons);
 
@@ -392,7 +401,7 @@ public class NMiniMapWnd extends Widget{
 
     private void layoutButtons(java.util.List<Widget> buttons) {
         if(buttons.isEmpty()) return;
-        
+
         int btnSpacing = UI.scale(3);
         int maxWidth = miniMap.sz.x;
         int currentX = 0;

@@ -300,6 +300,7 @@ public class NStyle {
     public static HashMap<String, Resource.Saved> iconMap = new HashMap<>();
     static {
         iconMap.put("gfx/terobjs/vehicle/wheelbarrow", new Resource.Saved(Resource.remote(),"mm/wheelbarrow",-1));
+        iconMap.put("gfx/terobjs/items/arrow", new Resource.Saved(Resource.remote(),"mm/arrow",-1));
         iconMap.put("gfx/terobjs/items/truffle",new Resource.Saved(Resource.remote(),"mm/truffle",-1));
         iconMap.put("gfx/terobjs/cauldron",new Resource.Saved(Resource.remote(),"mm/cauldron",-1));
         iconMap.put("gfx/kritter/horse/stallion",new Resource.Saved(Resource.remote(),"mm/horse",-1));
@@ -318,6 +319,8 @@ public class NStyle {
         iconMap.put("gfx/terobjs/claim",new Resource.Saved(Resource.remote(),"mm/claim",-1));
         iconMap.put("gfx/terobjs/items/gems/gemstone",new Resource.Saved(Resource.remote(),"mm/gem",-1));
         iconMap.put("gfx/terobjs/vehicle/cart",new Resource.Saved(Resource.remote(),"mm/cart",-1));
+        iconMap.put("gfx/terobjs/vehicle/primsled",new Resource.Saved(Resource.remote(),"mm/primsled",-1));
+        iconMap.put("gfx/terobjs/vehicle/coracle",new Resource.Saved(Resource.remote(),"mm/coracle",-1));
         iconMap.put("gfx/terobjs/vehicle/plow",new Resource.Saved(Resource.remote(),"mm/plow",-1));
         iconMap.put("gfx/terobjs/map/cavepuddle",new Resource.Saved(Resource.remote(),"mm/clay-cave",-1));
         iconMap.put("gfx/terobjs/minehole",new Resource.Saved(Resource.remote(),"mm/down",-1));
@@ -327,6 +330,7 @@ public class NStyle {
     public static HashMap<String, String> iconName = new HashMap<>();
     static {
         iconName.put("mm/wheelbarrow", "Wheelbarrow");
+        iconName.put("mm/arrow", "Arrow");
         iconName.put("mm/truffle", "Truffle");
         iconName.put("mm/cauldron", "Cauldron");
         iconName.put("mm/horse", "Horse");
@@ -344,6 +348,8 @@ public class NStyle {
         iconName.put("mm/claim", "Claim");
         iconName.put("mm/gem", "Gem");
         iconName.put("mm/cart", "Cart");
+        iconName.put("mm/primsled", "Primitive Sled");
+        iconName.put("mm/coracle", "Coracle");
         iconName.put("mm/plow", "Plow");
         iconName.put("mm/clay-cave", "Cave clay");
     }

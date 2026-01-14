@@ -201,6 +201,8 @@ public class DatabaseSettings extends Panel {
 
     @Override
     public void save() {
+        boolean wasEnabled = (Boolean) NConfig.get(NConfig.Key.ndbenable);
+        
         NConfig.set(NConfig.Key.ndbenable, enabled);
         boolean isPostgres = "PostgreSQL".equals(dbTypeStr);
         NConfig.set(NConfig.Key.postgres, isPostgres);
@@ -214,13 +216,98 @@ public class DatabaseSettings extends Panel {
             NConfig.set(NConfig.Key.dbFilePath, filePathEntry.text());
         }
 
-        if (ui != null) {
-            if (ui.core.poolManager == null)
-                ui.core.poolManager = new DBPoolManager(1);
-            ui.core.poolManager.reconnect();
+        // Handle database manager and areas reload
+        if (enabled) {
+            // DB is being enabled or settings changed - reconnect and reload areas from DB
+            if (nurgling.NCore.databaseManager != null) {
+                nurgling.NCore.databaseManager.reconnect();
+            }
+            // Reload areas from database
+            reloadAreasFromDatabase();
+        } else if (wasEnabled) {
+            // DB was enabled but now disabled - reload areas from file
+            reloadAreasFromFile();
         }
 
         NConfig.needUpdate();
+    }
+
+    /**
+     * Reload areas from database after DB settings change
+     */
+    private void reloadAreasFromDatabase() {
+        if (ui == null || nurgling.NUtils.getGameUI() == null || 
+            nurgling.NUtils.getGameUI().map == null) {
+            return;
+        }
+        
+        try {
+            // Clear current areas
+            nurgling.NUtils.getGameUI().map.glob.map.areas.clear();
+            // Reset loaded flag to force reload
+            nurgling.NUtils.getGameUI().map.glob.map.areasLoaded = false;
+            // Trigger reload (will load from DB since it's enabled)
+            nurgling.NUtils.getGameUI().map.glob.map.loadAreasIfNeeded();
+            // Refresh UI
+            refreshAreasUI();
+            System.out.println("Areas reloaded from database");
+        } catch (Exception e) {
+            System.err.println("Failed to reload areas from database: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Reload areas from file after DB is disabled
+     */
+    private void reloadAreasFromFile() {
+        if (ui == null || nurgling.NUtils.getGameUI() == null || 
+            nurgling.NUtils.getGameUI().map == null) {
+            return;
+        }
+        
+        try {
+            // Clear current areas
+            nurgling.NUtils.getGameUI().map.glob.map.areas.clear();
+            // Reset loaded flag to force reload
+            nurgling.NUtils.getGameUI().map.glob.map.areasLoaded = false;
+            // Trigger reload (will load from file since DB is disabled)
+            nurgling.NUtils.getGameUI().map.glob.map.loadAreasIfNeeded();
+            // Refresh UI
+            refreshAreasUI();
+            System.out.println("Areas reloaded from file");
+        } catch (Exception e) {
+            System.err.println("Failed to reload areas from file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Refresh areas display (overlays and widget)
+     */
+    private void refreshAreasUI() {
+        try {
+            if (nurgling.NUtils.getGameUI() == null || nurgling.NUtils.getGameUI().map == null) {
+                return;
+            }
+            
+            nurgling.NMapView map = (nurgling.NMapView) nurgling.NUtils.getGameUI().map;
+            
+            // Force redraw of all area overlays
+            if (map.nols != null) {
+                for (nurgling.overlays.map.NOverlay overlay : map.nols.values()) {
+                    if (overlay != null) {
+                        overlay.requpdate2 = true;
+                    }
+                }
+            }
+            
+            // Refresh NAreasWidget if open
+            if (nurgling.NUtils.getGameUI().areas != null && 
+                nurgling.NUtils.getGameUI().areas.al != null) {
+                nurgling.NUtils.getGameUI().areas.showPath(nurgling.NUtils.getGameUI().areas.currentPath);
+            }
+        } catch (Exception e) {
+            // Ignore UI refresh errors
+        }
     }
 
     private void updateWidgetsVisibility() {
@@ -240,12 +327,7 @@ public class DatabaseSettings extends Panel {
             fileLabel.visible = isSQLite;
             filePathEntry.visible = isSQLite;
             initDbButton.visible = isSQLite;
-
-            if (ui != null) {
-                if (ui.core.poolManager == null)
-                    ui.core.poolManager = new DBPoolManager(1);
-                ui.core.poolManager.reconnect();
-            }
+            // Don't reconnect here - it's just visibility update, not settings change
         }
 
         // Переупаковываем виджет

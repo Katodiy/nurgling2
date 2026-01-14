@@ -30,7 +30,8 @@ public class NForagerProp implements JConf {
         public String afterFinishAction = "nothing";
         public String onFullInventoryAction = "nothing";
         public boolean ignoreBats = true;
-        
+        public boolean waterMode = false;
+
         public PresetData() {}
         
         public PresetData(String pathFile) {
@@ -78,7 +79,9 @@ public class NForagerProp implements JConf {
                     pd.onFullInventoryAction = (String) entry.getValue().get("onFullInventoryAction");
                 if (entry.getValue().get("ignoreBats") != null)
                     pd.ignoreBats = (Boolean) entry.getValue().get("ignoreBats");
-                
+                if (entry.getValue().get("waterMode") != null)
+                    pd.waterMode = (Boolean) entry.getValue().get("waterMode");
+
                 presets.put(entry.getKey(), pd);
             }
         }
@@ -135,7 +138,8 @@ public class NForagerProp implements JConf {
             presetJson.put("afterFinishAction", entry.getValue().afterFinishAction);
             presetJson.put("onFullInventoryAction", entry.getValue().onFullInventoryAction);
             presetJson.put("ignoreBats", entry.getValue().ignoreBats);
-            
+            presetJson.put("waterMode", entry.getValue().waterMode);
+
             presetsJson.put(entry.getKey(), presetJson);
         }
         jforager.put("presets", presetsJson);

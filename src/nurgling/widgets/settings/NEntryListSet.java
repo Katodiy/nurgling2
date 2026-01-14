@@ -41,9 +41,11 @@ public abstract class NEntryListSet extends Widget {
             @Override
             public void change(String item) {
                 super.change(item);
-                name.settext(item);
-                if(!name.text().isEmpty())
-                    nchange();
+                if(item != null) {
+                    name.settext(item);
+                    if(!name.text().isEmpty())
+                        nchange();
+                }
             }
 
             @Override

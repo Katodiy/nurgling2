@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import haven.res.ui.obj.buddy.Buddy;
 import nurgling.*;
+import nurgling.overlays.map.MinimapChunkNavRenderer;
 import nurgling.overlays.map.MinimapClaimRenderer;
 import nurgling.overlays.map.MinimapExploredAreaRenderer;
 import nurgling.tools.ExploredArea;
@@ -193,6 +194,9 @@ NMiniMap extends MiniMap {
         
         // Render claim overlays (personal, village, realm)
         MinimapClaimRenderer.renderClaims(this, g);
+
+        // Render ChunkNav exploration overlay (checks config internally)
+        MinimapChunkNavRenderer.renderChunkNav(this, g);
 
         boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id));
         // Show grid when zoomed in enough (scale >= 0.25, i.e. not too far out)

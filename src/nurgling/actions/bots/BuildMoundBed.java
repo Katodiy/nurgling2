@@ -3,7 +3,6 @@ package nurgling.actions.bots;
 import haven.Coord;
 import haven.Coord2d;
 import haven.Gob;
-import haven.Pair;
 import haven.Resource;
 import nurgling.NGameUI;
 import nurgling.NHitBox;
@@ -12,9 +11,12 @@ import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Build;
 import nurgling.actions.Results;
+import nurgling.areas.NContext;
 import nurgling.overlays.BuildGhostPreview;
 import nurgling.overlays.NCustomBauble;
 import nurgling.tools.NAlias;
+
+import java.util.ArrayList;
 
 public class BuildMoundBed implements Action {
     @Override
@@ -23,6 +25,7 @@ public class BuildMoundBed implements Action {
             Build.Command command = new Build.Command();
             command.name = "Mound Bed";
             command.windowName = "Moundbed"; // Window name is different from menu name
+            NContext context = new NContext(gui);
 
             // Get the custom hitbox we defined
             NHitBox moundBedHitBox = NHitBox.findCustom("gfx/terobjs/moundbed");
@@ -35,20 +38,42 @@ public class BuildMoundBed implements Action {
 
             NUtils.getGameUI().msg("Please, select build area");
             // Pass custom hitbox to SelectAreaWithLiveGhosts since plob won't have it
-            SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Mound Bed", moundBedHitBox);
+            SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(context, Resource.loadsimg("baubles/buildArea"), "Mound Bed", moundBedHitBox);
             buildarea.run(NUtils.getGameUI());
 
-            NUtils.getGameUI().msg("Please, select area for mulch");
-            SelectArea mulcharea = new SelectArea(Resource.loadsimg("baubles/mulchArea"));
-            mulcharea.run(NUtils.getGameUI());
-            command.ingredients.add(new Build.Ingredient(new Coord(1,1), mulcharea.getRCArea(), new NAlias("Mulch"), 12));
+            // Use BuildMaterialHelper for auto-zone lookup
+            BuildMaterialHelper helper = new BuildMaterialHelper(context, gui);
+            
+            // Mulch (12)
+            command.ingredients.add(helper.getIngredient(
+                new Coord(1, 1),
+                new NAlias("Mulch"),
+                12,
+                "baubles/mulchArea",
+                "Please, select area for mulch"
+            ));
+            
+            // Straw (6)
+            command.ingredients.add(helper.getIngredient(
+                new Coord(1, 1),
+                new NAlias("Straw"),
+                6,
+                "baubles/strawArea",
+                "Please, select area for straw"
+            ));
 
-            NUtils.getGameUI().msg("Please, select area for straw");
-            SelectArea strawarea = new SelectArea(Resource.loadsimg("baubles/strawArea"));
-            strawarea.run(NUtils.getGameUI());
-            command.ingredients.add(new Build.Ingredient(new Coord(1,1), strawarea.getRCArea(), new NAlias("Straw"), 6));
+            // Get ghost positions from BuildGhostPreview if available
+            ArrayList<Coord2d> ghostPositions = null;
+            BuildGhostPreview ghostPreview = null;
+            Gob player = NUtils.player();
+            if (player != null) {
+                ghostPreview = player.getattr(BuildGhostPreview.class);
+                if (ghostPreview != null) {
+                    ghostPositions = new ArrayList<>(ghostPreview.getGhostPositions());
+                }
+            }
 
-            new Build(command, buildarea.getRCArea(), buildarea.getRotationCount()).run(gui);
+            new Build(context, command, buildarea.ghostArea, buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
             return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted

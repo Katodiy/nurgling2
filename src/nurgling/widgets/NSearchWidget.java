@@ -160,6 +160,11 @@ public class NSearchWidget extends Widget {
     public void tick(double dt) {
         super.tick(dt);
         history.visible = parent.visible && list.a;
+        
+        // Periodically refresh global search results
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().itemsForSearch != null) {
+            NUtils.getGameUI().itemsForSearch.tick();
+        }
     }
     String path = ((HashDirCache) ResCache.global).base + "\\..\\" +"searchcmd.dat";
     void read() {

@@ -273,10 +273,35 @@ public class NGItem extends GItem
     @Override
     public void destroy() {
         if(parent!=null && parent instanceof NInventory && (((NInventory) parent).parentGob)!=null && ((NInventory) parent).parentGob !=null && name!=null) {
-            ((NInventory) parent).iis.add(new ItemWatcher.ItemInfo(name, quality != null ? quality : -1, wi != null ? wi.c : Coord.z, (((NInventory) parent).parentGob).ngob.hash));
-            ((NInventory) parent).lastUpdate = NUtils.getTickId();
+            NInventory inv = (NInventory) parent;
+            String containerHash = inv.parentGob.ngob.hash;
+            
+            // Add to item info list for batch update on window close
+            inv.iis.add(new ItemWatcher.ItemInfo(name, quality != null ? quality : -1, wi != null ? wi.c : Coord.z, containerHash));
+            inv.lastUpdate = NUtils.getTickId();
+            
+            // Track for deletion if inventory stays open for 10 frames
+            if (containerHash != null && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+                String itemHash = generateItemHash();
+                if (itemHash != null) {
+                    long deleteAtTick = NUtils.getTickId() + 10;
+                    inv.pendingDeletions.add(new NInventory.PendingDeletion(itemHash, containerHash, deleteAtTick));
+                }
+            }
         }
         super.destroy();
+    }
+    
+    /**
+     * Generate a hash for this item for database identification
+     * Must match ItemWatcher.generateItemHash() format
+     */
+    private String generateItemHash() {
+        if (name == null || wi == null) return null;
+        // Format quality the same way as ItemWatcher.ItemInfo constructor
+        double q = Double.parseDouble(Utils.odformat2(quality != null ? quality : -1, 2));
+        String data = name + wi.c.toString() + q;
+        return NUtils.calculateSHA256(data);
     }
 
     public static boolean validateItem(WItem item)

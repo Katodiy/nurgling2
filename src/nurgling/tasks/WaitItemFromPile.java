@@ -1,5 +1,6 @@
 package nurgling.tasks;
 
+import haven.GItem;
 import haven.WItem;
 import haven.Widget;
 import nurgling.NGItem;
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 public class WaitItemFromPile extends NTask
 {
     int target_size = 1;
+    int totalItemCount = 0;
+
     public WaitItemFromPile()
     {
     }
@@ -24,6 +27,7 @@ public class WaitItemFromPile extends NTask
     public boolean check()
     {
         result.clear();
+        totalItemCount = 0;
 
         for (Widget widget : NUtils.getUI().getMonitorInfo())
         {
@@ -40,22 +44,37 @@ public class WaitItemFromPile extends NTask
                             if (cwidget instanceof WItem) {
                                 WItem wi = (WItem)cwidget;
                                 result.add((NGItem) wi.item);
+                                totalItemCount += getItemCount((NGItem) wi.item);
                             }
                         }
                     }
                     else
                     {
                         result.add(item);
+                        totalItemCount += getItemCount(item);
                     }
                 }
             }
         }
-        return result.size() >=target_size;
+        return totalItemCount >= target_size;
+    }
+
+    private int getItemCount(NGItem item)
+    {
+        GItem.Amount amount = item.getInfo(GItem.Amount.class);
+        if (amount != null && amount.itemnum() > 0) {
+            return amount.itemnum();
+        }
+        return 1;
     }
 
     private ArrayList<NGItem> result = new ArrayList<>();
 
     public ArrayList<NGItem> getResult(){
         return result;
+    }
+
+    public int getTotalItemCount(){
+        return totalItemCount;
     }
 }

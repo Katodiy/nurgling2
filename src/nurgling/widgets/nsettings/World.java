@@ -13,9 +13,11 @@ public class World extends Panel {
         boolean flatSurface;
         boolean decorativeObjects;
         boolean hideNature;
+        boolean hideEarthworm;
         boolean showBB;
         boolean showBeehiveRadius;
         boolean showTroughRadius;
+        boolean showMoundBedRadius;
         boolean showDamageShields;
         boolean persistentBarrelLabels;
         boolean disableTileSmoothing;
@@ -31,9 +33,11 @@ public class World extends Panel {
     private CheckBox flatSurface;
     private CheckBox decorativeObjects;
     private CheckBox natura;
+    private CheckBox earthworm;
     private CheckBox boundingBoxes;
     private CheckBox beehiveRadius;
     private CheckBox troughRadius;
+    private CheckBox moundBedRadius;
     private CheckBox damageShields;
     private CheckBox persistentBarrels;
     private CheckBox disableTileSmoothing;
@@ -121,6 +125,13 @@ public class World extends Panel {
             }
         }, prev.pos("bl").adds(0, 5));
 
+        prev = earthworm = content.add(new CheckBox("Hide earthworms") {
+            public void set(boolean val) {
+                tempSettings.hideEarthworm = !val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+
         prev = boundingBoxes = content.add(new CheckBox("Show object boundaries") {
             public void set(boolean val) {
                 tempSettings.showBB = val;
@@ -141,7 +152,14 @@ public class World extends Panel {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-        
+
+        prev = moundBedRadius = content.add(new CheckBox("Show mound bed radius") {
+            public void set(boolean val) {
+                tempSettings.showMoundBedRadius = val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
+
         prev = damageShields = content.add(new CheckBox("Show damage shields on broken objects") {
             public void set(boolean val) {
                 tempSettings.showDamageShields = val;
@@ -192,9 +210,11 @@ public class World extends Panel {
         tempSettings.flatSurface = (Boolean) NConfig.get(NConfig.Key.nextflatsurface);
         tempSettings.decorativeObjects = (Boolean) NConfig.get(NConfig.Key.nextshowCSprite);
         tempSettings.hideNature = (Boolean) NConfig.get(NConfig.Key.hideNature);
+        tempSettings.hideEarthworm = (Boolean) NConfig.get(NConfig.Key.hideEarthworm);
         tempSettings.showBB = (Boolean) NConfig.get(NConfig.Key.showBB);
         tempSettings.showBeehiveRadius = (Boolean) NConfig.get(NConfig.Key.showBeehiveRadius);
         tempSettings.showTroughRadius = (Boolean) NConfig.get(NConfig.Key.showTroughRadius);
+        tempSettings.showMoundBedRadius = (Boolean) NConfig.get(NConfig.Key.showMoundBedRadius);
         tempSettings.showDamageShields = (Boolean) NConfig.get(NConfig.Key.showDamageShields);
         tempSettings.persistentBarrelLabels = (Boolean) NConfig.get(NConfig.Key.persistentBarrelLabels);
         tempSettings.disableTileSmoothing = (Boolean) NConfig.get(NConfig.Key.disableTileSmoothing);
@@ -215,9 +235,11 @@ public class World extends Panel {
         flatSurface.a = tempSettings.flatSurface;
         decorativeObjects.a = tempSettings.decorativeObjects;
         natura.a = !tempSettings.hideNature;
+        earthworm.a = !tempSettings.hideEarthworm;
         boundingBoxes.a = tempSettings.showBB;
         beehiveRadius.a = tempSettings.showBeehiveRadius;
         troughRadius.a = tempSettings.showTroughRadius;
+        moundBedRadius.a = tempSettings.showMoundBedRadius;
         damageShields.a = tempSettings.showDamageShields;
         persistentBarrels.a = tempSettings.persistentBarrelLabels;
         disableTileSmoothing.a = tempSettings.disableTileSmoothing;
@@ -241,6 +263,7 @@ public class World extends Panel {
         // Save object radii settings (overlays will auto-update)
         NConfig.set(NConfig.Key.showBeehiveRadius, tempSettings.showBeehiveRadius);
         NConfig.set(NConfig.Key.showTroughRadius, tempSettings.showTroughRadius);
+        NConfig.set(NConfig.Key.showMoundBedRadius, tempSettings.showMoundBedRadius);
         NConfig.set(NConfig.Key.showDamageShields, tempSettings.showDamageShields);
         
         NConfig.set(NConfig.Key.persistentBarrelLabels, tempSettings.persistentBarrelLabels);
@@ -268,7 +291,14 @@ public class World extends Panel {
         
         // Save hideNature setting
         NConfig.set(NConfig.Key.hideNature, tempSettings.hideNature);
-        
+
+        // Save hideEarthworm setting
+        boolean oldHideEarthworm = (Boolean) NConfig.get(NConfig.Key.hideEarthworm);
+        NConfig.set(NConfig.Key.hideEarthworm, tempSettings.hideEarthworm);
+        if (oldHideEarthworm != tempSettings.hideEarthworm) {
+            NUtils.showHideEarthworm();
+        }
+
         // Update colors from UI widgets
         tempSettings.boxFillColor = fillColorWidget.color;
         tempSettings.boxEdgeColor = edgeColorWidget.color;

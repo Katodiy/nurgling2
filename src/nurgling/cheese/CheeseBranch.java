@@ -37,7 +37,7 @@ public class CheeseBranch {
             LinkedList<CheeseBranch.Cheese> midnight_blue = new LinkedList<>();
             midnight_blue.add(new CheeseBranch.Cheese(CheeseBranch.Place.start, "Cow's Curd"));
             midnight_blue.add(new CheeseBranch.Cheese(CheeseBranch.Place.cellar, "Cellar Cheddar"));
-            midnight_blue.add(new CheeseBranch.Cheese(CheeseBranch.Place.inside, "Brodgar Blue Cheese"));
+            midnight_blue.add(new CheeseBranch.Cheese(CheeseBranch.Place.outside, "Brodgar Blue Cheese"));
             midnight_blue.add(new CheeseBranch.Cheese(CheeseBranch.Place.mine, "Jorbonzola"));
             midnight_blue.add(new CheeseBranch.Cheese(CheeseBranch.Place.cellar, "Midnight Blue Cheese"));
             branches.add(new CheeseBranch(midnight_blue));
@@ -51,7 +51,7 @@ public class CheeseBranch {
             LinkedList<CheeseBranch.Cheese> sunlight = new LinkedList<>();
             sunlight.add(new CheeseBranch.Cheese(CheeseBranch.Place.start, "Cow's Curd"));
             sunlight.add(new CheeseBranch.Cheese(CheeseBranch.Place.mine, "Mothzarella"));
-            sunlight.add(new CheeseBranch.Cheese(CheeseBranch.Place.cellar, "Harmesan Cheese"));
+            sunlight.add(new CheeseBranch.Cheese(CheeseBranch.Place.inside, "Harmesan Cheese"));
             sunlight.add(new CheeseBranch.Cheese(CheeseBranch.Place.outside, "Sunlit Stilton"));
             branches.add(new CheeseBranch(sunlight));
 

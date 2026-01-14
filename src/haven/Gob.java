@@ -665,7 +665,8 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	if(a != null) {
 	    if(a instanceof RenderTree.Node) {
 		try {
-			if ((Boolean)NConfig.get(NConfig.Key.hideNature) || ngob.name==null || !NUtils.isNatureObject(ngob.name))
+			if (((Boolean)NConfig.get(NConfig.Key.hideNature) || ngob.name==null || !NUtils.isNatureObject(ngob.name)) &&
+				((Boolean)NConfig.get(NConfig.Key.hideEarthworm) || ngob.name==null || !NUtils.isEarthworm(ngob.name)))
 		    	RUtils.multiadd(this.slots, (RenderTree.Node)a);
 		} catch(Loading l) {
 		    if(prev instanceof RenderTree.Node) {
@@ -781,7 +782,7 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	return(curstate);
     }
 
-    private void updstate() {
+    public void updstate() {
 	GobState nst;
 	try {
 	    nst = new GobState();
@@ -806,7 +807,8 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 	}
 	for(GAttrib a : attr.values()) {
 	    if(a instanceof RenderTree.Node)
-			if ((Boolean)NConfig.get(NConfig.Key.hideNature) || ngob.name==null || !NUtils.isNatureObject(ngob.name))
+			if (((Boolean)NConfig.get(NConfig.Key.hideNature) || ngob.name==null || !NUtils.isNatureObject(ngob.name)) &&
+				((Boolean)NConfig.get(NConfig.Key.hideEarthworm) || ngob.name==null || !NUtils.isEarthworm(ngob.name)))
 				slot.add((RenderTree.Node)a);
 	}
 	slots.add(slot);

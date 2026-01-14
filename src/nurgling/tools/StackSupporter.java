@@ -24,11 +24,18 @@ public class StackSupporter {
         customStackSizes.put("Gooseneck Barnacle", 4);
         customStackSizes.put("River Pearl Mussel", 4);
         customStackSizes.put("Tuft of Squirrel's Finest Hair", 3);
-        customStackSizes.put("Ghostpipe", 3);
         customStackSizes.put("Forest Lizard", 3);
         customStackSizes.put("Cavebulb", 4);
         customStackSizes.put("Dusk Fern", 4);
+        customStackSizes.put("Straw", 5);
+        customStackSizes.put("Standing Grass", 4);
         customStackSizes.put("Frog", 3);
+        customStackSizes.put("Toad", 3);
+        customStackSizes.put("Waybroad", 4);
+        customStackSizes.put("Green Kelp", 4);
+        customStackSizes.put("Cattail Roots", 4);
+        customStackSizes.put("Heartwood Leaves", 4);
+
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
         size3.add("Onion");
@@ -52,7 +59,6 @@ public class StackSupporter {
         size3.add("Solid Fat");
         size3.add("Cured Tea");
         size3.add("Snail");
-        size3.add("Clean Animal Carcass");
         size3.add("Edible Seashell");
         size3.add("Candle");
         size3.add("Pearl");
@@ -64,8 +70,6 @@ public class StackSupporter {
         size3.add("Any Brick");
         size3.add("Clay");
         size3.add("Casting Material");
-        size3.add("Board");
-        size3.add("Block of Wood");
         size3.add("Ore");
         size3.add("Stone");
         size3.add("Lures");
@@ -74,6 +78,7 @@ public class StackSupporter {
         size3.add("Medicine");
         size3.add("Intestines");
         size3.add("Bait");
+        size3.add("Pipeweed");
         catSize.put(size3,3);
 
         HashSet<String> size4 = new HashSet<>();
@@ -147,13 +152,25 @@ public class StackSupporter {
         catExceptions.add("Silkworm");
         catExceptions.add("Female Silkmoth");
         catExceptions.add("Male Silkmoth");
-        catExceptions.add("Clean Squirrel Carcass");
-        catExceptions.add("Clean Rabbit Carcass");
         catExceptions.add("Bog Turtle Shell");
         catExceptions.add("Cleaned Bat");
         catExceptions.add("Mole's Pawbone");
         catExceptions.add("Lobster");
         catExceptions.add("Leech");
+        catExceptions.add("Clean Adder Carcass");
+        catExceptions.add("Clean Chicken");
+        catExceptions.add("Clean Pelican");
+        catExceptions.add("Dried Filet");
+        catExceptions.add("Rabbit Frost");
+        catExceptions.add("Whirling Snowflake");
+        catExceptions.add("Precious Snowflake");
+        catExceptions.add("Sleighbell");
+        catExceptions.add("Billygoat Horn");
+        catExceptions.add("Ant Chitin");
+        catExceptions.add("Bee Chitin");
+        catExceptions.add("Cave Louse Chitin");
+        catExceptions.add("Driftkelp");
+        catExceptions.add("A Beautiful Dream");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
     public static boolean isStackable(NInventory inv, String name)
@@ -161,7 +178,7 @@ public class StackSupporter {
         Window win = inv.getparent(Window.class);
         if(win!=null)
         {
-            if(NParser.checkName(win.cap,unstackableContainers) || NParser.checkName(name, new NAlias("Lynx Claws")) || name.equals("Silkworm") || catExceptions.contains(name))
+            if(NParser.checkName(win.cap,unstackableContainers) || NParser.checkName(name, new NAlias("Lynx Claws")) || name.equals("Silkworm") || name.contains("Dried Filet") || catExceptions.contains(name))
             {
                 return false;
             }

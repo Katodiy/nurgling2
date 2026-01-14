@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.Composite;
 import haven.render.Location;
 import haven.render.Pipe;
 import haven.render.Transform;
@@ -65,8 +66,10 @@ public class NGob
     private static final NAlias WALL_TRELLIS_ALIAS = new NAlias("wall", "trellis");
     private static final NAlias BORKA_ALIAS = new NAlias("borka");
     private static final NAlias PLANTS_ALIAS = new NAlias("plants");
+    private static final NAlias GARDEN_POT_ALIAS = new NAlias("gardenpot");
     private static final NAlias MINEBEAM_ALIAS = new NAlias(new ArrayList<>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<>(Arrays.asList("stump", "wrack", "log")));
     private static final NAlias MOUNDBED_ALIAS = new NAlias("gfx/terobjs/moundbed");
+    private static final NAlias IGNORED_ARCH = new NAlias("-door", "arch/hwall");
     private static final NAlias KRITTER_ALIAS = new NAlias("kritter");
     private static final NAlias BORKA_ALIAS_SETDYNAMIC = new NAlias("borka");
     private static final NAlias VEHICLE_ALIAS = new NAlias("vehicle");
@@ -83,6 +86,8 @@ public class NGob
     
     // Flag to track if crop marker was already added
     private boolean cropMarkerAdded = false;
+    // Flag to track if garden pot marker was already added
+    private boolean gardenPotMarkerAdded = false;
 
     public void changedPose(String currentPose)
     {
@@ -92,7 +97,7 @@ public class NGob
             {
                 if (ANIMAL_NAMES.contains(name))
                 {
-                    if (nurgling.NUtils.getGameUI() != null)
+                    if (nurgling.NUtils.getGameUI() != null && NUtils.getGameUI().fv!=null)
                     {
                         for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel)
                         {
@@ -104,11 +109,14 @@ public class NGob
                     }
                     parent.addcustomol(new NTexMarker(parent, new TexI(Resource.loadsimg("nurgling/hud/taiming")), () ->
                     {
-                        for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel)
+                        if(NUtils.getGameUI().fv!=null)
                         {
-                            if (rel.gobid == parent.id)
+                            for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel)
                             {
-                                return true;
+                                if (rel.gobid == parent.id)
+                                {
+                                    return true;
+                                }
                             }
                         }
                         return false;
@@ -617,8 +625,14 @@ public class NGob
                     if (NParser.checkName(name, BORKA_ALIAS))
                     {
                         // Add delayed check to ensure this is not a mannequin and not the player
+                        // Also check that Composite is fully loaded (like Hurricane does)
                         delayedOverlayTasks.add(new DelayedOverlayTask(
-                                gob -> gob.pose() != null,
+                                gob -> {
+                                    if (gob.pose() == null) return false;
+                                    // Check that Composite attribute exists and is fully loaded
+                                    Composite c = gob.getattr(Composite.class);
+                                    return c != null && c.comp != null && !c.comp.cmod.isEmpty();
+                                },
                                 gob ->
                                 {
                                     String posename = gob.pose();
@@ -635,9 +649,15 @@ public class NGob
                     {
                         parent.addcustomol(new NCropMarker(parent));
                         cropMarkerAdded = true;
-                    } else
+                    }
+
+                    if (NParser.checkName(name, GARDEN_POT_ALIAS) && cachedShowCropStage && !gardenPotMarkerAdded)
                     {
-                        if (NParser.checkName(name, MINEBEAM_ALIAS))
+                        parent.addcustomol(new NGardenPotMarker(parent));
+                        gardenPotMarkerAdded = true;
+                    }
+
+                    if (NParser.checkName(name, MINEBEAM_ALIAS))
                         {
                             switch (name)
                             {
@@ -691,11 +711,9 @@ public class NGob
                             hitBox = custom;
                         }
                     }
-
-                }
                 if (hitBox != null)
                 {
-                    if (NParser.checkName(name, MOUNDBED_ALIAS))
+                    if (NParser.checkName(name, MOUNDBED_ALIAS) || NParser.checkName(name, IGNORED_ARCH))
                     {
                         hitBox = null;
                     } else
@@ -748,6 +766,10 @@ public class NGob
                 else if (name.contains("trough"))
                 {
                     parent.addcustomol(new nurgling.overlays.NTroughRadius(parent));
+                }
+                else if (name.contains("moundbed"))
+                {
+                    parent.addcustomol(new nurgling.overlays.NMoundBedRadius(parent));
                 }
             }
         }

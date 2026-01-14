@@ -1,14 +1,15 @@
 package nurgling.actions;
 
 import haven.Utils;
-import nurgling.DBPoolManager;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.*;
 import java.util.HashSet;
 
@@ -21,40 +22,35 @@ public class ReadJsonAction implements Action {
 
     @Override
     public Results run(NGameUI gui) {
-        if (gui.ui.core.poolManager == null || !gui.ui.core.poolManager.isConnectionReady()) {
+        if (gui.ui.core.databaseManager == null || !gui.ui.core.databaseManager.isReady()) {
             return Results.ERROR("Database connection not available");
         }
 
-        Connection conn = null;
-        try (FileReader fileReader = new FileReader(path)) {
-            conn = gui.ui.core.poolManager.getConnection();
-            if (conn == null) {
-                return Results.ERROR("Database connection not available");
-            }
-            JSONArray foodItems = new JSONArray(new JSONTokener(fileReader));
-            loadDataIntoDatabase(conn, foodItems);
-            System.out.println("Data imported successfully");
+        try {
+            return gui.ui.core.databaseManager.executeOperation(adapter -> {
+                try (FileReader fileReader = new FileReader(path)) {
+                    JSONArray foodItems = new JSONArray(new JSONTokener(fileReader));
+                    loadDataIntoDatabase(adapter.getConnection(), foodItems);
+                    System.out.println("Data imported successfully");
+                    return Results.SUCCESS();
+                } catch (FileNotFoundException e)
+                {
+                    throw new RuntimeException(e);
+                } catch (IOException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ignore) {
-                }
-            }
             return Results.ERROR(e.getMessage());
-        } finally {
-            if (conn != null) {
-                gui.ui.core.poolManager.returnConnection(conn);
-            }
         }
-        return Results.SUCCESS();
     }
 
     private static final String INSERT_RECIPE_SQL =
             "INSERT OR IGNORE INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
     private static final String INSERT_INGREDIENT_SQL =
-            "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
+            "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage, resource_name) VALUES (?, ?, ?, ?)";
     private static final String INSERT_FEPS_SQL =
             "INSERT OR IGNORE INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
 
@@ -93,6 +89,12 @@ public class ReadJsonAction implements Action {
                     ingredientStmt.setString(1, recipeHash);
                     ingredientStmt.setString(2, ingredient.getString("name"));
                     ingredientStmt.setDouble(3, ingredient.getDouble("percentage"));
+                    // Set resource_name if present in JSON, otherwise null
+                    if (ingredient.has("resourceName")) {
+                        ingredientStmt.setString(4, ingredient.getString("resourceName"));
+                    } else {
+                        ingredientStmt.setNull(4, Types.VARCHAR);
+                    }
                     ingredientStmt.addBatch();
                 }
 
@@ -130,14 +132,22 @@ public class ReadJsonAction implements Action {
 
     private static String generateRecipeHash(JSONObject foodItem) {
         StringBuilder hashInput = new StringBuilder();
-        hashInput.append(foodItem.getString("resourceName"))
-                .append(foodItem.getInt("energy"));
+        // Match the format in NCore.buildRecipeHash: itemName + energy + resourceName
+        hashInput.append(foodItem.getString("itemName"))
+                .append(foodItem.getInt("energy"))
+                .append(foodItem.getString("resourceName"));
 
         JSONArray ingredients = foodItem.getJSONArray("ingredients");
         for (int i = 0; i < ingredients.length(); i++) {
             JSONObject ingredient = ingredients.getJSONObject(i);
-            hashInput.append(ingredient.getString("name"))
-                    .append(ingredient.getDouble("percentage"));
+            // Use resourceName if available, otherwise fall back to name (same as NCore)
+            if (ingredient.has("resourceName") && ingredient.get("resourceName") != null 
+                    && !ingredient.isNull("resourceName")) {
+                hashInput.append(ingredient.getString("resourceName"));
+            } else {
+                hashInput.append(ingredient.getString("name"));
+            }
+            hashInput.append((int) ingredient.getDouble("percentage"));
         }
 
         return NUtils.calculateSHA256(hashInput.toString());

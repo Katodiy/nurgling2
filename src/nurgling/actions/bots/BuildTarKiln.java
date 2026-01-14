@@ -12,6 +12,7 @@ import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Build;
 import nurgling.actions.Results;
+import nurgling.areas.NContext;
 import nurgling.overlays.BuildGhostPreview;
 import nurgling.overlays.NCustomBauble;
 import nurgling.tools.NAlias;
@@ -21,36 +22,48 @@ public class BuildTarKiln implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         try {
-        Build.Command command = new Build.Command();
-        command.name = "Tar Kiln";
+            Build.Command command = new Build.Command();
+            command.name = "Tar Kiln";
+            NContext context = new NContext(gui);
 
-        NUtils.getGameUI().msg("Please, select build area");
-        SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Tar Kiln");
-        buildarea.run(NUtils.getGameUI());
+            NUtils.getGameUI().msg("Please, select build area");
+            SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(context, Resource.loadsimg("baubles/buildArea"), "Tar Kiln");
+            buildarea.run(NUtils.getGameUI());
 
-        NUtils.getGameUI().msg("Please, select area for stone");
-        SelectArea stonearea = new SelectArea(Resource.loadsimg("baubles/chipperPiles"));
-        stonearea.run(NUtils.getGameUI());
-        command.ingredients.add(new Build.Ingredient(new Coord(1,1),stonearea.getRCArea(), VSpec.getNamesInCategory("Stone"),35));
+            // Use BuildMaterialHelper for auto-zone lookup
+            BuildMaterialHelper helper = new BuildMaterialHelper(context, gui);
+            
+            // Stone (35)
+            command.ingredients.add(helper.getIngredient(
+                new Coord(1, 1),
+                VSpec.getNamesInCategory("Stone"),
+                35,
+                "baubles/chipperPiles",
+                "Please, select area for stone"
+            ));
+            
+            // Clay (50)
+            command.ingredients.add(helper.getIngredient(
+                new Coord(1, 1),
+                new NAlias("Clay"),
+                50,
+                "baubles/clayPiles",
+                "Please, select area for clay"
+            ));
 
-        NUtils.getGameUI().msg("Please, select area for clay");
-        SelectArea clayarea = new SelectArea(Resource.loadsimg("baubles/clayPiles"));
-        clayarea.run(NUtils.getGameUI());
-        command.ingredients.add(new Build.Ingredient(new Coord(1,1),clayarea.getRCArea(),new NAlias("Clay"),50));
-
-        // Get ghost positions from BuildGhostPreview if available
-        ArrayList<Coord2d> ghostPositions = null;
-        BuildGhostPreview ghostPreview = null;
-        Gob player = NUtils.player();
-        if (player != null) {
-            ghostPreview = player.getattr(BuildGhostPreview.class);
-            if (ghostPreview != null) {
-                ghostPositions = new ArrayList<>(ghostPreview.getGhostPositions());
+            // Get ghost positions from BuildGhostPreview if available
+            ArrayList<Coord2d> ghostPositions = null;
+            BuildGhostPreview ghostPreview = null;
+            Gob player = NUtils.player();
+            if (player != null) {
+                ghostPreview = player.getattr(BuildGhostPreview.class);
+                if (ghostPreview != null) {
+                    ghostPositions = new ArrayList<>(ghostPreview.getGhostPositions());
+                }
             }
-        }
 
-        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
-        return Results.SUCCESS();
+            new Build(context, command, buildarea.ghostArea, buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
+            return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted
             Gob player = NUtils.player();

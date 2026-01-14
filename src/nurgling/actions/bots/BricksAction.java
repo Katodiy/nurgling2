@@ -30,7 +30,14 @@ public class BricksAction implements Action {
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
         if(new Validator(req, opt).run(gui).IsSuccess()) {
 
-            NArea npile_area = NContext.findIn(clays);
+            NArea npile_area = null;
+
+            for(String clay : clays.keys)
+            {
+                npile_area = NContext.findIn(clay);
+                if(npile_area != null)
+                    break;
+            }
             Pair<Coord2d,Coord2d> pile_area = npile_area!=null?npile_area.getRCArea():null;
             if(pile_area==null)
             {
@@ -38,10 +45,10 @@ public class BricksAction implements Action {
             }
 
             ArrayList<Container> containers = new ArrayList<>();
-
-            for (Gob kiln : Finder.findGobs(NContext.findSpec(rkilns.name),
+            NArea kilnsarea = NContext.findSpec(rkilns.name);
+            for (Gob kiln : Finder.findGobs(kilnsarea,
                     new NAlias("gfx/terobjs/kiln"))) {
-                Container cand = new Container(kiln,"Kiln" );
+                Container cand = new Container(kiln,"Kiln",kilnsarea );
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
                 cand.getattr(Container.FuelLvl.class).setMaxlvl(2);

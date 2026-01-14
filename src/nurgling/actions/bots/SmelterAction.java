@@ -49,7 +49,7 @@ public class SmelterAction implements Action {
             ArrayList<Container> containers = new ArrayList<>();
 
             for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/smelter"))) {
-                Container cand = new Container(sm, ((sm.ngob.getModelAttribute() & 128) == 128) ? "Smith's Smelter" : "Ore Smelter");
+                Container cand = new Container(sm, ((sm.ngob.getModelAttribute() & 128) == 128) ? "Smith's Smelter" : "Ore Smelter", smelters);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -64,7 +64,7 @@ public class SmelterAction implements Action {
             }
 
             for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/primsmelter"))) {
-                Container cand = new Container(sm, "Stack furnace");
+                Container cand = new Container(sm, "Stack furnace", smelters);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);
@@ -91,7 +91,9 @@ public class SmelterAction implements Action {
                 NUtils.getUI().core.addTask(new WaitForBurnout(lighted, 2));
                 synchronized (NUtils.getGameUI()) {
                     new FreeContainers(containers).run(gui);
+                    NUtils.navigateToArea(smelters);
                     new CollectQuickSilver(containers).run(gui);
+                    NUtils.navigateToArea(smelters);
                     new DropTargets(containers, new NAlias("Slag")).run(gui);
                     res = new FillContainersFromPiles(containers, NContext.findSpec(Specialisation.SpecName.ore.toString()).getRCArea(), ores).run(gui);
                     ArrayList<Container> forFuel = new ArrayList<>();

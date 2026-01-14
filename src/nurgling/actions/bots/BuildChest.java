@@ -10,9 +10,9 @@ import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Build;
 import nurgling.actions.Results;
+import nurgling.areas.NContext;
 import nurgling.overlays.BuildGhostPreview;
 import nurgling.overlays.NCustomBauble;
-import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
 
@@ -22,33 +22,29 @@ public class BuildChest implements Action {
         try {
             Build.Command command = new Build.Command();
             command.name = "Wooden Chest";
+            NContext context = new NContext(gui);
 
             NUtils.getGameUI().msg("Please, select build area");
-        SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Wooden Chest");
+            SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(context, Resource.loadsimg("baubles/buildArea"), "Wooden Chest");
             buildarea.run(NUtils.getGameUI());
 
-            NUtils.getGameUI().msg("Please, select area for board");
-            SelectArea brancharea = new SelectArea(Resource.loadsimg("baubles/boardIng"));
-            brancharea.run(NUtils.getGameUI());
-            command.ingredients.add(new Build.Ingredient(new Coord(4,1),brancharea.getRCArea(),new NAlias("Board"),4));
-
-            NUtils.getGameUI().msg("Please, select area for nuggets");
-            SelectArea bougharea = new SelectArea(Resource.loadsimg("baubles/nugget"));
-            bougharea.run(NUtils.getGameUI());
-            command.ingredients.add(new Build.Ingredient(new Coord(1,1),bougharea.getRCArea(),new NAlias("Nugget"),4));
+            // Use BuildMaterialHelper for auto-zone lookup
+            BuildMaterialHelper helper = new BuildMaterialHelper(context, gui);
+            command.ingredients.add(helper.getBoards(4));
+            command.ingredients.add(helper.getNuggets(4));
 
             // Get ghost positions from BuildGhostPreview if available
             ArrayList<Coord2d> ghostPositions = null;
             BuildGhostPreview ghostPreview = null;
             Gob player = NUtils.player();
             if (player != null) {
-            ghostPreview = player.getattr(BuildGhostPreview.class);
+                ghostPreview = player.getattr(BuildGhostPreview.class);
                 if (ghostPreview != null) {
                     ghostPositions = new ArrayList<>(ghostPreview.getGhostPositions());
                 }
             }
 
-            new Build(command, buildarea.getRCArea(), buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
+            new Build(context, command, buildarea.ghostArea, buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
             return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted

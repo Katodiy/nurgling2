@@ -146,7 +146,7 @@ public class GlobalExtractionPhase implements Action {
         for (String resource : NContext.contcaps.keySet()) {
             String type = NContext.contcaps.get(resource);
             for (haven.Gob gob : Finder.findGobs(jarArea, new NAlias(resource))) {
-                containers.add(new Container(gob, type));
+                containers.add(new Container(gob, type, jarArea));
             }
         }
         return containers;

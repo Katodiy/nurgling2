@@ -13,6 +13,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
+import static haven.Inventory.invsq;
+
 public class NEquipory extends Equipory
 {
     public static Text.Furnace fnd = new PUtils.BlurFurn(new Text.Foundry(Text.sans.deriveFont(java.awt.Font.BOLD), 12).aa(true), UI.scale(1), UI.scale(1), Color.BLACK);
@@ -21,13 +23,203 @@ public class NEquipory extends Equipory
     int percExp = -1;
     int hardArmor = -1;
     int softArmor = -1;
-    
+
+    // Toggle button textures for quick slot configuration
+    private static final Tex addUp = new TexI(Resource.loadsimg("nurgling/hud/buttons/add/u"));
+    private static final Tex addDown = new TexI(Resource.loadsimg("nurgling/hud/buttons/add/d"));
+    private static final Tex addHover = new TexI(Resource.loadsimg("nurgling/hud/buttons/add/h"));
+    private static final Tex removeUp = new TexI(Resource.loadsimg("nurgling/hud/buttons/remove/u"));
+    private static final Tex removeDown = new TexI(Resource.loadsimg("nurgling/hud/buttons/remove/d"));
+    private static final Tex removeHover = new TexI(Resource.loadsimg("nurgling/hud/buttons/remove/h"));
+
+    // Toggle buttons for each equipment slot
+    private final SlotToggleButton[] toggleButtons = new SlotToggleButton[ecoords.length];
+
     // Queue for pending parasite checks
     private final ArrayList<NGItem> pendingParasiteChecks = new ArrayList<>();
-    
+
     public NEquipory(long gobid)
     {
         super(gobid);
+        initToggleButtons();
+    }
+
+    // Custom offset for STORE_HAT slot to avoid overlapping HEAD slot's button
+    private static final int STORE_HAT_OFFSET = UI.scale(20);
+
+    /**
+     * Gets the display coordinate for a slot, applying any custom offsets
+     */
+    private Coord getSlotDisplayCoord(int slotIdx) {
+        Coord baseCoord = ecoords[slotIdx];
+        // Move STORE_HAT slot to the right to avoid covering HEAD's toggle button
+        if (slotIdx == Slots.STORE_HAT.idx) {
+            return new Coord(baseCoord.x + STORE_HAT_OFFSET, baseCoord.y);
+        }
+        return baseCoord;
+    }
+
+    /**
+     * Initializes toggle buttons for each equipment slot
+     */
+    private void initToggleButtons() {
+        // Button size and spacing from slot
+        int btnSize = UI.scale(12);
+        int spacing = UI.scale(4);  // Extra spacing from the slot edge
+
+        for (int i = 0; i < ecoords.length; i++) {
+            final int slotIdx = i;
+            Coord slotCoord = getSlotDisplayCoord(i);
+
+            // Determine if this is a right column slot by checking x position
+            // Left column has x=0, right column has x > inventory slot width
+            // STORE_HAT is a special middle slot - treat it like left column (button on right)
+            boolean isRightColumn = slotCoord.x > invsq.sz().x && slotIdx != Slots.STORE_HAT.idx;
+
+            // Calculate button position - center vertically next to the slot with extra spacing
+            Coord btnPos;
+            if (isRightColumn) {
+                // Right column: button on left side of slot
+                btnPos = new Coord(slotCoord.x - btnSize - spacing, slotCoord.y + (invsq.sz().y - btnSize) / 2);
+            } else {
+                // Left column or STORE_HAT: button on right side of slot
+                btnPos = new Coord(slotCoord.x + invsq.sz().x + spacing, slotCoord.y + (invsq.sz().y - btnSize) / 2);
+            }
+
+            toggleButtons[i] = add(new SlotToggleButton(slotIdx), btnPos);
+        }
+    }
+
+    /**
+     * Gets the current equip proxy slots as a list of integers.
+     * Handles both Integer and Long types that may come from JSON parsing.
+     */
+    @SuppressWarnings("unchecked")
+    private static ArrayList<Integer> getEquipProxySlotsFromConfig() {
+        Object configValue = NConfig.get(NConfig.Key.equipProxySlots);
+        if (configValue == null) {
+            return new ArrayList<>();
+        }
+
+        ArrayList<Integer> result = new ArrayList<>();
+        if (configValue instanceof ArrayList) {
+            for (Object item : (ArrayList<?>) configValue) {
+                if (item instanceof Number) {
+                    result.add(((Number) item).intValue());
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Check if a slot index is currently in the quick access bar config
+     */
+    private static boolean isSlotInQuickBar(int slotIdx) {
+        ArrayList<Integer> slots = getEquipProxySlotsFromConfig();
+        return slots.contains(slotIdx);
+    }
+
+    /**
+     * Toggle a slot in the quick access bar config
+     */
+    private static void toggleSlotInQuickBar(int slotIdx) {
+        ArrayList<Integer> slots = getEquipProxySlotsFromConfig();
+
+        if (slots.contains(slotIdx)) {
+            slots.remove(Integer.valueOf(slotIdx));
+        } else {
+            slots.add(slotIdx);
+        }
+
+        NConfig.set(NConfig.Key.equipProxySlots, slots);
+
+        // Update the NEquipProxy widget if it exists
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().nep != null) {
+            NUtils.getGameUI().nep.setSlots(NGameUI.getEquipProxySlotsFromConfig());
+        }
+    }
+
+    /**
+     * Custom button for toggling slot in/out of quick access bar
+     */
+    private class SlotToggleButton extends Widget {
+        private final int slotIdx;
+        private boolean hovering = false;
+        private boolean pressed = false;
+        private UI.Grab grab = null;
+
+        public SlotToggleButton(int slotIdx) {
+            super(UI.scale(new Coord(12, 12)));
+            this.slotIdx = slotIdx;
+        }
+
+        @Override
+        public void draw(GOut g) {
+            boolean inQuickBar = isSlotInQuickBar(slotIdx);
+            Tex img;
+
+            if (inQuickBar) {
+                // Show remove button
+                if (pressed && hovering) {
+                    img = removeDown;
+                } else if (hovering) {
+                    img = removeHover;
+                } else {
+                    img = removeUp;
+                }
+            } else {
+                // Show add button
+                if (pressed && hovering) {
+                    img = addDown;
+                } else if (hovering) {
+                    img = addHover;
+                } else {
+                    img = addUp;
+                }
+            }
+
+            g.image(img, Coord.z, sz);
+        }
+
+        @Override
+        public boolean mousedown(MouseDownEvent ev) {
+            if (ev.b == 1) {
+                pressed = true;
+                grab = ui.grabmouse(this);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean mouseup(MouseUpEvent ev) {
+            if (grab != null && ev.b == 1) {
+                grab.remove();
+                grab = null;
+                if (pressed && hovering) {
+                    toggleSlotInQuickBar(slotIdx);
+                }
+                pressed = false;
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void mousemove(MouseMoveEvent ev) {
+            hovering = ev.c.isect(Coord.z, sz);
+        }
+
+        @Override
+        public Object tooltip(Coord c, Widget prev) {
+            boolean inQuickBar = isSlotInQuickBar(slotIdx);
+            if (inQuickBar) {
+                return "Remove from quick access bar";
+            } else {
+                return "Add to quick access bar";
+            }
+        }
     }
 
     BufferedImage percExpText = null;
@@ -51,10 +243,12 @@ public class NEquipory extends Equipory
         CAPE(14),      //14: Cape
         BOOTS(15),     //15: Shoes
         STORE_HAT(16), //16: Hat from store
-        EYES(17),      //17: Eyes
+        EYES(17),      //17: Eyes/Mask
         MOUTH(18),     //18: Mouth
         LFOOT(19),     //19: Left Foot
-        RFOOT(20);     //20: Right Foot
+        RFOOT(20),     //20: Right Foot
+        SHOULDER(21),  //21: Shoulder
+        COAT(22);      //22: Coat
 
         public final int idx;
         Slots(int idx) {
@@ -130,7 +324,7 @@ public class NEquipory extends Equipory
             WItem[] v = new NWItem[args.length];
             for ( int i = 0 ; i < args.length ; i++ ) {
                 int ep = ( Integer ) args[i];
-                v[i] = quickslots[ep] = add ( new NWItem(g), ecoords[ep].add ( 1, 1 ) );
+                v[i] = quickslots[ep] = add ( new NWItem(g), getSlotDisplayCoord(ep).add ( 1, 1 ) );
             }
             wmap.put ( g, Arrays.asList ( v.clone () ) );
             
@@ -237,9 +431,43 @@ public class NEquipory extends Equipory
     }
 
     @Override
+    public int epat(Coord c) {
+        for(int i = 0; i < ecoords.length; i++) {
+            if(c.isect(getSlotDisplayCoord(i), invsq.sz()))
+                return(i);
+        }
+        return(-1);
+    }
+
+    @Override
+    public void drawslots(GOut g) {
+        int slots = 0;
+        GameUI gui = getparent(GameUI.class);
+        if((gui != null) && (gui.vhand != null)) {
+            try {
+                SlotInfo si = ItemInfo.find(SlotInfo.class, gui.vhand.item.info());
+                if(si != null)
+                    slots = si.slots();
+            } catch(Loading l) {
+            }
+        }
+        for(int i = 0; i < ecoords.length; i++) {
+            Coord slotCoord = getSlotDisplayCoord(i);
+            if((slots & (1 << i)) != 0) {
+                g.chcolor(255, 255, 0, 64);
+                g.frect(slotCoord.add(1, 1), invsq.sz().sub(2, 2));
+                g.chcolor();
+            }
+            g.image(invsq, slotCoord);
+            if(ebgs[i] != null)
+                g.image(ebgs[i], slotCoord);
+        }
+    }
+
+    @Override
     public void draw(GOut g) {
         super.draw(g);
-        Coord textCoord = new Coord(sz.x - percExpText.getWidth() - UI.scale(65), UI.scale(3));
+        Coord textCoord = new Coord(sz.x - percExpText.getWidth() - UI.scale(85), UI.scale(3));
         if (percExpText != null) {
 
             g.image(eye, textCoord, UI.scale(20,20));

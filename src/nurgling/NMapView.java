@@ -16,15 +16,16 @@ import nurgling.conf.QuickActionPreset;
 import nurgling.widgets.options.QuickActions;
 import nurgling.overlays.*;
 import nurgling.overlays.map.*;
-import nurgling.routes.Route;
-import nurgling.routes.RouteGraphManager;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.ChunkNavData;
+import nurgling.navigation.ChunkNavManager;
+import nurgling.navigation.ChunkPortal;
 import nurgling.scenarios.Scenario;
 import nurgling.tasks.WaitForMapLoadNoCoord;
 import nurgling.tools.*;
 import nurgling.widgets.NAreasWidget;
 import nurgling.widgets.NMiniMap;
 import nurgling.widgets.NZoneMeasureTool;
+import nurgling.NConfig;
 
 import java.awt.event.KeyEvent;
 import java.awt.image.*;
@@ -48,27 +49,15 @@ public class NMapView extends MapView
     public NGlobalCoord lastGC = null;
 
     public final List<NMiniMap.TempMark> tempMarkList = new ArrayList<NMiniMap.TempMark>();
-    
+
     // Route point dragging state
-    private RouteLabel draggedRouteLabel = null;
-    private boolean isDraggingRoutePoint = false;
     private UI.Grab dragGrab = null;
+    // Chunk navigation manager - owned by NMapView, not a singleton
+    private ChunkNavManager chunkNavManager;
+
+    // Track areas that were deleted locally to prevent restoration during sync
+    private final Set<Integer> locallyDeletedAreas = new HashSet<>();
     
-    // Find RouteLabel at screen coordinate
-    private RouteLabel getRouteLabeAt(Coord screenCoord) {
-        // Check all virtual game objects for RouteLabel overlays
-        for(Gob gob : routeDummys.values()) {
-            for(Gob.Overlay ol : gob.ols) {
-                if(ol.spr instanceof RouteLabel) {
-                    RouteLabel routeLabel = (RouteLabel) ol.spr;
-                    if(routeLabel.checkDragStart(screenCoord)) {
-                        return routeLabel;
-                    }
-                }
-            }
-        }
-        return null;
-    }
     public NMapView(Coord sz, Glob glob, Coord2d cc, long plgob)
     {
         super(sz, glob, cc, plgob);
@@ -82,9 +71,23 @@ public class NMapView extends MapView
      * Initialize profile-aware components with genus
      */
     public void initializeWithGenus(String genus) {
-        if (routeGraphManager == null) {
-            routeGraphManager = new RouteGraphManager(genus);
+        // Initialize ChunkNav system for this world
+        try {
+            if (chunkNavManager == null) {
+                chunkNavManager = new ChunkNavManager();
+            }
+            chunkNavManager.initialize(genus);
+        } catch(Exception e) {
+            System.err.println("NMapView: Error initializing ChunkNavManager: " + e.getMessage());
         }
+    }
+
+    /**
+     * Get the chunk navigation manager for this map view.
+     * @return The ChunkNavManager instance, or null if not initialized
+     */
+    public ChunkNavManager getChunkNavManager() {
+        return chunkNavManager;
     }
 
     final HashMap<String, String> ttip = new HashMap<>();
@@ -109,19 +112,7 @@ public class NMapView extends MapView
 
     public HashMap<Long, Gob> dummys = new HashMap<>();
     public HashMap<Long, Gob> routeDummys = new HashMap<>();
-
-    public RouteGraphManager routeGraphManager;
-
-    /**
-     * Get RouteGraphManager, initializing with fallback if needed
-     */
-    public RouteGraphManager getRouteGraphManager() {
-        if (routeGraphManager == null) {
-            System.out.println("DEBUG: NMapView.getRouteGraphManager() - RouteGraphManager not initialized, using fallback");
-            routeGraphManager = new RouteGraphManager(); // fallback to global
-        }
-        return routeGraphManager;
-    }
+    public HashMap<Long, Gob> portalDummys = new HashMap<>();
 
 
     // Destination point for path line (set by click)
@@ -172,21 +163,6 @@ public class NMapView extends MapView
                 }
             }
         }
-        for(Long gobid: ((NMapView)NUtils.getGameUI().map).routeDummys.keySet())
-        {
-            Gob gob = Finder.findGob(gobid);
-            Gob.Overlay ol;
-            if(gob!=null && (ol = gob.findol(RouteLabel.class))!=null)
-            {
-                RouteLabel al = (RouteLabel) ol.spr;
-                if(al.isect(pc)) {
-                    isFound = true;
-                    NUtils.getGameUI().msg(String.valueOf(al.point.id));
-                    break;
-                }
-            }
-        }
-
         return isFound;
     }
 
@@ -226,12 +202,16 @@ public class NMapView extends MapView
                         Coord playerc = screenxf(player.getc()).round2();
                         Coord destc = screenxf(clickDestination).round2();
                         if (playerc != null && destc != null) {
+                            // Get line settings from config
+                            Object widthObj = NConfig.get(NConfig.Key.pathLineWidth);
+                            int lineWidth = (widthObj instanceof Number) ? ((Number) widthObj).intValue() : 4;
+                            java.awt.Color lineColor = NConfig.getColor(NConfig.Key.pathLineColor, java.awt.Color.YELLOW);
                             // Draw black outline
                             g.chcolor(java.awt.Color.BLACK);
-                            g.line(playerc, destc, 6);
-                            // Draw bright yellow core
-                            g.chcolor(java.awt.Color.YELLOW);
-                            g.line(playerc, destc, 4);
+                            g.line(playerc, destc, lineWidth + 2);
+                            // Draw colored core
+                            g.chcolor(lineColor);
+                            g.line(playerc, destc, lineWidth);
                             // Reset color
                             g.chcolor();
                         }
@@ -264,7 +244,6 @@ public class NMapView extends MapView
 
     public void initRouteDummys(int id) {
         destroyRouteDummys();
-        createRouteLabel(id);
     }
 
     public void createAreaLabel(Integer id) {
@@ -281,25 +260,6 @@ public class NMapView extends MapView
             dummy.addcustomol(new NAreaLabel(dummy, area));
             dummys.put(dummy.id, dummy);
             glob.oc.add(dummy);
-        }
-    }
-
-    public void createRouteLabel(Integer id) {
-        Route route = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(id);
-        if (route == null) return;
-        synchronized (route.waypoints) {
-            NUtils.getGameUI().routesWidget.updateWaypoints();
-            List<RoutePoint> waypointsCopy = new ArrayList<>(route.waypoints);
-            for (RoutePoint point : waypointsCopy) {
-                Coord2d absCoord = point.toCoord2d(glob.map);
-                if (absCoord != null) {
-                    OCache.Virtual dummy = glob.oc.new Virtual(absCoord, 0);
-                    dummy.virtual = true;
-                    dummy.addcustomol(new RouteLabel(dummy, route, point));
-                    routeDummys.put(dummy.id, dummy);
-                    glob.oc.add(dummy);
-                }
-            }
         }
     }
 
@@ -321,6 +281,59 @@ public class NMapView extends MapView
                 glob.oc.remove(d);
         }
         routeDummys.clear();
+    }
+
+    public void destroyPortalDummys()
+    {
+        for(Gob d: portalDummys.values())
+        {
+            if(glob.oc.getgob(d.id)!=null)
+                glob.oc.remove(d);
+        }
+        portalDummys.clear();
+    }
+
+    /**
+     * Create portal labels for all portals in all visible chunks.
+     * Only creates labels if chunkNavOverlay config is enabled.
+     */
+    public void createPortalLabels() {
+        destroyPortalDummys();
+
+        // Check if ChunkNav overlay is enabled
+        Object val = NConfig.get(NConfig.Key.chunkNavOverlay);
+        if (!(val instanceof Boolean) || !(Boolean) val) {
+            return; // Don't show portal dots if overlay is disabled
+        }
+
+        ChunkNavManager manager = getChunkNavManager();
+        if (manager == null || !manager.isInitialized()) return;
+
+        MCache mcache = glob.map;
+        if (mcache == null) return;
+
+        synchronized (mcache.grids) {
+            for (MCache.Grid grid : mcache.grids.values()) {
+                if (grid == null || grid.ul == null) continue;
+
+                ChunkNavData chunk = manager.getGraph().getChunk(grid.id);
+                if (chunk == null) continue;
+
+                for (ChunkPortal portal : chunk.portals) {
+                    if (portal.localCoord == null) continue;
+
+                    // Convert local tile coord to world coord
+                    Coord worldTile = grid.ul.add(portal.localCoord);
+                    Coord2d absCoord = worldTile.mul(MCache.tilesz).add(MCache.tilesz.div(2));
+
+                    OCache.Virtual dummy = glob.oc.new Virtual(absCoord, 0);
+                    dummy.virtual = true;
+                    dummy.addcustomol(new PortalLabel(dummy, chunk, portal));
+                    portalDummys.put(dummy.id, dummy);
+                    glob.oc.add(dummy);
+                }
+            }
+        }
     }
 
     public static NMiningOverlay getMiningOl()
@@ -701,6 +714,7 @@ public class NMapView extends MapView
             NArea newArea = new NArea(key);
             newArea.id = id;
             newArea.space = result;
+            newArea.lastLocalChange = System.currentTimeMillis();
             newArea.grids_id.addAll(newArea.space.space.keySet());
             newArea.path = NUtils.getGameUI().areas.currentPath;
             
@@ -716,73 +730,11 @@ public class NMapView extends MapView
             }
             
             glob.map.areas.put(id, newArea);
-//            NUtils.getGameUI().areas.addArea(id, newArea.name, newArea);
 
-            routeGraphManager.getGraph().connectAreaToRoutePoints(newArea);
             createAreaLabel(id);
         }
         return key;
     }
-
-    public String addRoute()
-    {
-        String key;
-        synchronized (((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes())
-        {
-            HashSet<String> names = new HashSet<String>();
-            int id = 0;
-            for(Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values())
-            {
-                if(route.id >= id)
-                {
-                    id = route.id + 1;
-                }
-                names.add(route.name);
-            }
-            key = ("New Route" + ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().size());
-            while(names.contains(key))
-            {
-                key = key+"(1)";
-            }
-            Route newRoute = new Route(key);
-            newRoute.id = id;
-            newRoute.path = NUtils.getGameUI().routesWidget.currentPath;
-            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().put(id, newRoute);
-            createRouteLabel(id);
-        }
-        return key;
-    }
-
-    public String addHearthFireRoute()
-    {
-        String key;
-        synchronized (((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes())
-        {
-            HashSet<String> names = new HashSet<String>();
-            int id = 0;
-            for(Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values())
-            {
-                if(route.id >= id)
-                {
-                    id = route.id + 1;
-                }
-                names.add(route.name);
-            }
-            key = ("New Route" + ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().size());
-            while(names.contains(key))
-            {
-                key = key+"(1)";
-            }
-            Route newRoute = new Route(key);
-            newRoute.id = id;
-            newRoute.path = NUtils.getGameUI().routesWidget.currentPath;
-            newRoute.spec.add(new Route.RouteSpecialization("HearthFires"));
-            ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().put(id, newRoute);
-            createRouteLabel(id);
-        }
-        return key;
-    }
-
 
     boolean botsInit = false;
     private static final long BOT_DELAY_MS = 15 * 1000;
@@ -801,6 +753,11 @@ public class NMapView extends MapView
         // Update marker line overlay (follows player)
         if(markerLineOverlay != null) {
             markerLineOverlay.tick();
+        }
+
+        // Tick chunk navigation system for recording
+        if (chunkNavManager != null) {
+            chunkNavManager.tick();
         }
         ArrayList<Long> forRemove = new ArrayList<>();
 //        for(Gob dummy : dummys.values())
@@ -885,18 +842,7 @@ public class NMapView extends MapView
             // Don't consume the event, let it pass through to start selection
             // return true;
         }
-        
-        // Check for route point drag start
-        if(ev.b == 1 && !isDraggingRoutePoint) { // Left mouse button
-            RouteLabel clickedLabel = getRouteLabeAt(ev.c);
-            if(clickedLabel != null) {
-                isDraggingRoutePoint = true;
-                draggedRouteLabel = clickedLabel;
-                draggedRouteLabel.startDrag();
-                dragGrab = ui.grabmouse(this);
-                return true;
-            }
-        }
+
         
         // Handle zone measure mode
         if (zoneMeasureMode && ev.b == 1) {
@@ -956,73 +902,13 @@ public class NMapView extends MapView
     @Override
     public void mousemove(MouseMoveEvent ev) {
         lastCoord = ev.c;
-        
-        // Handle route point dragging
-        if(isDraggingRoutePoint && draggedRouteLabel != null) {
-            // Update preview position immediately with screen coordinates
-            draggedRouteLabel.updateDragPreview(ev.c);
-            
-            // Capture the reference to avoid race conditions with async Hittest
-            final RouteLabel currentDraggedLabel = draggedRouteLabel;
-            
-            // Check if coordinates are within valid bounds before attempting Hittest
-            if(ev.c.x >= 0 && ev.c.y >= 0 && ev.c.x < sz.x && ev.c.y < sz.y) {
-                try {
-                    // Convert screen coordinate to world coordinate using Hittest
-                    new Hittest(ev.c) {
-                        public void hit(Coord pc, Coord2d mc, ClickData inf) {
-                            if(mc != null && currentDraggedLabel != null) {
-                                currentDraggedLabel.updatePosition(mc);
-                            }
-                        }
-                        
-                        protected void nohit(Coord pc) {
-                            // Ignore if no hit - mouse outside valid map area
-                        }
-                    }.run();
-                } catch (Exception e) {
-                    // Ignore hittest errors when mouse is outside valid area
-                }
-            }
-            return;
-        }
-        
         super.mousemove(ev);
     }
     
     @Override
     public boolean mouseup(MouseUpEvent ev) {
-        // Block all clicks in DRAG mode to prevent character movement during UI adjustment
         if(ui.core.mode == NCore.Mode.DRAG) {
             return true;
-        }
-        
-        if(isDraggingRoutePoint) {
-            if(ev.b == 1) {
-                // Left mouse button - finalize drag
-                isDraggingRoutePoint = false;
-                if(dragGrab != null) {
-                    dragGrab.remove();
-                    dragGrab = null;
-                }
-                if(draggedRouteLabel != null) {
-                    draggedRouteLabel.finalizeDrag();
-                    draggedRouteLabel = null;
-                }
-                return true;
-            } else if(ev.b == 3) {
-                // Right mouse button - cancel drag
-                isDraggingRoutePoint = false;
-                if(dragGrab != null) {
-                    dragGrab.remove();
-                    dragGrab = null;
-                }
-                if(draggedRouteLabel != null) {
-                    draggedRouteLabel.cancelDrag();
-                    draggedRouteLabel = null;
-                }
-                return true;
-            }
         }
         return super.mouseup(ev);
     }
@@ -1463,19 +1349,46 @@ public class NMapView extends MapView
             if(area.name.equals(name))
             {
                 area.inWork = true;
-                glob.map.areas.remove(area.id);
+                final int areaId = area.id;
+                glob.map.areas.remove(areaId);
+                // Track locally deleted areas to prevent restoration during sync
+                locallyDeletedAreas.add(areaId);
+                System.out.println("Area deleted locally: " + areaId + " (" + area.name + ")");
                 Gob dummy = dummys.get(area.gid);
                 if(dummy != null) {
                     glob.oc.remove(dummy);
                     dummys.remove(area.gid);
                 }
-                NUtils.getGameUI().areas.removeArea(area.id);
+                NUtils.getGameUI().areas.removeArea(areaId);
 
-                routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
+                // Delete from database if enabled
+                if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable) &&
+                    nurgling.NCore.databaseManager != null && 
+                    nurgling.NCore.databaseManager.isReady()) {
+                    String profile = NUtils.getGameUI().getGenus();
+                    if (profile == null || profile.isEmpty()) {
+                        profile = "global";
+                    }
+                    nurgling.NCore.databaseManager.getAreaService().deleteAreaAsync(areaId, profile);
+                }
 
                 break;
             }
         }
+    }
+
+    /**
+     * Check if an area was deleted locally to prevent restoration during sync
+     */
+    public boolean isLocallyDeleted(int areaId) {
+        return locallyDeletedAreas.contains(areaId);
+    }
+
+    /**
+     * Clear the locally deleted areas set (called when areas are reloaded)
+     */
+    public void clearLocallyDeletedAreas() {
+        locallyDeletedAreas.clear();
     }
 
     public void disableArea(String name, String path, boolean val) {
@@ -1484,6 +1397,7 @@ public class NMapView extends MapView
             if(area.name.equals(name) && area.path.equals(path))
             {
                 area.hide = val;
+                area.lastLocalChange = System.currentTimeMillis();
                 NConfig.needAreasUpdate();
                 return;
             }
@@ -1519,7 +1433,6 @@ public class NMapView extends MapView
                     dummys.remove(area.gid);
                 }
                 NUtils.getGameUI().map.nols.remove(area.id);
-                routeGraphManager.getGraph().deleteAreaFromRoutePoints(area.id);
             }
             NAreaSelector.changeArea(area);
         }
@@ -1527,14 +1440,10 @@ public class NMapView extends MapView
 
     public void changeAreaName(Integer id, String new_name)
     {
-        glob.map.areas.get(id).name = new_name;
+        NArea area = glob.map.areas.get(id);
+        area.name = new_name;
+        area.lastLocalChange = System.currentTimeMillis();
         NConfig.needAreasUpdate();
-    }
-
-    public void changeRouteName(Integer id, String new_name)
-    {
-        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().get(id).name = new_name;
-        NConfig.needRoutesUpdate();
     }
 
     void getGob(Coord c) {

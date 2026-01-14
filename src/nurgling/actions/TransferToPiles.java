@@ -21,6 +21,9 @@ public class TransferToPiles implements Action{
 
     int th = 0;
 
+    // When set, use exact name matching instead of NAlias substring matching
+    String exactName = null;
+
     public TransferToPiles(Pair<Coord2d,Coord2d> out, NAlias items) {
         this.out = out;
         this.items = items;
@@ -32,16 +35,22 @@ public class TransferToPiles implements Action{
         this.th = th;
     }
 
+    public TransferToPiles(Pair<Coord2d,Coord2d> out, String exactName, int th) {
+        this.out = out;
+        this.exactName = exactName;
+        this.items = new NAlias(exactName);
+        this.th = th;
+    }
+
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         ArrayList<WItem> witems;
         NAlias pileName;
-        if (!(witems = gui.getInventory().getItems(items,th)).isEmpty() ) {
+        if (!(witems = getMatchingItems(gui)).isEmpty() ) {
                 Gob target = null;
                 for (Gob gob : Finder.findGobs(out, pileName = getStockpileName(items))) {
-                    while (gob.ngob.getModelAttribute() != 31) {
-                        if(PathFinder.isAvailable(gob)) {
+                    while (gob.ngob.getModelAttribute() != 31 && PathFinder.isAvailable(gob)) {
                             target = gob;
                             PathFinder pf = new PathFinder(target);
                             pf.isHardMode = true;
@@ -55,29 +64,33 @@ public class TransferToPiles implements Action{
                                     }
                                 });
                             }
-                            witems = gui.getInventory().getItems(items,th);
+                            witems = getMatchingItems(gui);
                             int size = witems.size();
                             new OpenTargetContainer("Stockpile", target).run(gui);
                             int target_size = Math.min(size,gui.getStockpile().getFreeSpace());
                             if(target_size>0) {
                                 transfer(gui, target_size);
                             }
-                            if((witems = gui.getInventory().getItems(items,th)).isEmpty())
+                            if((witems = getMatchingItems(gui)).isEmpty())
                             {
                                 new CloseTargetContainer("Stockpile").run(gui);
                                 return Results.SUCCESS();
                             }
                         }
-                    }
                 }
 
-                while(!(gui.getInventory().getItems(items,th)).isEmpty() && out!=null) {
+                while(!getMatchingItems(gui).isEmpty() && out!=null) {
                     PileMaker pm;
-                    if(!(pm = new PileMaker(out, items, pileName)).run(gui).IsSuccess())
+                    if (exactName != null) {
+                        pm = new PileMaker(out, exactName, pileName, th);
+                    } else {
+                        pm = new PileMaker(out, items, pileName, th);
+                    }
+                    if(!pm.run(gui).IsSuccess())
                         return Results.FAIL();
                     Gob pile = pm.getPile();
                     while (pile.ngob.getModelAttribute() != 31) {
-                        witems = gui.getInventory().getItems(items, th);
+                        witems = getMatchingItems(gui);
                         int size = witems.size();
                         new OpenTargetContainer("Stockpile", pile).run(gui);
                         int target_size = Math.min(size, gui.getStockpile().getFreeSpace());
@@ -101,7 +114,7 @@ public class TransferToPiles implements Action{
         if(th>1 || StackSupporter.isSameExist(items, gui.getInventory())) {
             for (int i = 0; i < target_size; i++) {
                 {
-                    witems = gui.getInventory().getItems(items, th);
+                    witems = getMatchingItems(gui);
                     witems.sort(new Comparator<WItem>() {
                         @Override
                         public int compare(WItem o1, WItem o2) {
@@ -112,6 +125,9 @@ public class TransferToPiles implements Action{
                             return Float.compare(q1,q2);
                         }
                     });
+                    if (witems.isEmpty()) {
+                        break;
+                    }
                     NUtils.takeItemToHand(witems.get(0));
                     gui.getStockpile().wdgmsg("drop");
                     NUtils.addTask(new WaitFreeHand());
@@ -154,5 +170,23 @@ public class TransferToPiles implements Action{
             return new NAlias("gfx/terobjs/stockpile-bone");
         } else
             return new NAlias("stockpile");
+    }
+
+    /**
+     * Gets items from inventory, using exact name match if exactName is set,
+     * otherwise uses NAlias substring matching.
+     */
+    private ArrayList<WItem> getMatchingItems(NGameUI gui) throws InterruptedException {
+        ArrayList<WItem> allItems = gui.getInventory().getItems(items, th);
+        if (exactName == null) {
+            return allItems;
+        }
+        ArrayList<WItem> exactMatches = new ArrayList<>();
+        for (WItem witem : allItems) {
+            if (((NGItem) witem.item).name().equals(exactName)) {
+                exactMatches.add(witem);
+            }
+        }
+        return exactMatches;
     }
 }

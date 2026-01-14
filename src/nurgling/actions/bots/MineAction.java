@@ -6,7 +6,6 @@ import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitChipperState;
 import nurgling.tools.NAlias;

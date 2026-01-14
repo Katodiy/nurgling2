@@ -43,12 +43,12 @@ public class CurdingTubUnloader implements Action {
         NUtils.stackSwitch(true);
 
         context.getSpecArea(curdingTubSpecName);
-
-        ArrayList<Gob> curdingTubs = Finder.findGobs(NContext.findSpec(curdingTubSpecialization), new NAlias("gfx/terobjs/curdingtub"));
+        NArea cts = NContext.findSpec(curdingTubSpecialization);
+        ArrayList<Gob> curdingTubs = Finder.findGobs(cts, new NAlias("gfx/terobjs/curdingtub"));
 
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob curdingTub : curdingTubs) {
-            Container cand = new Container(curdingTub, "Curding Tub");
+            Container cand = new Container(curdingTub, "Curding Tub", cts);
             cand.initattr(Container.Space.class);
             containers.add(cand);
         }

@@ -30,11 +30,48 @@ import java.awt.Color;
 import java.util.*;
 import haven.render.*;
 import haven.render.sl.*;
+import nurgling.NConfig;
 import static haven.render.sl.Cons.*;
 import static haven.render.sl.Type.*;
 
 public class Outlines implements RenderTree.Node {
     private boolean symmetric;
+
+    // Nurgling: Outline thickness parameters - configurable via NConfig.Key.thinOutlines
+    public static boolean isThinOutlines() {
+        return Boolean.TRUE.equals(NConfig.get(NConfig.Key.thinOutlines));
+    }
+    public static double getDepthThreshold() {
+        return isThinOutlines() ? 0.0001 : 0.0002;
+    }
+    public static double getDepthSmoothLow() {
+        return isThinOutlines() ? 8.0 : 5.0;
+    }
+    public static double getDepthSmoothHigh() {
+        return isThinOutlines() ? 10.0 : 6.0;
+    }
+    public static double getNormalScale() {
+        return isThinOutlines() ? 0.75 : 1.0;
+    }
+    public static double getFinalSmoothLow() {
+        return isThinOutlines() ? 0.55 : 0.4;
+    }
+    public static double getFinalSmoothHigh() {
+        return isThinOutlines() ? 0.7 : 0.6;
+    }
+    // Sub-pixel sample offsets for spatial AA (rotated grid pattern)
+    // Only apply AA to thin outlines
+    public static double[][] getAAOffsets() {
+        if (isThinOutlines()) {
+            return new double[][] {
+                {-0.125, -0.375},
+                { 0.375, -0.125},
+                {-0.375,  0.125},
+                { 0.125,  0.375}
+            };
+        }
+        return null;
+    }
 
     private final static Uniform snrm = new Uniform(SAMPLER2D, p -> ((Draw)p.get(RUtils.adhoc)).nrm, RUtils.adhoc);
     private final static Uniform sdep = new Uniform(SAMPLER2D, p -> ((Draw)p.get(RUtils.adhoc)).depth, RUtils.adhoc);
@@ -87,7 +124,7 @@ public class Outlines implements RenderTree.Node {
 		     * the lack of precision in the depth buffer
 		     * (though I'm not sure I buy that explanation
 		     * yet). */
-		    LValue dh = code.local(FLOAT, l(0.0002)).ref(), dl = code.local(FLOAT, l(-0.0002)).ref();
+		    LValue dh = code.local(FLOAT, l(getDepthThreshold())).ref(), dl = code.local(FLOAT, l(-getDepthThreshold())).ref();
 		    for(int i = 0; i < points.length; i++) {
 			Expression cdep = pick(sample(false, tc, sample, points[i]), "r");
 			cdep = sub(ldep, cdep);
@@ -96,20 +133,20 @@ public class Outlines implements RenderTree.Node {
 			code.add(stmt(ass(dl, min(dl, cdep))));
 		    }
 		    if(symmetric)
-			code.add(aadd(ret, smoothstep(l(5.0), l(6.0), max(div(dh, neg(dl)), div(dl, neg(dh))))));
+			code.add(aadd(ret, smoothstep(l(getDepthSmoothLow()), l(getDepthSmoothHigh()), max(div(dh, neg(dl)), div(dl, neg(dh))))));
 		    else
-			code.add(aadd(ret, smoothstep(l(5.0), l(6.0), div(dh, neg(dl)))));
+			code.add(aadd(ret, smoothstep(l(getDepthSmoothLow()), l(getDepthSmoothHigh()), div(dh, neg(dl)))));
 		    for(int i = 0; i < points.length; i++) {
 			Expression cnrm = pick(sample(true, tc, sample, points[i]), "rgb");
 			if(symmetric) {
-			    code.add(aadd(ret, sub(l(1.0), abs(dot(lnrm, cnrm)))));
+			    code.add(aadd(ret, mul(sub(l(1.0), abs(dot(lnrm, cnrm))), l(getNormalScale()))));
 			} else {
 			    cnrm = code.local(VEC3, cnrm).ref();
 			    code.add(new If(gt(pick(cross(lnrm, cnrm), "z"), l(0.0)),
-					    stmt(aadd(ret, sub(l(1.0), abs(dot(lnrm, cnrm)))))));
+					    stmt(aadd(ret, mul(sub(l(1.0), abs(dot(lnrm, cnrm))), l(getNormalScale()))))));
 			}
 		    }
-		    code.add(new Return(smoothstep(l(0.4), l(0.6), min(ret, l(1.0)))));
+		    code.add(new Return(smoothstep(l(getFinalSmoothLow()), l(getFinalSmoothHigh()), min(ret, l(1.0)))));
 		}};
 
 		Function msfac = new Function.Def(FLOAT) {{
@@ -120,9 +157,64 @@ public class Outlines implements RenderTree.Node {
 		    code.add(new Return(div(ret, FrameConfig.u_numsamples.ref())));
 		}};
 
+		// Nurgling: Spatial AA function - samples at sub-pixel offsets for smoother edges
+		Function ofacAA = new Function.Def(FLOAT) {{
+		    Expression sampleIdx = param(PDir.IN, INT).ref();
+		    Expression tcBase = Tex2D.rtexcoord.ref();
+		    double[][] aaOffsets = getAAOffsets();
+		    if (aaOffsets != null && aaOffsets.length > 0) {
+			LValue total = code.local(FLOAT, l(0.0)).ref();
+			for (double[] offset : aaOffsets) {
+			    // Offset texture coordinate by sub-pixel amount
+			    Expression tcOffset = add(tcBase, mul(vec2(l(offset[0]), l(offset[1])), FrameConfig.u_pixelpitch.ref()));
+			    // Sample edge detection at offset position
+			    LValue ret = code.local(FLOAT, l(0.0)).ref();
+			    Expression lnrm = code.local(VEC3, pick(texture2D(snrm.ref(), tcOffset), "rgb")).ref();
+			    Expression ldep = code.local(FLOAT, pick(texture2D(sdep.ref(), tcOffset), "r")).ref();
+			    LValue dh = code.local(FLOAT, l(getDepthThreshold())).ref();
+			    LValue dl = code.local(FLOAT, l(-getDepthThreshold())).ref();
+			    for (Coord pt : points) {
+				Expression sampleTc = add(tcOffset, mul(vec2(pt), FrameConfig.u_pixelpitch.ref()));
+				Expression cdep = pick(texture2D(sdep.ref(), sampleTc), "r");
+				cdep = sub(ldep, cdep);
+				cdep = code.local(FLOAT, cdep).ref();
+				code.add(stmt(ass(dh, max(dh, cdep))));
+				code.add(stmt(ass(dl, min(dl, cdep))));
+			    }
+			    if (symmetric)
+				code.add(aadd(ret, smoothstep(l(getDepthSmoothLow()), l(getDepthSmoothHigh()), max(div(dh, neg(dl)), div(dl, neg(dh))))));
+			    else
+				code.add(aadd(ret, smoothstep(l(getDepthSmoothLow()), l(getDepthSmoothHigh()), div(dh, neg(dl)))));
+			    for (Coord pt : points) {
+				Expression sampleTc = add(tcOffset, mul(vec2(pt), FrameConfig.u_pixelpitch.ref()));
+				Expression cnrm = pick(texture2D(snrm.ref(), sampleTc), "rgb");
+				if (symmetric) {
+				    code.add(aadd(ret, mul(sub(l(1.0), abs(dot(lnrm, cnrm))), l(getNormalScale()))));
+				} else {
+				    cnrm = code.local(VEC3, cnrm).ref();
+				    code.add(new If(gt(pick(cross(lnrm, cnrm), "z"), l(0.0)),
+						    stmt(aadd(ret, mul(sub(l(1.0), abs(dot(lnrm, cnrm))), l(getNormalScale()))))));
+				}
+			    }
+			    code.add(aadd(total, smoothstep(l(getFinalSmoothLow()), l(getFinalSmoothHigh()), min(ret, l(1.0)))));
+			}
+			code.add(new Return(div(total, l((double)aaOffsets.length))));
+		    } else {
+			// Fallback to regular sampling
+			code.add(new Return(ofac.call(sampleIdx)));
+		    }
+		}};
+
 		public void modify(ProgramContext prog) {
 		    FragColor.fragcol(prog.fctx).mod(in -> {
-			    Expression of = (!ms)?ofac.call(l(-1)):msfac.call();
+			    Expression of;
+			    if (ms) {
+				of = msfac.call();
+			    } else if (getAAOffsets() != null) {
+				of = ofacAA.call(l(-1));
+			    } else {
+				of = ofac.call(l(-1));
+			    }
 			    return(vec4(col3(color), mix(l(0.0), l(1.0), of)));
 			}, 0);
 		}

@@ -99,7 +99,7 @@ public class ReadyItemExtractor implements Action {
             ArrayList<haven.Gob> containerGobs = Finder.findGobs(new NAlias(containerResource));
 
             for (haven.Gob containerGob : containerGobs) {
-                Container container = new Container(containerGob, containerType);
+                Container container = new Container(containerGob, containerType, null);
                 containers.add(container);
             }
         }

@@ -10,6 +10,7 @@ import nurgling.tools.Context;
 import nurgling.tools.NAlias;
 import nurgling.tools.StackSupporter;
 import nurgling.NInventory.QualityType;
+import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
@@ -20,12 +21,17 @@ public class FillContainers2 implements Action
     NContext context;
     Coord targetCoord = new Coord(1,1);
     QualityType qualityType = null;
+    Specialisation.SpecName destinationSpec = null;
+    String destinationSubSpec = null;
 
-    public FillContainers2(ArrayList<Container> conts, String transferedItems, NContext context, QualityType qualityType) {
+    public FillContainers2(ArrayList<Container> conts, String transferedItems, NContext context, QualityType qualityType,
+                           Specialisation.SpecName destinationSpec, String destinationSubSpec) {
         this.conts = conts;
         this.context = context;
         this.transferedItems = transferedItems;
         this.qualityType = qualityType;
+        this.destinationSpec = destinationSpec;
+        this.destinationSubSpec = destinationSubSpec;
     }
 
     @Override
@@ -42,6 +48,11 @@ public class FillContainers2 implements Action
                     new TakeItems2(context, transferedItems, optimalCapacity, qualityType).run(gui);
                     if (gui.getInventory().getItems(transferedItems).isEmpty())
                         return Results.ERROR("NO ITEMS");
+                }
+                if (destinationSubSpec != null) {
+                    context.getSpecArea(destinationSpec, destinationSubSpec);
+                } else {
+                    context.getSpecArea(destinationSpec);
                 }
                 TransferToContainer ttc = new TransferToContainer(cont, new NAlias(transferedItems));
                 ttc.run(gui);

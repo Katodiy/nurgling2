@@ -4,7 +4,6 @@ import haven.*;
 import static haven.MCache.cmaps;
 import nurgling.*;
 import nurgling.actions.PathFinder;
-import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import org.json.*;
 
@@ -189,6 +188,26 @@ public class NArea
         this.name = name;
     }
 
+    /**
+     * Update this area's fields from another area (for sync without replacing object reference)
+     */
+    public void updateFrom(NArea other) {
+        this.name = other.name;
+        this.path = other.path;
+        this.hide = other.hide;
+        this.color = other.color;
+        this.space = other.space;
+        this.version = other.version;
+        this.grids_id.clear();
+        this.grids_id.addAll(other.grids_id);
+        this.jin = other.jin;
+        this.jout = other.jout;
+        this.jspec = other.jspec;
+        this.spec.clear();
+        this.spec.addAll(other.spec);
+        // Don't copy lastLocalChange - keep our own timestamp
+    }
+
     public NArea(JSONObject obj)
     {
         this.name = (String) obj.get("name");
@@ -243,10 +262,16 @@ public class NArea
                 }
             }
         }
+        if(obj.has("version"))
+        {
+            this.version = obj.getInt("version");
+        }
     }
     public Space space;
     public String name;
     public int id;
+    public int version = 1;  // Version for sync - incremented on each update
+    public long lastLocalChange = 0;  // Timestamp of last local change (to prevent sync overwrite)
     public Color color = new Color(194,194,65,56);
     public final ArrayList<Long> grids_id = new ArrayList<>();
 
@@ -301,6 +326,21 @@ public class NArea
             }
         }
         return null;
+    }
+
+    /**
+     * Check if a position is inside this area
+     * @param pos Position in world coordinates (RC)
+     * @return true if position is inside the area
+     */
+    public boolean checkHit(Coord2d pos) {
+        Pair<Coord2d, Coord2d> rcArea = getRCArea();
+        if (rcArea == null || pos == null) {
+            return false;
+        }
+        Coord2d begin = rcArea.a;
+        Coord2d end = rcArea.b;
+        return pos.x >= begin.x && pos.x <= end.x && pos.y >= begin.y && pos.y <= end.y;
     }
 
     public void tick(double dt)
@@ -360,6 +400,7 @@ public class NArea
             jspec.put(obj);
         }
         res.put("spec",jspec);
+        res.put("version", version);
         this.jspec = jspec;
         return res;
     }

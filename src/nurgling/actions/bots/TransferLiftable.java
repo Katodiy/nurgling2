@@ -1,84 +1,89 @@
 package nurgling.actions.bots;
 
-import haven.Coord2d;
-import haven.Gob;
-import haven.Resource;
-import haven.UI;
+import haven.*;
 import nurgling.NGameUI;
-import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.*;
+import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.conf.NCarrierProp;
-import nurgling.conf.NChopperProp;
-import nurgling.routes.RoutePoint;
 import nurgling.tasks.WaitCheckable;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
+import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
-public class TransferLiftable implements Action {
+public class TransferLiftable implements Action
+{
     @Override
-    public Results run(NGameUI gui) throws InterruptedException {
+    public Results run(NGameUI gui) throws InterruptedException
+    {
         nurgling.widgets.bots.Carrier w = null;
         NCarrierProp prop = null;
-        try {
-            NUtils.getUI().core.addTask(new WaitCheckable( NUtils.getGameUI().add((w = new nurgling.widgets.bots.Carrier()), UI.scale(200,200))));
+        try
+        {
+            NUtils.getUI().core.addTask(new WaitCheckable(NUtils.getGameUI().add((w = new nurgling.widgets.bots.Carrier()), UI.scale(200, 200))));
             prop = w.prop;
-        }
-        catch (InterruptedException e)
+        } catch (InterruptedException e)
         {
             throw e;
-        }
-        finally {
-            if(w!=null)
+        } finally
+        {
+            if (w != null)
                 w.destroy();
         }
-        if(prop == null)
+        if (prop == null)
         {
             return Results.ERROR("No config");
         }
 
+        // Create context for global transfer
+        NContext context = new NContext(gui);
 
+        // Find CarrierOut areas for output
+        NArea.Specialisation carrierOutSpec = new NArea.Specialisation(Specialisation.SpecName.carrierout.toString());
+        NArea carrierOutArea = NContext.findSpecGlobal(carrierOutSpec);
 
-        SelectArea insa;
-        NUtils.getGameUI().msg("Please, select input area");
-        (insa = new SelectArea(Resource.loadsimg("baubles/inputArea"))).run(gui);
+        String insaId = context.createArea("Please, select input area", Resource.loadsimg("baubles/inputArea"));
+        NArea inarea = context.getAreaById(insaId);
 
-        SelectArea outsa;
-        NUtils.getGameUI().msg("Please, select output area");
-        (outsa = new SelectArea(Resource.loadsimg("baubles/outputArea"))).run(gui);
-        ArrayList<Gob> logs;
-        RoutePoint inRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPoint(gui, insa.getRCArea().b.sub(insa.getRCArea().a).div(2).add(insa.getRCArea().a));
-        RoutePoint outRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPoint(gui,outsa.getRCArea().b.sub(outsa.getRCArea().a).div(2).add(outsa.getRCArea().a));
-        if(outRoutePoint!=null && inRoutePoint!=null)
+        if(carrierOutArea == null)
         {
-            if(inRoutePoint.toCoord2d(gui.map.glob.map).dist(outRoutePoint.toCoord2d(gui.map.glob.map))<450)
-            {
-                inRoutePoint = outRoutePoint = null;
-            }
-
+            String outsaId = context.createArea("Please, select output area", Resource.loadsimg("baubles/outputArea"));
+            carrierOutArea = context.getAreaById(outsaId);
         }
-        while (!(logs = Finder.findGobs(insa.getRCArea(), new NAlias(prop.object))).isEmpty()) {
-            ArrayList<Gob> availableLogs = new ArrayList<>();
-            for (Gob currGob: logs)
-            {
-                if(PathFinder.isAvailable(currGob))
-                    availableLogs.add(currGob);
-            }
-            if(availableLogs.isEmpty())
-                return Results.ERROR("Cant reach any object");
 
-            availableLogs.sort(NUtils.d_comp);
-            Gob log = availableLogs.get(0);
-            new LiftObject(log).run(gui);
-            if(outRoutePoint!=null)
-                new RoutePointNavigator((outRoutePoint)).run(gui);
-            new FindPlaceAndAction(log, outsa.getRCArea()).run(gui);
-            Coord2d shift = log.rc.sub(NUtils.player().rc).norm().mul(2);
+
+        ArrayList<Gob> items;
+        while (!(items = Finder.findGobs(inarea, new NAlias(prop.object))).isEmpty())
+        {
+            ArrayList<Gob> availableItems = new ArrayList<>();
+            for (Gob currGob : items)
+            {
+                if (PathFinder.isAvailable(currGob))
+                    availableItems.add(currGob);
+            }
+            if (availableItems.isEmpty())
+            {
+                NUtils.getGameUI().msg("Can't reach any " + prop.object + " in current area, skipping...");
+                break;
+            }
+
+            availableItems.sort(NUtils.d_comp);
+            Gob item = availableItems.get(0);
+
+            // Lift the item
+            new LiftObject(item).run(gui);
+
+            NUtils.navigateToArea(carrierOutArea);
+            // Move to output area and place the item
+            new FindPlaceAndAction(null, carrierOutArea.getRCArea()).run(gui);
+
+            // Move away from the placed item
+            Coord2d shift = item.rc.sub(NUtils.player().rc).norm().mul(2);
             new GoTo(NUtils.player().rc.sub(shift)).run(gui);
-            if(inRoutePoint!=null)
-                new RoutePointNavigator(inRoutePoint).run(gui);
+            NUtils.navigateToArea(inarea);
         }
 
         return Results.SUCCESS();

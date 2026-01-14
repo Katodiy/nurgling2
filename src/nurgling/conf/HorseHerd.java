@@ -181,6 +181,23 @@ public class HorseHerd implements JConf {
         return get(current);
     }
 
+    /**
+     * Get preset for area by its ID
+     * @param areaId Area ID
+     * @return Preset bound to area or null if not found
+     */
+    public static HorseHerd getForArea(int areaId)
+    {
+        if(areaId < 0)
+            return null;
+        String presetName = nurgling.NConfig.getAreaRankPreset(areaId, "horses");
+        if(presetName != null && !presetName.isEmpty())
+        {
+            return get(presetName);
+        }
+        return null;
+    }
+
     public static HashSet<String> getKeySet()
     {
         HashSet<String> res = new HashSet<>();

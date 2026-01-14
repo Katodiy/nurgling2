@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.Composite;
 import haven.res.ui.obj.buddy.Buddy;
 import nurgling.NAlarmManager;
 import nurgling.NConfig;
@@ -33,6 +34,8 @@ public class NAlarmWdg extends Widget
     private final HashMap<Long, Integer> lastKnownGroup = new HashMap<>();
     // Track frame counter for characters without buddy to delay alarm
     private final HashMap<Long, Integer> unknownPlayerFrameCounter = new HashMap<>();
+    // Track if map is fully loaded (all 9 grids)
+    private boolean isMapFullyLoaded = false;
     
     public NAlarmWdg() {
         super();
@@ -42,6 +45,10 @@ public class NAlarmWdg extends Widget
     @Override
     public void tick(double dt) {
         super.tick(dt);
+        
+        // Check if map is fully loaded (all 9 grids)
+        updateMapLoadedState();
+        
         synchronized (borkas) {
             ArrayList<Long> forRemove = new ArrayList();
             for (Long id : borkas) {
@@ -76,13 +83,24 @@ public class NAlarmWdg extends Widget
                         String pose = gob.pose();
                         // Skip mannequins, skeletons, and dead characters
                         if (pose == null || !NParser.checkName(pose, new NAlias("dead", "manneq", "skel"))) {
+                            // Verify that Composite is loaded before processing alarms
+                            // This prevents false alarms during player loading
+                            Composite c = gob.getattr(Composite.class);
+                            if (c == null || c.comp == null || c.comp.cmod.isEmpty()) {
+                                // Player model not fully loaded yet, skip alarm processing
+                                continue;
+                            }
+                            
+                            // Now that we know the model is loaded, get Buddy info
                             Buddy buddy = gob.getattr(Buddy.class);
                             
                             // Determine actual group - use cached if buddy is temporarily null
                             int group = 0;
                             boolean buddyLoaded = (buddy != null && buddy.b != null);
                             boolean shouldDelayAlarm = false;
-                            
+                            if(buddy!=null && buddy.b == null)
+                                continue;
+
                             if (buddyLoaded) {
                                 group = buddy.b.group;
                                 lastKnownGroup.put(id, group); // Cache the group
@@ -93,13 +111,18 @@ public class NAlarmWdg extends Widget
                                 unknownPlayerFrameCounter.remove(id); // Reset counter if we have cache
                             } else {
                                 // Buddy is null and no cache - might be loading, delay alarm
-                                int frameCount = unknownPlayerFrameCounter.getOrDefault(id, 0);
-                                frameCount++;
-                                unknownPlayerFrameCounter.put(id, frameCount);
-                                
-                                int alarmDelayFrames = ((Number) NConfig.get(NConfig.Key.alarmDelayFrames)).intValue();
-                                if (frameCount < alarmDelayFrames) {
+                                // Only start counting frames if map is fully loaded
+                                if (!isMapFullyLoaded) {
                                     shouldDelayAlarm = true;
+                                } else {
+                                    int frameCount = unknownPlayerFrameCounter.getOrDefault(id, 0);
+                                    frameCount++;
+                                    unknownPlayerFrameCounter.put(id, frameCount);
+                                    
+                                    int alarmDelayFrames = ((Number) NConfig.get(NConfig.Key.alarmDelayFrames)).intValue();
+                                    if (frameCount < alarmDelayFrames) {
+                                        shouldDelayAlarm = true;
+                                    }
                                 }
                                 // After delay frames elapsed, treat as unknown (group 0 - white)
                             }
@@ -112,7 +135,7 @@ public class NAlarmWdg extends Widget
                             boolean shouldAlarm = kinProp.alarm && isWhiteOrRed && !shouldDelayAlarm;
                             boolean isAlarmed = alarms.contains(id);
                             
-                            if (shouldAlarm && !isAlarmed) {
+                            if (shouldAlarm && !isAlarmed ) {
                                 // Add alarm if needed (only after delay period)
                                 addAlarm(id);
                             } else if (!shouldAlarm && isAlarmed) {
@@ -173,6 +196,48 @@ public class NAlarmWdg extends Widget
             } else {
                 numberAlarm = null;
             }
+        }
+    }
+    
+    /**
+     * Update map loaded state - checks if all 9 grids are fully loaded
+     */
+    private void updateMapLoadedState() {
+        if (NUtils.getGameUI() == null || NUtils.getGameUI().map == null || 
+            NUtils.getGameUI().map.glob == null || NUtils.getGameUI().map.glob.map == null) {
+            isMapFullyLoaded = false;
+            return;
+        }
+        
+        Gob player = NUtils.player();
+        if (player == null || player.rc == null) {
+            isMapFullyLoaded = false;
+            return;
+        }
+        
+        try {
+            // Get player's grid coordinate
+            Coord tc = player.rc.div(MCache.tilesz).floor();
+            Coord gc = tc.div(NUtils.getGameUI().map.glob.map.cmaps);
+            
+            // Check if we have exactly 9 grids loaded
+            if (NUtils.getGameUI().map.glob.map.grids.size() != 9) {
+                isMapFullyLoaded = false;
+                return;
+            }
+            
+            // Check if all 9 grids are centered around player's grid
+            for (Coord gridCoord : NUtils.getGameUI().map.glob.map.grids.keySet()) {
+                Coord pos = gridCoord.sub(gc.sub(1, 1));
+                if (pos.x < 0 || pos.x >= 3 || pos.y < 0 || pos.y >= 3) {
+                    isMapFullyLoaded = false;
+                    return;
+                }
+            }
+            
+            isMapFullyLoaded = true;
+        } catch (Exception e) {
+            isMapFullyLoaded = false;
         }
     }
 

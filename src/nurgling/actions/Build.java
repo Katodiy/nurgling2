@@ -6,6 +6,9 @@ import nurgling.NGameUI;
 import nurgling.NGob;
 import nurgling.NISBox;
 import nurgling.NUtils;
+import nurgling.areas.NArea;
+import nurgling.areas.NContext;
+import nurgling.conf.ConstructionMaterialsRegistry;
 import nurgling.overlays.BuildGhostPreview;
 import nurgling.tasks.*;
 import nurgling.tools.*;
@@ -18,11 +21,12 @@ import static haven.OCache.posres;
 public class Build implements Action
 {
     Command cmd;
-    Pair<Coord2d, Coord2d> area;
+    NArea buildArea;  // NArea for global navigation support
     int rotationCount = 0;  // Rotation count: 0, 1, 2, 3 for 0°, 90°, 180°, 270°
     ArrayList<Coord2d> ghostPositions = null;  // Optional ghost positions from preview
     BuildGhostPreview ghostPreview = null;  // Optional reference to ghost preview for removal
 
+    NContext context;
     public static class Command
     {
         public String name;
@@ -36,47 +40,84 @@ public class Build implements Action
     {
 
         public Coord coord;
-        public Pair<Coord2d, Coord2d> area;
+        public NArea nArea;  // NArea for global navigation support
         public NAlias name;
         public int count;
         public int left = 0;
         public Action specialWay = null;
         public ArrayList<Container> containers = new ArrayList<>();
 
-        public Ingredient(Coord coord, Pair<Coord2d, Coord2d> area, NAlias name, int count)
+        public Ingredient(Coord coord, NArea area, NAlias name, int count)
         {
             this.coord = coord;
-            this.area = area;
+            this.nArea = area;
             this.name = name;
             this.count = count;
         }
 
-        public Ingredient(Coord coord, Pair<Coord2d, Coord2d> area, NAlias name, int count, Action specialWay)
+        public Ingredient(Coord coord, NArea area, NAlias name, int count, Action specialWay)
         {
             this.coord = coord;
-            this.area = area;
+            this.nArea = area;
             this.name = name;
             this.count = count;
             this.specialWay = specialWay;
         }
+
+        /**
+         * Resolve the area from construction materials zones if useAutoZone is true.
+         * This should be called before trying to use the ingredient.
+         * @param context The NContext for area lookup and navigation
+         * @return true if area was resolved (or was already set), false if no zone found
+         */
+        public boolean resolveAutoZone(NContext context) throws InterruptedException {
+            if (nArea != null) {
+                return true; // Already has an area or doesn't need auto-lookup
+            }
+            
+            NArea materialArea = context.getBuildMaterialArea(name);
+            if (materialArea != null) {
+                this.nArea = materialArea;
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Navigate to this ingredient's area and get the RC area.
+         * Uses global pathfinding if the area is not visible.
+         * @param context NContext for navigation
+         * @return The RC area pair, or null if navigation failed
+         */
+        public Pair<Coord2d, Coord2d> navigateAndGetArea(NContext context) throws InterruptedException {
+            if (nArea != null) {
+                // Navigate to the area if needed
+                NUtils.navigateToArea(nArea);
+                // Now get the RC area
+                return nArea.getRCArea();
+            }
+            return null;
+        }
     }
 
-    public Build(Command cmd, Pair<Coord2d, Coord2d> area)
+    public Build(NContext context,Command cmd, NArea area)
     {
-        this(cmd, area, 0);
+        this(context, cmd, area, 0);
     }
 
-    public Build(Command cmd, Pair<Coord2d, Coord2d> area, int rotationCount)
+    public Build(NContext context,Command cmd, NArea area, int rotationCount)
     {
+        this.context = context;
         this.cmd = cmd;
-        this.area = area;
+        this.buildArea = area;
         this.rotationCount = rotationCount;
     }
 
-    public Build(Command cmd, Pair<Coord2d, Coord2d> area, int rotationCount, ArrayList<Coord2d> ghostPositions, BuildGhostPreview ghostPreview)
+    public Build(NContext context, Command cmd, NArea area, int rotationCount, ArrayList<Coord2d> ghostPositions, BuildGhostPreview ghostPreview)
     {
+        this.context = context;
         this.cmd = cmd;
-        this.area = area;
+        this.buildArea = area;
         this.rotationCount = rotationCount;
         this.ghostPositions = ghostPositions;
         this.ghostPreview = ghostPreview;
@@ -85,20 +126,63 @@ public class Build implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
+        try {
+            return runBuild(gui);
+        } finally {
+            // ALWAYS clean up ghost preview on exit (normal or exception)
+            cleanupGhosts();
+        }
+    }
+    
+    /**
+     * Clean up all ghost previews - called on any exit from Build
+     */
+    private void cleanupGhosts() {
+        if (ghostPreview != null) {
+            try {
+                ghostPreview.dispose();
+            } catch (Exception e) {
+                // Ignore errors during cleanup
+            }
+        }
+        // Also try to remove from player just in case
+        try {
+            Gob player = NUtils.player();
+            if (player != null) {
+                player.delattr(nurgling.overlays.BuildGhostPreview.class);
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+    }
+    
+    private Results runBuild(NGameUI gui) throws InterruptedException
+    {
+        // Create context for navigation and zone resolution
+        Pair<Coord2d,Coord2d> area = null;
+        // Navigate to build area if using NArea and resolve the RC area
+        if (buildArea != null) {
+            NUtils.navigateToArea(buildArea);
+            area = buildArea.getRCArea();
+            if (area == null) {
+                return Results.ERROR("Cannot get build area coordinates");
+            }
+        }
 
-
+        // Resolve auto-zones for ingredients that need it
         for (Ingredient ingredient : cmd.ingredients)
         {
-            if (ingredient.area != null)
+            if (ingredient.nArea == null)
             {
-                for (Gob sm : Finder.findGobs(ingredient.area, new NAlias(new ArrayList<>(Context.contcaps.keySet()))))
+                if (!ingredient.resolveAutoZone(context))
                 {
-                    Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
-                    cand.initattr(Container.Space.class);
-                    ingredient.containers.add(cand);
+                    // Zone not found, log warning but continue (bot may ask user later)
+                    NUtils.getGameUI().msg("Warning: No construction materials area found for " + ingredient.name.getKeys().get(0));
                 }
             }
         }
+
+        // Containers will be populated when we navigate to ingredient areas during refill
 
         // First, check for unfinished constructions (consobj) in the area and add them to ghost positions
         if (ghostPositions == null)
@@ -268,14 +352,14 @@ public class Build implements Action
                 {
                     isExist = true;
                 }
-                Ingredient copy = new Ingredient(ingredient.coord, ingredient.area, ingredient.name, ingredient.count - size, ingredient.specialWay);
+                Ingredient copy = new Ingredient(ingredient.coord, ingredient.nArea, ingredient.name, ingredient.count - size, ingredient.specialWay);
                 copy.containers = ingredient.containers;
                 copy.left = Math.max(0, size - copy.count);
                 curings.add(copy);
             }
             if (!isExist)
             {
-                if (!refillIng(gui, curings))
+                if (!refillIng(gui, curings, context))
                     return Results.ERROR("NO ITEMS");
             }
 
@@ -298,7 +382,7 @@ public class Build implements Action
 
                 if (needRefill(curings))
                 {
-                    if (!refillIng(gui, curings))
+                    if (!refillIng(gui, curings, context))
                         return Results.ERROR("NO ITEMS");
 
                     // Return to construction site
@@ -416,12 +500,40 @@ public class Build implements Action
         return Results.SUCCESS();
     }
 
-    private boolean refillIng(NGameUI gui, ArrayList<Ingredient> curings) throws InterruptedException
+    private boolean refillIng(NGameUI gui, ArrayList<Ingredient> curings, NContext context) throws InterruptedException
     {
         for (Ingredient ingredient : curings)
         {
             if (ingredient.specialWay == null)
             {
+                // Skip if we don't need any more of this ingredient
+                if (ingredient.count <= 0) {
+                    continue;
+                }
+                
+                if (ingredient.nArea == null) {
+                    NUtils.getGameUI().msg("No area defined for " + ingredient.name.getKeys().get(0));
+                    continue;
+                }
+                
+                // Navigate to ingredient area
+                NUtils.navigateToArea(ingredient.nArea);
+                Pair<Coord2d, Coord2d> ingredientArea = ingredient.nArea.getRCArea();
+                if (ingredientArea == null) {
+                    NUtils.getGameUI().msg("Cannot access ingredient area for " + ingredient.name.getKeys().get(0));
+                    continue;
+                }
+                
+                // Populate containers after navigation if not done yet
+                if (ingredient.containers.isEmpty()) {
+                    for (Gob sm : Finder.findGobs(ingredientArea, new NAlias(new ArrayList<>(NContext.contcaps.keySet()))))
+                    {
+                        Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name), null);
+                        cand.initattr(Container.Space.class);
+                        ingredient.containers.add(cand);
+                    }
+                }
+
                 if (!ingredient.containers.isEmpty())
                 {
                     for (Container container : ingredient.containers)
@@ -452,9 +564,10 @@ public class Build implements Action
                     }
                 } else
                 {
+                    // No containers, try stockpiles
                     while (ingredient.count != 0 && NUtils.getGameUI().getInventory().getNumberFreeCoord(ingredient.coord) != 0)
                     {
-                        ArrayList<Gob> piles = Finder.findGobs(ingredient.area, new NAlias("stockpile"));
+                        ArrayList<Gob> piles = Finder.findGobs(ingredientArea, new NAlias("stockpile"));
                         if (piles.isEmpty())
                         {
                             if (NUtils.getGameUI().getInventory().getItems(ingredient.name).size() != ingredient.count)
@@ -474,6 +587,12 @@ public class Build implements Action
                 }
             }
         }
+        
+        // Navigate back to build area
+        if (buildArea != null) {
+            NUtils.navigateToArea(buildArea);
+        }
+        
         return !needRefill(curings);
     }
 
@@ -597,7 +716,7 @@ public class Build implements Action
 
                 if (remaining > 0)
                 {
-                    Ingredient copy = new Ingredient(original.coord, original.area, original.name, remaining, original.specialWay);
+                    Ingredient copy = new Ingredient(original.coord, original.nArea, original.name, remaining, original.specialWay);
                     copy.containers = original.containers;
                     remainingIngredients.add(copy);
                 }
@@ -606,8 +725,7 @@ public class Build implements Action
             // If nothing left to add, construction should be complete
             if (!remainingIngredients.isEmpty())
             {
-
-                if (!refillIng(gui, remainingIngredients))
+                if (!refillIng(gui, remainingIngredients, context))
                 {
                     return Results.ERROR("Cannot refill ingredients for construction");
                 }

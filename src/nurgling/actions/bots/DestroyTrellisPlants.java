@@ -18,6 +18,7 @@ import java.util.Map;
 
 import static haven.MCache.tilesz;
 import static haven.MCache.tilehsz;
+import haven.MCache;
 
 public class DestroyTrellisPlants implements Action {
 
@@ -61,34 +62,39 @@ public class DestroyTrellisPlants implements Action {
             // Get first plant for pathfinding reference
             Gob firstPlant = plantsOnTile.get(0);
 
-            // Calculate pathfinder endpoint at edge of tile
-            // Check all 4 sides of the tile and use first reachable one
-            Coord2d tileBase = tile.mul(tilesz);
+            // Calculate pathfinder endpoint perpendicular to plant/trellis orientation
+            // Plants on trellises inherit the trellis orientation
+            Coord2d tileCenter = tile.mul(MCache.tilesz).add(MCache.tilehsz);
 
-            // Try all 4 edges of the tile
-            Coord2d[] tileEdges = new Coord2d[] {
-                tileBase.add(tilehsz.x, 0),                    // North edge
-                tileBase.add(tilehsz.x, tilesz.y),             // South edge
-                tileBase.add(0, tilehsz.y),                    // West edge
-                tileBase.add(tilesz.x, tilehsz.y)              // East edge
+            // Get plant angle to determine front/back orientation
+            double angle = firstPlant.a;
+
+            // Calculate front and back positions (perpendicular to trellis face)
+            // Front is in direction of angle, back is opposite (angle + PI)
+            double frontX = tileCenter.x + Math.cos(angle) * MCache.tilehsz.x;
+            double frontY = tileCenter.y + Math.sin(angle) * MCache.tilehsz.y;
+            double backX = tileCenter.x + Math.cos(angle + Math.PI) * MCache.tilehsz.x;
+            double backY = tileCenter.y + Math.sin(angle + Math.PI) * MCache.tilehsz.y;
+
+            Coord2d[] plantFrontBack = new Coord2d[] {
+                new Coord2d(frontX, frontY),  // Front edge
+                new Coord2d(backX, backY)     // Back edge
             };
 
             Coord2d pathfinderEndpoint = null;
-            for (Coord2d edge : tileEdges) {
+            for (Coord2d edge : plantFrontBack) {
                 if (PathFinder.isAvailable(edge)) {
                     pathfinderEndpoint = edge;
                     break;
                 }
             }
 
-            // Navigate to reachable tile edge, or fallback to first plant
-            PathFinder pf;
+            // Navigate to reachable position, or fallback to first plant
             if (pathfinderEndpoint != null) {
-                pf = new PathFinder(pathfinderEndpoint);
+                new PathFinder(pathfinderEndpoint).run(gui);
             } else {
-                pf = new PathFinder(firstPlant);
+                new PathFinder(firstPlant).run(gui);
             }
-            pf.run(gui);
 
             // Destroy ALL plants on this tile
             for (Gob plant : plantsOnTile) {

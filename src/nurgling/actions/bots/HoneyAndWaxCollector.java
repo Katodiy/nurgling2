@@ -7,7 +7,6 @@ import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.Route;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
@@ -30,9 +29,6 @@ import static nurgling.NUtils.getGameUI;
 
 
 public class HoneyAndWaxCollector implements Action {
-
-    HashMap<Integer, Route> routes = new HashMap<>();
-    Route route = null;
     Container waxContainer = null;
     Gob honeyBarrel = null;
 
@@ -40,19 +36,6 @@ public class HoneyAndWaxCollector implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         boolean needToFindBucket = false;
 
-        loadRoutes();
-
-        for (Route route : routes.values()) {
-            if (route.hasSpecialization("honey")) {
-                this.route = route;
-                break;
-            }
-        }
-
-        if (this.route == null) {
-            getGameUI().msg("No honey route found!");
-            return Results.FAIL();
-        }
 
         // Check if bucket is equipped or in inventory
         if (!hasBucketEquipped()) {
@@ -95,37 +78,10 @@ public class HoneyAndWaxCollector implements Action {
         Action returnAction = new DropOffHoneyAndWax(waxContainer, honeyBarrel, false);
         Action finalAction = new DropOffHoneyAndWax(waxContainer, honeyBarrel, true);
 
-        RouteWorker worker = new RouteWorker(mainAction, this.route, true, predicate, returnAction, finalAction);
-        return worker.run(gui);
+        return Results.SUCCESS();
 
     }
 
-    private void loadRoutes() {
-        // Use profile-specific config from NCore
-        NConfig config = NUtils.getUI().core.config;
-        if(new File(config.getRoutesPath()).exists())
-        {
-            StringBuilder contentBuilder = new StringBuilder();
-            try (Stream<String> stream = Files.lines(Paths.get(config.getRoutesPath()), StandardCharsets.UTF_8))
-            {
-                stream.forEach(s -> contentBuilder.append(s).append("\n"));
-            }
-            catch (IOException ignore)
-            {
-            }
-
-            if (!contentBuilder.toString().isEmpty())
-            {
-                JSONObject main = new JSONObject(contentBuilder.toString());
-                JSONArray array = (JSONArray) main.get("routes");
-                for (int i = 0; i < array.length(); i++)
-                {
-                    Route route = new Route((JSONObject) array.get(i));
-                    this.routes.put(route.id, route);
-                }
-            }
-        }
-    }
 
     private boolean hasBucketEquipped() throws InterruptedException {
         return NUtils.getEquipment().findBucket("Empty") != null ||
@@ -140,7 +96,7 @@ public class HoneyAndWaxCollector implements Action {
         if (area == null) return null;
         ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
         for (Gob gob : gobs) {
-            return new Container(gob,Context.contcaps.get(gob.ngob.name));
+            return new Container(gob,NContext.contcaps.get(gob.ngob.name), area);
         }
         return null;
     }

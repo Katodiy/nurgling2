@@ -91,6 +91,7 @@ public class NSettingsWindow extends Widget {
 
         SettingsCategory scenarios = new SettingsCategory("Autorunner", new Panel("Autorunner scenarios"), container);
         scenarios.addChild(new SettingsItem("Scenarios", new ScenarioPanel(), container));
+        scenarios.addChild(new SettingsItem("Craft Presets", new CraftPresetsPanel(), container));
 
         SettingsCategory bots = new SettingsCategory("Bots", new Panel("Bots"), container);
         bots.addChild(new SettingsItem("Feed Clover", new FeedClover(), container));
@@ -100,6 +101,8 @@ public class NSettingsWindow extends Widget {
         bots.addChild(new SettingsItem("Cheese orders", new CheeseOrdersPanel(), container));
         bots.addChild(new SettingsItem("Pickling Settings", new PicklingSettings(), container));
         bots.addChild(new SettingsItem("Parasite Bot", new ParasiteSettings(), container));
+        bots.addChild(new SettingsItem("Equipment Bot", new EquipmentBotSettings(), container));
+        bots.addChild(new SettingsItem("Starvation Alert", new StarvationAlertSettings(), container));
 
         list.addCategory(general);
         list.addCategory(gameenvironment);

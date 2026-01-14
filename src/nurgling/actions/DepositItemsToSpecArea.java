@@ -50,7 +50,7 @@ public class DepositItemsToSpecArea implements Action {
         ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(Context.contcaps.keySet())));
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob gob : gobs) {
-            Container c = new Container(gob, Context.contcaps.get(gob.ngob.name));
+            Container c = new Container(gob, Context.contcaps.get(gob.ngob.name), area);
             c.initattr(Container.Space.class);
             containers.add(c);
         }

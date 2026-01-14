@@ -67,6 +67,7 @@ public class KillAnimalsAction<C extends Entry> implements Action {
         if (forpred != null) {
             int c = 0;
             Gob last = null;
+            // Select best adults (those matching forpred) up to flcount
             for (Gob gob : targets) {
                 if (forpred.test(gob)) {
                     if (c < flcount) {
@@ -76,17 +77,8 @@ public class KillAnimalsAction<C extends Entry> implements Action {
                     }
                 }
             }
-            if(forlife.size()<flcount) {
-                for (Gob gob : targets) {
-                    if (!forlife.contains(gob)) {
-                        if (c < flcount) {
-                            forlife.add(gob);
-                            c++;
-                            last = gob;
-                        }
-                    }
-                }
-            }
+            // Kill all animals that are worse than the worst kept adult
+            // This preserves young females that are better than the worst adult female
             for (Gob gob : targets) {
                 if (!forlife.contains(gob) && last != null && comp.compare(last, gob) <= 0)
                     forkill.add(gob);
@@ -95,8 +87,21 @@ public class KillAnimalsAction<C extends Entry> implements Action {
             forkill.addAll(targets);
         }
 
-        while (!forkill.isEmpty()) {
-            kill(forkill, gui);
+        // Mark animals for kill in roster (red highlight)
+        for(Gob gob : forkill) {
+            CattleId cattleId = gob.getattr(CattleId.class);
+            if(cattleId != null && cattleId.entry() != null) {
+                Entry.killList.add(cattleId.entry().id);
+            }
+        }
+
+        try {
+            while (!forkill.isEmpty()) {
+                kill(forkill, gui);
+            }
+        } finally {
+            // Clear kill list when done
+            Entry.killList.clear();
         }
 
         return Results.SUCCESS();
@@ -117,8 +122,11 @@ public class KillAnimalsAction<C extends Entry> implements Action {
         }
         new LiftObject(target).run(gui);
         new FindPlaceAndAction(target, NContext.findSpec("deadkritter"), true).run(gui);
+        CattleId cattleId = (CattleId) target.getattr(CattleId.class);
         Collection<Object> args = new ArrayList<>();
-        args.add(((CattleId) target.getattr(CattleId.class)).entry().id);
+        args.add(cattleId.entry().id);
+        // Remove from kill list highlight
+        Entry.killList.remove(cattleId.entry().id);
         NUtils.getRosterWindow(cattleRoster).roster(cattleRoster).wdgmsg("rm", args.toArray(new Object[0]));
         forkill.remove(target);
     }

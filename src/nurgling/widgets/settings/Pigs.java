@@ -47,7 +47,6 @@ public class Pigs extends Window {
                     dk.set(gh.disable_killing);
                     ignorebd.set(gh.ignoreBD);
                     ignoreqp.set(gh.disable_q_percentage);
-
                 }
             }
             @Override
@@ -70,7 +69,6 @@ public class Pigs extends Window {
                     gh.ignoreBD = ignorebd.a;
                     gh.ignoreChildren = ic.a;
                     gh.disable_q_percentage = ignoreqp.a;
-
                 }
                 PigsHerd.set(gh);
             }

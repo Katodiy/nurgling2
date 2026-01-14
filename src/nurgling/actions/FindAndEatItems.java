@@ -2,6 +2,7 @@ package nurgling.actions;
 
 import haven.*;
 import nurgling.*;
+import nurgling.areas.NContext;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
@@ -13,11 +14,11 @@ import java.util.ArrayList;
 
 public class FindAndEatItems implements Action
 {
-    final Context cnt;
+    final NContext cnt;
     ArrayList<String> items;
     double level;
     Pair<Coord2d,Coord2d> area;
-    public FindAndEatItems(Context context, ArrayList<String> items, int level, Pair<Coord2d,Coord2d> area)
+    public FindAndEatItems(NContext context, ArrayList<String> items, int level, Pair<Coord2d,Coord2d> area)
     {
         this.cnt = context;
         this.items = items;
@@ -30,26 +31,22 @@ public class FindAndEatItems implements Action
     {
         for(String item: items)
         {
-            ArrayList<Context.Input> inputs = cnt.getInputs(item);
-            if(inputs == null)
-            {
-                cnt.addInput(item,Context.GetInput(area));
-            }
+           cnt.addInItem(item, null);
         }
 
-        for(String item: items) {
-            for (Context.Input input : cnt.getInputs(item)) {
-                if (input instanceof Context.InputPile) {
-                    takeFromPile(gui, (Context.InputPile) input);
-                } else if (input instanceof Context.InputContainer) {
-                    takeFromContainer(gui, (Context.InputContainer) input);
-                }
-                if(!calcCalories())
-                    break;
-            }
-            if(!calcCalories())
-                break;
-        }
+//        for(String item: items) {
+//            for (Context.Input input : cnt.getInputs(item)) {
+//                if (input instanceof Context.InputPile) {
+//                    takeFromPile(gui, (Context.InputPile) input);
+//                } else if (input instanceof Context.InputContainer) {
+//                    takeFromContainer(gui, (Context.InputContainer) input);
+//                }
+//                if(!calcCalories())
+//                    break;
+//            }
+//            if(!calcCalories())
+//                break;
+//        }
         eatAll(gui);
         return Results.SUCCESS();
     }
