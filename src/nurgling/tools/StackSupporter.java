@@ -4,7 +4,6 @@ import haven.Coord;
 import haven.Window;
 import nurgling.NInventory;
 import nurgling.NUtils;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +34,7 @@ public class StackSupporter {
         customStackSizes.put("Waybroad", 4);
         customStackSizes.put("Green Kelp", 4);
         customStackSizes.put("Cattail Roots", 4);
+        customStackSizes.put("Heartwood Leaves", 4);
 
         HashSet<String> size3 = new HashSet<>();
         size3.add("Tuber");
@@ -109,6 +109,7 @@ public class StackSupporter {
         size4.add("Fish Cave");
         size4.add("Fish");
         size4.add("Stackable Curiosities");
+        size4.add("Chitin");
         catSize.put(size4,4);
 
         HashSet<String> size5 = new HashSet<>();
@@ -156,6 +157,11 @@ public class StackSupporter {
         catExceptions.add("Mole's Pawbone");
         catExceptions.add("Lobster");
         catExceptions.add("Leech");
+        catExceptions.add("Dried Filet");
+        catExceptions.add("Billygoat Horn");
+        catExceptions.add("Wildgoat Horn");
+        catExceptions.add("Ant Chitin");
+        catExceptions.add("Cave Louse Chitin");
         catExceptions.add("A Beautiful Dream");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
