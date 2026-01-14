@@ -884,7 +884,7 @@ public class NAreasWidget extends Window
                 icon = new TexI(specialisationItem.image);
             }
             
-            int btnX = UI.scale(135);
+            int btnX = 135;
             
             if(SpecialisationData.data.get(item.name)!=null)
             {
@@ -952,7 +952,7 @@ public class NAreasWidget extends Window
                         ui.root.add(menu, pos);
                     }
                 },UI.scale(new Coord(btnX,4)));
-                btnX += UI.scale(18);
+                btnX += 18;
             }
             
             // Add rank preset selection button for animal specialisations
