@@ -86,7 +86,7 @@ public class Butcher implements Action {
                             break;
                     }
                     boolean optFound = optForSelect != null;
-                    while (optFound) {
+                    while (optFound && gob!=null) {
 
                         if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
                             new FreeInventory2(context).run(gui);
