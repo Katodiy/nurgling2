@@ -99,7 +99,7 @@ public class NArea
         return false;
     }
 
-    boolean containOut(String name)
+    public boolean containOut(String name)
     {
         for (int i = 0; i < jout.length(); i++) {
             if (((String) ((JSONObject) jout.get(i)).get("name")).equals(name))

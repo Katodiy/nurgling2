@@ -181,12 +181,30 @@ public class SaveCraftPresetDialog extends Window {
             outputSpec.setName(spec.name);
             outputSpec.setCount(spec.count);
 
+            // Capture resource path and item size
+            // The crafting window uses "small" preview icons, so we need to load the real item resource
             try {
                 if (spec.res != null && spec.res.get() != null) {
-                    outputSpec.setResourcePath(spec.res.get().name);
+                    String resName = spec.res.get().name;
+
+                    // Strip "/small/" from the path to get the actual item resource
+                    String actualResName = resName.replace("/small/", "/");
+                    outputSpec.setResourcePath(actualResName);
+
+                    Resource actualRes = Resource.remote().loadwait(actualResName);
+                    Resource.Image img = actualRes.layer(Resource.imgc);
+
+                    if (img != null && img.ssz != null) {
+                        Coord imgSz = img.ssz;
+                        // Convert pixel size to inventory squares
+                        int width = Math.max(1, (imgSz.x + Inventory.sqsz.x - 1) / Inventory.sqsz.x);
+                        int height = Math.max(1, (imgSz.y + Inventory.sqsz.y - 1) / Inventory.sqsz.y);
+                        outputSpec.setWidth(width);
+                        outputSpec.setHeight(height);
+                    }
                 }
-            } catch (Loading l) {
-                // Resource not loaded
+            } catch (Loading | Resource.LoadException l) {
+                // Resource not loaded or doesn't exist, use default 1x1
             }
 
             outputs.add(outputSpec);

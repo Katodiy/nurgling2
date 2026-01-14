@@ -344,6 +344,109 @@ public class StepSettingsPanel extends Widget {
             add(qtyEntry, new Coord(UI.scale(8), y));
             y += UI.scale(30);
         }
+        if (desc.id.equals("maintain_stock_bot")) {
+            hasAnySetting = true;
+
+            // Preset dropdown
+            add(new Label("Select Craft Preset:"), new Coord(UI.scale(8), y));
+            y += UI.scale(24);
+
+            List<CraftPreset> presetList = CraftPresetManager.getInstance().getPresetList();
+
+            if (presetList.isEmpty()) {
+                add(new Label("No presets available."), new Coord(UI.scale(8), y));
+                add(new Label("Save a craft preset first."), new Coord(UI.scale(8), y + UI.scale(18)));
+                y += UI.scale(42);
+            } else {
+                String currentPresetId = (String) step.getSetting("presetId");
+                CraftPreset selectedPreset = null;
+                if (currentPresetId != null) {
+                    selectedPreset = CraftPresetManager.getInstance().getPreset(currentPresetId);
+                }
+                if (selectedPreset == null && !presetList.isEmpty()) {
+                    selectedPreset = presetList.get(0);
+                }
+
+                // We'll need to store selected preset to filter areas
+                final CraftPreset[] currentPresetHolder = new CraftPreset[] { selectedPreset };
+                final Widget[] areaDropdownHolder = new Widget[] { null };
+                final int[] areaYHolder = new int[] { 0 };
+
+                final List<CraftPreset> finalPresetList = presetList;
+                NDropbox<CraftPreset> presetDropdown = new NDropbox<CraftPreset>(
+                        UI.scale(160),
+                        Math.min(presetList.size(), 10),
+                        UI.scale(22)
+                ) {
+                    @Override
+                    protected CraftPreset listitem(int i) { return finalPresetList.get(i); }
+                    @Override
+                    protected int listitems() { return finalPresetList.size(); }
+                    @Override
+                    protected void drawitem(GOut g, CraftPreset item, int i) {
+                        g.text(item.getName(), Coord.z);
+                    }
+                    @Override
+                    public void change(CraftPreset item) {
+                        super.change(item);
+                        if (item != null) {
+                            step.setSetting("presetId", item.getId());
+                            currentPresetHolder[0] = item;
+                            // Rebuild area dropdown when preset changes
+                            rebuildMaintainStockAreaDropdown(step, currentPresetHolder[0], areaDropdownHolder, areaYHolder[0]);
+                        }
+                    }
+                };
+                if (selectedPreset != null) {
+                    presetDropdown.change(selectedPreset);
+                }
+
+                add(presetDropdown, new Coord(UI.scale(8), y));
+                y += UI.scale(40);
+
+                // Area dropdown (filtered to areas with PUT for output item)
+                add(new Label("Select Stock Area:"), new Coord(UI.scale(8), y));
+                y += UI.scale(24);
+                areaYHolder[0] = y;
+
+                rebuildMaintainStockAreaDropdown(step, currentPresetHolder[0], areaDropdownHolder, y);
+                y += UI.scale(40);
+
+                // Target quantity input
+                add(new Label("Target Quantity:"), new Coord(UI.scale(8), y));
+                y += UI.scale(24);
+
+                Object currentQty = step.getSetting("targetQuantity");
+                int qty = 10;
+                if (currentQty != null) {
+                    if (currentQty instanceof Integer) {
+                        qty = (Integer) currentQty;
+                    } else if (currentQty instanceof Long) {
+                        qty = ((Long) currentQty).intValue();
+                    } else if (currentQty instanceof Number) {
+                        qty = ((Number) currentQty).intValue();
+                    }
+                }
+
+                TextEntry qtyEntry = new TextEntry(UI.scale(60), String.valueOf(qty)) {
+                    @Override
+                    protected void changed() {
+                        try {
+                            int q = Integer.parseInt(text().trim());
+                            if (q > 0) {
+                                step.setSetting("targetQuantity", q);
+                            }
+                        } catch (NumberFormatException e) {
+                            // Ignore invalid input
+                        }
+                    }
+                };
+                step.setSetting("targetQuantity", qty);
+
+                add(qtyEntry, new Coord(UI.scale(8), y));
+                y += UI.scale(30);
+            }
+        }
         if (!hasAnySetting) {
             add(new Label("No settings for this step."), new Coord(UI.scale(8), y));
         }
@@ -356,5 +459,93 @@ public class StepSettingsPanel extends Widget {
             child.destroy();
             child = next;
         }
+    }
+
+    /**
+     * Rebuilds the area dropdown for maintain_stock_bot, filtered to areas
+     * that have the preset's output item as a PUT item.
+     */
+    private void rebuildMaintainStockAreaDropdown(BotStep step, CraftPreset preset, Widget[] dropdownHolder, int y) {
+        // Remove old dropdown if exists
+        if (dropdownHolder[0] != null) {
+            dropdownHolder[0].destroy();
+            dropdownHolder[0] = null;
+        }
+
+        // Get output item name from preset
+        String outputItemName = null;
+        if (preset != null && !preset.getOutputs().isEmpty()) {
+            outputItemName = preset.getOutputs().get(0).getName();
+        }
+
+        // Get all areas and filter to those with PUT for output item
+        List<NArea> filteredAreas = new ArrayList<>();
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null &&
+            NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
+            for (NArea area : NUtils.getGameUI().map.glob.map.areas.values()) {
+                if (area.isVisible() && outputItemName != null && area.containOut(outputItemName)) {
+                    filteredAreas.add(area);
+                }
+            }
+        }
+
+        if (filteredAreas.isEmpty()) {
+            Label noAreaLabel = new Label("No areas with PUT for this item");
+            add(noAreaLabel, new Coord(UI.scale(8), y));
+            dropdownHolder[0] = noAreaLabel;
+            return;
+        }
+
+        // Get currently selected area
+        Object currentAreaId = step.getSetting("areaId");
+        NArea selectedArea = null;
+        if (currentAreaId != null) {
+            int areaId;
+            if (currentAreaId instanceof Integer) {
+                areaId = (Integer) currentAreaId;
+            } else if (currentAreaId instanceof Long) {
+                areaId = ((Long) currentAreaId).intValue();
+            } else {
+                areaId = ((Number) currentAreaId).intValue();
+            }
+            for (NArea area : filteredAreas) {
+                if (area.id == areaId) {
+                    selectedArea = area;
+                    break;
+                }
+            }
+        }
+        if (selectedArea == null && !filteredAreas.isEmpty()) {
+            selectedArea = filteredAreas.get(0);
+        }
+
+        final List<NArea> finalAreaList = filteredAreas;
+        NDropbox<NArea> areaDropdown = new NDropbox<NArea>(
+                UI.scale(160),
+                Math.min(filteredAreas.size(), 10),
+                UI.scale(22)
+        ) {
+            @Override
+            protected NArea listitem(int i) { return finalAreaList.get(i); }
+            @Override
+            protected int listitems() { return finalAreaList.size(); }
+            @Override
+            protected void drawitem(GOut g, NArea item, int i) {
+                g.text(item.name + " [ID " + item.id + "]", Coord.z);
+            }
+            @Override
+            public void change(NArea item) {
+                super.change(item);
+                if (item != null) {
+                    step.setSetting("areaId", item.id);
+                }
+            }
+        };
+        if (selectedArea != null) {
+            areaDropdown.change(selectedArea);
+        }
+
+        add(areaDropdown, new Coord(UI.scale(8), y));
+        dropdownHolder[0] = areaDropdown;
     }
 }

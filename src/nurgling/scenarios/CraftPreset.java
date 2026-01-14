@@ -160,6 +160,8 @@ public class CraftPreset {
         private String name;
         private String resourcePath;
         private int count;
+        private int width = 1;
+        private int height = 1;
 
         public OutputSpec() {}
 
@@ -167,6 +169,8 @@ public class CraftPreset {
             this.name = obj.optString("name", "");
             this.resourcePath = obj.optString("resourcePath", "");
             this.count = obj.optInt("count", 1);
+            this.width = obj.optInt("width", 1);
+            this.height = obj.optInt("height", 1);
         }
 
         public JSONObject toJson() {
@@ -174,6 +178,8 @@ public class CraftPreset {
             obj.put("name", name);
             obj.put("resourcePath", resourcePath);
             obj.put("count", count);
+            obj.put("width", width);
+            obj.put("height", height);
             return obj;
         }
 
@@ -186,5 +192,11 @@ public class CraftPreset {
 
         public int getCount() { return count; }
         public void setCount(int count) { this.count = count; }
+
+        public int getWidth() { return width; }
+        public void setWidth(int width) { this.width = width; }
+
+        public int getHeight() { return height; }
+        public void setHeight(int height) { this.height = height; }
     }
 }
