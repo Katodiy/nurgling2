@@ -621,9 +621,6 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
             new CloseTargetContainer(rack).run(gui);
         }
-
-        // Handle any remaining cheese that couldn't be placed
-        handleRemainingCheeseTrays(gui);
     }
 
     /**
