@@ -162,6 +162,7 @@ public class StackSupporter {
         catExceptions.add("Wildgoat Horn");
         catExceptions.add("Ant Chitin");
         catExceptions.add("Cave Louse Chitin");
+        catExceptions.add("Driftkelp");
         catExceptions.add("A Beautiful Dream");
     }
     private static final NAlias unstackableContainers = new NAlias("Smith's Smelter", "Ore Smelter", "Herbalist Table", "Tub", "Oven", "Steelbox", "Frame", "Kiln", "Smoke Shed", "Stack furnace");
