@@ -313,7 +313,7 @@ public class NMakewindow extends Widget {
             public void changed(boolean val) {
                 super.changed(val);
             }
-        }, new Coord(336, 35));
+        }, UI.scale(new Coord(325, 38)));
         noTransfer.visible = false;
 
         // Save Preset button - only visible in auto mode when all inputs are configured
