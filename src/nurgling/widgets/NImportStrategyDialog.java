@@ -2,6 +2,7 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.*;
+import nurgling.i18n.L10n;
 
 import java.io.File;
 
@@ -17,7 +18,7 @@ public class NImportStrategyDialog extends Window
     
     public NImportStrategyDialog()
     {
-        super(UI.scale(new Coord(300, 120)), "Import Strategy");
+        super(UI.scale(new Coord(300, 120)), L10n.get("import.title"));
         
         int btnWidth = UI.scale(90);
         int btnHeight = UI.scale(25);

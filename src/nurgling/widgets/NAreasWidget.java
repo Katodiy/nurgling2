@@ -971,8 +971,9 @@ public class NAreasWidget extends Window
                         }
                         
                         // Add reset option
+                        String noneOption = get("area.preset.none");
                         String[] options = new String[presets.size() + 1];
-                        options[0] = "-- None --";
+                        options[0] = noneOption;
                         int i = 1;
                         for(String preset : presets) {
                             options[i++] = preset;
@@ -994,7 +995,7 @@ public class NAreasWidget extends Window
                             @Override
                             public void nchoose(NPetal option) {
                                 if(option != null && al.sel != null && al.sel.area != null) {
-                                    String presetName = option.name.equals("-- None --") ? null : option.name;
+                                    String presetName = option.name.equals(noneOption) ? null : option.name;
                                     setPreset(al.sel.area, item.name, presetName);
                                     NConfig.needAreasUpdate();
                                     if(presetName != null) {

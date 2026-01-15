@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.NGameUI;
 import nurgling.NMapView;
+import nurgling.i18n.L10n;
 import nurgling.overlays.NZoneMeasureOverlay;
 
 import java.awt.Color;
@@ -34,13 +35,13 @@ public class NZoneMeasureTool extends Window {
     private static final Color DEFAULT_EDGE_COLOR = new Color(255, 200, 0, 255);
 
     public NZoneMeasureTool(NGameUI gui) {
-        super(UI.scale(200, 190), "Zone Measure Tool", true);
+        super(UI.scale(200, 190), L10n.get("zone.measure_title"), true);
         this.gui = gui;
 
         Widget prev;
 
         // Row 1: Select Area button
-        prev = add(selectAreaBtn = new Button(UI.scale(180), "Select Area") {
+        prev = add(selectAreaBtn = new Button(UI.scale(180), L10n.get("zone.select_area")) {
             @Override
             public void click() {
                 startAreaSelection();
@@ -48,7 +49,7 @@ public class NZoneMeasureTool extends Window {
         }, UI.scale(5, 5));
 
         // Row 2: Clear One button
-        prev = add(clearOneBtn = new Button(UI.scale(180), "Clear Selection") {
+        prev = add(clearOneBtn = new Button(UI.scale(180), L10n.get("zone.clear_selection")) {
             @Override
             public void click() {
                 startClearSelectionMode();
@@ -56,7 +57,7 @@ public class NZoneMeasureTool extends Window {
         }, prev.pos("bl").adds(0, 5));
 
         // Row 3: Clear All button
-        prev = add(clearAllBtn = new Button(UI.scale(180), "Clear All") {
+        prev = add(clearAllBtn = new Button(UI.scale(180), L10n.get("zone.clear_all")) {
             @Override
             public void click() {
                 clearAllZones();
@@ -64,16 +65,16 @@ public class NZoneMeasureTool extends Window {
         }, prev.pos("bl").adds(0, 5));
 
         // Color selection section
-        prev = add(new Label("Colors:"), prev.pos("bl").adds(0, 10));
+        prev = add(new Label(L10n.get("zone.colors")), prev.pos("bl").adds(0, 10));
 
-        prev = add(fillColorWidget = new NColorWidget("Fill"), prev.pos("bl").adds(0, 2));
+        prev = add(fillColorWidget = new NColorWidget(L10n.get("zone.fill")), prev.pos("bl").adds(0, 2));
         fillColorWidget.color = DEFAULT_FILL_COLOR;
 
-        prev = add(edgeColorWidget = new NColorWidget("Edge"), prev.pos("bl").adds(0, 2));
+        prev = add(edgeColorWidget = new NColorWidget(L10n.get("zone.edge")), prev.pos("bl").adds(0, 2));
         edgeColorWidget.color = DEFAULT_EDGE_COLOR;
 
         // Status label
-        prev = add(statusLabel = new Label("Ready"), prev.pos("bl").adds(0, 10));
+        prev = add(statusLabel = new Label(L10n.get("zone.ready")), prev.pos("bl").adds(0, 10));
 
         pack();
     }

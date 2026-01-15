@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.i18n.L10n;
 import java.awt.event.KeyEvent;
 import java.util.function.Consumer;
 
@@ -34,7 +35,7 @@ public class TextInputWindow extends Window {
         
         Widget buttonRow = add(new Widget(new Coord(UI.scale(280), UI.scale(30))), prev.pos("bl").add(UI.scale(0, 10)));
         
-        okButton = buttonRow.add(new Button(UI.scale(80), "OK") {
+        okButton = buttonRow.add(new Button(UI.scale(80), L10n.get("input.ok")) {
             @Override
             public void click() {
                 super.click();
@@ -42,7 +43,7 @@ public class TextInputWindow extends Window {
             }
         }, new Coord(UI.scale(50), 0));
         
-        cancelButton = buttonRow.add(new Button(UI.scale(80), "Cancel") {
+        cancelButton = buttonRow.add(new Button(UI.scale(80), L10n.get("input.cancel")) {
             @Override
             public void click() {
                 super.click();

@@ -4,6 +4,7 @@ import haven.*;
 import haven.Window;
 import nurgling.*;
 import nurgling.conf.*;
+import nurgling.i18n.L10n;
 
 import java.awt.*;
 
@@ -18,10 +19,10 @@ public class NKinSettings extends Window
 
     public NKinSettings(ICheckBox btn)
     {
-        super(UI.scale(300, 150), "Kin Notification");
+        super(UI.scale(300, 150), L10n.get("kin.notification.title"));
         this.btn = btn;
         prev = add(gs = new GroupSelector(0));
-        prev = add(ring = new CheckBox("Character highlighting")
+        prev = add(ring = new CheckBox(L10n.get("kin.notification.highlighting"))
         {
 
             public void set(boolean val)
@@ -32,7 +33,7 @@ public class NKinSettings extends Window
             }
 
         }, prev.pos("bl").adds(0, 5));
-        prev = add(arrow = new CheckBox("Character arrow pointer ")
+        prev = add(arrow = new CheckBox(L10n.get("kin.notification.arrow"))
         {
 
             public void set(boolean val)
@@ -42,7 +43,7 @@ public class NKinSettings extends Window
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-        prev = add(alarm = new CheckBox("Character sound alarm ")
+        prev = add(alarm = new CheckBox(L10n.get("kin.notification.alarm"))
         {
 
             public void set(boolean val)
@@ -54,7 +55,7 @@ public class NKinSettings extends Window
 
         }, prev.pos("bl").adds(0, 5));
 
-        prev = add(hil = new CheckBox("Hide character from kinlist")
+        prev = add(hil = new CheckBox(L10n.get("kin.notification.hide"))
         {
 
             public void set(boolean val)

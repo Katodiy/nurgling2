@@ -7,6 +7,7 @@ import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 import nurgling.tools.DirectionalVector;
 
 import java.lang.reflect.Field;
@@ -33,7 +34,7 @@ public class NProspecting extends Window {
 
     public NProspecting(Coord sz, String cap) {
         super(sz, cap);
-        mark = add(new Button(UI.scale(100), "Mark", false), UI.scale(105, 25));
+        mark = add(new Button(UI.scale(100), L10n.get("prospect.mark"), false), UI.scale(105, 25));
         mark.action(this::mark);
         mark.hide();
     }

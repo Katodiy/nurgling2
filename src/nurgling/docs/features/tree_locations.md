@@ -1,49 +1,46 @@
-# Tree Locations Save System
+# @enc.trees.title
 
-The **Tree Locations Save** system allows you to save the locations of trees.
+@enc.trees.intro
 
-## Overview
+## @enc.common.overview
 
-This feature maintains a file of tree locations by type, making it easy to find specific trees you've saved.
+@enc.trees.overview
 
-## How It Works
+## @enc.trees.how_works_title
 
-The system records tree locations:
+@enc.trees.how_works_intro
 
-1. Right-click a tree, a new option appears (Save Tree Location/Save Bush Location)
-2. All similar trees are detected around this tree.
-3. Locations and quantities are saved to a persistent database
-4. Access saved locations through the tree locations menu
-5. View saved tree locations by pressing one of the lines in the Trees Search menu.
+1. @enc.trees.how1
+2. @enc.trees.how2
+3. @enc.trees.how3
+4. @enc.trees.how4
+5. @enc.trees.how5
 
-## Saving a Tree Location
+## @enc.trees.saving_title
 
-Right-click a tree to bring up the flower menu to save the tree location:
+@enc.trees.saving_text
 
 ![Flower Menu](../images/features/flower-menu.png)
 
-## Accessing Tree Info from the Map
+## @enc.trees.map_access_title
 
-Right-click a tree icon on the map to get detailed info about the saved location. This panel also allows you to delete a saved tree.
+@enc.trees.map_access_text
 
 ![Tree Locations Details](../images/features/right-click-info.PNG)
 
-## Accessing Tree Locations
+## @enc.trees.accessing_title
 
-Open the Tree Search menu from the main map. You'll see the following panel:
+@enc.trees.accessing_text
 
 ![Tree Locations Panel](../images/features/tree_locations_panel.PNG)
 
-### Features
+### @enc.trees.features_title
 
-- **Tree Type Filter:** Select specific tree species to view
-- **Location List:** All saved locations for selected tree type. Click any of the items in the list to show it on the map.
+- @enc.trees.feature1
+- @enc.trees.feature2
 
-## Storage Location
+## @enc.trees.storage_title
 
-Tree location data is saved to:
+@enc.trees.storage_path
 
-%APPDATA%/Haven and Hearth/tree_locations.nurgling.json
-
-
-This file persists across game sessions and can be backed up.
+@enc.trees.storage_note

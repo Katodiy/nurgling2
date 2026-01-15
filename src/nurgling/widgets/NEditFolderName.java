@@ -4,6 +4,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 
 public class NEditFolderName extends Window {
     private final TextEntry te;
@@ -13,11 +14,11 @@ public class NEditFolderName extends Window {
     private final NAreasWidget areasWidget;
 
     public NEditFolderName(NAreasWidget areasWidget) {
-        super(UI.scale(new Coord(260, 100)), "New Folder");
+        super(UI.scale(new Coord(260, 100)), L10n.get("edit.folder_name"));
         this.areasWidget = areasWidget;
 
         prev = add(te = new TextEntry(UI.scale(200), ""), UI.scale(5, 5));
-        add(new Button(UI.scale(60), "Save") {
+        add(new Button(UI.scale(60), L10n.get("edit.save")) {
             @Override
             public void click() {
                 if (!te.text().isEmpty()) {
@@ -32,7 +33,7 @@ public class NEditFolderName extends Window {
             }
         }, prev.pos("ur").adds(5, -6));
 
-        add(new Button(UI.scale(60), "Cancel") {
+        add(new Button(UI.scale(60), L10n.get("edit.cancel")) {
             @Override
             public void click() {
                 NEditFolderName.this.hide();

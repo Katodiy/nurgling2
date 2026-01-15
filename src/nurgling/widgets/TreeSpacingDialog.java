@@ -2,6 +2,7 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.actions.bots.PlantTrees;
+import nurgling.i18n.L10n;
 
 /**
  * Dialog for configuring tree spacing options during tree planting
@@ -30,7 +31,7 @@ public class TreeSpacingDialog extends Window {
     private Label countLabel;
 
     public TreeSpacingDialog(PlantTrees parentBot) {
-        super(UI.scale(new Coord(280, 200)), "Tree Spacing Configuration");
+        super(UI.scale(new Coord(280, 200)), L10n.get("tree.spacing_title"));
         this.parentBot = parentBot;
 
         createUI();
@@ -87,7 +88,7 @@ public class TreeSpacingDialog extends Window {
         int buttonY = startY + (spacingOptions.length * 25) + 40;
 
         // Confirm button
-        add(new Button(UI.scale(60), "Confirm") {
+        add(new Button(UI.scale(60), L10n.get("common.confirm")) {
             @Override
             public void click() {
                 parentBot.confirmPlacement();
@@ -95,7 +96,7 @@ public class TreeSpacingDialog extends Window {
         }, UI.scale(50, buttonY));
 
         // Cancel button
-        add(new Button(UI.scale(60), "Cancel") {
+        add(new Button(UI.scale(60), L10n.get("common.cancel")) {
             @Override
             public void click() {
                 parentBot.cancelPlacement();

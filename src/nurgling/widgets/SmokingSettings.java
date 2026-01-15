@@ -11,6 +11,7 @@ import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.conf.NChopperProp;
 import nurgling.conf.NSmokProp;
+import nurgling.i18n.L10n;
 import nurgling.widgets.bots.Checkable;
 import nurgling.widgets.options.QuickActions;
 import org.json.JSONObject;
@@ -27,14 +28,14 @@ public class SmokingSettings extends Window implements Checkable {
     TextEntry textEntry;
     RecipesList rl;
     public SmokingSettings() {
-        super(UI.scale(500, 200), "Smoking Settings");
-        prev = add(new Label("Smoking properties for:"));
+        super(UI.scale(500, 200), L10n.get("smoking.title"));
+        prev = add(new Label(L10n.get("smoking.properties")));
         prev = add(sc = new SmockedContainer(), prev.pos("bl").add(UI.scale(0,5)));
 
         add(textEntry = new TextEntry(200,""),prev.pos("ur").add(UI.scale(5,mext.sz().y/2-UI.scale(10))));
 
 
-        Widget selectButton = add(new Button(100,"Log") {
+        Widget selectButton = add(new Button(100, L10n.get("smoking.log")) {
             @Override
             public void click() {
                 super.click();
@@ -54,7 +55,7 @@ public class SmokingSettings extends Window implements Checkable {
             }
         }, textEntry.pos("ur").add(UI.scale(5,-7)));
 
-        add(new Button(100,"Add"){
+        add(new Button(100, L10n.get("common.add")){
             @Override
             public void click() {
                 super.click();
@@ -75,7 +76,7 @@ public class SmokingSettings extends Window implements Checkable {
             }
         },selectButton.pos("ur").add(UI.scale(5,0)));
         prev = add(rl = new RecipesList(UI.scale(480, 150)), prev.pos("bl").add(UI.scale(0,5)));
-        prev = add(new Button(UI.scale(150), "Start"){
+        prev = add(new Button(UI.scale(150), L10n.get("common.start")){
             @Override
             public void click() {
                 super.click();

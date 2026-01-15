@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.i18n.L10n;
 
 import java.awt.Color;
 import java.awt.event.KeyEvent;
@@ -53,7 +54,7 @@ public class StarvationAlertPopup extends haven.Window {
         // OK button centered
         int btnWidth = UI.scale(80);
         int btnX = (UI.scale(POPUP_WIDTH) - btnWidth) / 2;
-        add(new Button(btnWidth, "OK") {
+        add(new Button(btnWidth, L10n.get("input.ok")) {
             @Override
             public void click() {
                 close();

@@ -1,56 +1,57 @@
-# Unload Curds Bot
+# @enc.curds.title
 
 ![Unload Curds](../images/cheese_empty.png)
-This bot automatically collects curds from your curding tubs and organizes them by type into designated storage areas.
+@enc.curds.intro
 
-*Note:* this bot will **NOT** fill up curding tubs with milk/rennet. Perhaps sometime in the future.
+*@enc.common.note* @enc.curds.note
 
-## Overview
+## @enc.common.overview
 
-The Unload Curding Tubs bot checks your curding tubs for accumulated curds and automatically transfers them to appropriate storage containers. It handles all three curd types: cow, sheep, and goat curds.
+@enc.curds.overview
 
-## Required Areas Setup
+## @enc.curds.areas_title
 
-You need to set up the following areas for the bot to function properly:
+@enc.curds.areas_intro
 
-### 1. Curding Tubs Area
+### @enc.curds.tubs_area_title
 
-Create an area with the **Curding Tubs** specialization where your curding tubs are located.
+@enc.curds.tubs_area_desc
 
 ![Curding Tubs Area](../images/curding_tubs.png)
 
-- This area should contain all your curding tubs
-- The bot will check these tubs for accumulated curds
+- @enc.curds.tubs_area_bullet1
+- @enc.curds.tubs_area_bullet2
 
-### 2. Curd Storage Areas
+### @enc.curds.storage_title
 
-Create separate "PUT" areas for each type of curd you want to collect:
+@enc.curds.storage_desc
 
 ![Curd Put Areas](../images/curds_put.png)
 
-- **Cow Curd Put Area**: Containers for storing cow curds
-- **Sheep Curd Put Area**: Containers for storing sheep curds  
-- **Goat Curd Put Area**: Containers for storing goat curds
+- @enc.curds.storage_cow
+- @enc.curds.storage_sheep
+- @enc.curds.storage_goat
 
-Each put area should contain appropriate storage containers (cupboards, chests, etc.) where the bot will deposit the collected curds.
+@enc.curds.storage_note
 
-## How It Works
+## @enc.curds.how_works_title
 
-1. The bot scans your Curding Tubs area for tubs containing accumulated curds
-2. When curds are found, the bot collects them from the tubs
-3. Based on the curd type (cow/sheep/goat), the bot transports them to the corresponding put area
-4. Curds are deposited into available containers in the appropriate storage area
-5. The process repeats automatically until all curding tubs are empty
+1. @enc.curds.how_step1
+2. @enc.curds.how_step2
+3. @enc.curds.how_step3
+4. @enc.curds.how_step4
+5. @enc.curds.how_step5
 
-## Usage Tips
+## @enc.curds.tips_title
 
-- Ensure your curding tubs area has enough space for the bot to navigate
-- Keep sufficient empty container space in your curd put areas
-- All three curd types can be processed in a single bot run
+- @enc.curds.tip1
+- @enc.curds.tip2
+- @enc.curds.tip3
 
-## Area Configuration
+## @enc.curds.config_title
 
-Make sure your areas are properly configured:
-- Curding Tubs area: Set specialization to "Curding Tubs"
-- Put areas: Configure as standard storage areas for each curd type
-- Ensure proper navigation: either create routes connecting all areas, or position all areas within visual range of each other
+@enc.curds.config_intro
+
+- @enc.curds.config_tubs
+- @enc.curds.config_put
+- @enc.curds.config_nav

@@ -1,37 +1,35 @@
-# Cookbook Usage
+# @enc.cookbook.title
 
-Cookbook allows you to import/save/view recipes you've previously cooked.
+@enc.cookbook.intro
 
-*Note:* Make sure to set up your database first. Read about it in **Setting Up SQLite Database**  section.
+*@enc.common.note* @enc.cookbook.db_note
 
-## Importing Existing Recipes
+## @enc.cookbook.import_title
 
-If you have a recipes JSON file exported from the cookbook website you can import it into the database:
+@enc.cookbook.import_intro
 
-### From Cookbook UI
+### @enc.cookbook.import_from_ui
 
-1. Open your Cookbook window
-2. Click the **"Import"** button in the top toolbar
-3. Select the JSON file with the recipes
-4. Wait for the import to complete
-5. Confirm the import was successful by looking through the cookbook.
+1. @enc.cookbook.import_step1
+2. @enc.cookbook.import_step2
+3. @enc.cookbook.import_step3
+4. @enc.cookbook.import_step4
+5. @enc.cookbook.import_step5
 
 ![Cookbook Import Button](../images/cookbook.png)
 
-## Managing Your Recipe Database
+## @enc.cookbook.manage_title
 
-### Adding New Recipes
+### @enc.cookbook.adding_recipes
 
-With database enabled, new recipes are automatically saved to the database when you:
-- Create a new recipe in the cookbook
-- Import recipes from game data
+@enc.cookbook.adding_recipes_text
 
-### Searching Recipes
+### @enc.cookbook.searching_title
 
 ![Cookbook Import Button](../images/cookbook_sorting.png)
 ![Cookbook Arrows](../images/cookbook_arrows.png)
 
-- Search by recipe name with the search bar. Example query: `name:fishwrap`.
-- You can also filter recipes by stat with the stat button shown in the image above.
-- +I/+II buttons allow you to sort by the amount of stat you get. Also shown in the image above.
-- At the bottom of the Cookbook page you have two buttons. Left array and right arrow that allow you to flip the pages if there are more results that can fit on one page.
+- @enc.cookbook.search_by_name
+- @enc.cookbook.filter_by_stat
+- @enc.cookbook.sort_buttons
+- @enc.cookbook.pagination

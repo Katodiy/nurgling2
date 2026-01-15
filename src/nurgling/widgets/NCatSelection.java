@@ -5,6 +5,7 @@ import haven.Label;
 import haven.Window;
 import haven.res.lib.itemtex.ItemTex;
 import nurgling.*;
+import nurgling.i18n.L10n;
 import nurgling.tools.VSpec;
 import org.json.JSONObject;
 
@@ -23,8 +24,8 @@ public class NCatSelection extends Window {
     private ElementList elementList;
 
     public NCatSelection() {
-        super(UI.scale(new Coord(600, 400)), "Category Selection");
-        add(new Label("Categories:"),UI.scale(5,5));
+        super(UI.scale(new Coord(600, 400)), L10n.get("category.window_title"));
+        add(new Label(L10n.get("category.label")),UI.scale(5,5));
         // Инициализация категорий и элементов из VSpec
         Set<String> categoryNames = VSpec.categories.keySet();
         for (String categoryName : categoryNames) {
@@ -204,7 +205,7 @@ public class NCatSelection extends Window {
                     addToInput();
                 }
             }, UI.scale(145, desiredHeight/2 - NStyle.toTake[0].sz().y/2));
-            addToInputButton.tooltip = Text.render("Add to 'Take'").tex();
+            addToInputButton.tooltip = Text.render(L10n.get("category.add_to_take")).tex();
 
             // Инициализация кнопки для добавления в OUT
             addToOutputButton = add(new IButton(NStyle.toPut[0].back,NStyle.toPut[1].back,NStyle.toPut[2].back){
@@ -213,7 +214,7 @@ public class NCatSelection extends Window {
                     addToOutput();
                 }
             }, UI.scale(165, desiredHeight/2 - NStyle.toTake[0].sz().y/2));
-            addToOutputButton.tooltip = Text.render("Add to 'Put'").tex();
+            addToOutputButton.tooltip = Text.render(L10n.get("category.add_to_put")).tex();
             pack();
         }
         // Метод для добавления в IN
@@ -281,7 +282,7 @@ public class NCatSelection extends Window {
                     addToInput();
                 }
             }, UI.scale(64 + 230, desiredHeight/2 - NStyle.toTake[0].sz().y/2));
-            addToInputButton.tooltip = Text.render("Add to 'Take'").tex();
+            addToInputButton.tooltip = Text.render(L10n.get("category.add_to_take")).tex();
 
             // Инициализация кнопки для добавления в OUT
             addToOutputButton = add(new IButton(NStyle.toPut[0].back,NStyle.toPut[1].back,NStyle.toPut[2].back){
@@ -290,7 +291,7 @@ public class NCatSelection extends Window {
                     addToOutput();
                 }
             }, UI.scale(64 + 250, desiredHeight/2 - NStyle.toTake[0].sz().y/2));
-            addToOutputButton.tooltip = Text.render("Add to 'Put'").tex();
+            addToOutputButton.tooltip = Text.render(L10n.get("category.add_to_put")).tex();
             pack();
             sz.y = desiredHeight;
         }

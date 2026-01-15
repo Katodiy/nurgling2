@@ -1,23 +1,23 @@
-# Setting Up SQLite Database
+# @enc.sqlite.title
 
-This guide shows you how to enable SQLite database storage for your cookbook recipes. Recipes that you make or import are stored in the cookbook and will only persist through restarts if a database is setup. SQLite is the easiest option to setup.
+@enc.sqlite.intro
 
-## Why Use SQLite Database?
+## @enc.sqlite.why_title
 
-- Recipes are saved permanently and won't be lost when you restart the client
-- Faster searching and filtering of recipes
-- Better performance with large recipe collections
-- Easy backup and restore of your recipe collection
+- @enc.sqlite.why1
+- @enc.sqlite.why2
+- @enc.sqlite.why3
+- @enc.sqlite.why4
 
-## Enabling SQLite Database
+## @enc.sqlite.enable_title
 
-### Enable Database in Settings
+### @enc.sqlite.enable_steps_title
 
-1. Open the Nurgling2 settings window
-2. Navigate to the **General** -> **Database** section
-3. Check the box for **"Enable using Database"**
-4. Select **"SQLight"** in the **"Database Type"**
-5. Click **"Initialize New Database"** button
-6. Click **"Save"**
+1. @enc.sqlite.step1
+2. @enc.sqlite.step2
+3. @enc.sqlite.step3
+4. @enc.sqlite.step4
+5. @enc.sqlite.step5
+6. @enc.sqlite.step6
 
 ![Settings Window - Cookbook Section](images/database_settings.png)
