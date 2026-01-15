@@ -45,7 +45,9 @@ public class GlobalFreshFillingPhase implements Action {
             }
         }
 
+        NUtils.stackSwitch(true);
         new FreeInventory2(new NContext(gui)).run(gui);
+        NUtils.stackSwitch(false);
         return workDone ? Results.SUCCESS() : Results.FAIL();
     }
 
