@@ -31,6 +31,9 @@ public class CheeseConstants {
     
     /** Inventory slots needed for slicing (tray + up to 5 cheese pieces) */
     public static final int SLICING_INVENTORY_REQUIREMENT = 7;
+
+    /** Total space needed before transferring a tray for slicing (slicing requirement + tray size) */
+    public static final int SLICING_TOTAL_SPACE_REQUIREMENT = SLICING_INVENTORY_REQUIREMENT + 2;
     
     // ============== AREA CONSTANTS ==============
     
