@@ -3,6 +3,7 @@ package nurgling.widgets.bots;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.conf.NFishingSettings;
+import nurgling.i18n.L10n;
 
 import java.util.ArrayList;
 
@@ -19,11 +20,11 @@ public class Fishing extends Window implements Checkable {
     public NFishingSettings prop;
     private FishingTarget fishwnd = null;
     public Fishing() {
-        super(UI.scale(200,400), "Auto Fishing");
+        super(UI.scale(200,400), L10n.get("fishing.wnd_title"));
         NFishingSettings fishSet = NFishingSettings.get(NUtils.getUI().sessInfo);
         if (fishSet == null) fishSet = new NFishingSettings("", "");
         final NFishingSettings finalFishSet = fishSet;
-        prev = add(new Label("Tool:"));
+        prev = add(new Label(L10n.get("fishing.tool")));
 
         prev = add(usingTools = new UsingTools(UsingTools.Tools.fishrot, false)
         {
@@ -35,7 +36,7 @@ public class Fishing extends Window implements Checkable {
                     {
                         baits.tools = UsingTools.initByCategories("Lures");
 //                        targets.visible = true;
-                        baitLab.settext("Lure:");
+                        baitLab.settext(L10n.get("fishing.lure"));
                         targLab.visible = true;
                         fishbtn.visible = true;
                         Fishing.this.pack();
@@ -44,7 +45,7 @@ public class Fishing extends Window implements Checkable {
                     {
                         baits.tools = UsingTools.initByCategories("Bait");
 //                        targets.visible = false;
-                        baitLab.settext("Bait:");
+                        baitLab.settext(L10n.get("fishing.bait"));
                         targLab.visible = false;
                         fishbtn.visible = false;
                         Fishing.this.pack();
@@ -75,19 +76,19 @@ public class Fishing extends Window implements Checkable {
                 }
             }
         }
-        prev = add(noPilesCheck = new CheckBox("Don't place piles")
+        prev = add(noPilesCheck = new CheckBox(L10n.get("fishing.no_piles"))
         {
             {
                 a = finalFishSet.noPiles;
             }
         }, prev.pos("bl").add(UI.scale(0,5)));
-        prev = add(useInventoryToolsCheck = new CheckBox("Use tools from inventory")
+        prev = add(useInventoryToolsCheck = new CheckBox(L10n.get("fishing.use_inv_tools"))
         {
             {
                 a = finalFishSet.useInventoryTools;
             }
         }, prev.pos("bl").add(UI.scale(0,5)));
-        prev = add(new Label("Fish line:"), prev.pos("bl").add(UI.scale(0,5)));
+        prev = add(new Label(L10n.get("fishing.fishline")), prev.pos("bl").add(UI.scale(0,5)));
         prev = add(fishlines = new UsingTools(UsingTools.initByCategories("Fishline"), false), prev.pos("bl").add(UI.scale(0,5)));
         if(finalFishSet.fishline!=null)
         {
@@ -102,7 +103,7 @@ public class Fishing extends Window implements Checkable {
 
 
         if(usingTools.s==null || !usingTools.s.name.equals("Primitive Casting-Rod")) {
-            prev = add(baitLab = new Label("Bite:"), prev.pos("bl").add(UI.scale(0,5)));
+            prev = add(baitLab = new Label(L10n.get("fishing.bait")), prev.pos("bl").add(UI.scale(0,5)));
             prev = add(baits = new UsingTools(UsingTools.initByCategories("Bait"), false), prev.pos("bl").add(UI.scale(0, 5)));
             if (finalFishSet.bait != null) {
                 for (UsingTools.Tool tl : baits.tools) {
@@ -115,7 +116,7 @@ public class Fishing extends Window implements Checkable {
         }
         else
         {
-            prev = add(baitLab = new Label("Lure:"), prev.pos("bl").add(UI.scale(0,5)));
+            prev = add(baitLab = new Label(L10n.get("fishing.lure")), prev.pos("bl").add(UI.scale(0,5)));
             prev = add(baits = new UsingTools(UsingTools.initByCategories("Lures"), false), prev.pos("bl").add(UI.scale(0, 5)));
             if (finalFishSet.bait != null) {
                 for (UsingTools.Tool tl : baits.tools) {
@@ -126,7 +127,7 @@ public class Fishing extends Window implements Checkable {
                 }
             }
         }
-        prev = add(new Label("Hook:"), prev.pos("bl").add(UI.scale(0,5)));
+        prev = add(new Label(L10n.get("fishing.hook")), prev.pos("bl").add(UI.scale(0,5)));
         prev = add(hooks = new UsingTools(UsingTools.initByCategories("Hooks"), false), prev.pos("bl").add(UI.scale(0,5)));
         if(finalFishSet.hook!=null)
         {
@@ -139,12 +140,12 @@ public class Fishing extends Window implements Checkable {
             }
         }
 
-        prev = add(targLab = new Label("Targets:"), prev.pos("bl").add(UI.scale(0,5)));
+        prev = add(targLab = new Label(L10n.get("fishing.targets")), prev.pos("bl").add(UI.scale(0,5)));
         if(fishwnd==null) {
             fishwnd = NUtils.getGameUI().add(new FishingTarget(finalFishSet));
         }
         fishwnd.hide();
-        prev = add(fishbtn = new Button(UI.scale(150),"Fish"){
+        prev = add(fishbtn = new Button(UI.scale(150), L10n.get("fishing.fish")){
             @Override
             public void click() {
                 super.click();
@@ -161,7 +162,7 @@ public class Fishing extends Window implements Checkable {
             fishbtn.hide();
             targLab.hide();
         }
-        prev = add(new Button(UI.scale(150), "Start"){
+        prev = add(new Button(UI.scale(150), L10n.get("botwnd.start")){
             @Override
             public void click() {
                 super.click();

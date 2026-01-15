@@ -3,6 +3,7 @@ package nurgling.widgets.bots;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.conf.NClayDiggerProp;
+import nurgling.i18n.L10n;
 
 public class ClayDigger extends Window implements Checkable {
 
@@ -10,9 +11,9 @@ public class ClayDigger extends Window implements Checkable {
     UsingTools usingSovels = null;
 
     public ClayDigger() {
-        super(new Coord(200,200), "Clay Digger");
+        super(new Coord(200,200), L10n.get("clay.wnd_title"));
         NClayDiggerProp startprop = NClayDiggerProp.get(NUtils.getUI().sessInfo);
-        prev = add(new Label("Digger Settings:"));
+        prev = add(new Label(L10n.get("clay.settings")));
 
         prev = add(usingSovels = new UsingTools(UsingTools.Tools.shovels, true), prev.pos("bl").add(UI.scale(0,5)));
         if(startprop != null && startprop.shovel!=null)
@@ -26,7 +27,7 @@ public class ClayDigger extends Window implements Checkable {
             }
         }
 
-        prev = add(new Button(UI.scale(150), "Start"){
+        prev = add(new Button(UI.scale(150), L10n.get("botwnd.start")){
             @Override
             public void click() {
                 super.click();

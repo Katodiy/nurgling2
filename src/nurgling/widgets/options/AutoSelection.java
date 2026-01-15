@@ -5,6 +5,7 @@ import haven.Label;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NStyle;
+import nurgling.i18n.L10n;
 import nurgling.widgets.nsettings.Panel;
 
 import java.awt.*;
@@ -25,13 +26,13 @@ public class AutoSelection extends Panel {
 
         final int margin = UI.scale(10);
 
-        prev = autoSelectEnabled = add(new CheckBox("Auto selection enabled"), new Coord(margin, margin));
+        prev = autoSelectEnabled = add(new CheckBox(L10n.get("autoselect.enabled")), new Coord(margin, margin));
 
-        prev = add(new Label("Auto selected petals:"), prev.pos("bl").adds(0, 5));
+        prev = add(new Label(L10n.get("autoselect.petals")), prev.pos("bl").adds(0, 5));
         prev = add(al = new ActionList(new Coord(width, UI.scale(300))), prev.pos("bl").adds(0, 10));
 
         newPetall = add(new TextEntry(UI.scale(150), ""), prev.pos("bl").adds(0, 10));
-        add(new Button(UI.scale(45), "Add") {
+        add(new Button(UI.scale(45), L10n.get("autoselect.btn_add")) {
             @Override
             public void click() {
                 if (!newPetall.text().isEmpty()) {
@@ -42,7 +43,7 @@ public class AutoSelection extends Panel {
             }
         }, newPetall.pos("ur").adds(10, 0));
 
-        singlePetal = add(new CheckBox("Auto select single petal"), newPetall.pos("bl").adds(0, 10));
+        singlePetal = add(new CheckBox(L10n.get("autoselect.single_petal")), newPetall.pos("bl").adds(0, 10));
 
         load();
         pack();

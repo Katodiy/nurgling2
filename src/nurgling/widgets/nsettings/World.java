@@ -2,6 +2,7 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.*;
+import nurgling.i18n.L10n;
 import nurgling.overlays.NModelBox;
 import nurgling.widgets.NColorWidget;
 import java.awt.Color;
@@ -73,43 +74,43 @@ public class World extends Panel {
         int contentMargin = UI.scale(5);
         
         // Terrain section
-        Widget prev = content.add(new Label("● Terrain"), new Coord(contentMargin, contentMargin));
-        prev = flatSurface = content.add(new CheckBox("Flat surface (requires restart)") {
+        Widget prev = content.add(new Label("● " + L10n.get("world.section.terrain")), new Coord(contentMargin, contentMargin));
+        prev = flatSurface = content.add(new CheckBox(L10n.get("world.flat_surface")) {
             public void set(boolean val) {
                 tempSettings.flatSurface = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = disableTileSmoothing = content.add(new CheckBox("Disable tile smoothing") {
+        prev = disableTileSmoothing = content.add(new CheckBox(L10n.get("world.disable_smoothing")) {
             public void set(boolean val) {
                 tempSettings.disableTileSmoothing = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = disableTileTransitions = content.add(new CheckBox("Disable tile transitions") {
+        prev = disableTileTransitions = content.add(new CheckBox(L10n.get("world.disable_transitions")) {
             public void set(boolean val) {
                 tempSettings.disableTileTransitions = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = disableCloudShadows = content.add(new CheckBox("Disable cloud shadows on ground") {
+        prev = disableCloudShadows = content.add(new CheckBox(L10n.get("world.disable_clouds")) {
             public void set(boolean val) {
                 tempSettings.disableCloudShadows = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = darkenDeepOcean = content.add(new CheckBox("Darken deep ocean tiles") {
+        prev = darkenDeepOcean = content.add(new CheckBox(L10n.get("world.darken_ocean")) {
             public void set(boolean val) {
                 tempSettings.darkenDeepOcean = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = decorativeObjects = content.add(new CheckBox("Show decorative objects (requires restart)") {
+        prev = decorativeObjects = content.add(new CheckBox(L10n.get("world.decorative_objects")) {
             public void set(boolean val) {
                 tempSettings.decorativeObjects = val;
                 a = val;
@@ -117,57 +118,57 @@ public class World extends Panel {
         }, prev.pos("bl").adds(0, 5));
 
         // Objects section
-        prev = content.add(new Label("● Objects"), prev.pos("bl").adds(0, 15));
-        prev = natura = content.add(new CheckBox("Hide nature objects") {
+        prev = content.add(new Label("● " + L10n.get("world.section.objects")), prev.pos("bl").adds(0, 15));
+        prev = natura = content.add(new CheckBox(L10n.get("world.hide_nature")) {
             public void set(boolean val) {
                 tempSettings.hideNature = !val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = earthworm = content.add(new CheckBox("Hide earthworms") {
+        prev = earthworm = content.add(new CheckBox(L10n.get("world.hide_earthworms")) {
             public void set(boolean val) {
                 tempSettings.hideEarthworm = !val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = boundingBoxes = content.add(new CheckBox("Show object boundaries") {
+        prev = boundingBoxes = content.add(new CheckBox(L10n.get("world.show_boundaries")) {
             public void set(boolean val) {
                 tempSettings.showBB = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
         
-        prev = beehiveRadius = content.add(new CheckBox("Show beehive radius") {
+        prev = beehiveRadius = content.add(new CheckBox(L10n.get("world.show_beehive_radius")) {
             public void set(boolean val) {
                 tempSettings.showBeehiveRadius = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
         
-        prev = troughRadius = content.add(new CheckBox("Show trough radius") {
+        prev = troughRadius = content.add(new CheckBox(L10n.get("world.show_trough_radius")) {
             public void set(boolean val) {
                 tempSettings.showTroughRadius = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = moundBedRadius = content.add(new CheckBox("Show mound bed radius") {
+        prev = moundBedRadius = content.add(new CheckBox(L10n.get("world.show_moundbed_radius")) {
             public void set(boolean val) {
                 tempSettings.showMoundBedRadius = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = damageShields = content.add(new CheckBox("Show damage shields on broken objects") {
+        prev = damageShields = content.add(new CheckBox(L10n.get("world.show_damage_shields")) {
             public void set(boolean val) {
                 tempSettings.showDamageShields = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
         
-        prev = persistentBarrels = content.add(new CheckBox("Keep barrel labels visible during camera scroll") {
+        prev = persistentBarrels = content.add(new CheckBox(L10n.get("world.persistent_barrels")) {
             public void set(boolean val) {
                 tempSettings.persistentBarrelLabels = val;
                 a = val;
@@ -175,20 +176,20 @@ public class World extends Panel {
         }, prev.pos("bl").adds(0, 5));
 
         // Bounding box colors section
-        prev = content.add(new Label("● Bounding Box Colors"), prev.pos("bl").adds(0, 15));
+        prev = content.add(new Label("● " + L10n.get("world.section.bbox_colors")), prev.pos("bl").adds(0, 15));
         
-        prev = fillColorWidget = content.add(new NColorWidget("Fill"), prev.pos("bl").adds(0, 5));
+        prev = fillColorWidget = content.add(new NColorWidget(L10n.get("world.fill")), prev.pos("bl").adds(0, 5));
         fillColorWidget.color = tempSettings.boxFillColor;
         
-        prev = edgeColorWidget = content.add(new NColorWidget("Edge"), prev.pos("bl").adds(0, 5));
+        prev = edgeColorWidget = content.add(new NColorWidget(L10n.get("world.edge")), prev.pos("bl").adds(0, 5));
         edgeColorWidget.color = tempSettings.boxEdgeColor;
 
         // Line width setting
-        prev = lineWidthLabel = content.add(new Label("Line width: 4"), prev.pos("bl").adds(0, 5));
+        prev = lineWidthLabel = content.add(new Label(L10n.get("world.line_width") + " 4"), prev.pos("bl").adds(0, 5));
         prev = lineWidthSlider = content.add(new HSlider(UI.scale(100), 1, 10, tempSettings.boxLineWidth) {
             public void changed() {
                 tempSettings.boxLineWidth = val;
-                lineWidthLabel.settext("Line width: " + val);
+                lineWidthLabel.settext(L10n.get("world.line_width") + " " + val);
             }
         }, prev.pos("bl").adds(0, 5));
         
@@ -249,7 +250,7 @@ public class World extends Panel {
         fillColorWidget.color = tempSettings.boxFillColor;
         edgeColorWidget.color = tempSettings.boxEdgeColor;
         lineWidthSlider.val = tempSettings.boxLineWidth;
-        lineWidthLabel.settext("Line width: " + tempSettings.boxLineWidth);
+        lineWidthLabel.settext(L10n.get("world.line_width") + " " + tempSettings.boxLineWidth);
     }
 
     @Override

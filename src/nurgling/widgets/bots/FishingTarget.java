@@ -6,6 +6,7 @@ import haven.Window;
 import haven.res.lib.itemtex.ItemTex;
 import nurgling.*;
 import nurgling.conf.NFishingSettings;
+import nurgling.i18n.L10n;
 import nurgling.tools.VSpec;
 import nurgling.widgets.NAreasWidget;
 import nurgling.widgets.NCatSelection;
@@ -21,7 +22,7 @@ public class FishingTarget extends Window {
     public FishList fishList;
     NFishingSettings settings;
     public FishingTarget(NFishingSettings settings) {
-        super(UI.scale(300,400), "Fish");
+        super(UI.scale(300,400), L10n.get("fishingtarget.wnd_title"));
         this.settings = settings;
         add(fishList = new FishList(UI.scale(300,400)));
         items.addAll(VSpec.categories.get("Fish"));

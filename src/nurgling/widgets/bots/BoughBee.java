@@ -3,6 +3,7 @@ package nurgling.widgets.bots;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.conf.NBoughBeeProp;
+import nurgling.i18n.L10n;
 
 public class BoughBee extends Window implements Checkable {
 
@@ -18,15 +19,15 @@ public class BoughBee extends Window implements Checkable {
     private Widget prev;
     
     public BoughBee() {
-        super(new Coord(250, 200), "Beehive Smoker");
+        super(new Coord(250, 200), L10n.get("boughbee.wnd_title"));
         NBoughBeeProp startprop = NBoughBeeProp.get(NUtils.getUI().sessInfo);
         if (startprop == null) startprop = new NBoughBeeProp("", "");
         final NBoughBeeProp finalStartprop = startprop;
         
-        prev = add(new Label("Beehive Smoker Settings:"));
+        prev = add(new Label(L10n.get("boughbee.settings")));
         
         // Player detection reaction
-        prev = add(new Label("On unknown player:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("boughbee.on_player")), prev.pos("bl").add(UI.scale(0, 10)));
         prev = add(onPlayerAction = new Dropbox<String>(UI.scale(150), PLAYER_ACTIONS.length, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
@@ -58,7 +59,7 @@ public class BoughBee extends Window implements Checkable {
         }
 
         // Animal detection reaction
-        prev = add(new Label("On dangerous animal:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("boughbee.on_animal")), prev.pos("bl").add(UI.scale(0, 10)));
         prev = add(onAnimalAction = new Dropbox<String>(UI.scale(150), ANIMAL_ACTIONS.length, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
@@ -90,7 +91,7 @@ public class BoughBee extends Window implements Checkable {
         }
 
         // After harvest action
-        prev = add(new Label("After harvest complete:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("boughbee.after_harvest")), prev.pos("bl").add(UI.scale(0, 10)));
         prev = add(afterHarvestAction = new Dropbox<String>(UI.scale(150), AFTER_HARVEST_ACTIONS.length, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
@@ -122,7 +123,7 @@ public class BoughBee extends Window implements Checkable {
         }
 
         // Start button
-        prev = add(new Button(UI.scale(150), "Start") {
+        prev = add(new Button(UI.scale(150), L10n.get("botwnd.start")) {
             @Override
             public void click() {
                 super.click();

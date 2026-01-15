@@ -13,6 +13,8 @@ import nurgling.widgets.NScenarioButton;
 import nurgling.widgets.ScenarioBotSelectionDialog;
 import nurgling.widgets.StepSettingsPanel;
 
+import nurgling.i18n.L10n;
+
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +53,7 @@ public class ScenarioPanel extends Panel {
         int editorListHeight = UI.scale(380);
 
         listPanel = add(new Widget(new Coord(contentWidth, contentHeight)), new Coord(margin, margin));
-        listPanel.add(new Label("Scenarios:"), new Coord(0, 0));
+        listPanel.add(new Label(L10n.get("scenarios.title")), new Coord(0, 0));
 
         int slistWidth = contentWidth - margin * 2;
         SListBox<Scenario, Widget> scenarioListBox = new SListBox<Scenario, Widget>(new Coord(slistWidth, slistHeight), UI.scale(40)) {
@@ -110,7 +112,7 @@ public class ScenarioPanel extends Panel {
         int bottomY = contentHeight - margin - btnHeight;
 
         listPanel.add(
-                new Button(btnWidth, "Add Scenario", this::addScenario),
+                new Button(btnWidth, L10n.get("scenarios.add"), this::addScenario),
                 new Coord((contentWidth - btnWidth) / 2, bottomY - btnHeight - UI.scale(8))
         );
 
@@ -118,7 +120,7 @@ public class ScenarioPanel extends Panel {
         editorPanel.hide();
 
         int y = margin;
-        editorPanel.add(new Label("Edit Scenario:"), new Coord(0, 0));
+        editorPanel.add(new Label(L10n.get("scenarios.edit")), new Coord(0, 0));
         y += UI.scale(22);
 
         scenarioNameEntry = editorPanel.add(new TextEntry(contentWidth - margin * 2 - 10, ""), new Coord(margin, y));
@@ -249,7 +251,7 @@ public class ScenarioPanel extends Panel {
         y += UI.scale(270) + UI.scale(10);
 
         editorPanel.add(
-                new Button(btnWidth, "Add Step", this::showBotSelectDialog),
+                new Button(btnWidth, L10n.get("scenarios.add_step"), this::showBotSelectDialog),
                 new Coord((contentWidth - btnWidth) / 2, bottomY - btnHeight - UI.scale(8))
         );
 
@@ -455,8 +457,8 @@ public class ScenarioPanel extends Panel {
 
             add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
             int itemBtnHeight = UI.scale(28);
-            add(new Button(btnW, "Edit", () -> editScenario(scenario)), new Coord(editBtnX, (sz.y - itemBtnHeight) / 2));
-            add(new Button(btnW, "Delete", () -> deleteScenario(scenario)), new Coord(deleteBtnX, (sz.y - itemBtnHeight) / 2));
+            add(new Button(btnW, L10n.get("scenarios.btn_edit"), () -> editScenario(scenario)), new Coord(editBtnX, (sz.y - itemBtnHeight) / 2));
+            add(new Button(btnW, L10n.get("scenarios.btn_delete"), () -> deleteScenario(scenario)), new Coord(deleteBtnX, (sz.y - itemBtnHeight) / 2));
         }
         
         @Override

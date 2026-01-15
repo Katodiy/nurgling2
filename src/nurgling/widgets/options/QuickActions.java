@@ -6,6 +6,7 @@ import haven.Label;
 import nurgling.*;
 import nurgling.areas.NArea;
 import nurgling.conf.QuickActionPreset;
+import nurgling.i18n.L10n;
 import nurgling.widgets.TextInputWindow;
 import nurgling.widgets.nsettings.Panel;
 
@@ -37,7 +38,7 @@ public class QuickActions extends Panel {
         final int margin = UI.scale(10);
 
         // Preset selection row
-        Label presetLabel = add(new Label("Preset:"), new Coord(margin, margin));
+        Label presetLabel = add(new Label(L10n.get("quickactions.preset")), new Coord(margin, margin));
         
         presetDropbox = add(new Dropbox<QuickActionPreset>(UI.scale(120), 10, UI.scale(16)) {
             @Override
@@ -74,7 +75,7 @@ public class QuickActions extends Panel {
                 createNewPreset();
             }
         }, new Coord(presetDropbox.pos("ur").x + UI.scale(5), margin ));
-        addPresetButton.settip("Create new preset");
+        addPresetButton.settip(L10n.get("quickactions.create_preset_tip"));
 
         // Remove preset button (-)
         removePresetButton = add(new IButton(
@@ -86,10 +87,10 @@ public class QuickActions extends Panel {
                 deleteCurrentPreset();
             }
         }, new Coord(addPresetButton.pos("ur").x + UI.scale(2), margin));
-        removePresetButton.settip("Delete selected preset (cannot delete Default)");
+        removePresetButton.settip(L10n.get("quickactions.delete_preset_tip"));
 
         // Keybind row
-        keybindLabel = add(new Label("Keybind:"), new Coord(margin, presetDropbox.pos("bl").y + UI.scale(30)));
+        keybindLabel = add(new Label(L10n.get("quickactions.keybind")), new Coord(margin, presetDropbox.pos("bl").y + UI.scale(30)));
         keybindButton = add(new KeyMatch.Capture(UI.scale(120), KeyMatch.nil) {
             @Override
             public void set(KeyMatch key) {
@@ -119,7 +120,7 @@ public class QuickActions extends Panel {
                 }
             }
         }, new Coord(newPattern.pos("ur").x + UI.scale(5), newPattern.c.y + (newPattern.sz.y - UI.scale(18)) / 2));
-        addPatternButton.settip("Add pattern");
+        addPatternButton.settip(L10n.get("quickactions.add_pattern_tip"));
 
         dpy = new Label("");
         rangeSlider = new HSlider(UI.scale(160), 1, 10, 1) {
@@ -134,21 +135,21 @@ public class QuickActions extends Panel {
         // Correctly update prev for chaining layout
         addhlp(prev.pos("bl").adds(0, UI.scale(10)), UI.scale(5), rangeSlider, dpy);
         prev = rangeSlider;
-        prev.settip("Set range of quick actions in tiles.", true);
+        prev.settip(L10n.get("quickactions.range_tip"), true);
 
-        prev = visitorCheck = add(new CheckBox("Disable opening/closing visitor gates"), prev.pos("bl").adds(0, 5));
-        prev = doorCheck = add(new CheckBox("Walking into doors in basic mode"), prev.pos("bl").adds(0, 5));
+        prev = visitorCheck = add(new CheckBox(L10n.get("quickactions.visitor_gates")), prev.pos("bl").adds(0, 5));
+        prev = doorCheck = add(new CheckBox(L10n.get("quickactions.door_mode")), prev.pos("bl").adds(0, 5));
         pack();
         load();
     }
 
     private void createNewPreset() {
-        TextInputWindow inputWindow = new TextInputWindow("New Preset", "Enter preset name:", presetName -> {
+        TextInputWindow inputWindow = new TextInputWindow(L10n.get("quickactions.new_preset"), L10n.get("quickactions.enter_name"), presetName -> {
             if (presetName != null && !presetName.trim().isEmpty()) {
                 String name = presetName.trim();
                 // Check if preset with this name already exists
                 if (getPresetByName(name) != null) {
-                    NUtils.getGameUI().error("Preset with this name already exists");
+                    NUtils.getGameUI().error(L10n.get("quickactions.exists_error"));
                     return;
                 }
                 QuickActionPreset newPreset = new QuickActionPreset(name);
@@ -166,13 +167,13 @@ public class QuickActions extends Panel {
         
         // Cannot delete Default preset
         if ("Default".equals(currentPreset.name)) {
-            NUtils.getGameUI().error("Cannot delete the Default preset");
+            NUtils.getGameUI().error(L10n.get("quickactions.cannot_delete_default"));
             return;
         }
         
         // Cannot delete if it's the only preset
         if (presets.size() <= 1) {
-            NUtils.getGameUI().error("Cannot delete the last preset");
+            NUtils.getGameUI().error(L10n.get("quickactions.cannot_delete_last"));
             return;
         }
         
@@ -236,7 +237,7 @@ public class QuickActions extends Panel {
 
     private void updateDpyLabel() {
         if (dpy != null && rangeSlider != null)
-            dpy.settext(rangeSlider.val + " tiles");
+            dpy.settext(rangeSlider.val + " " + L10n.get("common.tiles"));
     }
 
     @Override

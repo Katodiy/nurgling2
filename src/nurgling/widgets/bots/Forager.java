@@ -3,6 +3,7 @@ package nurgling.widgets.bots;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.conf.NForagerProp;
+import nurgling.i18n.L10n;
 import nurgling.routes.ForagerAction;
 import nurgling.routes.ForagerPath;
 
@@ -51,14 +52,14 @@ public class Forager extends Window implements Checkable {
     private Widget prev;
     
     public Forager() {
-        super(new Coord(380, 300), "Forager Bot");
+        super(new Coord(380, 300), L10n.get("forager.wnd_title"));
         NForagerProp startprop = NForagerProp.get(NUtils.getUI().sessInfo);
         if (startprop == null) startprop = new NForagerProp("", "");
         
-        prev = add(new Label("Forager Bot Settings:"));
+        prev = add(new Label(L10n.get("forager.settings")));
         
         // Preset selection
-        prev = add(new Label("Preset:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("forager.preset")), prev.pos("bl").add(UI.scale(0, 10)));
         
         loadAvailablePresets();
         
@@ -104,7 +105,7 @@ public class Forager extends Window implements Checkable {
                 createNewPreset();
             }
         }, new Coord(UI.scale(245), 0));
-        newPresetButton.settip("Create new preset");
+        newPresetButton.settip(L10n.get("forager.create_preset_tip"));
         
         presetRow.add(deletePresetButton = new IButton(
             Resource.loadsimg("nurgling/hud/buttons/remove/u"),
@@ -116,12 +117,12 @@ public class Forager extends Window implements Checkable {
                 deleteCurrentPreset();
             }
         }, new Coord(UI.scale(270), 0));
-        deletePresetButton.settip("Delete current preset");
+        deletePresetButton.settip(L10n.get("forager.delete_preset_tip"));
         
         prev = presetRow;
         
         // Path selection
-        prev = add(new Label("Path:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("forager.path")), prev.pos("bl").add(UI.scale(0, 10)));
         
         loadAvailablePaths();
         
@@ -167,7 +168,7 @@ public class Forager extends Window implements Checkable {
                 createNewPath();
             }
         }, new Coord(UI.scale(245), 0));
-        newPathButton.settip("Create new path");
+        newPathButton.settip(L10n.get("forager.create_path_tip"));
         
         pathRow.add(deletePathButton = new IButton(
             Resource.loadsimg("nurgling/hud/buttons/remove/u"),
@@ -179,13 +180,13 @@ public class Forager extends Window implements Checkable {
                 deleteCurrentPath();
             }
         }, new Coord(UI.scale(270), 0));
-        deletePathButton.settip("Delete current path");
+        deletePathButton.settip(L10n.get("forager.delete_path_tip"));
         
         prev = pathRow;
         
         // Record path button on separate row
         Widget recordRow = add(new Widget(new Coord(UI.scale(270), UI.scale(20))), prev.pos("bl").add(UI.scale(0, 5)));
-        recordRow.add(new Label("Record:"), new Coord(0, UI.scale(2)));
+        recordRow.add(new Label(L10n.get("forager.record")), new Coord(0, UI.scale(2)));
         recordRow.add(recordPathButton = new ICheckBox(
             "nurgling/hud/buttons/record_4states/",
             "u",
@@ -202,15 +203,15 @@ public class Forager extends Window implements Checkable {
                 }
             }
         }, new Coord(UI.scale(60), 0));
-        recordPathButton.settip("Record path by clicking on minimap");
+        recordPathButton.settip(L10n.get("forager.record_path_tip"));
         
         prev = recordRow;
         
         // Sections info
-        prev = sectionsLabel = add(new Label("No path loaded"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = sectionsLabel = add(new Label(L10n.get("forager.no_path")), prev.pos("bl").add(UI.scale(0, 10)));
         
         // Actions list
-        prev = add(new Label("Actions:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("forager.actions")), prev.pos("bl").add(UI.scale(0, 10)));
         
         Widget actionsRow = add(new Widget(new Coord(UI.scale(270), UI.scale(120))), prev.pos("bl").add(UI.scale(0, 5)));
         
@@ -258,7 +259,7 @@ public class Forager extends Window implements Checkable {
                 addAction();
             }
         }, new Coord(0, 0));
-        addActionButton.settip("Add action");
+        addActionButton.settip(L10n.get("forager.add_action_tip"));
         
         actionsButtonsCol.add(removeActionButton = new IButton(
             Resource.loadsimg("nurgling/hud/buttons/remove/u"),
@@ -270,12 +271,12 @@ public class Forager extends Window implements Checkable {
                 removeAction();
             }
         }, new Coord(0, UI.scale(30)));
-        removeActionButton.settip("Remove action");
+        removeActionButton.settip(L10n.get("forager.remove_action_tip"));
         
         prev = actionsRow;
         
         // Player detection reaction
-        prev = add(new Label("On unknown player:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("forager.on_player")), prev.pos("bl").add(UI.scale(0, 10)));
         prev = add(onPlayerAction = new Dropbox<String>(UI.scale(150), PLAYER_ACTIONS.length, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
@@ -299,7 +300,7 @@ public class Forager extends Window implements Checkable {
         }, prev.pos("bl").add(UI.scale(0, 5)));
         
         // Animal detection reaction
-        prev = add(new Label("On dangerous animal:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("forager.on_animal")), prev.pos("bl").add(UI.scale(0, 10)));
         prev = add(onAnimalAction = new Dropbox<String>(UI.scale(150), ANIMAL_ACTIONS.length, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
@@ -323,7 +324,7 @@ public class Forager extends Window implements Checkable {
         }, prev.pos("bl").add(UI.scale(0, 5)));
 
         // After finish action
-        prev = add(new Label("After finish:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("forager.after_finish")), prev.pos("bl").add(UI.scale(0, 10)));
         prev = add(afterFinishAction = new Dropbox<String>(UI.scale(150), AFTER_FINISH_ACTIONS.length, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
@@ -347,7 +348,7 @@ public class Forager extends Window implements Checkable {
         }, prev.pos("bl").add(UI.scale(0, 5)));
 
         // On full inventory action
-        prev = add(new Label("On full inventory:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("forager.on_full_inv")), prev.pos("bl").add(UI.scale(0, 10)));
         prev = add(onFullInventoryAction = new Dropbox<String>(UI.scale(150), FULL_INVENTORY_ACTIONS.length, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
@@ -371,13 +372,13 @@ public class Forager extends Window implements Checkable {
         }, prev.pos("bl").add(UI.scale(0, 5)));
         
         // Ignore bats checkbox
-        prev = add(ignoreBatsCheckbox = new CheckBox("Ignore bats"), prev.pos("bl").add(UI.scale(0, 5)));
+        prev = add(ignoreBatsCheckbox = new CheckBox(L10n.get("forager.ignore_bats")), prev.pos("bl").add(UI.scale(0, 5)));
 
         // Water mode checkbox
-        prev = add(waterModeCheckbox = new CheckBox("Water mode (for boats)"), prev.pos("bl").add(UI.scale(0, 5)));
+        prev = add(waterModeCheckbox = new CheckBox(L10n.get("forager.water_mode")), prev.pos("bl").add(UI.scale(0, 5)));
 
         // Start button
-        prev = startButton = add(new Button(UI.scale(150), "Start") {
+        prev = startButton = add(new Button(UI.scale(150), L10n.get("botwnd.start")) {
             @Override
             public void click() {
                 super.click();
@@ -485,7 +486,7 @@ public class Forager extends Window implements Checkable {
         }
         
         if (availablePaths.isEmpty()) {
-            availablePaths.add("No paths available");
+            availablePaths.add(L10n.get("forager.no_paths"));
         }
     }
     
@@ -529,7 +530,7 @@ public class Forager extends Window implements Checkable {
                     pathDropbox.change(fileName);
                 }
             } else {
-                sectionsLabel.settext("No path loaded");
+                sectionsLabel.settext(L10n.get("forager.no_path"));
                 startButton.disable(true);
                 // Reset path dropbox
                 if (!availablePaths.isEmpty()) {
@@ -547,7 +548,7 @@ public class Forager extends Window implements Checkable {
     }
     
     private void onPathChanged(String pathName) {
-        if (pathName.equals("No paths available")) {
+        if (pathName.equals(L10n.get("forager.no_paths"))) {
             return;
         }
         
@@ -559,7 +560,7 @@ public class Forager extends Window implements Checkable {
     }
     
     private void createNewPreset() {
-        TextInputWindow inputWindow = new TextInputWindow("New Preset", "Enter preset name:", presetName -> {
+        TextInputWindow inputWindow = new TextInputWindow(L10n.get("forager.new_preset"), L10n.get("forager.enter_preset"), presetName -> {
             if (presetName != null && !presetName.trim().isEmpty()) {
                 prop = NForagerProp.get(NUtils.getUI().sessInfo);
                 prop.presets.put(presetName.trim(), new NForagerProp.PresetData());
@@ -569,7 +570,7 @@ public class Forager extends Window implements Checkable {
                 availablePresets.add(presetName.trim());
                 presetDropbox.change(presetName.trim());
                 
-                sectionsLabel.settext("No path loaded");
+                sectionsLabel.settext(L10n.get("forager.no_path"));
                 startButton.disable(true);
             }
         });
@@ -578,7 +579,7 @@ public class Forager extends Window implements Checkable {
     }
     
     private void createNewPath() {
-        TextInputWindow inputWindow = new TextInputWindow("New Path", "Enter path name:", pathName -> {
+        TextInputWindow inputWindow = new TextInputWindow(L10n.get("forager.new_path"), L10n.get("forager.enter_path"), pathName -> {
             if (pathName != null && !pathName.trim().isEmpty()) {
                 ForagerPath newPath = new ForagerPath(pathName.trim());
                 
@@ -873,18 +874,18 @@ public class Forager extends Window implements Checkable {
                     
                     updateSectionsInfo();
                 } catch (Exception e) {
-                    sectionsLabel.settext("No path loaded");
+                    sectionsLabel.settext(L10n.get("forager.no_path"));
                     startButton.disable(true);
                 }
             } else {
-                sectionsLabel.settext("No path loaded");
+                sectionsLabel.settext(L10n.get("forager.no_path"));
                 startButton.disable(true);
             }
         }
     }
     
     private void deleteCurrentPath() {
-        if (pathDropbox.sel == null || pathDropbox.sel.equals("No paths available")) {
+        if (pathDropbox.sel == null || pathDropbox.sel.equals(L10n.get("forager.no_paths"))) {
             return;
         }
         
@@ -921,8 +922,8 @@ public class Forager extends Window implements Checkable {
         
         // Update UI - select previous path or show "No paths available"
         if (availablePaths.isEmpty()) {
-            availablePaths.add("No paths available");
-            pathDropbox.change("No paths available");
+            availablePaths.add(L10n.get("forager.no_paths"));
+            pathDropbox.change(L10n.get("forager.no_paths"));
         } else {
             int newIndex = Math.max(0, currentIndex - 1);
             pathDropbox.change(availablePaths.get(newIndex));

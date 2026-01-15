@@ -3,6 +3,7 @@ package nurgling.widgets.bots;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.conf.NChipperProp;
+import nurgling.i18n.L10n;
 
 public class ChipperWnd extends Window implements Checkable {
 
@@ -15,13 +16,13 @@ public class ChipperWnd extends Window implements Checkable {
     CheckBox autoeat;
 
     public ChipperWnd() {
-        super(new Coord(200,200), "Chipper");
+        super(new Coord(200,200), L10n.get("chipper.wnd_title"));
         NChipperProp startprop = NChipperProp.get(NUtils.getUI().sessInfo);
         if (startprop == null) startprop = new NChipperProp("", "");
         final NChipperProp finalStartprop = startprop;
-        prev = add(new Label("Chipper Settings:"));
+        prev = add(new Label(L10n.get("chipper.settings")));
 
-        prev = add(plateu = new CheckBox("Dig on a mountain plateau"){
+        prev = add(plateu = new CheckBox(L10n.get("chipper.plateau")){
             {
                 a = finalStartprop.plateu;
             }
@@ -37,7 +38,7 @@ public class ChipperWnd extends Window implements Checkable {
         }, prev.pos("bl").add(UI.scale(0,5)));
 
 
-        prev = add(nopiles = new CheckBox("Drop stones"){
+        prev = add(nopiles = new CheckBox(L10n.get("chipper.drop_stones")){
             {
                 a = finalStartprop.nopiles;
             }
@@ -48,7 +49,7 @@ public class ChipperWnd extends Window implements Checkable {
 
         }, prev.pos("bl").add(UI.scale(0,5)));
 
-        prev = add(autorefill = new CheckBox("Auto refill water-containers")
+        prev = add(autorefill = new CheckBox(L10n.get("botwnd.autorefill"))
         {
             {
                 a = finalStartprop.autorefill;
@@ -60,7 +61,7 @@ public class ChipperWnd extends Window implements Checkable {
 
         }, prev.pos("bl").add(UI.scale(0,5)));
 
-        prev = add(autoeat = new CheckBox("Eat from inventory")
+        prev = add(autoeat = new CheckBox(L10n.get("botwnd.autoeat"))
         {
             {
                 a = finalStartprop.autoeat;
@@ -86,7 +87,7 @@ public class ChipperWnd extends Window implements Checkable {
         usingTools.visible = !finalStartprop.plateu;
 
 
-        prev = add(new Button(UI.scale(150), "Start"){
+        prev = add(new Button(UI.scale(150), L10n.get("botwnd.start")){
             @Override
             public void click() {
                 super.click();

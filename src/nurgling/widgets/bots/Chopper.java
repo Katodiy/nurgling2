@@ -3,6 +3,7 @@ package nurgling.widgets.bots;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.conf.NChopperProp;
+import nurgling.i18n.L10n;
 
 public class Chopper extends Window implements Checkable {
 
@@ -18,12 +19,12 @@ public class Chopper extends Window implements Checkable {
     UsingTools usingSovels = null;
 
     public Chopper() {
-        super(new Coord(200,200), "Chopper");
+        super(new Coord(200,200), L10n.get("chopper.wnd_title"));
         NChopperProp startprop = NChopperProp.get(NUtils.getUI().sessInfo);
         if (startprop == null) startprop = new NChopperProp("", "");
         final NChopperProp finalStartprop = startprop;
-        prev = add(new Label("Chopper Settings:"));
-        prev = add(stumps = new CheckBox("Uproot stumps"){
+        prev = add(new Label(L10n.get("chopper.settings")));
+        prev = add(stumps = new CheckBox(L10n.get("chopper.uproot_stumps")){
             {
                 a = finalStartprop.stumps;
             }
@@ -38,7 +39,7 @@ public class Chopper extends Window implements Checkable {
 
         }, prev.pos("bl").add(UI.scale(0,5)));
 
-        prev = add(bushes = new CheckBox("Сut down bushes"){
+        prev = add(bushes = new CheckBox(L10n.get("chopper.cut_bushes")){
             {
                 a = finalStartprop.bushes;
             }
@@ -50,7 +51,7 @@ public class Chopper extends Window implements Checkable {
         }, prev.pos("bl").add(UI.scale(0,5)));
 
 
-        prev = add(ngrowth = new CheckBox("Ignore the growth")
+        prev = add(ngrowth = new CheckBox(L10n.get("chopper.ignore_growth"))
         {
             {
                 a = finalStartprop.ngrowth;
@@ -62,7 +63,7 @@ public class Chopper extends Window implements Checkable {
 
         }, prev.pos("bl").add(UI.scale(0,5)));
 
-        prev = add(autorefill = new CheckBox("Auto refill water-containers")
+        prev = add(autorefill = new CheckBox(L10n.get("botwnd.autorefill"))
         {
             {
                 a = finalStartprop.autorefill;
@@ -74,7 +75,7 @@ public class Chopper extends Window implements Checkable {
 
         }, prev.pos("bl").add(UI.scale(0,5)));
 
-        prev = add(autoeat = new CheckBox("Eat from inventory")
+        prev = add(autoeat = new CheckBox(L10n.get("botwnd.autoeat"))
         {
             {
                 a = finalStartprop.autoeat;
@@ -86,7 +87,7 @@ public class Chopper extends Window implements Checkable {
 
         }, prev.pos("bl").add(UI.scale(0,5)));
 
-        prev = add(checkWounds = new CheckBox("Stop on Scrapes & Cuts (dmg >= 4)")
+        prev = add(checkWounds = new CheckBox(L10n.get("botwnd.check_wounds"))
         {
             {
                 a = finalStartprop.checkWounds;
@@ -127,7 +128,7 @@ public class Chopper extends Window implements Checkable {
             usingSovels.hide();
         }
 
-        prev = add(new Button(UI.scale(150), "Start"){
+        prev = add(new Button(UI.scale(150), L10n.get("botwnd.start")){
             @Override
             public void click() {
                 super.click();

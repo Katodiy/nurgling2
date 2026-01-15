@@ -10,6 +10,7 @@ import nurgling.conf.ItemQualityOverlaySettings;
 import nurgling.conf.ItemQualityOverlaySettings.Corner;
 import nurgling.conf.ItemQualityOverlaySettings.QualityThreshold;
 import nurgling.conf.ItemQualityOverlaySettings.TimeFormat;
+import nurgling.i18n.L10n;
 import nurgling.widgets.NColorWidget;
 
 import java.awt.Color;
@@ -159,49 +160,49 @@ public class ItemOverlaySettings extends Panel {
     private CheckBox previewShowVol;
     
     public ItemOverlaySettings() {
-        super("Item Overlays");
+        super(L10n.get("overlay.title"));
         
         int margin = 10;
         int tabY = 25;
         int tabWidth = 55;
         
         // === TAB BUTTONS ===
-        itemQualityTabBtn = add(new Button(UI.scale(tabWidth), "Item Q") {
+        itemQualityTabBtn = add(new Button(UI.scale(tabWidth), L10n.get("overlay.tab.item_q")) {
             @Override
             public void click() {
                 switchTab(0);
             }
         }, UI.scale(0, tabY));
         
-        stackQualityTabBtn = add(new Button(UI.scale(tabWidth), "Stack Q") {
+        stackQualityTabBtn = add(new Button(UI.scale(tabWidth), L10n.get("overlay.tab.stack_q")) {
             @Override
             public void click() {
                 switchTab(1);
             }
         }, UI.scale(tabWidth + 2, tabY));
         
-        amountTabBtn = add(new Button(UI.scale(tabWidth), "Amount") {
+        amountTabBtn = add(new Button(UI.scale(tabWidth), L10n.get("overlay.tab.amount")) {
             @Override
             public void click() {
                 switchTab(2);
             }
         }, UI.scale((tabWidth + 2) * 2, tabY));
         
-        studyInfoTabBtn = add(new Button(UI.scale(tabWidth), "Study") {
+        studyInfoTabBtn = add(new Button(UI.scale(tabWidth), L10n.get("overlay.tab.study")) {
             @Override
             public void click() {
                 switchTab(3);
             }
         }, UI.scale((tabWidth + 2) * 3, tabY));
         
-        progressTabBtn = add(new Button(UI.scale(tabWidth), "Meter") {
+        progressTabBtn = add(new Button(UI.scale(tabWidth), L10n.get("overlay.tab.meter")) {
             @Override
             public void click() {
                 switchTab(4);
             }
         }, UI.scale((tabWidth + 2) * 4, tabY));
         
-        volumeTabBtn = add(new Button(UI.scale(tabWidth), "Vol") {
+        volumeTabBtn = add(new Button(UI.scale(tabWidth), L10n.get("overlay.tab.vol")) {
             @Override
             public void click() {
                 switchTab(5);
@@ -241,7 +242,7 @@ public class ItemOverlaySettings extends Panel {
         
         // === PREVIEW (shared) ===
         int previewY = contentY + 290 + 15;  // 15px gap before preview (content height 290)
-        add(new Label("● Preview:"), UI.scale(margin, previewY));
+        add(new Label("● " + L10n.get("overlay.section.preview")), UI.scale(margin, previewY));
         
         // Preview visibility checkboxes
         int cbY = previewY + 2;
@@ -307,7 +308,7 @@ public class ItemOverlaySettings extends Panel {
         // === LEFT COLUMN ===
         
         // Corner position selector
-        parent.add(new Label("Corner:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.corner")), UI.scale(margin, y));
         cornerSelector = parent.add(new Dropbox<Corner>(UI.scale(100), Corner.values().length, UI.scale(16)) {
             @Override
             protected Corner listitem(int i) { return Corner.values()[i]; }
@@ -329,7 +330,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font family selector
-        parent.add(new Label("Font:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.font")), UI.scale(margin, y));
         fontSelector = parent.add(new Dropbox<String>(UI.scale(100), FONT_FAMILIES.size(), UI.scale(16)) {
             @Override
             protected String listitem(int i) { return FONT_FAMILIES.get(i); }
@@ -349,7 +350,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font size slider
-        parent.add(new Label("Size:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.size")), UI.scale(margin, y));
         fontSizeSlider = parent.add(new HSlider(UI.scale(80), 8, 20, 10) {
             @Override
             public void changed() {
@@ -364,7 +365,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Show decimal checkbox
-        showDecimalCheckbox = parent.add(new CheckBox("Decimal (42.5)") {
+        showDecimalCheckbox = parent.add(new CheckBox(L10n.get("overlay.decimal")) {
             @Override
             public void changed(boolean val) {
                 if (currentSettings != null) {
@@ -376,7 +377,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Show outline checkbox
-        showOutlineCheckbox = parent.add(new CheckBox("Text outline") {
+        showOutlineCheckbox = parent.add(new CheckBox(L10n.get("overlay.text_outline")) {
             @Override
             public void changed(boolean val) {
                 if (currentSettings != null) {
@@ -390,7 +391,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Outline color & width
-        parent.add(new Label("Outline:"), UI.scale(margin + 15, y));
+        parent.add(new Label(L10n.get("overlay.outline")), UI.scale(margin + 15, y));
         outlineColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y - 8));
         outlineColorWidget.label.hide();
         outlineWidthSlider = parent.add(new HSlider(UI.scale(50), 1, 3, 1) {
@@ -407,7 +408,7 @@ public class ItemOverlaySettings extends Panel {
         y += 28;
         
         // Show background checkbox
-        showBackgroundCheckbox = parent.add(new CheckBox("Background") {
+        showBackgroundCheckbox = parent.add(new CheckBox(L10n.get("overlay.background")) {
             @Override
             public void changed(boolean val) {
                 if (currentSettings != null) {
@@ -420,24 +421,24 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Background color
-        parent.add(new Label("BG color:"), UI.scale(margin + 15, y + 8));
+        parent.add(new Label(L10n.get("overlay.bg_color")), UI.scale(margin + 15, y + 8));
         backgroundColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         backgroundColorWidget.label.hide();
         y += 30;
         
         // Content color
-        parent.add(new Label("Content color:"), UI.scale(margin, y + 8));
+        parent.add(new Label(L10n.get("overlay.content_color")), UI.scale(margin, y + 8));
         contentColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         contentColorWidget.label.hide();
         
         // === RIGHT COLUMN (Quality Thresholds) ===
         int rightY = 0;
         
-        parent.add(new Label("● Quality Thresholds"), UI.scale(rightColumnX, rightY));
+        parent.add(new Label("● " + L10n.get("overlay.section.thresholds")), UI.scale(rightColumnX, rightY));
         rightY += 20;
         
         // Use thresholds checkbox
-        useThresholdsCheckbox = parent.add(new CheckBox("Use color thresholds") {
+        useThresholdsCheckbox = parent.add(new CheckBox(L10n.get("overlay.use_thresholds")) {
             @Override
             public void changed(boolean val) {
                 if (currentSettings != null) {
@@ -449,13 +450,13 @@ public class ItemOverlaySettings extends Panel {
         rightY += 22;
         
         // Default color (when thresholds disabled)
-        parent.add(new Label("Default color:"), UI.scale(rightColumnX, rightY));
+        parent.add(new Label(L10n.get("overlay.default_color")), UI.scale(rightColumnX, rightY));
         defaultColorWidget = parent.add(new NColorWidget(""), UI.scale(rightColumnX + 90, rightY - 8));
         defaultColorWidget.label.hide();
         rightY += 30;
         
         // Thresholds list
-        parent.add(new Label("Thresholds (Q >= value):"), UI.scale(rightColumnX, rightY));
+        parent.add(new Label(L10n.get("overlay.thresholds_list")), UI.scale(rightColumnX, rightY));
         rightY += 18;
         
         int listWidth = 210;
@@ -487,7 +488,7 @@ public class ItemOverlaySettings extends Panel {
         // === LEFT COLUMN ===
         
         // Corner position selector
-        parent.add(new Label("Corner:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.corner")), UI.scale(margin, y));
         stackCornerSelector = parent.add(new Dropbox<Corner>(UI.scale(100), Corner.values().length, UI.scale(16)) {
             @Override
             protected Corner listitem(int i) { return Corner.values()[i]; }
@@ -509,7 +510,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font family selector
-        parent.add(new Label("Font:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.font")), UI.scale(margin, y));
         stackFontSelector = parent.add(new Dropbox<String>(UI.scale(100), FONT_FAMILIES.size(), UI.scale(16)) {
             @Override
             protected String listitem(int i) { return FONT_FAMILIES.get(i); }
@@ -529,7 +530,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font size slider
-        parent.add(new Label("Size:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.size")), UI.scale(margin, y));
         stackFontSizeSlider = parent.add(new HSlider(UI.scale(80), 8, 20, 10) {
             @Override
             public void changed() {
@@ -544,7 +545,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Show decimal checkbox
-        stackShowDecimalCheckbox = parent.add(new CheckBox("Decimal (42.5)") {
+        stackShowDecimalCheckbox = parent.add(new CheckBox(L10n.get("overlay.decimal")) {
             @Override
             public void changed(boolean val) {
                 if (currentStackSettings != null) {
@@ -556,7 +557,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Show outline checkbox
-        stackShowOutlineCheckbox = parent.add(new CheckBox("Text outline") {
+        stackShowOutlineCheckbox = parent.add(new CheckBox(L10n.get("overlay.text_outline")) {
             @Override
             public void changed(boolean val) {
                 if (currentStackSettings != null) {
@@ -570,7 +571,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Outline color & width
-        parent.add(new Label("Outline:"), UI.scale(margin + 15, y));
+        parent.add(new Label(L10n.get("overlay.outline")), UI.scale(margin + 15, y));
         stackOutlineColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y - 8));
         stackOutlineColorWidget.label.hide();
         stackOutlineWidthSlider = parent.add(new HSlider(UI.scale(50), 1, 3, 1) {
@@ -587,7 +588,7 @@ public class ItemOverlaySettings extends Panel {
         y += 28;
         
         // Show background checkbox
-        stackShowBackgroundCheckbox = parent.add(new CheckBox("Background") {
+        stackShowBackgroundCheckbox = parent.add(new CheckBox(L10n.get("overlay.background")) {
             @Override
             public void changed(boolean val) {
                 if (currentStackSettings != null) {
@@ -600,18 +601,18 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Background color
-        parent.add(new Label("BG color:"), UI.scale(margin + 15, y + 8));
+        parent.add(new Label(L10n.get("overlay.bg_color")), UI.scale(margin + 15, y + 8));
         stackBackgroundColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         stackBackgroundColorWidget.label.hide();
         
         // === RIGHT COLUMN (Quality Thresholds) ===
         int rightY = 0;
         
-        parent.add(new Label("● Quality Thresholds"), UI.scale(rightColumnX, rightY));
+        parent.add(new Label("● " + L10n.get("overlay.section.thresholds")), UI.scale(rightColumnX, rightY));
         rightY += 20;
         
         // Use thresholds checkbox
-        stackUseThresholdsCheckbox = parent.add(new CheckBox("Use color thresholds") {
+        stackUseThresholdsCheckbox = parent.add(new CheckBox(L10n.get("overlay.use_thresholds")) {
             @Override
             public void changed(boolean val) {
                 if (currentStackSettings != null) {
@@ -623,13 +624,13 @@ public class ItemOverlaySettings extends Panel {
         rightY += 22;
         
         // Default color
-        parent.add(new Label("Default color:"), UI.scale(rightColumnX, rightY));
+        parent.add(new Label(L10n.get("overlay.default_color")), UI.scale(rightColumnX, rightY));
         stackDefaultColorWidget = parent.add(new NColorWidget(""), UI.scale(rightColumnX + 90, rightY - 8));
         stackDefaultColorWidget.label.hide();
         rightY += 30;
         
         // Thresholds list
-        parent.add(new Label("Thresholds (Q >= value):"), UI.scale(rightColumnX, rightY));
+        parent.add(new Label(L10n.get("overlay.thresholds_list")), UI.scale(rightColumnX, rightY));
         rightY += 18;
         
         int listWidth = 210;
@@ -656,7 +657,7 @@ public class ItemOverlaySettings extends Panel {
         int controlX = labelWidth + 5;
         
         // Corner position selector
-        parent.add(new Label("Corner:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.corner")), UI.scale(margin, y));
         amountCornerSelector = parent.add(new Dropbox<Corner>(UI.scale(100), Corner.values().length, UI.scale(16)) {
             @Override
             protected Corner listitem(int i) { return Corner.values()[i]; }
@@ -678,7 +679,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font family selector
-        parent.add(new Label("Font:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.font")), UI.scale(margin, y));
         amountFontSelector = parent.add(new Dropbox<String>(UI.scale(100), FONT_FAMILIES.size(), UI.scale(16)) {
             @Override
             protected String listitem(int i) { return FONT_FAMILIES.get(i); }
@@ -698,7 +699,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font size slider
-        parent.add(new Label("Size:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.size")), UI.scale(margin, y));
         amountFontSizeSlider = parent.add(new HSlider(UI.scale(80), 8, 20, 10) {
             @Override
             public void changed() {
@@ -713,7 +714,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Show prefix checkbox (×5 instead of 5)
-        amountShowPrefixCheckbox = parent.add(new CheckBox("Prefix (×5)") {
+        amountShowPrefixCheckbox = parent.add(new CheckBox(L10n.get("overlay.prefix")) {
             @Override
             public void changed(boolean val) {
                 if (currentAmountSettings != null) {
@@ -725,7 +726,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Show outline checkbox
-        amountShowOutlineCheckbox = parent.add(new CheckBox("Text outline") {
+        amountShowOutlineCheckbox = parent.add(new CheckBox(L10n.get("overlay.text_outline")) {
             @Override
             public void changed(boolean val) {
                 if (currentAmountSettings != null) {
@@ -739,7 +740,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Outline color & width
-        parent.add(new Label("Outline:"), UI.scale(margin + 15, y));
+        parent.add(new Label(L10n.get("overlay.outline")), UI.scale(margin + 15, y));
         amountOutlineColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y - 8));
         amountOutlineColorWidget.label.hide();
         amountOutlineWidthSlider = parent.add(new HSlider(UI.scale(50), 1, 3, 1) {
@@ -756,7 +757,7 @@ public class ItemOverlaySettings extends Panel {
         y += 28;
         
         // Show background checkbox
-        amountShowBackgroundCheckbox = parent.add(new CheckBox("Background") {
+        amountShowBackgroundCheckbox = parent.add(new CheckBox(L10n.get("overlay.background")) {
             @Override
             public void changed(boolean val) {
                 if (currentAmountSettings != null) {
@@ -769,13 +770,13 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Background color
-        parent.add(new Label("BG color:"), UI.scale(margin + 15, y + 8));
+        parent.add(new Label(L10n.get("overlay.bg_color")), UI.scale(margin + 15, y + 8));
         amountBackgroundColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         amountBackgroundColorWidget.label.hide();
         y += 30;
         
         // Text color
-        parent.add(new Label("Text color:"), UI.scale(margin, y + 8));
+        parent.add(new Label(L10n.get("overlay.text_color")), UI.scale(margin, y + 8));
         amountColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         amountColorWidget.label.hide();
     }
@@ -787,7 +788,7 @@ public class ItemOverlaySettings extends Panel {
         int controlX = labelWidth + 5;
         
         // Hide checkbox
-        studyHiddenCheckbox = parent.add(new CheckBox("Hide overlay") {
+        studyHiddenCheckbox = parent.add(new CheckBox(L10n.get("overlay.hide")) {
             @Override
             public void changed(boolean val) {
                 if (currentStudySettings != null) {
@@ -799,7 +800,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Corner position selector
-        parent.add(new Label("Corner:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.corner")), UI.scale(margin, y));
         studyCornerSelector = parent.add(new Dropbox<Corner>(UI.scale(100), Corner.values().length, UI.scale(16)) {
             @Override
             protected Corner listitem(int i) { return Corner.values()[i]; }
@@ -821,7 +822,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Time format selector
-        parent.add(new Label("Time format:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.time_format")), UI.scale(margin, y));
         studyTimeFormatSelector = parent.add(new Dropbox<TimeFormat>(UI.scale(100), TimeFormat.values().length, UI.scale(16)) {
             @Override
             protected TimeFormat listitem(int i) { return TimeFormat.values()[i]; }
@@ -843,7 +844,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Time ratio slider (2.0 - 5.0, default 3.29)
-        parent.add(new Label("Time ratio:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.time_ratio")), UI.scale(margin, y));
         studyTimeRatioSlider = parent.add(new HSlider(UI.scale(360), 200, 500, 329) {
             @Override
             public void changed() {
@@ -859,7 +860,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font family selector
-        parent.add(new Label("Font:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.font")), UI.scale(margin, y));
         studyFontSelector = parent.add(new Dropbox<String>(UI.scale(100), FONT_FAMILIES.size(), UI.scale(16)) {
             @Override
             protected String listitem(int i) { return FONT_FAMILIES.get(i); }
@@ -879,7 +880,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font size slider
-        parent.add(new Label("Size:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.size")), UI.scale(margin, y));
         studyFontSizeSlider = parent.add(new HSlider(UI.scale(80), 8, 20, 9) {
             @Override
             public void changed() {
@@ -894,7 +895,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Show outline checkbox
-        studyShowOutlineCheckbox = parent.add(new CheckBox("Text outline") {
+        studyShowOutlineCheckbox = parent.add(new CheckBox(L10n.get("overlay.text_outline")) {
             @Override
             public void changed(boolean val) {
                 if (currentStudySettings != null) {
@@ -908,7 +909,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Outline color & width
-        parent.add(new Label("Outline:"), UI.scale(margin + 15, y));
+        parent.add(new Label(L10n.get("overlay.outline")), UI.scale(margin + 15, y));
         studyOutlineColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y - 8));
         studyOutlineColorWidget.label.hide();
         studyOutlineWidthSlider = parent.add(new HSlider(UI.scale(50), 1, 3, 1) {
@@ -925,7 +926,7 @@ public class ItemOverlaySettings extends Panel {
         y += 28;
         
         // Show background checkbox
-        studyShowBackgroundCheckbox = parent.add(new CheckBox("Background") {
+        studyShowBackgroundCheckbox = parent.add(new CheckBox(L10n.get("overlay.background")) {
             @Override
             public void changed(boolean val) {
                 if (currentStudySettings != null) {
@@ -938,13 +939,13 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Background color
-        parent.add(new Label("BG color:"), UI.scale(margin + 15, y + 8));
+        parent.add(new Label(L10n.get("overlay.bg_color")), UI.scale(margin + 15, y + 8));
         studyBackgroundColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         studyBackgroundColorWidget.label.hide();
         y += 30;
         
         // Text color
-        parent.add(new Label("Text color:"), UI.scale(margin, y + 8));
+        parent.add(new Label(L10n.get("overlay.text_color")), UI.scale(margin, y + 8));
         studyColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         studyColorWidget.label.hide();
     }
@@ -956,7 +957,7 @@ public class ItemOverlaySettings extends Panel {
         int controlX = labelWidth + 5;
         
         // Hide checkbox
-        progressHiddenCheckbox = parent.add(new CheckBox("Hide overlay") {
+        progressHiddenCheckbox = parent.add(new CheckBox(L10n.get("overlay.hide")) {
             @Override
             public void changed(boolean val) {
                 if (currentProgressSettings != null) {
@@ -968,7 +969,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Corner position selector
-        parent.add(new Label("Corner:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.corner")), UI.scale(margin, y));
         progressCornerSelector = parent.add(new Dropbox<Corner>(UI.scale(100), Corner.values().length, UI.scale(16)) {
             @Override
             protected Corner listitem(int i) { return Corner.values()[i]; }
@@ -990,7 +991,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font family selector
-        parent.add(new Label("Font:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.font")), UI.scale(margin, y));
         progressFontSelector = parent.add(new Dropbox<String>(UI.scale(100), FONT_FAMILIES.size(), UI.scale(16)) {
             @Override
             protected String listitem(int i) { return FONT_FAMILIES.get(i); }
@@ -1010,7 +1011,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font size slider
-        parent.add(new Label("Size:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.size")), UI.scale(margin, y));
         progressFontSizeSlider = parent.add(new HSlider(UI.scale(80), 8, 20, 10) {
             @Override
             public void changed() {
@@ -1025,7 +1026,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Show outline checkbox
-        progressShowOutlineCheckbox = parent.add(new CheckBox("Text outline") {
+        progressShowOutlineCheckbox = parent.add(new CheckBox(L10n.get("overlay.text_outline")) {
             @Override
             public void changed(boolean val) {
                 if (currentProgressSettings != null) {
@@ -1039,7 +1040,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Outline color & width
-        parent.add(new Label("Outline:"), UI.scale(margin + 15, y));
+        parent.add(new Label(L10n.get("overlay.outline")), UI.scale(margin + 15, y));
         progressOutlineColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y - 8));
         progressOutlineColorWidget.label.hide();
         progressOutlineWidthSlider = parent.add(new HSlider(UI.scale(50), 1, 3, 1) {
@@ -1056,7 +1057,7 @@ public class ItemOverlaySettings extends Panel {
         y += 28;
         
         // Show background checkbox
-        progressShowBackgroundCheckbox = parent.add(new CheckBox("Background") {
+        progressShowBackgroundCheckbox = parent.add(new CheckBox(L10n.get("overlay.background")) {
             @Override
             public void changed(boolean val) {
                 if (currentProgressSettings != null) {
@@ -1069,13 +1070,13 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Background color
-        parent.add(new Label("BG color:"), UI.scale(margin + 15, y + 8));
+        parent.add(new Label(L10n.get("overlay.bg_color")), UI.scale(margin + 15, y + 8));
         progressBackgroundColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         progressBackgroundColorWidget.label.hide();
         y += 30;
         
         // Text color
-        parent.add(new Label("Text color:"), UI.scale(margin, y + 8));
+        parent.add(new Label(L10n.get("overlay.text_color")), UI.scale(margin, y + 8));
         progressColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         progressColorWidget.label.hide();
     }
@@ -1087,7 +1088,7 @@ public class ItemOverlaySettings extends Panel {
         int controlX = labelWidth + 5;
         
         // Hide checkbox
-        volumeHiddenCheckbox = parent.add(new CheckBox("Hide overlay") {
+        volumeHiddenCheckbox = parent.add(new CheckBox(L10n.get("overlay.hide")) {
             @Override
             public void changed(boolean val) {
                 if (currentVolumeSettings != null) {
@@ -1099,7 +1100,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Corner position selector
-        parent.add(new Label("Corner:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.corner")), UI.scale(margin, y));
         volumeCornerSelector = parent.add(new Dropbox<Corner>(UI.scale(100), Corner.values().length, UI.scale(16)) {
             @Override
             protected Corner listitem(int i) { return Corner.values()[i]; }
@@ -1121,7 +1122,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font family selector
-        parent.add(new Label("Font:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.font")), UI.scale(margin, y));
         volumeFontSelector = parent.add(new Dropbox<String>(UI.scale(100), FONT_FAMILIES.size(), UI.scale(16)) {
             @Override
             protected String listitem(int i) { return FONT_FAMILIES.get(i); }
@@ -1141,7 +1142,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Font size slider
-        parent.add(new Label("Size:"), UI.scale(margin, y));
+        parent.add(new Label(L10n.get("overlay.size")), UI.scale(margin, y));
         volumeFontSizeSlider = parent.add(new HSlider(UI.scale(80), 8, 20, 10) {
             @Override
             public void changed() {
@@ -1156,7 +1157,7 @@ public class ItemOverlaySettings extends Panel {
         y += 25;
         
         // Show outline checkbox
-        volumeShowOutlineCheckbox = parent.add(new CheckBox("Text outline") {
+        volumeShowOutlineCheckbox = parent.add(new CheckBox(L10n.get("overlay.text_outline")) {
             @Override
             public void changed(boolean val) {
                 if (currentVolumeSettings != null) {
@@ -1170,7 +1171,7 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Outline color & width
-        parent.add(new Label("Outline:"), UI.scale(margin + 15, y));
+        parent.add(new Label(L10n.get("overlay.outline")), UI.scale(margin + 15, y));
         volumeOutlineColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y - 8));
         volumeOutlineColorWidget.label.hide();
         volumeOutlineWidthSlider = parent.add(new HSlider(UI.scale(50), 1, 3, 1) {
@@ -1187,7 +1188,7 @@ public class ItemOverlaySettings extends Panel {
         y += 28;
         
         // Show background checkbox
-        volumeShowBackgroundCheckbox = parent.add(new CheckBox("Background") {
+        volumeShowBackgroundCheckbox = parent.add(new CheckBox(L10n.get("overlay.background")) {
             @Override
             public void changed(boolean val) {
                 if (currentVolumeSettings != null) {
@@ -1200,13 +1201,13 @@ public class ItemOverlaySettings extends Panel {
         y += 22;
         
         // Background color
-        parent.add(new Label("BG color:"), UI.scale(margin + 15, y + 8));
+        parent.add(new Label(L10n.get("overlay.bg_color")), UI.scale(margin + 15, y + 8));
         volumeBackgroundColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         volumeBackgroundColorWidget.label.hide();
         y += 30;
         
         // Text color
-        parent.add(new Label("Text color:"), UI.scale(margin, y + 8));
+        parent.add(new Label(L10n.get("overlay.text_color")), UI.scale(margin, y + 8));
         volumeColorWidget = parent.add(new NColorWidget(""), UI.scale(controlX, y));
         volumeColorWidget.label.hide();
     }
