@@ -217,7 +217,7 @@ public class WoundWnd extends Widget {
 		loading = false;
 		for(Wound w : wounds) {
 		    try {
-			w.sortkey = w.res.get().flayer(Resource.tooltip).t;
+			w.sortkey = w.res.get().flayer(Resource.tooltip).text();
 		    } catch(Loading l) {
 			w.sortkey = "\uffff";
 			loading = true;

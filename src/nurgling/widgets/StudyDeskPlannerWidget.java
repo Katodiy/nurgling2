@@ -308,7 +308,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                 Resource res = item.item.getres();
                 if(res.layers(Resource.Tooltip.class) != null) {
                     for(Resource.Tooltip tt : res.layers(Resource.Tooltip.class)) {
-                        return tt.t;
+                        return tt.text();
                     }
                 }
                 return res.name;

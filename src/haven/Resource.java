@@ -1221,6 +1221,15 @@ public class Resource implements Serializable {
 	public Tooltip(Message buf) {
 	    t = new String(buf.bytes(), Utils.utf8);
 	}
+	
+	/**
+	 * Get localized tooltip text.
+	 * If t starts with "@", it's treated as a localization key.
+	 * Otherwise returns t as-is (for server strings).
+	 */
+	public String text() {
+	    return nurgling.i18n.L10n.tr(t);
+	}
                 
 	public void init() {}
     }

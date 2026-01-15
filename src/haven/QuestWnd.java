@@ -70,7 +70,7 @@ public class QuestWnd extends Widget {
 	public String title() {
 	    if(title != null)
 		return(title);
-	    return(res.get().flayer(Resource.tooltip).t);
+	    return(res.get().flayer(Resource.tooltip).text());
 	}
 
 	public static class Condition {
@@ -198,7 +198,7 @@ public class QuestWnd extends Widget {
 	    public String title() {
 		if(title != null)
 		    return(title);
-		return(res.get().flayer(Resource.tooltip).t);
+		return(res.get().flayer(Resource.tooltip).text());
 	    }
 
 	    public Condition[] conds() {

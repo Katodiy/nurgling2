@@ -181,7 +181,7 @@ public class NFightsess extends Fightsess {
                         Coord lac = center.add(-UI.scale(65), UI.scale(20));
                         if(c.isect(lac.sub(usesz.div(2)), usesz)) {
                             if(parent.lastacttip1 == null)
-                                parent.lastacttip1 = Text.render(lastact.get().flayer(Resource.tooltip).t);
+                                parent.lastacttip1 = Text.render(lastact.get().flayer(Resource.tooltip).text());
                             return parent.lastacttip1;
                         }
                     }
@@ -195,7 +195,7 @@ public class NFightsess extends Fightsess {
                         Coord lac = center.add(UI.scale(65), UI.scale(20));
                         if(c.isect(lac.sub(usesz.div(2)), usesz)) {
                             if(parent.lastacttip2 == null)
-                                parent.lastacttip2 = Text.render(lastact.get().flayer(Resource.tooltip).t);
+                                parent.lastacttip2 = Text.render(lastact.get().flayer(Resource.tooltip).text());
                             return parent.lastacttip2;
                         }
                     }
@@ -286,7 +286,7 @@ public class NFightsess extends Fightsess {
                     Tex img = act.get().flayer(Resource.imgc).tex();
                     ca = ca.sub(img.sz().div(2));
                     if(c.isect(ca, img.sz())) {
-                        String tip = act.get().flayer(Resource.tooltip).t;
+                        String tip = act.get().flayer(Resource.tooltip).text();
                         if(kb_acts[i].key() != KeyMatch.nil)
                             tip += " ($b{$col[255,128,0]{" + kb_acts[i].key().name() + "}})";
                         if((parent.acttip == null) || !parent.acttip.text.equals(tip))

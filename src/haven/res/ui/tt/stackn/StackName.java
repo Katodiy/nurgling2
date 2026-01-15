@@ -20,7 +20,7 @@ public class StackName implements ItemInfo.InfoFactory {
 	if(tt == null)
 		return "";
 //	    throw(new RuntimeException("Item resource " + res + " is missing default tooltip"));
-	return(tt.t);
+	return(tt.text());
     }
 
     public ItemInfo build(ItemInfo.Owner owner, ItemInfo.Raw raw, Object... args) {

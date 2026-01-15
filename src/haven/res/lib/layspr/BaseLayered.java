@@ -16,7 +16,7 @@ public class BaseLayered extends Layered implements ItemInfo.Name.Dynamic {
 	Resource.Tooltip tt = nres.layer(Resource.tooltip);
 	if(tt == null)
 	    throw(new RuntimeException("Item resource " + nres + " is missing default tooltip"));
-	name = tt.t;
+	name = tt.text();
     }
 
     public BaseLayered(Owner owner, Resource res, Message sdt) {

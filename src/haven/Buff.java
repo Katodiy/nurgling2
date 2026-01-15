@@ -152,7 +152,7 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
     private BufferedImage shorttip() {
 	if(rawinfo != null)
 	    return(ItemInfo.shorttip(info()));
-	String ret = res.get().flayer(Resource.tooltip).t;
+	String ret = res.get().flayer(Resource.tooltip).text();
 	return(Text.render(ret).img);
     }
 

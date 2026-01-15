@@ -234,12 +234,12 @@ public class NBotsMenu extends Widget
                                 info.add(new ItemInfo.Tip(null) {
                                     @Override
                                     public BufferedImage tipimg() {
-                                        return Text.render(tt.t).img;
+                                        return Text.render(tt.text()).img;
                                     }
                                 });
                             }
                             else {
-                                info.add(new ItemInfo.Pagina(null, tt.t));
+                                info.add(new ItemInfo.Pagina(null, tt.text()));
                             }
                             count++;
                         }

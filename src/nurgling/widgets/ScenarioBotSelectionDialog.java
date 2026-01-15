@@ -57,7 +57,7 @@ public class ScenarioBotSelectionDialog extends Window {
                 IButton btn = new IButton(up, down, hover) {
                     public void click() { onSelect.accept(bot); }
                     @Override public Object tooltip(Coord c, Widget prev) {
-                        return Text.render(bot.displayName).tex();
+                        return Text.render(bot.getDisplayName()).tex();
                     }
                 };
                 btn.resize(new Coord(ICON_SIZE, ICON_SIZE));

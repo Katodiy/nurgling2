@@ -28,7 +28,7 @@ public class Column <E extends Entry> {
 	Resource hres = Loading.waitfor(() -> head.get());
 	Resource.Tooltip tip = hres.layer(Resource.tooltip);
 	this.head = hres.layer(Resource.imgc).tex();
-	this.tip = (tip == null) ? null : tip.t;
+	this.tip = (tip == null) ? null : tip.text();
 	this.order = order;
 	this.w = UI.scale(w);
     }

@@ -147,7 +147,7 @@ public class ScenarioPanel extends Panel {
                             BotDescriptor desc = BotRegistry.byId(botId);
                             Tex iconTex = null;
                             if (desc != null) {
-                                botId = desc.displayName;
+                                botId = desc.getDisplayName();
                                 try {
                                     BufferedImage iconImg = Resource.loadsimg(desc.getUpIconPath());
                                     if (iconImg != null)

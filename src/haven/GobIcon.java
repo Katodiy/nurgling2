@@ -140,7 +140,7 @@ public class GobIcon extends GAttrib {
 
 	public String name() {
 	    Resource.Tooltip name = res.layer(Resource.tooltip);
-	    return(name == null ? "???" : name.t);
+	    return(name == null ? "???" : name.text());
 	}
 
 	public BufferedImage image() {

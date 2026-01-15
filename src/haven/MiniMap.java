@@ -778,7 +778,7 @@ public class MiniMap extends Widget
 		    if(prev == null) {
 			if(icon.conf.getmarkp()) {
 			    Resource.Tooltip tt = micon.res.flayer(Resource.tooltip);
-			    mid = new SMarker(info.seg, sc, tt.t, 0, new Resource.Saved(Resource.remote(), micon.res.name, micon.res.ver));
+			    mid = new SMarker(info.seg, sc, tt.text(), 0, new Resource.Saved(Resource.remote(), micon.res.name, micon.res.ver));
 			    file.add(mid);
 			    isNew = true;
 			} else {

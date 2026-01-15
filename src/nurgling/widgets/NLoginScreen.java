@@ -439,7 +439,7 @@ public class NLoginScreen extends LoginScreen
                     loginItems.remove(NLoginDataItem.this);
                 }
             });
-            remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).t);
+            remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).text());
             pack();
         }
 

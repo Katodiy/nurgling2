@@ -77,7 +77,7 @@ public class SkillWnd extends Widget {
 	    StringBuilder buf = new StringBuilder();
 	    Resource res = this.res.get();
 	    buf.append("$img[" + res.name + "]\n\n");
-	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).t + "}}\n\n\n");
+	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).text() + "}}\n\n\n");
 	    if(cost > 0)
 		buf.append("Cost: " + cost + "\n\n");
 	    buf.append(res.flayer(Resource.pagina).text);
@@ -87,7 +87,7 @@ public class SkillWnd extends Widget {
 	private Text tooltip = null;
 	public Text tooltip() {
 	    if(tooltip == null)
-		tooltip = Text.render(res.get().flayer(Resource.tooltip).t);
+		tooltip = Text.render(res.get().flayer(Resource.tooltip).text());
 	    return(tooltip);
 	}
     }
@@ -110,7 +110,7 @@ public class SkillWnd extends Widget {
 	    StringBuilder buf = new StringBuilder();
 	    Resource res = this.res.get();
 	    buf.append("$img[" + res.name + "]\n\n");
-	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).t + "}}\n\n\n");
+	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).text() + "}}\n\n\n");
 	    buf.append(res.flayer(Resource.pagina).text);
 	    return(buf.toString());
 	}
@@ -118,7 +118,7 @@ public class SkillWnd extends Widget {
 	private Text tooltip = null;
 	public Text tooltip() {
 	    if(tooltip == null)
-		tooltip = Text.render(res.get().flayer(Resource.tooltip).t);
+		tooltip = Text.render(res.get().flayer(Resource.tooltip).text());
 	    return(tooltip);
 	}
     }
@@ -139,7 +139,7 @@ public class SkillWnd extends Widget {
 	    StringBuilder buf = new StringBuilder();
 	    Resource res = this.res.get();
 	    buf.append("$img[" + res.name + "]\n\n");
-	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).t + "}}\n\n\n");
+	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).text() + "}}\n\n\n");
 	    if(score > 0)
 		buf.append("Experience points: " + Utils.thformat(score) + "\n\n");
 	    buf.append(res.flayer(Resource.pagina).text);
@@ -149,7 +149,7 @@ public class SkillWnd extends Widget {
 	private Text tooltip = null;
 	public Text tooltip() {
 	    if(tooltip == null)
-		tooltip = Text.render(res.get().flayer(Resource.tooltip).t);
+		tooltip = Text.render(res.get().flayer(Resource.tooltip).text());
 	    return(tooltip);
 	}
     }
@@ -179,7 +179,7 @@ public class SkillWnd extends Widget {
 	private void sksort(List<Skill> skills) {
 	    for(Skill sk : skills) {
 		try {
-		    sk.sortkey = sk.res.get().flayer(Resource.tooltip).t;
+		    sk.sortkey = sk.res.get().flayer(Resource.tooltip).text();
 		} catch(Loading l) {
 		    sk.sortkey = sk.nm;
 		    loading = true;
@@ -245,7 +245,7 @@ public class SkillWnd extends Widget {
 	    CredoImg(Credo cr) {
 		super(crtex(cr));
 		this.cr = cr;
-		this.tooltip = Text.render(cr.res.get().flayer(Resource.tooltip).t);
+		this.tooltip = Text.render(cr.res.get().flayer(Resource.tooltip).text());
 	    }
 
 	    public void draw(GOut g) {
@@ -275,7 +275,7 @@ public class SkillWnd extends Widget {
 	}
 
 	private void sort(List<Credo> buf) {
-	    Collections.sort(buf, Comparator.comparing(cr -> cr.res.get().flayer(Resource.tooltip).t));
+	    Collections.sort(buf, Comparator.comparing(cr -> cr.res.get().flayer(Resource.tooltip).text()));
 	}
 
 	private void update() {
@@ -385,7 +385,7 @@ public class SkillWnd extends Widget {
 		loading = false;
 		for(Experience exp : seen.items) {
 		    try {
-			exp.sortkey = exp.res.get().flayer(Resource.tooltip).t;
+			exp.sortkey = exp.res.get().flayer(Resource.tooltip).text();
 		    } catch(Loading l) {
 			exp.sortkey = "\uffff";
 			loading = true;

@@ -303,7 +303,7 @@ public class CharWnd extends Window {
 		if(pag != null)
 		    binfo.add(new ItemInfo.Pagina(this, pag.text));
 		if(!binfo.isEmpty())
-		    binfo.add(new ItemInfo.Name(this, attr.res().get().flayer(Resource.tooltip).t));
+		    binfo.add(new ItemInfo.Name(this, attr.res().get().flayer(Resource.tooltip).text()));
 		this.binfo = binfo;
 	    }
 	    return(this.binfo);

@@ -64,7 +64,7 @@ public class FightWnd extends Widget {
 	    StringBuilder buf = new StringBuilder();
 	    Resource res = this.res.get();
 	    buf.append("$img[" + res.name + "]\n\n");
-	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).t + "}}\n\n");
+	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).text() + "}}\n\n");
 	    Resource.Pagina pag = res.layer(Resource.pagina);
 	    if(pag != null)
 		buf.append(pag.text);
@@ -91,7 +91,7 @@ public class FightWnd extends Widget {
 		if(rawinfo != null)
 		    info = ItemInfo.buildinfo(this, rawinfo);
 		else
-		    info = Arrays.asList(new ItemInfo.Name(this, res.get().flayer(Resource.tooltip).t));
+		    info = Arrays.asList(new ItemInfo.Name(this, res.get().flayer(Resource.tooltip).text()));
 	    }
 	    return(info);
 	}
@@ -165,7 +165,7 @@ public class FightWnd extends Widget {
 		prev = adda(new IButton("gfx/hud/buttons/add", "u", "d", "h").action(() -> setu(item.u + 1)), sz.x - UI.scale(2), sz.y / 2, 1.0, 0.5);
 		prev = adda(new IButton("gfx/hud/buttons/sub", "u", "d", "h").action(() -> setu(item.u - 1)), prev.c.x - UI.scale(2), sz.y / 2, 1.0, 0.5);
 		prev = use = adda(new Label("0/0", attrf), prev.c.x - UI.scale(5), sz.y / 2, 1.0, 0.5);
-		add(IconText.of(Coord.of(prev.c.x - UI.scale(2), sz.y), act::rendericon, () -> act.res.get().flayer(Resource.tooltip).t), Coord.z);
+		add(IconText.of(Coord.of(prev.c.x - UI.scale(2), sz.y), act::rendericon, () -> act.res.get().flayer(Resource.tooltip).text()), Coord.z);
 	    }
 
 	    public void tick(double dt) {
@@ -259,7 +259,7 @@ public class FightWnd extends Widget {
 		loading = false;
 		for(Action act : acts) {
 		    try {
-			act.name = act.res.get().flayer(Resource.tooltip).t;
+			act.name = act.res.get().flayer(Resource.tooltip).text();
 		    } catch(Loading l) {
 			act.name = "...";
 			loading = true;
