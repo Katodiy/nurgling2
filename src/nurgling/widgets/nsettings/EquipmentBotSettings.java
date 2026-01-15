@@ -10,6 +10,8 @@ import nurgling.equipment.EquipmentPresetManager;
 import nurgling.widgets.NEquipmentPresetButton;
 import nurgling.widgets.TextInputWindow;
 
+import nurgling.i18n.L10n;
+
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -72,8 +74,8 @@ public class EquipmentBotSettings extends Panel implements DTarget {
 
         // List Panel
         listPanel = add(new Widget(new Coord(contentWidth, contentHeight)), new Coord(margin, margin));
-        listPanel.add(new Label("Equipment Presets:"), new Coord(0, 0));
-        listPanel.add(new Label("Drag buttons to quick actions bar"), new Coord(0, UI.scale(16)));
+        listPanel.add(new Label(L10n.get("equipment.title")), new Coord(0, 0));
+        listPanel.add(new Label(L10n.get("equipment.drag_hint")), new Coord(0, UI.scale(16)));
 
         int slistWidth = contentWidth - margin * 2;
         SListBox<EquipmentPreset, Widget> presetListBox = new SListBox<EquipmentPreset, Widget>(new Coord(slistWidth, slistHeight), UI.scale(40)) {
@@ -130,7 +132,7 @@ public class EquipmentBotSettings extends Panel implements DTarget {
         int bottomY = contentHeight - margin - btnHeight;
 
         listPanel.add(
-            new Button(btnWidth, "Add Preset", this::addPreset),
+            new Button(btnWidth, L10n.get("equipment.add"), this::addPreset),
             new Coord((contentWidth - btnWidth) / 2, bottomY - btnHeight - UI.scale(8))
         );
 
@@ -139,21 +141,21 @@ public class EquipmentBotSettings extends Panel implements DTarget {
         editorPanel.hide();
 
         int y = margin;
-        editorPanel.add(new Label("Edit Preset:"), new Coord(0, 0));
+        editorPanel.add(new Label(L10n.get("equipment.edit")), new Coord(0, 0));
         y += UI.scale(22);
 
         presetNameEntry = editorPanel.add(new TextEntry(contentWidth - margin * 2 - 10, ""), new Coord(margin, y));
         y += UI.scale(36);
 
-        editorPanel.add(new Label("Drag items from inventory onto slots:"), new Coord(margin, y));
+        editorPanel.add(new Label(L10n.get("equipment.drag_items")), new Coord(margin, y));
         y += UI.scale(18);
-        editorPanel.add(new Label("Right-click a slot to clear it."), new Coord(margin, y));
+        editorPanel.add(new Label(L10n.get("equipment.rightclick_hint")), new Coord(margin, y));
 
         // Equipment slots are drawn in draw() method
 
         // Buttons at bottom
         int btnY = bottomY - btnHeight - UI.scale(8);
-        editorPanel.add(new Button(btnWidth, "Equip Now", this::equipNow), new Coord(margin, btnY));
+        editorPanel.add(new Button(btnWidth, L10n.get("equipment.equip_now"), this::equipNow), new Coord(margin, btnY));
 
         editorPanel.pack();
         pack();
@@ -223,7 +225,7 @@ public class EquipmentBotSettings extends Panel implements DTarget {
                     }
                     return slotName + ": " + itemName;
                 }
-                return slotName + " (empty)";
+                return slotName + " " + L10n.get("equipment.empty");
             }
         }
         return super.tooltip(c, prev);
@@ -379,7 +381,7 @@ public class EquipmentBotSettings extends Panel implements DTarget {
 
     private void equipNow() {
         if (slotConfig.isEmpty()) {
-            NUtils.getGameUI().msg("No equipment configured!");
+            NUtils.getGameUI().msg(L10n.get("equipment.no_config"));
             return;
         }
 
@@ -391,7 +393,7 @@ public class EquipmentBotSettings extends Panel implements DTarget {
             try {
                 new EquipmentBot(tempPreset).run(NUtils.getGameUI());
             } catch (InterruptedException e) {
-                NUtils.getGameUI().msg("Equipment bot stopped.");
+                NUtils.getGameUI().msg(L10n.get("equipment.stopped"));
             }
         }, "EquipmentBot");
 
@@ -429,8 +431,8 @@ public class EquipmentBotSettings extends Panel implements DTarget {
 
             add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
             int itemBtnHeight = UI.scale(28);
-            add(new Button(btnW, "Edit", () -> editPreset(preset)), new Coord(editBtnX, (sz.y - itemBtnHeight) / 2));
-            add(new Button(btnW, "Delete", () -> deletePreset(preset)), new Coord(deleteBtnX, (sz.y - itemBtnHeight) / 2));
+            add(new Button(btnW, L10n.get("common.edit"), () -> editPreset(preset)), new Coord(editBtnX, (sz.y - itemBtnHeight) / 2));
+            add(new Button(btnW, L10n.get("common.delete"), () -> deletePreset(preset)), new Coord(deleteBtnX, (sz.y - itemBtnHeight) / 2));
         }
 
         @Override

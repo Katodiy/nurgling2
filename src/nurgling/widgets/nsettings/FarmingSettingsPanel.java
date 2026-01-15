@@ -56,8 +56,7 @@ public class FarmingSettingsPanel extends Panel {
         add(ignoreStrawInFarmers, new Coord(margin, y));
         y += UI.scale(28);
 
-        autoEquipTravellersSacksCheck = new CheckBox(
-                "Auto equip traveller's sacks after harvesting") {
+        autoEquipTravellersSacksCheck = new CheckBox(L10n.get("farming.auto_equip_sacks")) {
             public void set(boolean val) {
                 a = val;
             }
@@ -66,8 +65,7 @@ public class FarmingSettingsPanel extends Panel {
         add(autoEquipTravellersSacksCheck, new Coord(margin, y));
         y += UI.scale(28);
 
-        validateAllCropsBeforeHarvestCheck = new CheckBox(
-                "Validate all crops are ready before harvesting") {
+        validateAllCropsBeforeHarvestCheck = new CheckBox(L10n.get("farming.validate_crops")) {
             public void set(boolean val) {
                 a = val;
             }
@@ -76,7 +74,7 @@ public class FarmingSettingsPanel extends Panel {
         add(validateAllCropsBeforeHarvestCheck, new Coord(margin, y));
         y += UI.scale(28);
 
-        add(new Label("Seeding Pattern X (columns):"), new Coord(margin, y));
+        add(new Label(L10n.get("farming.pattern_x")), new Coord(margin, y));
         y += UI.scale(24);
 
         xEntry = new TextEntry.NumberValue(50, "") {
@@ -88,7 +86,7 @@ public class FarmingSettingsPanel extends Panel {
         add(xEntry, new Coord(margin, y));
         y += UI.scale(32);
 
-        add(new Label("Seeding Pattern Y (rows):"), new Coord(margin, y));
+        add(new Label(L10n.get("farming.pattern_y")), new Coord(margin, y));
         y += UI.scale(24);
 
         yEntry = new TextEntry.NumberValue(50, "") {
