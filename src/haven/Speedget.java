@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.i18n.L10n;
+
 public class Speedget extends Widget {
     public static final Tex imgs[][];
     public static final String tips[];
