@@ -459,7 +459,7 @@ public class NMakewindow extends Widget {
         {
             int x = 0;
             if(!qmod.isEmpty()) {
-                x += qmodl.sz().x + UI.scale(5);
+                x += getQmodl().sz().x + UI.scale(5);
                 x = Math.max(x, xoff);
                 qmx = x;
                 int count = 0;
@@ -505,8 +505,8 @@ public class NMakewindow extends Widget {
 
             }
             if(!tools.isEmpty()) {
-                g.aimage(tooll.tex(), new Coord(x, qmy + (qmodsz.y / 2) - UI.scale(2)), 0, 0.5);
-                x += tooll.sz().x + UI.scale(5);
+                g.aimage(getTooll().tex(), new Coord(x, qmy + (qmodsz.y / 2) - UI.scale(2)), 0, 0.5);
+                x += getTooll().sz().x + UI.scale(5);
                 x = Math.max(x, xoff);
                 toolx = x;
                 for(Indir<Resource> tool : tools) {
