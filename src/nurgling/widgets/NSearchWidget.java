@@ -166,7 +166,7 @@ public class NSearchWidget extends Widget {
             NUtils.getGameUI().itemsForSearch.tick();
         }
     }
-    String path = ((HashDirCache) ResCache.global).base + "\\..\\" +"searchcmd.dat";
+    String path = NUtils.getDataFile("searchcmd.dat");
     void read() {
 
         try (BufferedReader reader = new BufferedReader(

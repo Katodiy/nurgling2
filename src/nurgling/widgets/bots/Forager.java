@@ -11,6 +11,7 @@ import nurgling.widgets.TextInputWindow;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.nio.file.Path;
 
 public class Forager extends Window implements Checkable {
 
@@ -40,6 +41,7 @@ public class Forager extends Window implements Checkable {
     private static final String[] FULL_INVENTORY_ACTIONS = {"nothing", "logout", "travel hearth"};
     
     // Recording state
+    private final  String pathDataDir = "forager_paths";
     private boolean isRecording = false;
     private ForagerPath currentRecordingPath = null;
     
@@ -471,8 +473,8 @@ public class Forager extends Window implements Checkable {
     private void loadAvailablePaths() {
         availablePaths.clear();
         
-        String defaultDir = ((HashDirCache) ResCache.global).base + "\\..\\forager_paths";
-        File dir = new File(defaultDir);
+        Path defaultDir = NUtils.getDataFilePath(pathDataDir);
+        File dir = defaultDir.toFile();
         
         if (dir.exists() && dir.isDirectory()) {
             File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
@@ -551,8 +553,7 @@ public class Forager extends Window implements Checkable {
             return;
         }
         
-        String defaultDir = ((HashDirCache) ResCache.global).base + "\\..\\forager_paths";
-        String pathFile = defaultDir + "\\" + pathName + ".json";
+        String pathFile = NUtils.getDataFile(pathDataDir, pathName + ".json");
         
         // Load and save to current preset
         loadPath(pathFile);
@@ -584,14 +585,14 @@ public class Forager extends Window implements Checkable {
                 
                 // Save empty path
                 try {
-                    String defaultDir = ((HashDirCache) ResCache.global).base + "\\..\\forager_paths";
-                    File dir = new File(defaultDir);
+                    Path defaultDir = NUtils.getDataFilePath(pathDataDir);
+                    File dir = defaultDir.toFile();
                     if (!dir.exists()) {
                         dir.mkdirs();
                     }
                     
-                    newPath.save(defaultDir);
-                    String pathFile = defaultDir + "\\" + pathName.trim() + ".json";
+                    newPath.save(defaultDir.toString());
+                    String pathFile = defaultDir.resolve( pathName.trim() + ".json").toString();
                     
                     // Save to current preset
                     prop = NForagerProp.get(NUtils.getUI().sessInfo);
@@ -741,8 +742,7 @@ public class Forager extends Window implements Checkable {
         // Check if there's a current path selected
         if (pathDropbox.sel != null && !pathDropbox.sel.equals("No paths available")) {
             // Load existing path for editing
-            String defaultDir = ((HashDirCache) ResCache.global).base + "\\..\\forager_paths";
-            String pathFile = defaultDir + "\\" + pathDropbox.sel + ".json";
+            String pathFile = NUtils.getDataFile(pathDataDir, pathDropbox.sel + ".json");
             try {
                 currentRecordingPath = ForagerPath.load(pathFile);
                 isRecording = true;
@@ -765,14 +765,14 @@ public class Forager extends Window implements Checkable {
             
             // Save the path
             try {
-                String defaultDir = ((HashDirCache) ResCache.global).base + "\\..\\forager_paths";
-                currentRecordingPath.save(defaultDir);
+                Path defaultDir = NUtils.getDataFilePath(pathDataDir);
+                currentRecordingPath.save(defaultDir.toString());
                 
                 // Update the preset with the saved path
                 prop = NForagerProp.get(NUtils.getUI().sessInfo);
                 NForagerProp.PresetData preset = prop.presets.get(prop.currentPreset);
                 if (preset != null) {
-                    String pathFile = defaultDir + "\\" + currentRecordingPath.name + ".json";
+                    String pathFile = defaultDir.resolve(currentRecordingPath.name + ".json").toString();
                     preset.pathFile = pathFile;
                     preset.foragerPath = currentRecordingPath;
                     NForagerProp.set(prop);
@@ -889,11 +889,10 @@ public class Forager extends Window implements Checkable {
         }
         
         String pathToDelete = pathDropbox.sel;
-        String defaultDir = ((HashDirCache) ResCache.global).base + "\\..\\forager_paths";
-        String pathFile = defaultDir + "\\" + pathToDelete + ".json";
+        Path pathFile = NUtils.getDataFilePath(pathDataDir, pathToDelete + ".json");
         
         // Delete the file
-        File file = new File(pathFile);
+        File file = pathFile.toFile();
         if (file.exists()) {
             if (!file.delete()) {
                 NUtils.getGameUI().error("Failed to delete path file");

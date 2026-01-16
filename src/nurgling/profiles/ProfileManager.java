@@ -10,6 +10,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
 
+import nurgling.NUtils;
+
 /**
  * Manages world-specific configuration profiles based on genus identifier.
  * Provides path resolution, migration, and backwards compatibility for
@@ -46,8 +48,7 @@ public class ProfileManager {
      */
     private Path getBaseConfigPath() {
         try {
-            String basePath = ((HashDirCache) ResCache.global).base + "\\..\\";
-            return Paths.get(basePath).normalize();
+            return NUtils.getDataFilePath();
         } catch (Exception e) {
             // Fallback to standard AppData location
             String appdata = System.getenv("APPDATA");

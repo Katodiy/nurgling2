@@ -15,6 +15,8 @@ import org.json.JSONObject;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
@@ -272,13 +274,13 @@ public class NavigationStressTest implements Action {
     private String generateOutputFilePath() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
         String timestamp = sdf.format(new Date());
-        String basePath;
+        Path basePath;
         try {
-            basePath = ((HashDirCache) ResCache.global).base + "\\..\\";
+            basePath = NUtils.getDataFilePath();
         } catch (Exception e) {
-            basePath = System.getProperty("user.home") + "\\";
+            basePath = Paths.get(System.getProperty("user.home"));
         }
-        return basePath + "navtest_" + timestamp + ".json";
+        return basePath.resolve("navtest_" + timestamp + ".json").toString();
     }
 
     private String getPassRateString() {
