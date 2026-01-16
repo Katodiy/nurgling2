@@ -33,7 +33,7 @@ public class FishLocationService implements ProfileAwareService {
 
     public FishLocationService(NGameUI gui) {
         this.gui = gui;
-        this.dataFile = ((HashDirCache) ResCache.global).base + "\\..\\" + "fish_locations.nurgling.json";
+        this.dataFile = NUtils.getDataFile("fish_locations.nurgling.json");
         loadFishLocations();
     }
 

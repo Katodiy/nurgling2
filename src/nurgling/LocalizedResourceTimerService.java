@@ -33,7 +33,7 @@ public class LocalizedResourceTimerService implements ProfileAwareService {
 
     public LocalizedResourceTimerService(NGameUI gui) {
         this.gui = gui;
-        this.dataFile = ((haven.HashDirCache) haven.ResCache.global).base + "\\..\\" + "resource_timers.nurgling.json";
+        this.dataFile = NUtils.getDataFile("resource_timers.nurgling.json");
         loadTimers();
     }
 

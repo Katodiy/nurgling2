@@ -92,11 +92,11 @@ public class NCharacterInfo extends Widget {
                 path = profileConfig.getProfileAwarePath(filename);
             } else {
                 // Fallback to global path
-                path = ((HashDirCache) ResCache.global).base + "\\..\\" + filename;
+                path = NUtils.getDataFile(filename);
             }
         } else {
             // Fallback to global path
-            path = ((HashDirCache) ResCache.global).base + "\\..\\" + filename;
+            path = NUtils.getDataFile(filename);
         }
         read();
     }
