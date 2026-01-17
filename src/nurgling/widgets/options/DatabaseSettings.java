@@ -3,16 +3,13 @@ package nurgling.widgets.options;
 import haven.*;
 import haven.Button;
 import haven.Label;
-import nurgling.DBPoolManager;
 import nurgling.NConfig;
 import nurgling.NUtils;
-import nurgling.tools.NParser;
 import nurgling.widgets.nsettings.Panel;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
