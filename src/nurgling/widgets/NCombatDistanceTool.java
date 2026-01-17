@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.NGameUI;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 import nurgling.tools.Finder;
 
 import java.awt.Color;
@@ -60,13 +61,13 @@ public class NCombatDistanceTool extends haven.Window implements Runnable {
     private Thread updateThread;
 
     public NCombatDistanceTool(NGameUI gui) {
-        super(UI.scale(180, 60), "Combat Distance Tool", true);
+        super(UI.scale(180, 60), L10n.get("combat.distance_title"), true);
         this.gui = gui;
         this.stop = false;
 
         Widget prev;
 
-        prev = add(new haven.Label("Set Distance:"), 0, UI.scale(6));
+        prev = add(new haven.Label(L10n.get("combat.set_distance")), 0, UI.scale(6));
 
         prev = add(new TextEntry(UI.scale(80), distanceValue) {
             @Override
@@ -75,7 +76,7 @@ public class NCombatDistanceTool extends haven.Window implements Runnable {
             }
         }, prev.pos("ur").adds(5, 0));
 
-        prev = add(new Button(UI.scale(40), "Go") {
+        prev = add(new Button(UI.scale(40), L10n.get("common.go")) {
             @Override
             public void click() {
                 moveToDistance();
@@ -83,7 +84,7 @@ public class NCombatDistanceTool extends haven.Window implements Runnable {
             }
         }, prev.pos("ur").adds(5, -2));
 
-        add(new Button(UI.scale(50), "Auto") {
+        add(new Button(UI.scale(50), L10n.get("combat.auto")) {
             @Override
             public void click() {
                 tryToAutoDistance();
@@ -91,7 +92,7 @@ public class NCombatDistanceTool extends haven.Window implements Runnable {
             }
         }, prev.pos("ur").adds(5, 0));
 
-        currentDistanceLabel = new haven.Label("Current dist: No target");
+        currentDistanceLabel = new haven.Label(L10n.get("combat.current_dist") + ": " + L10n.get("combat.no_target"));
         add(currentDistanceLabel, UI.scale(0, 40));
         pack();
     }

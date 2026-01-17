@@ -28,6 +28,7 @@ package haven;
 
 import nurgling.*;
 import nurgling.conf.*;
+import nurgling.i18n.L10n;
 import nurgling.widgets.*;
 
 import java.awt.Color;
@@ -140,7 +141,7 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	    GameUI gui = getparent(GameUI.class);
 	    if(gui != null) {
 		if(status == 1)
-		    ui.msg(String.format("%s is now online.", name));
+		    ui.msg(L10n.get("kin.msg_online", name));
 	    }
 	}
 
@@ -153,15 +154,15 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	public Map<String, Runnable> opts() {
 	    Map<String, Runnable> opts = new LinkedHashMap<>();
 	    if(online >= 0) {
-		opts.put("Chat", this::chat);
+		opts.put(L10n.get("kin.opt_chat"), this::chat);
 		if(online == 1)
-		    opts.put("Invite", this::invite);
-		opts.put("End kinship", this::endkin);
+		    opts.put(L10n.get("kin.opt_invite"), this::invite);
+		opts.put(L10n.get("kin.opt_end_kinship"), this::endkin);
 	    } else {
-		opts.put("Forget", this::forget);
+		opts.put(L10n.get("kin.opt_forget"), this::forget);
 	    }
 	    if(seen)
-		opts.put("Describe", this::describe);
+		opts.put(L10n.get("kin.opt_describe"), this::describe);
 	    return(opts);
 	}
     }
@@ -255,30 +256,37 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 		if(b.online == 1) {
 			if(bi!=null)
 				bi.utime = 0;
-			text = "Now";
+			text = L10n.get("kin.online_now");
 		} else {
 			int au, atime = (int)((long)Utils.ntime() - checktime);
-			String unit;
+			String unitSingular;
+			String unitPlural;
 			if(atime >= (604800 * 2)) {
 				au = 604800;
-				unit = "week";
+				unitSingular = L10n.get("kin.time_week");
+				unitPlural = L10n.get("kin.time_weeks");
 			} else if(atime >= 86400) {
 				au = 86400;
-				unit = "day";
+				unitSingular = L10n.get("kin.time_day");
+				unitPlural = L10n.get("kin.time_days");
 			} else if(atime >= 3600) {
 				au = 3600;
-				unit = "hour";
+				unitSingular = L10n.get("kin.time_hour");
+				unitPlural = L10n.get("kin.time_hours");
 			} else if(atime >= 60) {
 				au = 60;
-				unit = "minute";
+				unitSingular = L10n.get("kin.time_minute");
+				unitPlural = L10n.get("kin.time_minutes");
 			} else {
 				au = 1;
-				unit = "second";
+				unitSingular = L10n.get("kin.time_second");
+				unitPlural = L10n.get("kin.time_seconds");
 			}
 			int am = atime / au;
 			if(bi!=null)
 				bi.utime = checktime + ((am + 1) * au);
-			text = am + " " + unit + ((am > 1)?"s":"") + " ago";
+			String unit = (am > 1) ? unitPlural : unitSingular;
+			text = am + " " + unit + " " + L10n.get("kin.time_ago");
 		}
 		return text;
 	}
@@ -338,7 +346,7 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	private void setatime() {
 	    if(atimel != null)
 		ui.destroy(atimel);
-	    atimel = add(new Label("Last seen: " + lastOnline(atime, buddy, this)), margin2, grp.c.y + grp.sz.y + margin2);
+	    atimel = add(new Label(L10n.get("kin.last_seen") + " " + lastOnline(atime, buddy, this)), margin2, grp.c.y + grp.sz.y + margin2);
 	}
 
 	private void setopts() {
@@ -429,7 +437,7 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	public void draw(GOut g) {
 	    super.draw(g);
 	    if(buddies.size() == 0)
-		g.atext("You are alone in the world", sz.div(2), 0.5, 0.5);
+		g.atext(L10n.get("kin.alone_in_world"), sz.div(2), 0.5, 0.5);
 	}
 	
 	public void change(Buddy b) {
@@ -469,17 +477,17 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	super(new Coord(width, 0));
 	setfocustab(true);
 	Widget prev;
-        prev = add(new Img(CharWnd.catf.render("Kin").tex()));
+        prev = add(new Img(CharWnd.catf.render(L10n.get("kin.window_title")).tex()));
 
 	bl = add(new BuddyList(Coord.of(sz.x - Window.wbox.bisz().x, UI.scale(140))), prev.pos("bl").add(Window.wbox.btloff()));
 	prev = Frame.around(this, Collections.singletonList(bl));
 
-	prev = add(new Label("Sort by:"), prev.pos("bl").adds(0, 5));
+	prev = add(new Label(L10n.get("kin.sort_by")), prev.pos("bl").adds(0, 5));
 	int sbw = ((sz.x + margin1) / 3) - margin1;
 	addhl(prev.pos("bl").adds(0, 2), sz.x,
-	      prev = new Button(sbw, "Status").action(() -> { setcmp(statuscmp); }),
-	             new Button(sbw, "Group" ).action(() -> { setcmp(groupcmp); }),
-	             new Button(sbw, "Name"  ).action(() -> { setcmp(alphacmp); })
+	      prev = new Button(sbw, L10n.get("kin.sort_status")).action(() -> { setcmp(statuscmp); }),
+	             new Button(sbw, L10n.get("kin.sort_group") ).action(() -> { setcmp(groupcmp); }),
+	             new Button(sbw, L10n.get("kin.sort_name")  ).action(() -> { setcmp(alphacmp); })
 	      );
 	String sort = Utils.getpref("buddysort", "");
 	if(sort.equals("")) {
@@ -490,18 +498,18 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 	    if(sort.equals("status")) bcmp = statuscmp;
 	}
 
-	prev = add(new Label("Presentation name:"), prev.pos("bl").adds(0, 10));
+	prev = add(new Label(L10n.get("kin.presentation_name")), prev.pos("bl").adds(0, 10));
 	pname = add(new TextEntry(sz.x, "") {
 		{dshow = true;}
 		public void activate(String text) {
 		    setpname(text);
 		}
 	    }, prev.pos("bl").adds(0, 2));
-	prev = add(new Button(sbw, "Set").action(() -> {
+	prev = add(new Button(sbw, L10n.get("kin.btn_set")).action(() -> {
 		    setpname(pname.text());
 	}), pname.pos("bl").adds(0, 5));
 
-	prev = add(new Label("My hearth secret:"), prev.pos("bl").adds(0, 10));
+	prev = add(new Label(L10n.get("kin.hearth_secret")), prev.pos("bl").adds(0, 10));
 	charpass = add(new TextEntry(sz.x, "") {
 		{dshow = true;}
 		public void activate(String text) {
@@ -509,19 +517,19 @@ public class BuddyWnd extends Widget implements Iterable<BuddyWnd.Buddy> {
 		}
 	    }, prev.pos("bl").adds(0, 2));
         addhl(charpass.pos("bl").adds(0, 5), sz.x,
-	      prev = new Button(sbw, "Set"   ).action(() -> { setpwd(charpass.text()); }),
-	             new Button(sbw, "Clear" ).action(() -> { setpwd(""); }),
-	             new Button(sbw, "Random").action(() -> {setpwd(randpwd());})
+	      prev = new Button(sbw, L10n.get("kin.btn_set")   ).action(() -> { setpwd(charpass.text()); }),
+	             new Button(sbw, L10n.get("kin.btn_clear") ).action(() -> { setpwd(""); }),
+	             new Button(sbw, L10n.get("kin.btn_random")).action(() -> {setpwd(randpwd());})
 	      );
 
-	prev = add(new Label("Make kin by hearth secret:"), prev.pos("bl").adds(0, 10));
+	prev = add(new Label(L10n.get("kin.make_kin_by_secret")), prev.pos("bl").adds(0, 10));
 	opass = add(new TextEntry(sz.x, "") {
 		public void activate(String text) {
 		    BuddyWnd.this.wdgmsg("bypwd", text);
 		    settext("");
 		}
 	    }, prev.pos("bl").adds(0, 2));
-	prev = add(new Button(sbw, "Add kin").action(() -> {
+	prev = add(new Button(sbw, L10n.get("kin.btn_add_kin")).action(() -> {
 		    BuddyWnd.this.wdgmsg("bypwd", opass.text());
 		    opass.settext("");
 	}), opass.pos("bl").adds(0, 5));

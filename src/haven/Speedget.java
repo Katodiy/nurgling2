@@ -26,6 +26,8 @@
 
 package haven;
 
+import nurgling.i18n.L10n;
+
 public class Speedget extends Widget {
     public static final Tex imgs[][];
     public static final String tips[];
@@ -45,7 +47,7 @@ public class Speedget extends Widget {
 	tsz = new Coord(w, imgs[0][0].sz().y);
 	tips = new String[names.length];
 	for(int i = 0; i < names.length; i++) {
-	    tips[i] = Resource.local().loadwait("gfx/hud/meter/rmeter/" + names[i] + "-on").flayer(Resource.tooltip).t;
+	    tips[i] = Resource.local().loadwait("gfx/hud/meter/rmeter/" + names[i] + "-on").flayer(Resource.tooltip).text();
 	}
     }
 

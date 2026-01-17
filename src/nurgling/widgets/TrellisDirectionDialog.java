@@ -2,6 +2,7 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.NHitBox;
+import nurgling.i18n.L10n;
 
 public class TrellisDirectionDialog extends Window {
     // 0 = NS-East, 1 = NS-West, 2 = EW-North, 3 = EW-South, 4 = NS-Center, 5 = EW-Center
@@ -22,7 +23,7 @@ public class TrellisDirectionDialog extends Window {
     };
 
     public TrellisDirectionDialog() {
-        super(UI.scale(new Coord(250, 100)), "Trellis Placement");
+        super(UI.scale(new Coord(250, 100)), L10n.get("trellis.direction_title"));
         initializeWidgets();
     }
 
@@ -35,7 +36,7 @@ public class TrellisDirectionDialog extends Window {
         y += UI.scale(25);
 
         // Rotate button
-        rotateButton = new Button(UI.scale(115), "Rotate") {
+        rotateButton = new Button(UI.scale(115), L10n.get("common.rotate")) {
             @Override
             public void click() {
                 toggleDirection();
@@ -44,7 +45,7 @@ public class TrellisDirectionDialog extends Window {
         add(rotateButton, UI.scale(new Coord(10, y)));
 
         // Confirm button
-        confirmButton = new Button(UI.scale(115), "Confirm") {
+        confirmButton = new Button(UI.scale(115), L10n.get("common.confirm")) {
             @Override
             public void click() {
                 confirm();

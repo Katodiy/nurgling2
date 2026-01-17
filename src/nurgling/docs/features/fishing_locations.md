@@ -1,85 +1,83 @@
-# Fishing Locations Save System
+# @enc.fishing.title
 
-The **Fishing Locations Save** system allows you to save fishing spots, including catch rates, moon phases, time of day, and equipment used.
+@enc.fishing.intro
 
-## How It Works
+## @enc.fishing.how_works_title
 
-The system records detailed fishing data when you save locations:
+@enc.fishing.how_works_intro
 
-1. Fish type and catch percentage
-2. Time of day and moon phase
-3. Map coordinates
-4. Fishing equipment (rod, hook, line, bait)
-5. Timestamp of when location was saved
+1. @enc.fishing.record1
+2. @enc.fishing.record2
+3. @enc.fishing.record3
+4. @enc.fishing.record4
+5. @enc.fishing.record5
 
-## Saving a Fishing Location
+## @enc.fishing.saving_title
 
-When the fishing bite window appears:
+@enc.fishing.saving_intro
 
 ![Fishing Window with Save Button](../images/features/fish-save.png)
 
-Click the save button for the fish to be saved to the persistent file. The location is automatically added to your map and database.
+@enc.fishing.saving_text
 
-## Viewing Saved Locations on Map
+## @enc.fishing.viewing_title
 
-Fishing locations appear as fish icons on both the minimap and full map:
+@enc.fishing.viewing_intro
 
 ![Fish Location Icons on Map](../images/features/fish-location-icons.png)
 
-### Map Features
+### @enc.fishing.map_features_title
 
-- **Fish Icons:** Each saved location displays as a fish icon
-- **Tooltip:** Hover over any icon to see the fish name
-- **Right-Click Details:** Right-click any icon to view full information or delete this location
+- @enc.fishing.map_icons
+- @enc.fishing.map_tooltip
+- @enc.fishing.map_rightclick
 
-## Fish Location Details Window
+## @enc.fishing.details_title
 
-Right-click a fish icon to open the detailed information window:
+@enc.fishing.details_text
 
 ![Fish Location Details Window](../images/features/fish-location-details.png)
 
-## Searching Fishing Locations
+## @enc.fishing.search_title
 
-Access the search feature through the map window (top right corner of full map window):
+@enc.fishing.search_intro
 
 ![Fish Search Button](../images/features/fish-search-menu.png)
 
-Click the **Fish Search** button to open the search interface.
+@enc.fishing.search_click
 
-### Search Filters
+### @enc.fishing.filters_title
 
-**Fish Name Filter:**
-- Select specific fish species from dropdown
-- Choose "Any" to search all fish types
-- Dropdown shows only fish you've saved
+**@enc.fishing.filter_name**
+- @enc.fishing.filter_name1
+- @enc.fishing.filter_name2
+- @enc.fishing.filter_name3
 
-**Moon Phase Filter:**
-- Filter by specific moon phase
-- Choose "Any" to ignore moon phase
+**@enc.fishing.filter_moon**
+- @enc.fishing.filter_moon1
+- @enc.fishing.filter_moon2
 
-**Minimum Percentage:**
-- Enter a number (e.g., "50" for 50% or higher)
-- Filters out locations below this catch rate
-- Leave at "0" to show all percentages
+**@enc.fishing.filter_percent**
+- @enc.fishing.filter_percent1
+- @enc.fishing.filter_percent2
+- @enc.fishing.filter_percent3
 
-### Using Search Results
+### @enc.fishing.results_title
 
-1. Set your desired filters
-2. Click **Search** button
-3. Results appear showing: `[Fish Name] - [Percentage] - [Moon Phase] @ [Time]`
-4. Example: `Salmon - 87% - Full Moon @ 12:45`
-5. **Click any result** to center the map on that location
+1. @enc.fishing.results1
+2. @enc.fishing.results2
+3. @enc.fishing.results3
+4. @enc.fishing.results4
+5. @enc.fishing.results5
 
-This makes it easy to find the best fishing spots for specific conditions.
+@enc.fishing.results_note
 
-## Storage Location
+## @enc.fishing.storage_title
 
-Fishing location data is saved to:
+@enc.fishing.storage_path
 
-%APPDATA%/Haven and Hearth/fish_locations.nurgling.json
-
-### Data Persistence
-- Locations persist across game sessions
-- Data includes full history with timestamps
-- Back up this file to preserve your fishing database
-- Share with friends by copying the JSON file
+### @enc.fishing.persistence_title
+- @enc.fishing.persist1
+- @enc.fishing.persist2
+- @enc.fishing.persist3
+- @enc.fishing.persist4

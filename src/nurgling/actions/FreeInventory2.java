@@ -3,7 +3,6 @@ package nurgling.actions;
 import haven.WItem;
 import nurgling.NGItem;
 import nurgling.NGameUI;
-import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.areas.NContext;
 import nurgling.tasks.GetItems;

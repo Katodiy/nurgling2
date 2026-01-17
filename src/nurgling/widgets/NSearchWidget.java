@@ -66,7 +66,7 @@ public class NSearchWidget extends Widget {
                 helpwnd.show();
             }
         };
-        help.settip(Resource.remote().loadwait("nurgling/hud/buttons/search/u").flayer(Resource.tooltip).t);
+        help.settip(Resource.remote().loadwait("nurgling/hud/buttons/search/u").flayer(Resource.tooltip).text());
         save = new IButton(ssearchbi[0], ssearchbi[1], ssearchbi[2])
         {
             @Override
@@ -80,7 +80,7 @@ public class NSearchWidget extends Widget {
                 }
             }
         };
-        save.settip(Resource.remote().loadwait("nurgling/hud/buttons/ssearch/u").flayer(Resource.tooltip).t);
+        save.settip(Resource.remote().loadwait("nurgling/hud/buttons/ssearch/u").flayer(Resource.tooltip).text());
         list = new ICheckBox(lsearchbi[0], lsearchbi[1], lsearchbi[2], lsearchbi[3])
         {
             @Override
@@ -88,7 +88,7 @@ public class NSearchWidget extends Widget {
                 super.changed(val);
             }
         };
-        list.settip(Resource.remote().loadwait("nurgling/hud/buttons/lsearch/u").flayer(Resource.tooltip).t);
+        list.settip(Resource.remote().loadwait("nurgling/hud/buttons/lsearch/u").flayer(Resource.tooltip).text());
         tpos_y = searchF.sz.y / 2 - help.sz.y / 2;
         add(help, new Coord(0, tpos_y));
         add(save, new Coord(0, tpos_y));
@@ -144,7 +144,7 @@ public class NSearchWidget extends Widget {
 
     void initHelp() {
         ArrayList<BufferedImage> imgs = new ArrayList<>();
-        String[] src = Resource.remote().loadwait("nurgling/hud/wnd/search").flayer(Resource.tooltip).t.split("\\|");
+        String[] src = Resource.remote().loadwait("nurgling/hud/wnd/search").flayer(Resource.tooltip).text().split("\\|");
         for (String s : src)
             if (s.contains("$") && !s.contains("$col")) {
                 imgs.add(nfnd.render(s).img);
@@ -222,7 +222,7 @@ public class NSearchWidget extends Widget {
                     write();
                 }
             },this.text.pos("ur").add(UI.scale(5),UI.scale(1) ));
-            remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).t);
+            remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).text());
 
             pack();
         }

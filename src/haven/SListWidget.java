@@ -219,7 +219,7 @@ public abstract class SListWidget<I, W extends Widget> extends Widget {
 
 	    public String text() {
 		Resource.Tooltip name = res.get().layer(Resource.tooltip);
-		return((name == null) ? "???" : name.t);
+		return((name == null) ? "???" : name.text());
 	    }
 	}
 

@@ -742,7 +742,7 @@ public class MapWnd extends Window implements Console.Directory {
 			    Resource.Tooltip tt = res.layer(Resource.tooltip);
 			    if(tt == null)
 				return;
-			    rnm = tt.t;
+			    rnm = tt.text();
 			}
 			double now = Utils.rtime();
 			if(f == 0)

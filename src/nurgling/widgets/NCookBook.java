@@ -11,6 +11,7 @@ import nurgling.actions.ReadJsonAction;
 import nurgling.cookbook.FavoriteRecipeManager;
 import nurgling.cookbook.Recipe;
 import nurgling.cookbook.connection.RecipeHashFetcher;
+import nurgling.i18n.L10n;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -70,7 +71,7 @@ public class NCookBook extends Window {
     static int col6 = UI.scale(1095);  // Energy (расширен)
 
     public NCookBook() {
-        super(UI.scale(new Coord(1300, 550)), "Cook Book");
+        super(UI.scale(new Coord(1300, 550)), L10n.get("cookbook.window_title"));
         statButtons = new ICheckBox[9];
 
         searchF = add(new TextEntry(UI.scale(1290), "") {
@@ -94,12 +95,12 @@ public class NCookBook extends Window {
 
 
         Coord headerPos = new Coord(0, searchF.pos("br").y + UI.scale(35));
-        add(new Label("Name"), new Coord(col1, headerY));
-        add(new Label("Ingredients"), new Coord(col2, headerY));
-        add(new Label("FEP/Hunger"), new Coord(col3, headerY));
-        add(new Label("Total FEP"), new Coord(col4, headerY));
-        add(new Label("Hunger"), new Coord(col5, headerY));
-        add(new Label("Energy"), new Coord(col6, headerY));
+        add(new Label(L10n.get("cookbook.col_name")), new Coord(col1, headerY));
+        add(new Label(L10n.get("cookbook.col_ingredients")), new Coord(col2, headerY));
+        add(new Label(L10n.get("cookbook.col_fep_hunger")), new Coord(col3, headerY));
+        add(new Label(L10n.get("cookbook.col_total_fep")), new Coord(col4, headerY));
+        add(new Label(L10n.get("cookbook.col_hunger")), new Coord(col5, headerY));
+        add(new Label(L10n.get("cookbook.col_energy")), new Coord(col6, headerY));
 
 
         // Кнопки сортировки
@@ -348,7 +349,7 @@ public class NCookBook extends Window {
                 });
             }
         }, new Coord(rl.pos("ur").x - UI.scale(32), searchF.pos("br").y+UI.scale(10)));
-        imp.settip("Import");
+        imp.settip(L10n.get("cookbook.btn_import"));
 
         // Кнопки пагинации
         prev = add(new IButton(Resource.loadsimg("nurgling/hud/buttons/cookbook/left/u"),
@@ -655,7 +656,7 @@ public class NCookBook extends Window {
                 
                 final NCookBook finalCookbook = cookbook;
                 String[] opts = new String[] { 
-                    recipe.isFavorite() ? "Remove from Favorites" : "Add to Favorites"
+                    recipe.isFavorite() ? L10n.get("cookbook.remove_from_favorites") : L10n.get("cookbook.add_to_favorites")
                 };
                 
                 menu = new NFlowerMenu(opts) {

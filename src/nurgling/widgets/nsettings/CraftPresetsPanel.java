@@ -7,6 +7,8 @@ import nurgling.scenarios.CraftPresetManager;
 import nurgling.tools.VSpec;
 import org.json.JSONObject;
 
+import nurgling.i18n.L10n;
+
 import java.awt.image.BufferedImage;
 import java.util.*;
 
@@ -30,8 +32,8 @@ public class CraftPresetsPanel extends Panel {
         int contentWidth = sz.x - margin * 2;
         int listHeight = UI.scale(420);
 
-        add(new Label("Craft Presets:"), new Coord(margin, margin));
-        add(new Label("Save presets from crafting windows using the 'Save' button."),
+        add(new Label(L10n.get("craftpresets.title")), new Coord(margin, margin));
+        add(new Label(L10n.get("craftpresets.hint")),
             new Coord(margin, margin + UI.scale(18)));
 
         int listWidth = contentWidth - margin * 2;
@@ -68,7 +70,7 @@ public class CraftPresetsPanel extends Panel {
         }
 
         if (presets.isEmpty()) {
-            presetListContent.add(new Label("No presets saved yet."), new Coord(margin, UI.scale(10)));
+            presetListContent.add(new Label(L10n.get("craftpresets.no_presets")), new Coord(margin, UI.scale(10)));
         }
 
         presetListContent.pack();
@@ -149,7 +151,7 @@ public class CraftPresetsPanel extends Panel {
         }
 
         // Delete button
-        w.add(new Button(btnW, "Delete", () -> {
+        w.add(new Button(btnW, L10n.get("craftpresets.btn_delete"), () -> {
             CraftPresetManager.getInstance().deletePreset(preset.getId());
             expandedPresets.remove(preset.getId());
             rebuildPresetList();
@@ -160,7 +162,7 @@ public class CraftPresetsPanel extends Panel {
             int detailY = baseHeight + UI.scale(5);
 
             // Inputs
-            StringBuilder inputs = new StringBuilder("Inputs: ");
+            StringBuilder inputs = new StringBuilder(L10n.get("craftpresets.inputs") + " ");
             for (CraftPreset.InputSpec input : preset.getInputs()) {
                 if (inputs.length() > 8) inputs.append(", ");
                 inputs.append(input.getName());
@@ -170,7 +172,7 @@ public class CraftPresetsPanel extends Panel {
             w.add(new Label(inputsStr), new Coord(nameX, detailY));
 
             // Outputs
-            StringBuilder outputs = new StringBuilder("Outputs: ");
+            StringBuilder outputs = new StringBuilder(L10n.get("craftpresets.outputs") + " ");
             for (CraftPreset.OutputSpec output : preset.getOutputs()) {
                 if (outputs.length() > 9) outputs.append(", ");
                 outputs.append(output.getName());

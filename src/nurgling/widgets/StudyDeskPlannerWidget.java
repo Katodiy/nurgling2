@@ -5,6 +5,7 @@ import haven.Button;
 import haven.Label;
 import haven.resutil.Curiosity;
 import nurgling.*;
+import nurgling.i18n.L10n;
 import nurgling.iteminfo.NCuriosity;
 import org.json.*;
 
@@ -46,7 +47,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
     public StudyDeskPlannerWidget() {
         // Width = grid + gap + time panel (200px)
-        super(sqsz.mul(DESK_SIZE).add(UI.scale(160), UI.scale(40)), "Study Desk Planner");
+        super(sqsz.mul(DESK_SIZE).add(UI.scale(160), UI.scale(40)), L10n.get("study.planner_title"));
 
         loadLayout();
         addTimePanel();
@@ -308,7 +309,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
                 Resource res = item.item.getres();
                 if(res.layers(Resource.Tooltip.class) != null) {
                     for(Resource.Tooltip tt : res.layers(Resource.Tooltip.class)) {
-                        return tt.t;
+                        return tt.text();
                     }
                 }
                 return res.name;
@@ -450,7 +451,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
         // Save as Map (will be serialized as proper JSON by NConfig)
         NConfig.set(NConfig.Key.studyDeskLayout, allLayouts);
-        NUtils.getGameUI().msg("Study desk layout saved!", Color.GREEN);
+        NUtils.getGameUI().msg(L10n.get("study.layout_saved"), Color.GREEN);
     }
 
     private void loadLayout() {
@@ -537,7 +538,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
     private void clearLayout() {
         plannedItems.clear();
-        NUtils.getGameUI().msg("Layout cleared!", Color.YELLOW);
+        NUtils.getGameUI().msg(L10n.get("study.layout_cleared"), Color.YELLOW);
     }
 
     @Override
@@ -574,14 +575,14 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         add(timeScrollport, panelPos);
 
         // Add Mental Weight label below the scrollport
-        mentalWeightLabel = new Label("Mental Weight: 0");
+        mentalWeightLabel = new Label(L10n.get("study.mental_weight") + ": 0");
         mentalWeightLabel.setcolor(new Color(255, 192, 255)); // Light purple color
         add(mentalWeightLabel, new Coord(panelPos.x, panelPos.y + scrollHeight + UI.scale(5)));
     }
 
     private void addButtons() {
         // Save button
-        Button saveButton = new Button(UI.scale(60), "Save") {
+        Button saveButton = new Button(UI.scale(60), L10n.get("common.save")) {
             @Override
             public void click() {
                 saveLayout();
@@ -592,7 +593,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         };
 
         // Cancel button
-        Button cancelButton = new Button(UI.scale(60), "Cancel") {
+        Button cancelButton = new Button(UI.scale(60), L10n.get("common.cancel")) {
             @Override
             public void click() {
                 cancelChanges();
@@ -615,7 +616,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         // Restore to original layout
         plannedItems.clear();
         plannedItems.putAll(originalLayout);
-        NUtils.getGameUI().msg("Changes cancelled - layout restored", Color.YELLOW);
+        NUtils.getGameUI().msg(L10n.get("study.changes_cancelled"), Color.YELLOW);
     }
 
     public static class StudyTimePanel extends Widget {
@@ -678,7 +679,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
         private void updateMentalWeight(int mentalWeight) {
             if(parent.mentalWeightLabel != null) {
-                String text = String.format("Mental Weight: %d", mentalWeight);
+                String text = L10n.get("study.mental_weight") + ": " + mentalWeight;
                 parent.mentalWeightLabel.settext(text);
             }
         }

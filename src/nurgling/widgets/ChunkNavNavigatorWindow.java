@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 import nurgling.areas.NArea;
+import nurgling.i18n.L10n;
 import nurgling.navigation.*;
 
 import java.awt.Color;
@@ -21,10 +22,10 @@ public class ChunkNavNavigatorWindow extends Window {
     private final List<NArea> areas = new ArrayList<>();
 
     public ChunkNavNavigatorWindow() {
-        super(new Coord(UI.scale(300), UI.scale(350)), "ChunkNav Navigator");
+        super(new Coord(UI.scale(300), UI.scale(350)), L10n.get("chunknav.title"));
 
         // Title/instructions
-        Widget prev = add(new Label("Select an area to navigate to:"), new Coord(UI.scale(10), UI.scale(5)));
+        Widget prev = add(new Label(L10n.get("chunknav.select_area")), new Coord(UI.scale(10), UI.scale(5)));
 
         // Area list
         refreshAreas();
@@ -38,7 +39,7 @@ public class ChunkNavNavigatorWindow extends Window {
         // Buttons row
         Widget buttonRow = add(new Widget(new Coord(UI.scale(280), UI.scale(30))), prev.pos("bl").add(0, UI.scale(10)));
 
-        navigateButton = buttonRow.add(new Button(UI.scale(100), "Navigate") {
+        navigateButton = buttonRow.add(new Button(UI.scale(100), L10n.get("chunknav.navigate")) {
             @Override
             public void click() {
                 super.click();
@@ -46,7 +47,7 @@ public class ChunkNavNavigatorWindow extends Window {
             }
         }, new Coord(UI.scale(30), 0));
 
-        cancelButton = buttonRow.add(new Button(UI.scale(100), "Cancel") {
+        cancelButton = buttonRow.add(new Button(UI.scale(100), L10n.get("common.cancel")) {
             @Override
             public void click() {
                 super.click();
@@ -55,7 +56,7 @@ public class ChunkNavNavigatorWindow extends Window {
         }, new Coord(UI.scale(150), 0));
 
         // Refresh button
-        add(new Button(UI.scale(80), "Refresh") {
+        add(new Button(UI.scale(80), L10n.get("chunknav.refresh")) {
             @Override
             public void click() {
                 super.click();

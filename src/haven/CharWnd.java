@@ -36,6 +36,7 @@ import haven.resutil.Curiosity;
 import nurgling.NUI;
 
 import static haven.PUtils.*;
+import nurgling.i18n.L10n;
 
 public class CharWnd extends Window {
     public static final RichText.Foundry ifnd = new RichText.Foundry(RichText.ImageSource.res(Resource.remote()), java.awt.font.TextAttribute.FAMILY, "SansSerif", java.awt.font.TextAttribute.SIZE, UI.scale(9)).aa(true);
@@ -303,7 +304,7 @@ public class CharWnd extends Window {
 		if(pag != null)
 		    binfo.add(new ItemInfo.Pagina(this, pag.text));
 		if(!binfo.isEmpty())
-		    binfo.add(new ItemInfo.Name(this, attr.res().get().flayer(Resource.tooltip).t));
+		    binfo.add(new ItemInfo.Name(this, attr.res().get().flayer(Resource.tooltip).text()));
 		this.binfo = binfo;
 	    }
 	    return(this.binfo);
@@ -386,12 +387,12 @@ public class CharWnd extends Window {
 	    }
 
 	    this.addhl(new Coord(tabs.c.x, tabs.c.y + tabs.sz.y + UI.scale(10)), tabs.sz.x,
-		tbbattrtab = new TB("battr", battrtab, "Base Attributes"),
-		tbsattrtab = new TB("sattr", sattrtab, "Abilities"),
-		tbskilltab =new TB("skill", skilltab, "Lore & Skills"),
-		tbfighttab = new TB("fgt",   fighttab, "Martial Arts & Combat Schools"),
-		tbwoundtab = new TB("wound", woundtab, "Health & Wounds"),
-		tbquesttab = new TB("quest", questtab, "Quest Log")
+		tbbattrtab = new TB("battr", battrtab, L10n.get("char.tab.battr")),
+		tbsattrtab = new TB("sattr", sattrtab, L10n.get("char.tab.sattr")),
+		tbskilltab =new TB("skill", skilltab, L10n.get("char.tab.skill")),
+		tbfighttab = new TB("fgt",   fighttab, L10n.get("char.tab.fight")),
+		tbwoundtab = new TB("wound", woundtab, L10n.get("char.tab.wound")),
+		tbquesttab = new TB("quest", questtab, L10n.get("char.tab.quest"))
 	    );
 	}
 

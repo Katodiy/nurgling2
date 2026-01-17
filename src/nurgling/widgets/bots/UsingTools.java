@@ -7,6 +7,7 @@ import haven.Widget.MouseDownEvent;
 import haven.res.lib.itemtex.ItemTex;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.i18n.L10n;
 import nurgling.tools.VSpec;
 import nurgling.widgets.NMakewindow;
 import org.json.JSONObject;
@@ -69,7 +70,7 @@ public class UsingTools extends Widget {
     public static final TexI frame = new TexI(Resource.loadimg("nurgling/hud/iconframe"));
     public UsingTools(ArrayList<Tool> tools, boolean showLabel) {
         this.tools = tools;
-        prev = add(l = new Label("Tool:"));
+        prev = add(l = new Label(L10n.get("tools.label")));
         if(!showLabel)
             l.hide();
         sz = prev.sz.add(0,showLabel?Inventory.sqsz.y:25).add(UI.scale(0,5));

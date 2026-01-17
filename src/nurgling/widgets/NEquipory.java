@@ -4,6 +4,7 @@ import haven.*;
 import haven.res.ui.tt.gast.Gast;
 import haven.res.ui.tt.wear.Wear;
 import nurgling.*;
+import nurgling.i18n.L10n;
 import nurgling.tasks.GetItem;
 import nurgling.tasks.WaitItemSpr;
 import nurgling.tools.NAlias;
@@ -215,9 +216,9 @@ public class NEquipory extends Equipory
         public Object tooltip(Coord c, Widget prev) {
             boolean inQuickBar = isSlotInQuickBar(slotIdx);
             if (inQuickBar) {
-                return "Remove from quick access bar";
+                return L10n.get("equipment.remove_from_quickbar");
             } else {
-                return "Add to quick access bar";
+                return L10n.get("equipment.add_to_quickbar");
             }
         }
     }

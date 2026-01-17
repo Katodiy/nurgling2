@@ -2,19 +2,20 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.NConfig;
+import nurgling.i18n.L10n;
 
 public class FeedClover extends Panel {
 
     boolean tempUseRope = false;
     CheckBox ropeAfterFeeding;
     public FeedClover() {
-        super("Feed Clover");
+        super(L10n.get("feedclover.title"));
 
         int margin = UI.scale(10);
 
-        Widget prev = add(new Label("Feed Clover options:"), new Coord(margin, margin));
+        Widget prev = add(new Label(L10n.get("feedclover.options")), new Coord(margin, margin));
 
-        prev = ropeAfterFeeding = add(new CheckBox("Tie the animal on a rope after feeding it") {
+        prev = ropeAfterFeeding = add(new CheckBox(L10n.get("feedclover.rope_after")) {
             public void set(boolean val) {
                 tempUseRope = val;
                 a = val;

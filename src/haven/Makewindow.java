@@ -102,7 +102,7 @@ public class Makewindow extends Widget {
 		Resource.Tooltip tt = res.get().layer(Resource.tooltip);
 		if(tt == null)
 		    return(null);
-		return(Text.render(tt.t).img);
+		return(Text.render(tt.text()).img);
 	    }
 	    return(ItemInfo.shorttip(info()));
 	}
@@ -113,7 +113,7 @@ public class Makewindow extends Widget {
 		Resource.Tooltip tt = res.get().layer(Resource.tooltip);
 		if(tt == null)
 		    return(null);
-		img = Text.render(tt.t).img;
+		img = Text.render(tt.text()).img;
 	    } else {
 		img = ItemInfo.longtip(info);
 	    }
@@ -378,7 +378,7 @@ public class Makewindow extends Widget {
 	    for(Indir<Resource> qm : qmod) {
 		Coord tsz = qmicon(qm).sz();
 		if(mc.isect(c, tsz))
-		    return(qm.get().flayer(Resource.tooltip).t);
+		    return(qm.get().flayer(Resource.tooltip).text());
 		c = c.add(tsz.x + UI.scale(1), 0);
 	    }
 	}
@@ -387,7 +387,7 @@ public class Makewindow extends Widget {
 	    for(Indir<Resource> tool : tools) {
 		Coord tsz = qmicon(tool).sz();
 		if(mc.isect(c, tsz))
-		    return(tool.get().flayer(Resource.tooltip).t);
+		    return(tool.get().flayer(Resource.tooltip).text());
 		c = c.add(tsz.x + UI.scale(1), 0);
 	    }
 	}

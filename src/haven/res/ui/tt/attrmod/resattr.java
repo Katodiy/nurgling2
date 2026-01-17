@@ -22,6 +22,6 @@ public abstract class resattr implements Attribute {
     }
 
     public String name() {
-	return(res.flayer(Resource.tooltip).t);
+	return(res.flayer(Resource.tooltip).text());
     }
 }

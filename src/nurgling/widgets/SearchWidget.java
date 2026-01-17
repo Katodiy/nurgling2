@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.i18n.L10n;
 import nurgling.overlays.NTexMarker;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -24,14 +25,14 @@ public class SearchWidget extends Window {
 
         input = add(new TextEntry(UI.scale(200), ""), new Coord(margin, margin));
 
-        findBtn = add(new Button(UI.scale(60), "Find") {
+        findBtn = add(new Button(UI.scale(60), L10n.get("search.find")) {
             @Override
             public void click() {
                 doSearch();
             }
         }, input.pos("ur").adds(UI.scale(10), 0));
 
-        cancelBtn = add(new Button(UI.scale(60), "Cancel") {
+        cancelBtn = add(new Button(UI.scale(60), L10n.get("search.cancel")) {
             @Override
             public void click() {
                 cleanupAndHide();

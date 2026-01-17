@@ -5,6 +5,7 @@ import haven.Label;
 import haven.Scrollbar;
 import haven.Window;
 import nurgling.*;
+import nurgling.i18n.L10n;
 import org.json.*;
 
 import javax.swing.*;
@@ -177,7 +178,7 @@ public class BlueprintWidget extends Window
     }
 
     public BlueprintWidget() {
-        super(UI.scale(new Coord(800, 600)), "Blueprint Manager");
+        super(UI.scale(new Coord(800, 600)), L10n.get("blueprint.manager_title"));
         
         // Load blueprints from file only once
         if (!blueprintsLoaded) {
@@ -191,7 +192,7 @@ public class BlueprintWidget extends Window
         Widget prev;
         
         // Blueprint selector
-        Widget firstRow = add(new Label("Blueprint:"), new Coord(UI.scale(10), UI.scale(10)));
+        Widget firstRow = add(new Label(L10n.get("blueprint.blueprint")), new Coord(UI.scale(10), UI.scale(10)));
         int baseY = firstRow.c.y;
         
         prev = add(blueprintSelector = new Dropbox<String>(UI.scale(150), 5, UI.scale(16)) {
@@ -229,7 +230,7 @@ public class BlueprintWidget extends Window
         addBlueprint.settip("Create new blueprint");
         
         // Grid size inputs
-        prev = add(new Label("Grid:"), new Coord(prev.c.x + prev.sz.x + UI.scale(15), baseY));
+        prev = add(new Label(L10n.get("blueprint.grid")), new Coord(prev.c.x + prev.sz.x + UI.scale(15), baseY));
         
         prev = add(widthEntry = new TextEntry(UI.scale(50), String.valueOf(gridWidth)) {
             public void changed() {
@@ -268,7 +269,7 @@ public class BlueprintWidget extends Window
         
         int contentY = UI.scale(45);
         
-        prev = add(new Label("Available Plants:", NStyle.areastitle), 
+        prev = add(new Label(L10n.get("blueprint.plants"), NStyle.areastitle), 
                    new Coord(UI.scale(10), contentY));
         
         treeListPanel = new TreeListPanel(UI.scale(new Coord(180, 500)));

@@ -5,6 +5,7 @@ import haven.Label;
 import haven.Window;
 import nurgling.*;
 import nurgling.conf.*;
+import nurgling.i18n.L10n;
 
 import java.io.*;
 import java.net.URL;
@@ -98,7 +99,7 @@ public class NLoginScreen extends LoginScreen
                     // Compare versions
                     if (line != null && line2 != null && !line2.contains(line))
                     {
-                        Window win = adda(new Window(new Coord(UI.scale(150, 40)), "Attention")
+                        Window win = adda(new Window(new Coord(UI.scale(150, 40)), L10n.get("login.attention"))
                         {
                             @Override
                             public void wdgmsg(String msg, Object... args)
@@ -114,7 +115,7 @@ public class NLoginScreen extends LoginScreen
                             }
                         }, bgc.x, bg.sz().y / 8, 0.5, 0.5);
 
-                        win.add(new Label("New version available!"));
+                        win.add(new Label(L10n.get("login.new_version")));
                     }
                 } finally {
                     // Ensure all resources are properly closed
@@ -439,7 +440,7 @@ public class NLoginScreen extends LoginScreen
                     loginItems.remove(NLoginDataItem.this);
                 }
             });
-            remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).t);
+            remove.settip(Resource.remote().loadwait("nurgling/hud/buttons/removeItem/u").flayer(Resource.tooltip).text());
             pack();
         }
 

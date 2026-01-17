@@ -29,6 +29,7 @@ package haven;
 import haven.render.*;
 import nurgling.*;
 import nurgling.conf.*;
+import nurgling.i18n.L10n;
 import nurgling.widgets.EncyclopediaWindow;
 import nurgling.widgets.NMiniMapWnd;
 import nurgling.widgets.NSettingsWindow;
@@ -98,7 +99,7 @@ public class OptWnd extends Window {
 
 	public VideoPanel(Panel prev) {
 	    super();
-	    back = add(new PButton(UI.scale(200), "Back", 27, prev));
+	    back = add(new PButton(UI.scale(200), L10n.get("opt.back"), 27, prev));
 	}
 
 	public class CPanel extends Widget {
@@ -108,7 +109,7 @@ public class OptWnd extends Window {
 		this.prefs = gprefs;
 		Widget prev;
 		int marg = UI.scale(5);
-		prev = add(new CheckBox("Render shadows") {
+		prev = add(new CheckBox(L10n.get("opt.video.shadows")) {
 			{a = prefs.lshadow.val;}
 
 			public void set(boolean val) {
@@ -122,7 +123,7 @@ public class OptWnd extends Window {
 			    a = val;
 			}
 		    }, Coord.z);
-		prev = add(new Label("Render scale"), prev.pos("bl").adds(0, 5));
+		prev = add(new Label(L10n.get("opt.video.render_scale")), prev.pos("bl").adds(0, 5));
 		{
 		    Label dpy = new Label("");
 		    final int steps = 4;
@@ -147,7 +148,7 @@ public class OptWnd extends Window {
 			   },
 			   dpy);
 		}
-		prev = add(new CheckBox("Vertical sync") {
+		prev = add(new CheckBox(L10n.get("opt.video.vsync")) {
 			{a = prefs.vsync.val;}
 
 			public void set(boolean val) {
@@ -161,7 +162,7 @@ public class OptWnd extends Window {
 			    a = val;
 			}
 		    }, prev.pos("bl").adds(0, 5));
-		prev = add(new Label("Framerate limit (active window)"), prev.pos("bl").adds(0, 5));
+		prev = add(new Label(L10n.get("opt.video.fps_active")), prev.pos("bl").adds(0, 5));
 		{
 		    Label dpy = new Label("");
 		    final int max = 250;
@@ -191,7 +192,7 @@ public class OptWnd extends Window {
 			   },
 			   dpy);
 		}
-		prev = add(new Label("Framerate limit (background window)"), prev.pos("bl").adds(0, 5));
+		prev = add(new Label(L10n.get("opt.video.fps_background")), prev.pos("bl").adds(0, 5));
 		{
 		    Label dpy = new Label("");
 		    final int max = 250;
@@ -221,7 +222,7 @@ public class OptWnd extends Window {
 			   },
 			   dpy);
 		}
-		prev = add(new Label("Lighting mode"), prev.pos("bl").adds(0, 5));
+		prev = add(new Label(L10n.get("opt.video.lighting_mode")), prev.pos("bl").adds(0, 5));
 		{
 		    boolean[] done = {false};
 		    RadioGroup grp = new RadioGroup(this) {
@@ -239,11 +240,11 @@ public class OptWnd extends Window {
 				resetcf();
 			    }
 			};
-		    prev = grp.add("Global", prev.pos("bl").adds(5, 2));
+		    prev = grp.add(L10n.get("opt.video.lighting_global"), prev.pos("bl").adds(5, 2));
 		    prev.settip("Global lighting supports fewer light sources, and scales worse in " +
 				"performance per additional light source, than zoned lighting, but " +
 				"has lower baseline performance requirements.", true);
-		    prev = grp.add("Zoned", prev.pos("bl").adds(0, 2));
+		    prev = grp.add(L10n.get("opt.video.lighting_zoned"), prev.pos("bl").adds(0, 2));
 		    prev.settip("Zoned lighting supports far more light sources than global " +
 				"lighting with better performance, but may have higher performance " +
 				"requirements in cases with few light sources, and may also have " +
@@ -251,7 +252,7 @@ public class OptWnd extends Window {
 		    grp.check(prefs.lightmode.val.ordinal());
 		    done[0] = true;
 		}
-		prev = add(new Label("Light-source limit"), prev.pos("bl").adds(0, 5).x(0));
+		prev = add(new Label(L10n.get("opt.video.light_limit")), prev.pos("bl").adds(0, 5).x(0));
 		{
 		    Label dpy = new Label("");
 		    int val = prefs.maxlights.val, max = 32;
@@ -291,7 +292,7 @@ public class OptWnd extends Window {
 			   },
 			   dpy);
 		}
-		prev = add(new Label("Frame sync mode"), prev.pos("bl").adds(0, 5).x(0));
+		prev = add(new Label(L10n.get("opt.video.sync_mode")), prev.pos("bl").adds(0, 5).x(0));
 		{
 		    boolean[] done = {false};
 		    RadioGroup grp = new RadioGroup(this) {
@@ -306,12 +307,12 @@ public class OptWnd extends Window {
 				}
 			    }
 			};
-		    prev = add(new Label("\u2191 Better performance, worse latency"), prev.pos("bl").adds(5, 2));
-		    prev = grp.add("One-frame overlap", prev.pos("bl").adds(0, 2));
-		    prev = grp.add("Tick overlap", prev.pos("bl").adds(0, 2));
-		    prev = grp.add("CPU-sequential", prev.pos("bl").adds(0, 2));
-		    prev = grp.add("GPU-sequential", prev.pos("bl").adds(0, 2));
-		    prev = add(new Label("\u2193 Worse performance, better latency"), prev.pos("bl").adds(0, 2));
+		    prev = add(new Label(L10n.get("opt.video.sync_better")), prev.pos("bl").adds(5, 2));
+		    prev = grp.add(L10n.get("opt.video.sync_oneframe"), prev.pos("bl").adds(0, 2));
+		    prev = grp.add(L10n.get("opt.video.sync_tick"), prev.pos("bl").adds(0, 2));
+		    prev = grp.add(L10n.get("opt.video.sync_cpu"), prev.pos("bl").adds(0, 2));
+		    prev = grp.add(L10n.get("opt.video.sync_gpu"), prev.pos("bl").adds(0, 2));
+		    prev = add(new Label(L10n.get("opt.video.sync_worse")), prev.pos("bl").adds(0, 2));
 		    grp.check(prefs.syncmode.val.ordinal());
 		    done[0] = true;
 		}
@@ -361,7 +362,7 @@ public class OptWnd extends Window {
 		    );
 		}
 		*/
-		add(new Button(UI.scale(200), "Reset to defaults", false).action(() -> {
+		add(new Button(UI.scale(200), L10n.get("opt.video.reset"), false).action(() -> {
 			    ui.setgprefs(GSettings.defaults());
 			    curcf.destroy();
 			    curcf = null;
@@ -387,13 +388,13 @@ public class OptWnd extends Window {
 
     public class AudioPanel extends Panel {
 	public AudioPanel(Panel back) {
-	    prev = add(new Label("Master audio volume"), 0, 0);
+	prev = add(new Label(L10n.get("opt.audio.master")), 0, 0);
 	    prev = add(new HSlider(UI.scale(200), 0, 1000, (int)(Audio.volume * 1000)) {
 		    public void changed() {
 			Audio.setvolume(val / 1000.0);
 		    }
 		}, prev.pos("bl").adds(0, 2));
-	    prev = add(new Label("Interface sound volume"), prev.pos("bl").adds(0, 15));
+	    prev = add(new Label(L10n.get("opt.audio.interface")), prev.pos("bl").adds(0, 15));
 	    prev = add(new HSlider(UI.scale(200), 0, 1000, 0) {
 		    protected void attach(UI ui) {
 			super.attach(ui);
@@ -403,7 +404,7 @@ public class OptWnd extends Window {
 			ui.audio.aui.setvolume(val / 1000.0);
 		    }
 		}, prev.pos("bl").adds(0, 2));
-	    prev = add(new Label("In-game event volume"), prev.pos("bl").adds(0, 5));
+	    prev = add(new Label(L10n.get("opt.audio.ingame")), prev.pos("bl").adds(0, 5));
 	    prev = add(new HSlider(UI.scale(200), 0, 1000, 0) {
 		    protected void attach(UI ui) {
 			super.attach(ui);
@@ -413,7 +414,7 @@ public class OptWnd extends Window {
 			ui.audio.pos.setvolume(val / 1000.0);
 		    }
 		}, prev.pos("bl").adds(0, 2));
-	    prev = add(new Label("Ambient volume"), prev.pos("bl").adds(0, 5));
+	    prev = add(new Label(L10n.get("opt.audio.ambient")), prev.pos("bl").adds(0, 5));
 	    prev = add(new HSlider(UI.scale(200), 0, 1000, 0) {
 		    protected void attach(UI ui) {
 			super.attach(ui);
@@ -423,7 +424,7 @@ public class OptWnd extends Window {
 			ui.audio.amb.setvolume(val / 1000.0);
 		    }
 		}, prev.pos("bl").adds(0, 2));
-	    prev = add(new Label("Audio latency"), prev.pos("bl").adds(0, 15));
+	    prev = add(new Label(L10n.get("opt.audio.latency")), prev.pos("bl").adds(0, 15));
 	    {
 		Label dpy = new Label("");
 		addhlp(prev.pos("bl").adds(0, 2), UI.scale(5),
@@ -442,7 +443,7 @@ public class OptWnd extends Window {
 		prev.settip("Sets the size of the audio buffer. Smaller sizes are better, " +
 			    "but larger sizes can fix issues with broken sound.", true);
 	    }
-	    add(new PButton(UI.scale(200), "Back", 27, back), prev.pos("bl").adds(0, 30));
+	    add(new PButton(UI.scale(200), L10n.get("opt.back"), 27, back), prev.pos("bl").adds(0, 30));
 	    pack();
 	}
     }
@@ -469,7 +470,7 @@ public class OptWnd extends Window {
 
 
 	public InterfacePanel(Panel back) {
-		Widget prev = add(new Button(200, "Drag Mode"){
+		Widget prev = add(new Button(200, L10n.get("opt.interface.drag_mode")){
 			@Override
 			public void click()
 			{
@@ -482,9 +483,9 @@ public class OptWnd extends Window {
 			}
 		});
 
-		prev = add(new Label("Num. of panels HK (need reboot):"), prev.pos("bl").adds(0, UI.scale(5)));
+		prev = add(new Label(L10n.get("opt.interface.num_panels")), prev.pos("bl").adds(0, UI.scale(5)));
 		prev = add(new NumToolBox(145), prev.pos("bl").adds(0, UI.scale(5)));
-		prev = add(new Label("Camera:"), prev.pos("bl").adds(0, UI.scale(5)));
+		prev = add(new Label(L10n.get("opt.interface.camera")), prev.pos("bl").adds(0, UI.scale(5)));
 		Dropbox cam = add(new Dropbox<String>(UI.scale(92), 5, UI.scale(16)) {
 			@Override
 			protected String listitem(int i) {
@@ -512,7 +513,7 @@ public class OptWnd extends Window {
 		}, prev.pos("ur").adds(5, 0));
 		cam.sel = NMapView.defcam();
 
-		prev = add(new CheckBox("Invert horizontal camera rotation") {
+		prev = add(new CheckBox(L10n.get("opt.interface.invert_hor")) {
 			{a = (Boolean)NConfig.get(NConfig.Key.invert_hor);}
 
 			public void set(boolean val) {
@@ -522,7 +523,7 @@ public class OptWnd extends Window {
 		}, prev.pos("bl").adds(0, UI.scale(5)));
 
 
-		prev = add(new CheckBox("Invert vertical camera rotation") {
+		prev = add(new CheckBox(L10n.get("opt.interface.invert_ver")) {
 			{a = (Boolean)NConfig.get(NConfig.Key.invert_ver);}
 
 			public void set(boolean val) {
@@ -530,7 +531,7 @@ public class OptWnd extends Window {
 				NConfig.set(NConfig.Key.invert_ver,val);
 			}
 		}, prev.pos("bl").adds(0, UI.scale(5)));
-	prev = add(new Label("Interface scale (need restart)"), prev.pos("bl").adds(0, 5));
+	prev = add(new Label(L10n.get("opt.interface.ui_scale")), prev.pos("bl").adds(0, 5));
 	    {
 		Label dpy = new Label("");
 		final double gran = 0.05;
@@ -552,10 +553,10 @@ public class OptWnd extends Window {
 			   },
 		       dpy);
 	    }
-	    prev = add(new Label("Object fine-placement granularity"), prev.pos("bl").adds(0, 5));
+	    prev = add(new Label(L10n.get("opt.interface.placement")), prev.pos("bl").adds(0, 5));
 	    {
-		Label pos = add(new Label("Position"), prev.pos("bl").adds(5, 2));
-		Label ang = add(new Label("Angle"), pos.pos("bl").adds(0, 2));
+		Label pos = add(new Label(L10n.get("opt.interface.placement_pos")), prev.pos("bl").adds(5, 2));
+		Label ang = add(new Label(L10n.get("opt.interface.placement_angle")), pos.pos("bl").adds(0, 2));
 		int x = Math.max(pos.pos("ur").x, ang.pos("ur").x);
 		{
 		    Label dpy = new Label("");
@@ -604,7 +605,7 @@ public class OptWnd extends Window {
 		}
 
 		// UI Opacity Controls
-		prev = add(new Label("UI Opacity:"), prev.pos("bl").adds(0, UI.scale(10)).x(0));
+		prev = add(new Label(L10n.get("opt.interface.ui_opacity")), prev.pos("bl").adds(0, UI.scale(10)).x(0));
 		{
 		    Label opacityLabel = new Label("100%");
 		    HSlider opacitySlider = new HSlider(UI.scale(160), 0, 100, 100) {
@@ -646,8 +647,8 @@ public class OptWnd extends Window {
 		}
 
 		// Background Mode Controls
-		prev = add(new Label("Background Mode:"), prev.pos("bl").adds(0, UI.scale(10)).x(0));
-		CheckBox useSolidBackgroundBox = add(new CheckBox("Use solid color background") {
+		prev = add(new Label(L10n.get("opt.interface.bg_mode")), prev.pos("bl").adds(0, UI.scale(10)).x(0));
+		CheckBox useSolidBackgroundBox = add(new CheckBox(L10n.get("opt.interface.bg_solid")) {
 		    @Override
 		    public void set(boolean val) {
 			super.set(val);
@@ -668,7 +669,7 @@ public class OptWnd extends Window {
 		}, prev.pos("bl").adds(0, UI.scale(5)).x(0));
 
 		// Background Color Widget
-		nurgling.widgets.NColorWidget backgroundColorWidget = add(new nurgling.widgets.NColorWidget("Background") {
+		nurgling.widgets.NColorWidget backgroundColorWidget = add(new nurgling.widgets.NColorWidget(L10n.get("opt.interface.bg_color")) {
 		    @Override
 		    public void tick(double dt) {
 			super.tick(dt);
@@ -689,7 +690,7 @@ public class OptWnd extends Window {
 		prev = backgroundColorWidget;
 		
 		// Button Style Controls
-		prev = add(new Label("Button Style:"), prev.pos("bl").adds(0, UI.scale(10)).x(0));
+		prev = add(new Label(L10n.get("opt.interface.button_style")), prev.pos("bl").adds(0, UI.scale(10)).x(0));
 		Dropbox<String> buttonStyleDropbox = add(new Dropbox<String>(UI.scale(160), 4, UI.scale(16)) {
 		    private final String[] styles = {"Classic", "Alternative", "Alternative 2", "Alternative 3"};
 		    private final String[] styleKeys = {"tbtn", "tbtn2", "tbtn3", "tbtn4"};
@@ -746,7 +747,7 @@ public class OptWnd extends Window {
 		}, prev.pos("bl").adds(0, UI.scale(5)).x(0));
 		prev = buttonStyleDropbox;
 	    }
-	    add(new PButton(UI.scale(200), "Back", 27, back), prev.pos("bl").adds(0, 30).x(0));
+	    add(new PButton(UI.scale(200), L10n.get("opt.back"), 27, back), prev.pos("bl").adds(0, 30).x(0));
 	    pack();
 	}
     }
@@ -767,71 +768,71 @@ public class OptWnd extends Window {
 	    Widget cont = scroll.cont;
 	    Widget prev;
 	    int y = 0;
-	    y = cont.adda(new Label("Main menu"), cont.sz.x / 2, y, 0.5, 0.0).pos("bl").adds(0, 5).y;
-	    y = addbtn(cont, "Inventory", GameUI.kb_inv, y);
-	    y = addbtn(cont, "Equipment", GameUI.kb_equ, y);
-	    y = addbtn(cont, "Character sheet", GameUI.kb_chr, y);
-	    y = addbtn(cont, "Map window", GameUI.kb_map, y);
-	    y = addbtn(cont, "Kith & Kin", GameUI.kb_bud, y);
-	    y = addbtn(cont, "Options", GameUI.kb_opt, y);
-	    y = addbtn(cont, "Search actions", GameUI.kb_srch, y);
-	    y = addbtn(cont, "Find object", GameUI.kb_searchWidget, y);
-	    y = addbtn(cont, "Quick chat", ChatUI.kb_quick, y);
-	    y = addbtn(cont, "Take screenshot", GameUI.kb_shoot, y);
-	    y = addbtn(cont, "Minimap icons", GameUI.kb_ico, y);
-	    y = addbtn(cont, "Toggle UI", GameUI.kb_hide, y);
-	    y = addbtn(cont, "Log out", GameUI.kb_logout, y);
-	    y = addbtn(cont, "Switch character", GameUI.kb_switchchr, y);
-	    y = addbtn(cont, "Instant Log Out", GameUI.kb_instantLogout, y);
-	    y = cont.adda(new Label("Map options"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
-	    y = addbtn(cont, "Display claims", GameUI.kb_claim, y);
-	    y = addbtn(cont, "Display villages", GameUI.kb_vil, y);
-	    y = addbtn(cont, "Display realms", GameUI.kb_rlm, y);
-	    y = addbtn(cont, "Display grid-lines", MapView.kb_grid, y);
-	    y = cont.adda(new Label("Camera control"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
-	    y = addbtn(cont, "Rotate left", MapView.kb_camleft, y);
-	    y = addbtn(cont, "Rotate right", MapView.kb_camright, y);
-	    y = addbtn(cont, "Zoom in", MapView.kb_camin, y);
-	    y = addbtn(cont, "Zoom out", MapView.kb_camout, y);
-	    y = addbtn(cont, "Reset", MapView.kb_camreset, y);
-	    y = cont.adda(new Label("Map window"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
-	    y = addbtn(cont, "Reset view", MapWnd.kb_home, y);
-	    y = addbtn(cont, "Place marker", MapWnd.kb_mark, y);
-	    y = addbtn(cont, "Toggle markers", MapWnd.kb_hmark, y);
-	    y = addbtn(cont, "Compact mode", MapWnd.kb_compact, y);
-	    y = cont.adda(new Label("Walking speed"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
-	    y = addbtn(cont, "Increase speed", Speedget.kb_speedup, y);
-	    y = addbtn(cont, "Decrease speed", Speedget.kb_speeddn, y);
+	    y = cont.adda(new Label(L10n.get("opt.keybind.main_menu")), cont.sz.x / 2, y, 0.5, 0.0).pos("bl").adds(0, 5).y;
+	    y = addbtn(cont, L10n.get("opt.keybind.inventory"), GameUI.kb_inv, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.equipment"), GameUI.kb_equ, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.character"), GameUI.kb_chr, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.map"), GameUI.kb_map, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.kith_kin"), GameUI.kb_bud, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.options"), GameUI.kb_opt, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.search_actions"), GameUI.kb_srch, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.find_object"), GameUI.kb_searchWidget, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.quick_chat"), ChatUI.kb_quick, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.screenshot"), GameUI.kb_shoot, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.minimap_icons"), GameUI.kb_ico, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.toggle_ui"), GameUI.kb_hide, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.logout"), GameUI.kb_logout, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.switch_char"), GameUI.kb_switchchr, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.instant_logout"), GameUI.kb_instantLogout, y);
+	    y = cont.adda(new Label(L10n.get("opt.keybind.map_options")), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
+	    y = addbtn(cont, L10n.get("opt.keybind.claims"), GameUI.kb_claim, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.villages"), GameUI.kb_vil, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.realms"), GameUI.kb_rlm, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.grid"), MapView.kb_grid, y);
+	    y = cont.adda(new Label(L10n.get("opt.keybind.camera")), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
+	    y = addbtn(cont, L10n.get("opt.keybind.cam_left"), MapView.kb_camleft, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.cam_right"), MapView.kb_camright, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.cam_in"), MapView.kb_camin, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.cam_out"), MapView.kb_camout, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.cam_reset"), MapView.kb_camreset, y);
+	    y = cont.adda(new Label(L10n.get("opt.keybind.map_wnd")), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
+	    y = addbtn(cont, L10n.get("opt.keybind.map_reset"), MapWnd.kb_home, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.map_marker"), MapWnd.kb_mark, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.map_toggle"), MapWnd.kb_hmark, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.map_compact"), MapWnd.kb_compact, y);
+	    y = cont.adda(new Label(L10n.get("opt.keybind.speed")), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
+	    y = addbtn(cont, L10n.get("opt.keybind.speed_up"), Speedget.kb_speedup, y);
+	    y = addbtn(cont, L10n.get("opt.keybind.speed_down"), Speedget.kb_speeddn, y);
 	    for(int i = 0; i < 4; i++)
-		y = addbtn(cont, String.format("Set speed %d", i + 1), Speedget.kb_speeds[i], y);
-	    y = cont.adda(new Label("Combat actions"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
+		y = addbtn(cont, String.format(L10n.get("opt.keybind.speed_set"), i + 1), Speedget.kb_speeds[i], y);
+	    y = cont.adda(new Label(L10n.get("opt.keybind.combat")), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
 	    for(int i = 0; i < Fightsess.kb_acts.length; i++)
-		y = addbtn(cont, String.format("Combat action %d", i + 1), Fightsess.kb_acts[i], y);
-	    y = addbtn(cont, "Switch targets", Fightsess.kb_relcycle, y);
-		y = cont.adda(new Label("Special ability"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
-		y = addbtn(cont, "Quick action", NMapView.kb_quickaction, y);
-		y = addbtn(cont, "Quick action (Alt.)", NMapView.kb_quickignaction, y);
-		y = addbtn(cont, "Show/hide nature objects", NMiniMapWnd.kb_nature, y);
-		y = addbtn(cont, "Night vision", NMiniMapWnd.kb_night, y);
+		y = addbtn(cont, String.format(L10n.get("opt.keybind.combat_action"), i + 1), Fightsess.kb_acts[i], y);
+	    y = addbtn(cont, L10n.get("opt.keybind.combat_switch"), Fightsess.kb_relcycle, y);
+		y = cont.adda(new Label(L10n.get("opt.keybind.special")), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
+		y = addbtn(cont, L10n.get("opt.keybind.quick_action"), NMapView.kb_quickaction, y);
+		y = addbtn(cont, L10n.get("opt.keybind.quick_action_alt"), NMapView.kb_quickignaction, y);
+		y = addbtn(cont, L10n.get("opt.keybind.nature"), NMiniMapWnd.kb_nature, y);
+		y = addbtn(cont, L10n.get("opt.keybind.night"), NMiniMapWnd.kb_night, y);
 //		y = addbtn(cont, "Player grid box", NMapView.kb_displaypbox, y);
 //		y = addbtn(cont, "Player FOV box", NMapView.kb_displayfov, y);
 //		y = addbtn(cont, "Grid box", NMapView.kb_displaygrid, y);
-		y = addbtn(cont, "Toggle bounding boxes", NMapView.kb_togglebb, y);
-		y = addbtn(cont, "Clear damage overlays", NMapView.kb_cleardmg, y);
+		y = addbtn(cont, L10n.get("opt.keybind.toggle_bb"), NMapView.kb_togglebb, y);
+		y = addbtn(cont, L10n.get("opt.keybind.clear_dmg"), NMapView.kb_cleardmg, y);
 
-		y = cont.adda(new Label("Tool belt"), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
+		y = cont.adda(new Label(L10n.get("opt.keybind.belt")), cont.sz.x / 2, y + UI.scale(10), 0.5, 0.0).pos("bl").adds(0, 5).y;
 		for(int i = 0 ; i < (Integer)NConfig.get(NConfig.Key.numbelts); i++)
 		{
 			for( int j = 0; j < 12 ; j ++)
 			{
-				y = addbtn(cont, "Belt#" + i +" button" + j, NToolBeltProp.get("belt"+i).getKb().get(j), y);
+				y = addbtn(cont, String.format(L10n.get("opt.keybind.belt_button"), i, j), NToolBeltProp.get("belt"+i).getKb().get(j), y);
 			}
 		}
 
 
 
 	    prev = adda(new PointBind(UI.scale(200)), scroll.pos("bl").adds(0, 10).x(scroll.sz.x / 2), 0.5, 0.0);
-	    prev = adda(new PButton(UI.scale(200), "Back", 27, back), prev.pos("bl").adds(0, 10).x(scroll.sz.x / 2), 0.5, 0.0);
+	    prev = adda(new PButton(UI.scale(200), L10n.get("opt.back"), 27, back), prev.pos("bl").adds(0, 10).x(scroll.sz.x / 2), 0.5, 0.0);
 	    pack();
 	}
 
@@ -876,13 +877,12 @@ public class OptWnd extends Window {
 
 
     public static class PointBind extends Button implements CursorQuery.Handler {
-	public static final String msg = "Bind other elements...";
 	public static final Resource curs = Resource.local().loadwait("gfx/hud/curs/wrench");
 	private UI.Grab mg, kg;
 	private KeyBinding cmd;
 
 	public PointBind(int w) {
-	    super(w, msg, false);
+	    super(w, L10n.get("opt.keybind.bind_other"), false);
 	    tooltip = RichText.render("Bind a key to an element not listed above, such as an action-menu " +
 				      "button. Click the element to bind, and then press the key to bind to it. " +
 				      "Right-click to stop rebinding.",
@@ -891,12 +891,12 @@ public class OptWnd extends Window {
 
 	public void click() {
 	    if(mg == null) {
-		change("Click element...");
+		change(L10n.get("opt.keybind.click_element"));
 		mg = ui.grabmouse(this);
 	    } else if(kg != null) {
 		kg.remove();
 		kg = null;
-		change(msg);
+		change(L10n.get("opt.keybind.bind_other"));
 	    }
 	}
 
@@ -935,7 +935,7 @@ public class OptWnd extends Window {
 	    if(ev.b == 3) {
 		mg.remove();
 		mg = null;
-		change(msg);
+		change(L10n.get("opt.keybind.bind_other"));
 		return(true);
 	    }
 	    return(false);
@@ -950,7 +950,7 @@ public class OptWnd extends Window {
 		    mg.remove();
 		    mg = null;
 		    kg = ui.grabkeys(this);
-		    change("Press key...");
+		    change(L10n.get("opt.keybind.press_key"));
 		} else {
 		    this.cmd = null;
 		}
@@ -972,7 +972,7 @@ public class OptWnd extends Window {
 		kg.remove();
 		kg = null;
 		cmd = null;
-		change("Click another element...");
+		change(L10n.get("opt.keybind.click_another"));
 		mg = ui.grabmouse(this);
 	    }
 	    return(true);
@@ -993,28 +993,28 @@ public class OptWnd extends Window {
 	int y = 0;
 	int x = 0;
 	Widget prev;
-	y = (prev = main.add(new PButton(UI.scale(200), "Interface settings", 'v', iface), 0, y)).pos("bl").adds(0, 5).y;
+	y = (prev = main.add(new PButton(UI.scale(200), L10n.get("opt.main.interface"), 'v', iface), 0, y)).pos("bl").adds(0, 5).y;
 	x = prev.pos("ur").adds(10, 0).x;
-	main.add(new PButton(UI.scale(200), "Nurgling Settings", 'k', nqolwnd), x, prev.pos("ur").y);
-	y = (prev = main.add(new PButton(UI.scale(200), "Video settings", 'v', video), 0, y)).pos("bl").adds(0, 5).y;
-	y = (prev = main.add(new PButton(UI.scale(200), "Audio settings", 'a', audio), 0, y)).pos("bl").adds(0, 5).y;
-	y = (prev = main.add(new PButton(UI.scale(200), "Keybindings", 'k', keybind), 0, y)).pos("bl").adds(0, 5).y;
+	main.add(new PButton(UI.scale(200), L10n.get("opt.main.nurgling"), 'k', nqolwnd), x, prev.pos("ur").y);
+	y = (prev = main.add(new PButton(UI.scale(200), L10n.get("opt.main.video"), 'v', video), 0, y)).pos("bl").adds(0, 5).y;
+	y = (prev = main.add(new PButton(UI.scale(200), L10n.get("opt.main.audio"), 'a', audio), 0, y)).pos("bl").adds(0, 5).y;
+	y = (prev = main.add(new PButton(UI.scale(200), L10n.get("opt.main.keybind"), 'k', keybind), 0, y)).pos("bl").adds(0, 5).y;
 
 	y += UI.scale(60);
 	if(gopts) {
 	    if((SteamStore.steamsvc.get() != null) && (Steam.get() != null)) {
-		y = main.add(new Button(UI.scale(200), "Visit store", false).action(() -> {
+		y = main.add(new Button(UI.scale(200), L10n.get("opt.main.store"), false).action(() -> {
 			    SteamStore.launch(ui.sess);
 		}), 0, y).pos("bl").adds(0, 5).y;
 	    }
-	    y = (prev = main.add(new Button(UI.scale(200), "Switch character", false).action(() -> {
+	    y = (prev = main.add(new Button(UI.scale(200), L10n.get("opt.main.switch_char"), false).action(() -> {
 			getparent(GameUI.class).act("lo", "cs");
 	    }), 0, y)).pos("bl").adds(0, 5).y;
-	    main.add(new Button(UI.scale(200), "Log out", false).action(() -> {
+	    main.add(new Button(UI.scale(200), L10n.get("opt.main.logout"), false).action(() -> {
 			getparent(GameUI.class).act("lo");
 	    }), x, prev.pos("ur").y);
 	}
-	y = main.add(new Button(UI.scale(200), "Close", false).action(() -> {
+	y = main.add(new Button(UI.scale(200), L10n.get("opt.close"), false).action(() -> {
 		    OptWnd.this.hide();
 	}), x/2, y).pos("bl").adds(0, 5).y;
 	this.main.pack();

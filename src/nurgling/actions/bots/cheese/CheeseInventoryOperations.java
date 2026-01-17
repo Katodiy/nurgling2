@@ -57,13 +57,14 @@ public class CheeseInventoryOperations {
     
     /**
      * Check if inventory has space for slicing operations
-     * Slicing requires space for tray + up to 5 cheese pieces (7 single slots total)
-     * 
+     * Requires space for: tray transfer (2 slots) + slicing output (7 slots) = 9 total
+     * This accounts for the tray being transferred before sliceCheese checks space again
+     *
      * @param gui The game UI
      * @return true if inventory has enough space for slicing
      */
     public static boolean hasSpaceForSlicing(NGameUI gui) throws InterruptedException {
         int availableSlots = gui.getInventory().getNumberFreeCoord(CheeseConstants.SINGLE_SLOT_SIZE);
-        return availableSlots >= CheeseConstants.SLICING_INVENTORY_REQUIREMENT && gui.getInventory().getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE) > 1;
+        return availableSlots >= CheeseConstants.SLICING_TOTAL_SPACE_REQUIREMENT && gui.getInventory().getNumberFreeCoord(CheeseConstants.CHEESE_TRAY_SIZE) > 1;
     }
 }

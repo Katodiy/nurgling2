@@ -3,6 +3,7 @@ package nurgling.widgets.nsettings;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.conf.NDiscordNotification;
+import nurgling.i18n.L10n;
 
 public class DiscordSettings extends Panel {
     
@@ -12,29 +13,29 @@ public class DiscordSettings extends Panel {
     private Button testButton;
     
     public DiscordSettings() {
-        super("Discord Notifications");
+        super(L10n.get("discord.title"));
         
         int y = UI.scale(40);
         
-        add(new Label("Configure Discord webhook for bot notifications"), UI.scale(10), y);
+        add(new Label(L10n.get("discord.description")), UI.scale(10), y);
         y += UI.scale(30);
         
-        add(new Label("Webhook URL:"), UI.scale(10), y);
+        add(new Label(L10n.get("discord.webhook_url")), UI.scale(10), y);
         y += UI.scale(20);
         webhookUrlEntry = add(new TextEntry(UI.scale(560), ""), UI.scale(10), y);
         y += UI.scale(30);
         
-        add(new Label("Webhook Username (optional):"), UI.scale(10), y);
+        add(new Label(L10n.get("discord.webhook_username")), UI.scale(10), y);
         y += UI.scale(20);
         webhookUsernameEntry = add(new TextEntry(UI.scale(560), ""), UI.scale(10), y);
         y += UI.scale(30);
         
-        add(new Label("Webhook Icon URL (optional):"), UI.scale(10), y);
+        add(new Label(L10n.get("discord.webhook_icon")), UI.scale(10), y);
         y += UI.scale(20);
         webhookIconEntry = add(new TextEntry(UI.scale(560), ""), UI.scale(10), y);
         y += UI.scale(30);
         
-        testButton = add(new Button(UI.scale(150), "Test Notification") {
+        testButton = add(new Button(UI.scale(150), L10n.get("discord.test_button")) {
             @Override
             public void click() {
                 testNotification();
@@ -48,7 +49,7 @@ public class DiscordSettings extends Panel {
         String webhookUrl = webhookUrlEntry.text().trim();
         
         if (webhookUrl.isEmpty()) {
-            ui.gui.error("Please enter webhook URL first!");
+            ui.gui.error(L10n.get("discord.error_no_url"));
             return;
         }
         
@@ -60,7 +61,7 @@ public class DiscordSettings extends Panel {
         );
         
         ui.gui.msgToDiscord(settings, "Test notification from Nurgling2 - Discord integration is working!");
-        ui.gui.msg("Test notification sent to Discord");
+        ui.gui.msg(L10n.get("discord.test_sent"));
     }
     
     @Override
@@ -94,6 +95,6 @@ public class DiscordSettings extends Panel {
         NDiscordNotification.set(settings);
         NConfig.needUpdate();
         
-        ui.gui.msg("Discord settings saved");
+        ui.gui.msg(L10n.get("discord.saved"));
     }
 }

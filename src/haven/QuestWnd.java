@@ -34,6 +34,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import static haven.CharWnd.*;
 import static haven.PUtils.*;
+import nurgling.i18n.L10n;
 
 public class QuestWnd extends Widget {
     public final Widget questbox;
@@ -70,7 +71,7 @@ public class QuestWnd extends Widget {
 	public String title() {
 	    if(title != null)
 		return(title);
-	    return(res.get().flayer(Resource.tooltip).t);
+	    return(res.get().flayer(Resource.tooltip).text());
 	}
 
 	public static class Condition {
@@ -86,8 +87,8 @@ public class QuestWnd extends Widget {
 	    }
 	}
 
-	private static final Tex qcmp = catf.render("Quest completed").tex();
-	private static final Tex qfail = failf.render("Quest failed").tex();
+	private static final Tex qcmp = catf.render(L10n.get("char.quest.completed")).tex();
+	private static final Tex qfail = failf.render(L10n.get("char.quest.failed")).tex();
 	public void done(GameUI parent) {
 	    parent.add(new Widget() {
 		    double a = 0.0;
@@ -198,7 +199,7 @@ public class QuestWnd extends Widget {
 	    public String title() {
 		if(title != null)
 		    return(title);
-		return(res.get().flayer(Resource.tooltip).t);
+		return(res.get().flayer(Resource.tooltip).text());
 	    }
 
 	    public Condition[] conds() {
@@ -638,7 +639,7 @@ public class QuestWnd extends Widget {
     public QuestWnd() {
 	Widget prev;
 
-	prev = add(CharWnd.settip(new Img(catf.render("Quest Log").tex()), "gfx/hud/chr/tips/quests"), new Coord(0, 0));
+	prev = add(CharWnd.settip(new Img(catf.render(L10n.get("char.quest.title")).tex()), "gfx/hud/chr/tips/quests"), new Coord(0, 0));
 	questbox = add(new Widget(new Coord(attrw, height)) {
 		public void draw(GOut g) {
 		    g.chcolor(0, 0, 0, 128);
@@ -666,8 +667,8 @@ public class QuestWnd extends Widget {
 	}
 	lists.pack();
 	addhlp(lists.c.add(0, lists.sz.y + UI.scale(5)), UI.scale(5), lists.sz.x,
-		     lists.new TabButton(0, "Current",   cqst),
-		     lists.new TabButton(0, "Completed", dqst));
+		     lists.new TabButton(0, L10n.get("char.quest.tab_current"),   cqst),
+		     lists.new TabButton(0, L10n.get("char.quest.tab_completed"), dqst));
 	pack();
     }
 

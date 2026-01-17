@@ -4,6 +4,7 @@ import haven.*;
 import haven.Locked;
 import nurgling.TreeLocation;
 import nurgling.TreeLocationService;
+import nurgling.i18n.L10n;
 import nurgling.NGameUI;
 
 import java.util.*;
@@ -27,7 +28,7 @@ public class TreeSearchWindow extends Window {
     private static final int WINDOW_HEIGHT = UI.scale(400);
 
     public TreeSearchWindow(NGameUI gui) {
-        super(new Coord(WINDOW_WIDTH, WINDOW_HEIGHT), "Tree Location Search", true);
+        super(new Coord(WINDOW_WIDTH, WINDOW_HEIGHT), L10n.get("tree.search_title"), true);
         this.gui = gui;
         this.treeService = gui.treeLocationService;
 
@@ -38,12 +39,12 @@ public class TreeSearchWindow extends Window {
         int lineHeight = UI.scale(30);
 
         // Tree type filter
-        add(new Label("Tree Type:"), labelX, y + UI.scale(5));
+        add(new Label(L10n.get("tree.type")), labelX, y + UI.scale(5));
         refreshTreeTypeDropdown();
         y += lineHeight;
 
         // Search button
-        Button searchBtn = add(new Button(UI.scale(150), "Search") {
+        Button searchBtn = add(new Button(UI.scale(150), L10n.get("common.search")) {
             @Override
             public void click() {
                 performSearch();
@@ -52,7 +53,7 @@ public class TreeSearchWindow extends Window {
         y += lineHeight + UI.scale(10);
 
         // Results list
-        add(new Label("Results:"), labelX, y);
+        add(new Label(L10n.get("common.results")), labelX, y);
         y += UI.scale(25);
 
         Coord resultsSize = new Coord(WINDOW_WIDTH - UI.scale(20), WINDOW_HEIGHT - y - UI.scale(10));

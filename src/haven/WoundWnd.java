@@ -30,6 +30,7 @@ import java.util.*;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import static haven.CharWnd.*;
+import nurgling.i18n.L10n;
 
 public class WoundWnd extends Widget {
     public static final Text.Foundry namef = new Text.Foundry(Text.serif.deriveFont(java.awt.Font.BOLD), 16).aa(true);
@@ -217,7 +218,7 @@ public class WoundWnd extends Widget {
 		loading = false;
 		for(Wound w : wounds) {
 		    try {
-			w.sortkey = w.res.get().flayer(Resource.tooltip).t;
+			w.sortkey = w.res.get().flayer(Resource.tooltip).text();
 		    } catch(Loading l) {
 			w.sortkey = "\uffff";
 			loading = true;
@@ -344,7 +345,7 @@ public class WoundWnd extends Widget {
     public WoundWnd() {
 	Widget prev;
 
-	prev = add(CharWnd.settip(new Img(catf.render("Health & Wounds").tex()), "gfx/hud/chr/tips/wounds"), 0, 0);
+	prev = add(CharWnd.settip(new Img(catf.render(L10n.get("char.wound.title")).tex()), "gfx/hud/chr/tips/wounds"), 0, 0);
 	this.wounds = add(new WoundList(Coord.of(attrw, height)), prev.pos("bl").x(width + UI.scale(5)).add(wbox.btloff()));
 	Frame.around(this, Collections.singletonList(this.wounds));
 	woundbox = add(new Widget(new Coord(attrw, this.wounds.sz.y)) {

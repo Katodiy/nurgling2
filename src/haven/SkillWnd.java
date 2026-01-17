@@ -30,6 +30,7 @@ import java.util.*;
 import java.awt.Color;
 import static haven.CharWnd.*;
 import static haven.PUtils.*;
+import nurgling.i18n.L10n;
 
 public class SkillWnd extends Widget {
     public final SkillGrid skg;
@@ -77,7 +78,7 @@ public class SkillWnd extends Widget {
 	    StringBuilder buf = new StringBuilder();
 	    Resource res = this.res.get();
 	    buf.append("$img[" + res.name + "]\n\n");
-	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).t + "}}\n\n\n");
+	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).text() + "}}\n\n\n");
 	    if(cost > 0)
 		buf.append("Cost: " + cost + "\n\n");
 	    buf.append(res.flayer(Resource.pagina).text);
@@ -87,7 +88,7 @@ public class SkillWnd extends Widget {
 	private Text tooltip = null;
 	public Text tooltip() {
 	    if(tooltip == null)
-		tooltip = Text.render(res.get().flayer(Resource.tooltip).t);
+		tooltip = Text.render(res.get().flayer(Resource.tooltip).text());
 	    return(tooltip);
 	}
     }
@@ -110,7 +111,7 @@ public class SkillWnd extends Widget {
 	    StringBuilder buf = new StringBuilder();
 	    Resource res = this.res.get();
 	    buf.append("$img[" + res.name + "]\n\n");
-	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).t + "}}\n\n\n");
+	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).text() + "}}\n\n\n");
 	    buf.append(res.flayer(Resource.pagina).text);
 	    return(buf.toString());
 	}
@@ -118,7 +119,7 @@ public class SkillWnd extends Widget {
 	private Text tooltip = null;
 	public Text tooltip() {
 	    if(tooltip == null)
-		tooltip = Text.render(res.get().flayer(Resource.tooltip).t);
+		tooltip = Text.render(res.get().flayer(Resource.tooltip).text());
 	    return(tooltip);
 	}
     }
@@ -139,9 +140,9 @@ public class SkillWnd extends Widget {
 	    StringBuilder buf = new StringBuilder();
 	    Resource res = this.res.get();
 	    buf.append("$img[" + res.name + "]\n\n");
-	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).t + "}}\n\n\n");
+	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).text() + "}}\n\n\n");
 	    if(score > 0)
-		buf.append("Experience points: " + Utils.thformat(score) + "\n\n");
+		buf.append(String.format(L10n.get("char.skill.exp_points"), Utils.thformat(score)) + "\n\n");
 	    buf.append(res.flayer(Resource.pagina).text);
 	    return(buf.toString());
 	}
@@ -149,7 +150,7 @@ public class SkillWnd extends Widget {
 	private Text tooltip = null;
 	public Text tooltip() {
 	    if(tooltip == null)
-		tooltip = Text.render(res.get().flayer(Resource.tooltip).t);
+		tooltip = Text.render(res.get().flayer(Resource.tooltip).text());
 	    return(tooltip);
 	}
     }
@@ -160,8 +161,8 @@ public class SkillWnd extends Widget {
 
 	public SkillGrid(Coord sz) {
 	    super(sz);
-	    nsk = new Group(UI.scale(40, 40), new Coord(-1, 5), "Available Skills", Collections.emptyList());
-	    csk = new Group(UI.scale(40, 40), new Coord(-1, 5), "Known Skills", Collections.emptyList());
+	    nsk = new Group(UI.scale(40, 40), new Coord(-1, 5), L10n.get("char.skill.available"), Collections.emptyList());
+	    csk = new Group(UI.scale(40, 40), new Coord(-1, 5), L10n.get("char.skill.known"), Collections.emptyList());
 	    itemtooltip = Skill::tooltip;
 	}
 
@@ -179,7 +180,7 @@ public class SkillWnd extends Widget {
 	private void sksort(List<Skill> skills) {
 	    for(Skill sk : skills) {
 		try {
-		    sk.sortkey = sk.res.get().flayer(Resource.tooltip).t;
+		    sk.sortkey = sk.res.get().flayer(Resource.tooltip).text();
 		} catch(Loading l) {
 		    sk.sortkey = sk.nm;
 		    loading = true;
@@ -215,16 +216,16 @@ public class SkillWnd extends Widget {
 
 	public CredoGrid(Coord sz) {
 	    super(sz);
-	    pcrc = new Img(GridList.dcatf.render("Pursuing").tex());
-	    ncrc = new Img(GridList.dcatf.render("Credos Available").tex());
-	    ccrc = new Img(GridList.dcatf.render("Credos Acquired").tex());
-	    pbtn = new Button(btnw, "Pursue", false) {
+	    pcrc = new Img(GridList.dcatf.render(L10n.get("char.skill.pursuing")).tex());
+	    ncrc = new Img(GridList.dcatf.render(L10n.get("char.skill.credos_available")).tex());
+	    ccrc = new Img(GridList.dcatf.render(L10n.get("char.skill.credos_acquired")).tex());
+	    pbtn = new Button(btnw, L10n.get("char.skill.pursue"), false) {
 		    public void click() {
 			if(sel != null)
 			    credo.wdgmsg("crpursue", sel.nm);
 		    }
 		};
-	    qbtn = new Button(btnw, "Show quest", false) {
+	    qbtn = new Button(btnw, L10n.get("char.skill.show_quest"), false) {
 		    public void click() {
 			CharWnd chr = getparent(CharWnd.class);
 			chr.quest.wdgmsg("qsel", pqid);
@@ -245,7 +246,7 @@ public class SkillWnd extends Widget {
 	    CredoImg(Credo cr) {
 		super(crtex(cr));
 		this.cr = cr;
-		this.tooltip = Text.render(cr.res.get().flayer(Resource.tooltip).t);
+		this.tooltip = Text.render(cr.res.get().flayer(Resource.tooltip).text());
 	    }
 
 	    public void draw(GOut g) {
@@ -275,7 +276,7 @@ public class SkillWnd extends Widget {
 	}
 
 	private void sort(List<Credo> buf) {
-	    Collections.sort(buf, Comparator.comparing(cr -> cr.res.get().flayer(Resource.tooltip).t));
+	    Collections.sort(buf, Comparator.comparing(cr -> cr.res.get().flayer(Resource.tooltip).text()));
 	}
 
 	private void update() {
@@ -287,8 +288,8 @@ public class SkillWnd extends Widget {
 		cont.add(pcrc, m, y);
 		y += pcrc.sz.y + m;
 		Widget pcrim = cont.add(new CredoImg(pcr), m, y);
-		cont.add(new Label(String.format("Level: %d/%d", pcl, pclt), prsf), pcrim.c.x + pcrim.sz.x + m, y);
-		cont.add(new Label(String.format("Quest: %d/%d", pcql, pcqlt), prsf), pcrim.c.x + pcrim.sz.x + m, y + UI.scale(20));
+		cont.add(new Label(String.format(L10n.get("char.skill.level"), pcl, pclt), prsf), pcrim.c.x + pcrim.sz.x + m, y);
+		cont.add(new Label(String.format(L10n.get("char.skill.quest_progress"), pcql, pcqlt), prsf), pcrim.c.x + pcrim.sz.x + m, y + UI.scale(20));
 		cont.adda(qbtn, pcrim.c.x + pcrim.sz.x + m, y + pcrim.sz.y, 0, 1);
 		y += pcrim.sz.y;
 		y += UI.scale(10);
@@ -301,7 +302,7 @@ public class SkillWnd extends Widget {
 		if(pcr == null) {
 		    cont.add(pbtn, m, y);
 		    if(cost > 0)
-			cont.adda(new Label(String.format("Cost: %,d LP", cost)), pbtn.c.x + pbtn.sz.x + UI.scale(10), pbtn.c.y + (pbtn.sz.y / 2), 0, 0.5);
+			cont.adda(new Label(String.format(L10n.get("char.skill.credo_cost"), cost)), pbtn.c.x + pbtn.sz.x + UI.scale(10), pbtn.c.y + (pbtn.sz.y / 2), 0, 0.5);
 		    y += pbtn.sz.y;
 		}
 		y += UI.scale(10);
@@ -385,7 +386,7 @@ public class SkillWnd extends Widget {
 		loading = false;
 		for(Experience exp : seen.items) {
 		    try {
-			exp.sortkey = exp.res.get().flayer(Resource.tooltip).t;
+			exp.sortkey = exp.res.get().flayer(Resource.tooltip).text();
 		    } catch(Loading l) {
 			exp.sortkey = "\uffff";
 			loading = true;
@@ -404,12 +405,12 @@ public class SkillWnd extends Widget {
     public SkillWnd() {
 	Widget prev;
 
-	prev = add(CharWnd.settip(new Img(catf.render("Lore & Skills").tex()), "gfx/hud/chr/tips/skills"), Coord.z);
+	prev = add(CharWnd.settip(new Img(catf.render(L10n.get("char.skill.title")).tex()), "gfx/hud/chr/tips/skills"), Coord.z);
 	LoadingTextBox info = add(new LoadingTextBox(new Coord(attrw, height), "", ifnd), prev.pos("bl").adds(5, 0).add(wbox.btloff()));
 	info.bg = new Color(0, 0, 0, 128);
 	Frame.around(this, Collections.singletonList(info));
 
-	prev = add(new Img(catf.render("Entries").tex()), width, 0);
+	prev = add(new Img(catf.render(L10n.get("char.skill.entries")).tex()), width, 0);
 	Tabs lists = new Tabs(prev.pos("bl").adds(5, 0), new Coord(attrw + wbox.bisz().x, 0), this);
 	int gh = UI.scale(241);
 	Tabs.Tab sktab = lists.add();
@@ -429,11 +430,11 @@ public class SkillWnd extends Widget {
 		    }
 		});
 	    Widget bf = sktab.adda(new Frame(new Coord(f.sz.x, UI.scale(44)), false), f.c.x, gh, 0.0, 1.0);
-	    Button bbtn = sktab.adda(new Button(UI.scale(50), "Buy").action(() -> {
+	    Button bbtn = sktab.adda(new Button(UI.scale(50), L10n.get("char.skill.buy")).action(() -> {
 			if (skg.sel != null)
 			    skill.wdgmsg("buy", skg.sel.nm);
 	    }), bf.pos("ibr").subs(10, 0).y(bf.pos("mid").y), 1.0, 0.5);
-	    Label clbl = sktab.adda(new Label("Cost:"), bf.pos("iul").adds(10, 0).y(bf.pos("mid").y), 0, 0.5);
+	    Label clbl = sktab.adda(new Label(L10n.get("char.skill.cost")), bf.pos("iul").adds(10, 0).y(bf.pos("mid").y), 0, 0.5);
 	    sktab.adda(new RLabel<Pair<Integer, Integer>>(() -> new Pair<>(((skg.sel == null) || skg.sel.has) ? null : skg.sel.cost, this.chr.exp),
 							  n -> (n.a == null) ? "N/A" : String.format("%,d / %,d LP", n.a, n.b),
 							  n -> ((n.a != null) && (n.a > n.b)) ? debuff : Color.WHITE),
@@ -475,9 +476,9 @@ public class SkillWnd extends Widget {
 	}
 	lists.pack();
 	addhlp(lists.c.add(0, lists.sz.y + UI.scale(5)), UI.scale(5), lists.sz.x,
-	      lists.new TabButton(0, "Skills", sktab),
-	      lists.new TabButton(0, "Credos", credos),
-	      lists.new TabButton(0, "Lore",   exps));
+	      lists.new TabButton(0, L10n.get("char.skill.tab_skills"), sktab),
+	      lists.new TabButton(0, L10n.get("char.skill.tab_credos"), credos),
+	      lists.new TabButton(0, L10n.get("char.skill.tab_lore"),   exps));
 	pack();
     }
 

@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.i18n.L10n;
 import org.json.JSONObject;
 
 import java.awt.image.*;
@@ -10,6 +11,12 @@ import java.util.*;
 
 public class IconItem extends Widget
 {
+    // Menu option keys - used for comparison (language-independent)
+    private static final String KEY_THRESHOLD = "iconitem.threshold";
+    private static final String KEY_DELETE = "iconitem.delete";
+    private static final String KEY_MARK_BARTER = "iconitem.mark_barter";
+    private static final String KEY_MARK_BARREL = "iconitem.mark_barrel";
+    private static final String KEY_UNMARK = "iconitem.unmark";
     public static final TexI frame = new TexI(Resource.loadimg("nurgling/hud/iconframe"));
     public static final TexI framet = new TexI(Resource.loadimg("nurgling/hud/iconframet"));
     public static final TexI bm = new TexI(Resource.loadimg("nurgling/hud/bartermark"));
@@ -108,40 +115,44 @@ public class IconItem extends Widget
     }
 
     NFlowerMenu menu;
+    
+    // Map to reverse lookup: localized name -> key
+    private Map<String, String> menuKeyMap = new HashMap<>();
+    
+    private String addMenuOption(ArrayList<String> opts, String key) {
+        String localized = L10n.get(key);
+        opts.add(localized);
+        menuKeyMap.put(localized, key);
+        return localized;
+    }
 
     public void opts( Coord c ) {
         if(menu == null) {
-            String[] opts = null;
+            menuKeyMap.clear();
+            ArrayList<String> optList = new ArrayList<>();
+            
             if(type==NArea.Ingredient.Type.CONTAINER)
             {
-                ArrayList<String> opt = new ArrayList<String>() {
-                    {
-                        if (parent instanceof IngredientContainer || parent instanceof DropContainer)
-                            add("Threshold");
-                        add("Delete");
-                        if (parent instanceof IngredientContainer) {
-                            add("Mark as barter");
-                            add("Mark as barrel");
-                        }
-                    }
-                };
-                opts = opt.toArray(new String[0]);
+                if (parent instanceof IngredientContainer || parent instanceof DropContainer)
+                    addMenuOption(optList, KEY_THRESHOLD);
+                addMenuOption(optList, KEY_DELETE);
+                if (parent instanceof IngredientContainer) {
+                    addMenuOption(optList, KEY_MARK_BARTER);
+                    addMenuOption(optList, KEY_MARK_BARREL);
+                }
             }
             else
             {
-                ArrayList<String> uopt = new ArrayList<String>(){
-                    {
-                        if(parent instanceof IngredientContainer || parent instanceof DropContainer) {
-                            add("Threshold");
-                        }
-                        add("Delete");
-                        if(parent instanceof IngredientContainer) {
-                            add("Unmark");
-                        }
-                    }
-                };
-                opts = uopt.toArray(new String[0]);
+                if(parent instanceof IngredientContainer || parent instanceof DropContainer) {
+                    addMenuOption(optList, KEY_THRESHOLD);
+                }
+                addMenuOption(optList, KEY_DELETE);
+                if(parent instanceof IngredientContainer) {
+                    addMenuOption(optList, KEY_UNMARK);
+                }
             }
+            
+            String[] opts = optList.toArray(new String[0]);
             menu = new NFlowerMenu(opts) {
 
                 public boolean mousedown(MouseDownEvent ev) {
@@ -160,7 +171,11 @@ public class IconItem extends Widget
                 {
                     if(option!=null)
                     {
-                        if (option.name.equals("Threshold"))
+                        // Get the key from the localized name
+                        String key = menuKeyMap.get(option.name);
+                        if (key == null) key = "";
+                        
+                        if (key.equals(KEY_THRESHOLD))
                         {
                             Widget par = IconItem.this.parent;
                             Coord pos = IconItem.this.c.add(UI.scale(32, 38));
@@ -173,19 +188,19 @@ public class IconItem extends Widget
                             ui.root.add(st, pos);
 
                         }
-                        else if(option.name.equals("Delete"))
+                        else if(key.equals(KEY_DELETE))
                         {
                             ((BaseIngredientContainer)IconItem.this.parent).delete(IconItem.this.name);
                         }
-                        else if(option.name.equals("Mark as barter"))
+                        else if(key.equals(KEY_MARK_BARTER))
                         {
                             ((IngredientContainer)IconItem.this.parent).setType(IconItem.this.name, NArea.Ingredient.Type.BARTER);
                         }
-                        else if(option.name.equals("Mark as barrel"))
+                        else if(key.equals(KEY_MARK_BARREL))
                         {
                             ((IngredientContainer)IconItem.this.parent).setType(IconItem.this.name, NArea.Ingredient.Type.BARREL);
                         }
-                        else if(option.name.equals("Unmark"))
+                        else if(key.equals(KEY_UNMARK))
                         {
                             ((IngredientContainer)IconItem.this.parent).setType(IconItem.this.name, NArea.Ingredient.Type.CONTAINER);
                         }
@@ -215,10 +230,10 @@ public class IconItem extends Widget
     {
         public SetThreshold(int val)
         {
-            super(UI.scale(140,25), "Threshold");
+            super(UI.scale(140,25), L10n.get("iconitem.threshold"));
             TextEntry te;
             prev = add(te = new TextEntry(UI.scale(80),String.valueOf(val)));
-            add(new Button(UI.scale(50),"Set"){
+            add(new Button(UI.scale(50), L10n.get("iconitem.btn_set")){
                 @Override
                 public void click()
                 {

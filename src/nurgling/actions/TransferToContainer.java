@@ -287,7 +287,9 @@ public class TransferToContainer implements Action
 
         String itemName = ((NGItem) item.item).name();
 
-        if (!StackSupporter.isStackable(targetInv, itemName))
+        // Check if stacking is disabled (bundle.a == false) OR item is not stackable
+        boolean stackingDisabled = !((NInventory) NUtils.getGameUI().maininv).bundle.a;
+        if (stackingDisabled || !StackSupporter.isStackable(targetInv, itemName))
         {
             if(targetInv.getFreeSpace() == 0)
             {

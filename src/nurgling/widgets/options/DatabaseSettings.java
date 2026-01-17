@@ -5,6 +5,7 @@ import haven.Button;
 import haven.Label;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 import nurgling.widgets.nsettings.Panel;
 
 import javax.swing.*;
@@ -38,7 +39,7 @@ public class DatabaseSettings extends Panel {
         int y = margin;
 
         // Чекбокс включения/выключения базы данных
-        prev = enableCheckbox = add(new CheckBox("Enable using Database") {
+        prev = enableCheckbox = add(new CheckBox(L10n.get("database.enable")) {
             public void set(boolean val) {
                 a = val;
                 enabled = val;
@@ -48,11 +49,11 @@ public class DatabaseSettings extends Panel {
         y += enableCheckbox.sz.y + UI.scale(8);
 
         // Заголовок раздела
-        prev = add(new Label("Database Settings:"), new Coord(margin, y));
+        prev = add(new Label(L10n.get("database.settings")), new Coord(margin, y));
         y += prev.sz.y + UI.scale(5);
 
         // Выпадающий список для выбора типа базы данных
-        prev = add(new Label("Database Type:"), new Coord(margin, y));
+        prev = add(new Label(L10n.get("database.type")), new Coord(margin, y));
         dbType = add(new Dropbox<String>(UI.scale(150), 5, UI.scale(16)) {
             @Override
             protected String listitem(int i) {
@@ -81,26 +82,26 @@ public class DatabaseSettings extends Panel {
         int firstSettingY = y;
 
         // Создаем виджеты для PostgreSQL
-        hostLabel = add(new Label("Host:"), new Coord(margin, firstSettingY));
+        hostLabel = add(new Label(L10n.get("database.host")), new Coord(margin, firstSettingY));
         hostEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, firstSettingY));
         y += hostEntry.sz.y + UI.scale(5);
 
-        userLabel = add(new Label("Username:"), new Coord(margin, y));
+        userLabel = add(new Label(L10n.get("database.username")), new Coord(margin, y));
         usernameEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, y));
         y += usernameEntry.sz.y + UI.scale(5);
 
-        passLabel = add(new Label("Password:"), new Coord(margin, y));
+        passLabel = add(new Label(L10n.get("database.password")), new Coord(margin, y));
         passwordEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, y));
         passwordEntry.pw = true;
         y += passwordEntry.sz.y + UI.scale(10);
 
         // Создаем виджеты для SQLite
-        fileLabel = add(new Label("File Path:"), new Coord(margin, firstSettingY));
+        fileLabel = add(new Label(L10n.get("database.filepath")), new Coord(margin, firstSettingY));
         filePathEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, firstSettingY));
         y += filePathEntry.sz.y + UI.scale(5);
 
         // Кнопка инициализации новой базы данных
-        initDbButton = add(new Button(UI.scale(200), "Initialize New Database") {
+        initDbButton = add(new Button(UI.scale(200), L10n.get("database.init_new")) {
             @Override
             public void click() {
                 super.click();

@@ -3,6 +3,7 @@ package nurgling.widgets.bots;
 import haven.*;
 import nurgling.NUtils;
 import nurgling.conf.NAutoFlowerActionProp;
+import nurgling.i18n.L10n;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ public class AutoFlowerAction extends Window implements Checkable {
     List<String> actionList = new ArrayList<>();
 
     public AutoFlowerAction() {
-        super(new Coord(300, 200), "Auto Flower Action");
+        super(new Coord(300, 200), L10n.get("autoflower.wnd_title"));
         NAutoFlowerActionProp startprop = NAutoFlowerActionProp.get(NUtils.getUI().sessInfo);
         if (startprop == null) startprop = new NAutoFlowerActionProp("", "");
         final NAutoFlowerActionProp finalStartprop = startprop;
@@ -26,9 +27,9 @@ public class AutoFlowerAction extends Window implements Checkable {
             actionList.add(0, "");
         }
         
-        prev = add(new Label("Auto Flower Action Settings:"));
+        prev = add(new Label(L10n.get("autoflower.settings")));
         
-        prev = add(new Label("Enter custom:"), prev.pos("bl").add(UI.scale(0, 5)));
+        prev = add(new Label(L10n.get("autoflower.enter_custom")), prev.pos("bl").add(UI.scale(0, 5)));
         
         prev = add(customActionInput = new TextEntry(UI.scale(200), finalStartprop.action) {
             @Override
@@ -38,7 +39,7 @@ public class AutoFlowerAction extends Window implements Checkable {
             }
         }, prev.pos("bl").add(UI.scale(0, 5)));
         
-        prev = add(new Label("Or select from recent:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("autoflower.select_recent")), prev.pos("bl").add(UI.scale(0, 10)));
         
         prev = add(actionDropbox = new Dropbox<String>(UI.scale(200), Math.min(10, actionList.size()), UI.scale(16)) {
             @Override
@@ -56,7 +57,7 @@ public class AutoFlowerAction extends Window implements Checkable {
                 if (item != null && !item.isEmpty()) {
                     g.text(item, Coord.z);
                 } else {
-                    g.text("<empty>", Coord.z);
+                    g.text(L10n.get("autoflower.empty"), Coord.z);
                 }
             }
             
@@ -76,7 +77,7 @@ public class AutoFlowerAction extends Window implements Checkable {
             actionDropbox.change(actionList.get(0));
         }
         
-        prev = add(transfer = new CheckBox("Transfer items") {
+        prev = add(transfer = new CheckBox(L10n.get("autoflower.transfer")) {
             {
                 a = finalStartprop.transfer;
             }
@@ -86,7 +87,7 @@ public class AutoFlowerAction extends Window implements Checkable {
             }
         }, prev.pos("bl").add(UI.scale(0, 10)));
 
-        prev = add(new Button(UI.scale(150), "Start") {
+        prev = add(new Button(UI.scale(150), L10n.get("botwnd.start")) {
             @Override
             public void click() {
                 super.click();

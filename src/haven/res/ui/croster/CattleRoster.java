@@ -444,7 +444,7 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	TypeButton ret = new TypeButton(ui.scaled(), di.scaled(), ui.z);
 	Resource.Tooltip tip = ur.layer(Resource.tooltip);
 	if(tip != null)
-	    ret.settip(tip.t);
+	    ret.settip(tip.text());
 	return(ret);
     }
 

@@ -82,21 +82,21 @@ public class BotRegistry {
                 false
         ));
 
-        // RESOURCES
-        bots.add(new BotDescriptor("choper", BotDescriptor.BotType.RESOURCES, "Chopper", "Chops trees.", false, true, Chopper.class, "choper", false));
-        bots.add(new BotDescriptor("chipper", BotDescriptor.BotType.RESOURCES, "Chipper", "Chips stuff.", false, true, Chipper.class, "chipper", true));
-        bots.add(new BotDescriptor("pblocks", BotDescriptor.BotType.RESOURCES, "Prepare Blocks", "Prepares blocks.", false, true, PrepareBlocks.class, "pblocks", false));
-        bots.add(new BotDescriptor("pboards", BotDescriptor.BotType.RESOURCES, "Prepare Boards", "Prepares boards.", false, true, PrepareBoards.class, "pboards", false));
-        bots.add(new BotDescriptor("clay", BotDescriptor.BotType.RESOURCES, "Clay Digger", "Digs clay.", false, true, ClayDigger.class, "clay", true));
-        bots.add(new BotDescriptor("bark", BotDescriptor.BotType.RESOURCES, "Collect Bark", "Collects bark.", false, true, CollectBark.class, "bark", true));
-        bots.add(new BotDescriptor("bough", BotDescriptor.BotType.RESOURCES, "Collect Bough", "Collects boughs.", false, true, CollectBough.class, "bough", true));
-        bots.add(new BotDescriptor("leaf", BotDescriptor.BotType.RESOURCES, "Collect Leaf", "Collects leaves.", false, true, CollectLeaf.class, "leaf", true));
-        bots.add(new BotDescriptor("fisher", BotDescriptor.BotType.RESOURCES, "Fishing", "Fishes fish.", false, true, Fishing.class, "fisher", true));
-        bots.add(new BotDescriptor("plower", BotDescriptor.BotType.RESOURCES, "Plower", "Plows fields.", false, true, Plower.class, "plower", true));
-        bots.add(new BotDescriptor("plant_trees", BotDescriptor.BotType.RESOURCES, "Plant Trees", "Plants trees in selected area with configurable spacing.", false, true, PlantTrees.class, "treePlanter", false));
-        bots.add(new BotDescriptor("blueprint_tree_planter", BotDescriptor.BotType.RESOURCES, "Blueprint Tree Planter", "Plants trees based on TreeGarden blueprint.", false, true, BlueprintTreePlanter.class, "treegardener", false));
-        bots.add(new BotDescriptor("boughbee", BotDescriptor.BotType.RESOURCES, "Beehive Smoker", "Smokes out wild beehives and collects honey. Automatically reacts to dangerous animals and unknown players.", false, true, BoughBee.class, "boughpyre", false));
-        bots.add(new BotDescriptor("forager", BotDescriptor.BotType.RESOURCES, "Forager", "Follows a recorded path and performs configured actions on objects. Automatically reacts to dangerous animals and unknown players.", true, true, Forager.class, "forager", false));
+        // RESOURCES (using localization keys: bot.<id>.title and bot.<id>.desc)
+        bots.add(new BotDescriptor("choper", BotDescriptor.BotType.RESOURCES, "bot.chopper.title", "bot.chopper.desc", false, true, Chopper.class, "choper", false));
+        bots.add(new BotDescriptor("chipper", BotDescriptor.BotType.RESOURCES, "bot.chipper.title", "bot.chipper.desc", false, true, Chipper.class, "chipper", true));
+        bots.add(new BotDescriptor("pblocks", BotDescriptor.BotType.RESOURCES, "bot.pblocks.title", "bot.pblocks.desc", false, true, PrepareBlocks.class, "pblocks", false));
+        bots.add(new BotDescriptor("pboards", BotDescriptor.BotType.RESOURCES, "bot.pboards.title", "bot.pboards.desc", false, true, PrepareBoards.class, "pboards", false));
+        bots.add(new BotDescriptor("clay", BotDescriptor.BotType.RESOURCES, "bot.clay.title", "bot.clay.desc", false, true, ClayDigger.class, "clay", true));
+        bots.add(new BotDescriptor("bark", BotDescriptor.BotType.RESOURCES, "bot.bark.title", "bot.bark.desc", false, true, CollectBark.class, "bark", true));
+        bots.add(new BotDescriptor("bough", BotDescriptor.BotType.RESOURCES, "bot.bough.title", "bot.bough.desc", false, true, CollectBough.class, "bough", true));
+        bots.add(new BotDescriptor("leaf", BotDescriptor.BotType.RESOURCES, "bot.leaf.title", "bot.leaf.desc", false, true, CollectLeaf.class, "leaf", true));
+        bots.add(new BotDescriptor("fisher", BotDescriptor.BotType.RESOURCES, "bot.fisher.title", "bot.fisher.desc", false, true, Fishing.class, "fisher", true));
+        bots.add(new BotDescriptor("plower", BotDescriptor.BotType.RESOURCES, "bot.plower.title", "bot.plower.desc", false, true, Plower.class, "plower", true));
+        bots.add(new BotDescriptor("plant_trees", BotDescriptor.BotType.RESOURCES, "bot.plant_trees.title", "bot.plant_trees.desc", false, true, PlantTrees.class, "treePlanter", false));
+        bots.add(new BotDescriptor("blueprint_tree_planter", BotDescriptor.BotType.RESOURCES, "bot.blueprint_tree_planter.title", "bot.blueprint_tree_planter.desc", false, true, BlueprintTreePlanter.class, "treegardener", false));
+        bots.add(new BotDescriptor("boughbee", BotDescriptor.BotType.RESOURCES, "bot.boughbee.title", "bot.boughbee.desc", false, true, BoughBee.class, "boughpyre", false));
+        bots.add(new BotDescriptor("forager", BotDescriptor.BotType.RESOURCES, "bot.forager.title", "bot.forager.desc", true, true, Forager.class, "forager", false));
 
         // PRODUCTIONS
         bots.add(new BotDescriptor("smelter", BotDescriptor.BotType.PRODUCTIONS, "Smelter", "Smelts ore.", true, true, SmelterAction.class, "smelter", true));
@@ -225,7 +225,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("bugs", BotDescriptor.BotType.UTILS, "Catch bugs", "Catch bugs around player.", false, true, CatchBugsAround.class, "bugs", false));
         bots.add(new BotDescriptor("freeinv", BotDescriptor.BotType.UTILS, "Free inventory", "Free inventory with Area system.", true, true, FreeInvBot.class, "freeinv", false));
         bots.add(new BotDescriptor("travellerssack", BotDescriptor.BotType.UTILS, "Equip travellers sacks", "Equip travellers sacks.", false, true, EquipTravellersSacksFromBelt.class, "travellerssack", false));
-        bots.add(new BotDescriptor("studytable", BotDescriptor.BotType.UTILS, "Fill study desk", "Fill study desk", true, true, StudyDeskFiller.class, "studytable", false));
+        bots.add(new BotDescriptor("studytable", BotDescriptor.BotType.UTILS, "bot.studytable.title", "bot.studytable.desc", true, true, StudyDeskFiller.class, "studytable", false));
         bots.add(new BotDescriptor("swill_collector", BotDescriptor.BotType.UTILS, "Swill Collector", "Collects swill items from area and feeds to troughs/cisterns.", false, true, CollectSwillInArea.class, "swillcollector", false));
         bots.add(new BotDescriptor("qzone", BotDescriptor.BotType.UTILS, "Quality in Zone", "Scan the quality of all typical objects in the area.", false, true, InspectQualityBot.class, "qzone", false));
         bots.add(new BotDescriptor("autoflaction", BotDescriptor.BotType.UTILS, "Auto Flower Action", "Perform the specified flower pop-up menu action for all objects in the area.", false, true, AutoFlowerActionBot.class, "autoflaction", false));

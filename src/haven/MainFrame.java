@@ -521,6 +521,9 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 	config = new NConfig();
 	config.read();
 	
+	// Apply saved language after config is loaded
+	nurgling.i18n.L10n.applySavedLanguage();
+	
 	// Initialize FileLogger and redirect System.err as early as possible
 	haven.error.FileLogger.redirectSystemErr();
 	haven.error.FileLogger.log("Application starting...");

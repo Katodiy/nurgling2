@@ -9,6 +9,8 @@ import nurgling.NUtils;
 import nurgling.tools.VSpec;
 import org.json.JSONObject;
 
+import nurgling.i18n.L10n;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +59,7 @@ public class CheeseOrdersPanel extends Panel {
 
         // -------- List Panel -----------
         listPanel = add(new Widget(new Coord(contentWidth, contentHeight)), new Coord(margin, margin));
-        listPanel.add(new Label("Cheese Orders:"), new Coord(0, 0));
+        listPanel.add(new Label(L10n.get("cheese.title")), new Coord(0, 0));
 
         int olistWidth = contentWidth - margin * 2;
         
@@ -78,7 +80,7 @@ public class CheeseOrdersPanel extends Panel {
 
         // "Add Order" button
         listPanel.add(
-                new Button(btnWidth, "Add Order", this::showEditorPanel),
+                new Button(btnWidth, L10n.get("cheese.add_order"), this::showEditorPanel),
                 new Coord((contentWidth - btnWidth) / 2, bottomY - btnHeight - UI.scale(8))
         );
 
@@ -87,7 +89,7 @@ public class CheeseOrdersPanel extends Panel {
         editorPanel.hide();
 
         int y = margin;
-        editorPanel.add(new Label("Add Cheese Order:"), new Coord(0, 0));
+        editorPanel.add(new Label(L10n.get("cheese.add_title")), new Coord(0, 0));
         y += UI.scale(22);
 
         cheeseTypeDropdown = editorPanel.add(new Dropbox<String>(UI.scale(200), cheeseTypes.size(), UI.scale(16)) {
@@ -102,7 +104,7 @@ public class CheeseOrdersPanel extends Panel {
 
         y += UI.scale(40);
 
-        editorPanel.add(new Label("Quantity:"), new Coord(margin, y + UI.scale(6)));
+        editorPanel.add(new Label(L10n.get("cheese.quantity")), new Coord(margin, y + UI.scale(6)));
         countEntry = editorPanel.add(new TextEntry(UI.scale(60), "1"), new Coord(margin + UI.scale(120), y));
         y += UI.scale(40);
 
@@ -110,11 +112,11 @@ public class CheeseOrdersPanel extends Panel {
 
         // "Save" and "Cancel" buttons
         editorPanel.add(
-                new Button(btnWidth, "Save", this::saveOrder),
+                new Button(btnWidth, L10n.get("common.save"), this::saveOrder),
                 new Coord((contentWidth - btnWidth * 2 - UI.scale(20)) / 2, editorBtnY)
         );
         editorPanel.add(
-                new Button(btnWidth, "Cancel", this::showListPanel),
+                new Button(btnWidth, L10n.get("common.cancel"), this::showListPanel),
                 new Coord((contentWidth - btnWidth * 2 - UI.scale(20)) / 2 + btnWidth + UI.scale(20), editorBtnY)
         );
 
@@ -143,18 +145,18 @@ public class CheeseOrdersPanel extends Panel {
         try {
             count = Integer.parseInt(countEntry.text().trim());
         } catch (NumberFormatException e) {
-            NUtils.getGameUI().msg("Enter a valid number for count.");
+            NUtils.getGameUI().msg(L10n.get("cheese.invalid_count"));
             countEntry.settext("1");
             return;
         }
         if (count <= 0) {
-            NUtils.getGameUI().msg("Enter a positive count.");
+            NUtils.getGameUI().msg(L10n.get("cheese.positive_count"));
             return;
         }
 
         List<CheeseBranch.Cheese> chain = CheeseBranch.getChainToProduct(cheeseType);
         if (chain == null || chain.isEmpty()) {
-            NUtils.getGameUI().msg("Could not find a recipe chain for: " + cheeseType);
+            NUtils.getGameUI().msg(L10n.get("cheese.no_recipe") + " " + cheeseType);
             return;
         }
         CheeseBranch.Cheese firstStep = chain.get(0);
@@ -286,7 +288,7 @@ public class CheeseOrdersPanel extends Panel {
         w.add(qtyLabel, new Coord(progressColX, (baseHeight - qtyLabel.sz.y) / 2));
         
         // Delete button
-        w.add(new Button(btnW, "Delete", () -> {
+        w.add(new Button(btnW, L10n.get("common.delete"), () -> {
             manager.deleteOrder(order.getId());
             manager.writeOrders();
             expandedOrders.remove(order.getId());
@@ -298,10 +300,10 @@ public class CheeseOrdersPanel extends Panel {
             int stepY = baseHeight + UI.scale(5);
             
             // Header row for steps
-            Label headerStatus = new Label("Status");
-            Label headerName = new Label("Cheese Type");
-            Label headerLocation = new Label("Location");
-            Label headerProgress = new Label("Progress");
+            Label headerStatus = new Label(L10n.get("cheese.status"));
+            Label headerName = new Label(L10n.get("cheese.cheese_type"));
+            Label headerLocation = new Label(L10n.get("cheese.location"));
+            Label headerProgress = new Label(L10n.get("cheese.progress"));
             
             w.add(headerStatus, new Coord(statusColX, stepY));
             w.add(headerName, new Coord(nameColX, stepY));
@@ -344,9 +346,9 @@ public class CheeseOrdersPanel extends Panel {
                 // Progress
                 String progressText;
                 if (step.left > 0) {
-                    progressText = step.left + " remaining";
+                    progressText = step.left + " " + L10n.get("cheese.remaining").replace("%d", "").trim();
                 } else {
-                    progressText = "Complete";
+                    progressText = L10n.get("cheese.complete");
                 }
                 Label progressLabel = new Label(progressText);
                 w.add(progressLabel, new Coord(progressColX, stepY + UI.scale(4)));

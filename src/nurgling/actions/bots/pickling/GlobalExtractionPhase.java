@@ -40,11 +40,15 @@ public class GlobalExtractionPhase implements Action {
             }
 
             if (isInventoryFull(gui)) {
+                NUtils.stackSwitch(true);
                 new FreeInventory2(new NContext(gui)).run(gui);
+                NUtils.stackSwitch(false);
             }
         }
 
+        NUtils.stackSwitch(true);
         new FreeInventory2(new NContext(gui)).run(gui);
+        NUtils.stackSwitch(false);
         return workDone ? Results.SUCCESS() : Results.FAIL();
     }
 
@@ -68,7 +72,9 @@ public class GlobalExtractionPhase implements Action {
                     }
                     if (isInventoryFull(gui)) {
                         new CloseTargetContainer(container).run(gui);
+                        NUtils.stackSwitch(true);
                         new FreeInventory2(new NContext(gui)).run(gui);
+                        NUtils.stackSwitch(false);
                         // Navigate back to jar area after dropping off items
                         NContext context = new NContext(gui);
                         context.getSpecArea(Specialisation.SpecName.picklingJars);

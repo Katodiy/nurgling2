@@ -1,28 +1,29 @@
-# Welcome to the Encyclopedia
+# @enc.welcome.title
 
-This is the Nurgling2 client encyclopedia system. It outlines basic functionality of the client. If you have any questions this is the best place to start.
+@enc.welcome.intro
 
-## If you have performance issues while the bots are running:
+## @enc.welcome.performance_title
 
-Bots work within the frame system, so the overlap technology is not consistent with the bot runtime engine. Do not use the first 2 points.
+@enc.welcome.performance_text
 
 ![Frame Issues](images/frame_issues.png)
 
-## My bot X is broken:
+## @enc.welcome.bot_broken_title
 
-If you have a broken bot but have already completed step 1. fulfil the following set of conditions:
-- Clear your inventory
-- Get off the horse
-- Switch off the stacks
+@enc.welcome.bot_broken_text
 
-## How do I stop a running bot:
+- @enc.welcome.bot_broken_step1
+- @enc.welcome.bot_broken_step2
+- @enc.welcome.bot_broken_step3
 
-Click on the cross in the center of the gear
+## @enc.welcome.stop_bot_title
+
+@enc.welcome.stop_bot_text
 
 ![Gear](images/gear.png)
 
-## How to report an error:
+## @enc.welcome.report_error_title
 
-In the middle of the gear, information about the current bot execution string is displayed. If you have a hang - send a screenshot to the appropriate section
+@enc.welcome.report_error_text
 
 ![Gear](images/gear_hover_hang.png)

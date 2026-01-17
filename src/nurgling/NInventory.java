@@ -658,7 +658,7 @@ public class NInventory extends Inventory
                 Slotted.show = val;
             }
         }, toggles.atl);
-        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/gilding/u").flayer(Resource.tooltip).t);
+        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/gilding/u").flayer(Resource.tooltip).text());
         ((ICheckBox)pw).a = Slotted.show;
         pw = toggles.add(new ICheckBox(vari[0], vari[1], vari[2], vari[3]) {
             @Override
@@ -669,7 +669,7 @@ public class NInventory extends Inventory
                 NConfig.set(NConfig.Key.showVarity, val);
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
-        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/var/u").flayer(Resource.tooltip).t);
+        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/var/u").flayer(Resource.tooltip).text());
         NFoodInfo.show = (Boolean)NConfig.get(NConfig.Key.showVarity);
         ((ICheckBox)pw).a = NFoodInfo.show;
 
@@ -681,7 +681,7 @@ public class NInventory extends Inventory
                 NConfig.set(NConfig.Key.showInventoryNums, val);
             }
         }, pw.pos("ur").add(UI.scale(new Coord(5, 0))));
-        rpw.settip(Resource.remote().loadwait("nurgling/hud/buttons/numbering/u").flayer(Resource.tooltip).t);
+        rpw.settip(Resource.remote().loadwait("nurgling/hud/buttons/numbering/u").flayer(Resource.tooltip).text());
         ((ICheckBox)rpw).a = (Boolean)NConfig.get(NConfig.Key.showInventoryNums);
 
         pw = toggles.add(new ICheckBox(stacki[0], stacki[1], stacki[2], stacki[3]) {
@@ -692,7 +692,7 @@ public class NInventory extends Inventory
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
         ((ICheckBox)pw).a = Stack.show;
-        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/stack/u").flayer(Resource.tooltip).t);
+        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/stack/u").flayer(Resource.tooltip).text());
 
         bundle = toggles.add(new ICheckBox(bundlei[0], bundlei[1], bundlei[2], bundlei[3]) {
             @Override
@@ -701,7 +701,7 @@ public class NInventory extends Inventory
                 pagBundle.use(new MenuGrid.Interaction(1, 0));
             }
         }, pw.pos("ur").add(UI.scale(new Coord(5, 0))));
-        bundle.settip(Resource.remote().loadwait("nurgling/hud/buttons/bundle/u").flayer(Resource.tooltip).t);
+        bundle.settip(Resource.remote().loadwait("nurgling/hud/buttons/bundle/u").flayer(Resource.tooltip).text());
 
         pw = toggles.add(new ICheckBox(autoflower[0], autoflower[1], autoflower[2], autoflower[3]) {
             @Override
@@ -710,7 +710,7 @@ public class NInventory extends Inventory
                 NConfig.set(NConfig.Key.autoFlower, val);
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
-        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/autoflower/u").flayer(Resource.tooltip).t);
+        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/autoflower/u").flayer(Resource.tooltip).text());
         ((ICheckBox)pw).a = (Boolean)NConfig.get(NConfig.Key.autoFlower);
         pw = toggles.add(new ICheckBox(autosplittor[0], autosplittor[1], autosplittor[2], autosplittor[3]) {
             @Override
@@ -719,7 +719,7 @@ public class NInventory extends Inventory
                 NConfig.set(NConfig.Key.autoSplitter, val);
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
-        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/autosplittor/u").flayer(Resource.tooltip).t);
+        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/autosplittor/u").flayer(Resource.tooltip).text());
         ((ICheckBox)pw).a = (Boolean)NConfig.get(NConfig.Key.autoSplitter);
 
         pw = toggles.add(new ICheckBox(dropperi[0], dropperi[1], dropperi[2], dropperi[3]) {
@@ -729,7 +729,7 @@ public class NInventory extends Inventory
                 NConfig.set(NConfig.Key.autoDropper, val);
             }
         }, pw.pos("bl").add(UI.scale(new Coord(0, 5))));
-        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/dropper/u").flayer(Resource.tooltip).t);
+        pw.settip(Resource.remote().loadwait("nurgling/hud/buttons/dropper/u").flayer(Resource.tooltip).text());
         ((ICheckBox)pw).a = (Boolean)NConfig.get(NConfig.Key.autoDropper);
 
         toggles.pack();

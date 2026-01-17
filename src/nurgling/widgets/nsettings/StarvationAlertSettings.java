@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.NAlarmManager;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 import nurgling.overlays.StarvationVignetteOverlay;
 import nurgling.widgets.StarvationAlertPopup;
 
@@ -32,7 +33,7 @@ public class StarvationAlertSettings extends Panel {
     private boolean testVignetteActive = false;
 
     public StarvationAlertSettings() {
-        super("Starvation Alert Settings");
+        super(L10n.get("starvation.settings_title"));
 
         int margin = UI.scale(10);
         int labelWidth = UI.scale(180);
@@ -42,10 +43,10 @@ public class StarvationAlertSettings extends Panel {
         int sectionGap = UI.scale(15);
 
         // Master enable
-        add(new Label("Configure alerts to warn you when energy gets low:"), new Coord(margin, y));
+        add(new Label(L10n.get("starvation.description")), new Coord(margin, y));
         y += lineHeight;
 
-        masterEnable = add(new CheckBox("Enable starvation alerts") {
+        masterEnable = add(new CheckBox(L10n.get("starvation.enable")) {
             public void set(boolean val) {
                 a = val;
             }

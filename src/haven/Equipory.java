@@ -79,7 +79,7 @@ public class Equipory extends Widget implements DTarget {
 	    Resource.Image img = bgres.layer(Resource.imgc);
 	    if(img != null) {
 		ebgs[i] = img.tex();
-		etts[i] = Text.render(bgres.flayer(Resource.tooltip).t);
+		etts[i] = Text.render(bgres.flayer(Resource.tooltip).text());
 	    }
 	}
     }

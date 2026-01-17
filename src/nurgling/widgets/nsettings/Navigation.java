@@ -2,6 +2,7 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.NConfig;
+import nurgling.i18n.L10n;
 import nurgling.widgets.NColorWidget;
 import java.awt.Color;
 
@@ -61,37 +62,37 @@ public class Navigation extends Panel {
         int contentMargin = UI.scale(5);
         
         // Safety section
-        Widget prev = content.add(new Label("● Safety"), new Coord(contentMargin, contentMargin));
-        prev = content.add(new Label("Auto-actions on unknown/red players (useful for beginners)"), prev.pos("bl").adds(0, 3));
+        Widget prev = content.add(new Label("● " + L10n.get("nav.section.safety")), new Coord(contentMargin, contentMargin));
+        prev = content.add(new Label(L10n.get("nav.safety_desc")), prev.pos("bl").adds(0, 3));
         
-        prev = autoHearthOnUnknown = content.add(new CheckBox("Auto hearth on unknown/red players") {
+        prev = autoHearthOnUnknown = content.add(new CheckBox(L10n.get("nav.auto_hearth")) {
             public void set(boolean val) {
                 tempSettings.autoHearthOnUnknown = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 10));
         
-        prev = autoLogoutOnUnknown = content.add(new CheckBox("Auto logout on unknown/red players") {
+        prev = autoLogoutOnUnknown = content.add(new CheckBox(L10n.get("nav.auto_logout")) {
             public void set(boolean val) {
                 tempSettings.autoLogoutOnUnknown = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
         
-        Widget alarmDelayLabel = content.add(new Label("Alarm delay frames (before unknown player triggers alarm):"), prev.pos("bl").adds(0, 10));
+        Widget alarmDelayLabel = content.add(new Label(L10n.get("nav.alarm_delay")), prev.pos("bl").adds(0, 10));
         alarmDelayFramesEntry = content.add(new TextEntry(UI.scale(60), ""), alarmDelayLabel.pos("ur").adds(5, 0));
 
         // Pathfinding section
-        prev = content.add(new Label("● Pathfinding & Navigation"), alarmDelayLabel.pos("bl").adds(0, 15));
+        prev = content.add(new Label("● " + L10n.get("nav.section.pathfinding")), alarmDelayLabel.pos("bl").adds(0, 15));
         
-        prev = useGlobalPf = content.add(new CheckBox("Use global pathfinding") {
+        prev = useGlobalPf = content.add(new CheckBox(L10n.get("nav.use_global_pf")) {
             public void set(boolean val) {
                 tempSettings.useGlobalPf = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
         
-        prev = waypointRetryOnStuck = content.add(new CheckBox("Retry waypoint movement when stuck") {
+        prev = waypointRetryOnStuck = content.add(new CheckBox(L10n.get("nav.retry_waypoint")) {
             public void set(boolean val) {
                 tempSettings.waypointRetryOnStuck = val;
                 a = val;
@@ -99,9 +100,9 @@ public class Navigation extends Panel {
         }, prev.pos("bl").adds(0, 5));
 
         // Visual indicators section
-        prev = content.add(new Label("● Visual indicators"), prev.pos("bl").adds(0, 15));
+        prev = content.add(new Label("● " + L10n.get("nav.section.visual")), prev.pos("bl").adds(0, 15));
         
-        prev = showPathLine = content.add(new CheckBox("Show path line to destination") {
+        prev = showPathLine = content.add(new CheckBox(L10n.get("nav.show_path_line")) {
             public void set(boolean val) {
                 tempSettings.showPathLine = val;
                 a = val;
@@ -109,19 +110,19 @@ public class Navigation extends Panel {
         }, prev.pos("bl").adds(0, 5));
 
         // Path line color
-        prev = pathLineColorWidget = content.add(new NColorWidget("Path line color"), prev.pos("bl").adds(10, 5));
+        prev = pathLineColorWidget = content.add(new NColorWidget(L10n.get("nav.path_line_color")), prev.pos("bl").adds(10, 5));
         pathLineColorWidget.color = tempSettings.pathLineColor;
 
         // Path line thickness
-        prev = pathLineWidthLabel = content.add(new Label("Path line thickness: 4"), prev.pos("bl").adds(0, 5));
+        prev = pathLineWidthLabel = content.add(new Label(L10n.get("nav.path_line_thickness") + " 4"), prev.pos("bl").adds(0, 5));
         prev = pathLineWidthSlider = content.add(new HSlider(UI.scale(100), 1, 10, tempSettings.pathLineWidth) {
             public void changed() {
                 tempSettings.pathLineWidth = val;
-                pathLineWidthLabel.settext("Path line thickness: " + val);
+                pathLineWidthLabel.settext(L10n.get("nav.path_line_thickness") + " " + val);
             }
         }, prev.pos("bl").adds(0, 5));
 
-        prev = showSpeedometer = content.add(new CheckBox("Show speedometer") {
+        prev = showSpeedometer = content.add(new CheckBox(L10n.get("nav.show_speedometer")) {
             public void set(boolean val) {
                 tempSettings.showSpeedometer = val;
                 a = val;
@@ -161,7 +162,7 @@ public class Navigation extends Panel {
         showPathLine.a = tempSettings.showPathLine;
         pathLineColorWidget.color = tempSettings.pathLineColor;
         pathLineWidthSlider.val = tempSettings.pathLineWidth;
-        pathLineWidthLabel.settext("Path line thickness: " + tempSettings.pathLineWidth);
+        pathLineWidthLabel.settext(L10n.get("nav.path_line_thickness") + " " + tempSettings.pathLineWidth);
         showSpeedometer.a = tempSettings.showSpeedometer;
     }
 
