@@ -75,11 +75,12 @@ public class AutoDrink implements Action
 
     boolean checkWater() throws InterruptedException
     {
-        if (NUtils.getEquipment() == null) {
+        NEquipory equipment = NUtils.getEquipment();
+        if (equipment == null) {
             return false;
         }
         // Check waterskins in belt
-        WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
+        WItem wbelt = equipment.findItem (NEquipory.Slots.BELT.idx);
         if(wbelt!=null && wbelt.item.contents!=null) {
             ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
             if (!witems.isEmpty()) {
@@ -94,7 +95,7 @@ public class AutoDrink implements Action
             }
         }
         // Check bucket in hands
-        WItem bucket = NUtils.getEquipment().findBucket("Water");
+        WItem bucket = equipment.findBucket("Water");
         if (bucket != null) {
             NGItem ngItem = ((NGItem) bucket.item);
             if (!ngItem.content().isEmpty()) {

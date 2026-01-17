@@ -142,7 +142,20 @@ public class TransferToContainer implements Action
                     // Для заполнения стаков продолжаем пока есть доступные предметы и цели для заполнения
                     transfer_size = availableItems.size(); // Переносим все доступные предметы
 
-                    if (container.getattr(Container.TargetItems.class) != null && container.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM))
+                    // Check ItemCount updater first (new system)
+                    if (container.getattr(Container.ItemCount.class) != null)
+                    {
+                        Container.ItemCount itemCount = container.getattr(Container.ItemCount.class);
+                        // Update ItemCount to get current state (container is now open)
+                        itemCount.update();
+                        int currentInContainer = itemCount.getCurrentCount();
+                        int need = itemCount.getNeeded();
+                        gui.msg("TransferToContainer: ItemCount current=" + currentInContainer + ", needed=" + need + ", available=" + transfer_size);
+                        transfer_size = Math.min(transfer_size, need);
+                        gui.msg("TransferToContainer: Will transfer max " + transfer_size + " items");
+                    }
+                    // Fall back to deprecated TargetItems if ItemCount not present
+                    else if (container.getattr(Container.TargetItems.class) != null && container.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM))
                     {
                         int need = (Integer) container.getattr(Container.TargetItems.class).getRes().get(Container.TargetItems.MAXNUM) - (Integer) container.getattr(Container.TargetItems.class).getTargets(items);
                         transfer_size = Math.min(transfer_size, need);
@@ -152,7 +165,7 @@ public class TransferToContainer implements Action
                     int oldSpace = gui.getInventory(container.cap).getItems(items).size();
                     int transferred = 0;
 
-                    while (!availableItems.isEmpty())
+                    while (!availableItems.isEmpty() && transferred < transfer_size)
                     {
                         WItem currentItem = availableItems.get(0);
 
@@ -163,8 +176,9 @@ public class TransferToContainer implements Action
                             continue;
                         }
 
-
-                        int itemsTransferred = transfer(currentItem, gui.getInventory(container.cap), transfer_size);
+                        // Calculate remaining items we can transfer
+                        int remainingToTransfer = transfer_size - transferred;
+                        int itemsTransferred = transfer(currentItem, gui.getInventory(container.cap), remainingToTransfer);
 
                         if (itemsTransferred > 0)
                         {
