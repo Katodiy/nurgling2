@@ -1,5 +1,6 @@
 package nurgling.actions;
 
+import haven.Gob;
 import haven.WItem;
 import nurgling.NGItem;
 import nurgling.NGameUI;
@@ -34,11 +35,11 @@ public class TransferTargetItemsFromContainers implements Action
 
         for(Container container: containers)
         {
-            Container.Space space;
-            if((space = container.getattr(Container.Space.class)).isReady())
+            // Skip empty containers using visual flag (except dframes)
+            Gob gob = Finder.findGob(container.gobid);
+            if(gob != null && !"Frame".equals(container.cap) && gob.ngob.isContainerEmpty())
             {
-                if(space.getRes().get(Container.Space.FREESPACE) == space.getRes().get(Container.Space.MAXSPACE))
-                    continue;
+                continue;
             }
             PathFinder pf = new PathFinder(Finder.findGob(container.gobid));
             pf.isHardMode = true;

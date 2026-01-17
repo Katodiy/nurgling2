@@ -111,6 +111,9 @@ public class ProcessCheeseOrderInBatches implements Action {
                 rackManager.handleTrayPlacement(gui, targetPlace, totalTraysInInventory, curdType, ordersManager, order);
             }
             
+            // Return unused empty trays to storage after placing filled trays
+            returnEmptyTraysToStorage(gui);
+            
             return actualCount;
         } else {
             return 0; // No work done yet for aging steps
@@ -209,5 +212,27 @@ public class ProcessCheeseOrderInBatches implements Action {
         CheeseBranch.Place targetPlace = chain.get(1).place;
         
         return rackCapacity.getOrDefault(targetPlace, 0);
+    }
+    
+    /**
+     * Return empty cheese trays to storage after filled trays have been placed on racks.
+     * This cleans up inventory between cheese types to prevent mixing.
+     */
+    private void returnEmptyTraysToStorage(NGameUI gui) throws InterruptedException {
+        // Count empty trays
+        ArrayList<WItem> allTrays = CheeseInventoryOperations.getCheeseTrays(gui);
+        int emptyCount = 0;
+        for (WItem tray : allTrays) {
+            if (CheeseUtils.isEmpty(tray)) {
+                emptyCount++;
+            }
+        }
+        
+        if (emptyCount > 0) {
+            gui.msg("Returning " + emptyCount + " empty trays to storage");
+            nurgling.areas.NContext context = new nurgling.areas.NContext(gui);
+            context.addOutItem("Cheese Tray", null, 0);
+            new FreeInventory2(context).run(gui);
+        }
     }
 }

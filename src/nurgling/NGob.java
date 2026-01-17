@@ -789,6 +789,30 @@ public class NGob
         return modelAttribute;
     }
 
+    /**
+     * Check if container is visually empty using model attribute.
+     * Works for: chest, cupboard, barrel, dframe, cheeserack, jotunclam
+     * @return true if container is visually empty (FREE status)
+     */
+    public boolean isContainerEmpty()
+    {
+        if (name == null) return false;
+        MaterialFactory.Status status = MaterialFactory.getStatus(name, (int) modelAttribute);
+        return status == MaterialFactory.Status.FREE;
+    }
+
+    /**
+     * Check if container is visually full using model attribute.
+     * Works for: chest, cupboard, barrel, dframe, cheeserack, jotunclam
+     * @return true if container is visually full (FULL status)
+     */
+    public boolean isContainerFull()
+    {
+        if (name == null) return false;
+        MaterialFactory.Status status = MaterialFactory.getStatus(name, (int) modelAttribute);
+        return status == MaterialFactory.Status.FULL;
+    }
+
     public CellsArray getCA()
     {
         if (isDynamic)

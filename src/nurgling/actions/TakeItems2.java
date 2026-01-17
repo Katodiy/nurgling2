@@ -174,6 +174,9 @@ public class TakeItems2 implements Action
         Gob contgob = Finder.findGob(cont.gobHash);
         if(contgob == null)
             return Results.FAIL();
+        // Skip empty containers using visual flag (except dframes)
+        if(!"Frame".equals(cont.cap) && contgob.ngob.isContainerEmpty())
+            return Results.SUCCESS();
         new PathFinder(contgob).run(gui);
         new OpenTargetContainer(cont).run(gui);
         TakeItemsFromContainer tifc = new TakeItemsFromContainer(cont,new HashSet<>(Arrays.asList(item)), null, qualityType);

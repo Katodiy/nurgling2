@@ -70,6 +70,12 @@ public class CheeseRackManager {
 
             for (Gob rack : racks) {
                 if (moved >= quantity) break;
+                
+                // Skip visually full racks before walking to them
+                if (rack.ngob.isContainerFull()) {
+                    continue;
+                }
+                
                 Container rackContainer = new Container(rack, "Rack", targetArea);
                 rackContainer.initattr(Container.Space.class);
                 new PathFinder(rack).run(gui);
@@ -77,23 +83,26 @@ public class CheeseRackManager {
 
                 // Check how many trays we can fit in this rack
                 int availableSpace = gui.getInventory(rackContainer.cap).getNumberFreeCoord(TRAY_SIZE);
+                
+                if (availableSpace == 0) {
+                    // Rack is full, skip it
+                    new CloseTargetContainer(rackContainer).run(gui);
+                    continue;
+                }
+                
                 int toMove = Math.min(availableSpace, quantity - moved);
 
-                new CloseTargetContainer(rackContainer).run(gui);
+                // Get specific trays of the requested cheese type
+                ArrayList<WItem> specificTrays = getTraysOfType(gui, cheeseType, toMove);
+                if (!specificTrays.isEmpty()) {
+                    // Transfer while container is still open
+                    new TransferWItemsToContainer(rackContainer, specificTrays).run(gui);
+                    moved += specificTrays.size();
 
-                if (toMove > 0) {
-                    // Get specific trays of the requested cheese type
-                    ArrayList<WItem> specificTrays = getTraysOfType(gui, cheeseType, toMove);
-                    if (!specificTrays.isEmpty()) {
-                        // Transfer only the specific cheese trays to this rack
-                        new TransferWItemsToContainer(rackContainer, specificTrays).run(gui);
-                        moved += specificTrays.size();
-
-                        // Update and save orders after placing trays on rack
-                        if (ordersManager != null && specificOrder != null) {
-                            updateOrdersAfterCurdPlacement(ordersManager, cheeseType, specificTrays.size(), specificOrder);
-                            ordersManager.writeOrders();
-                        }
+                    // Update and save orders after placing trays on rack
+                    if (ordersManager != null && specificOrder != null) {
+                        updateOrdersAfterCurdPlacement(ordersManager, cheeseType, specificTrays.size(), specificOrder);
+                        ordersManager.writeOrders();
                     }
                 }
 
