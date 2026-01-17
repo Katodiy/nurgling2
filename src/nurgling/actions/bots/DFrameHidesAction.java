@@ -81,9 +81,9 @@ public class DFrameHidesAction implements Action {
 
 
             new FreeContainers(containers, new NAlias(new ArrayList<>(Arrays.asList("Fur", "Hide", "Scale", "Tail", "skin", "hide")), new ArrayList<>(Arrays.asList("Fresh", "Raw")))).run(gui);
-           NUtils.navigateToArea(NContext.findSpec(Specialisation.SpecName.rawhides.toString()));
-            new FillContainersFromPiles(containers, NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), raw).run(gui);
-            new TransferToPiles(NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
+            NUtils.navigateToArea(NContext.findSpecGlobal(Specialisation.SpecName.rawhides.toString()));
+            new FillContainersFromPiles(containers, NContext.findSpecGlobal(Specialisation.SpecName.rawhides.toString()).getRCArea(), raw).run(gui);
+            new TransferToPiles(NContext.findSpecGlobal(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
 
             return Results.SUCCESS();
         }
