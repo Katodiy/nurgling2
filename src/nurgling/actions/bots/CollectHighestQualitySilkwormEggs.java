@@ -8,7 +8,9 @@ import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NContext;
+import nurgling.tasks.GetNotFullStack;
 import nurgling.tasks.ISRemoved;
+import nurgling.tasks.ISRemovedLoftar;
 import nurgling.tasks.StackSizeChanged;
 import nurgling.tasks.WaitFreeHand;
 import nurgling.tools.Container;
@@ -217,31 +219,80 @@ public class CollectHighestQualitySilkwormEggs implements Action {
         return collected;
     }
 
+    private static final String EGG_NAME = "Silkworm Egg";
+
     /**
      * Takes a single egg from a container to the player inventory.
      * Handles both stacked and non-stacked items.
+     * Ensures items are stacked in player inventory.
      * Returns true if successful.
      */
     private boolean takeEggToPlayerInventory(WItem item, NGameUI gui)
             throws InterruptedException {
+        NInventory playerInv = gui.getInventory();
+
+        // Find stacking target in player inventory
+        WItem targetSingleItem = playerInv.findNotStack(EGG_NAME);
+        ItemStack targetNotFullStack = playerInv.findNotFullStack(EGG_NAME);
+
         if (item.parent instanceof ItemStack) {
-            // Item is inside a stack - use hand-based transfer
+            // Item is inside a stack in the source container
             ItemStack sourceStack = (ItemStack) item.parent;
             int originalSize = sourceStack.wmap.size();
 
             NUtils.takeItemToHand(item);
-            NUtils.dropToInv(gui.getInventory());
-            NUtils.addTask(new WaitFreeHand());
 
-            // Wait for stack to update
-            if (originalSize > 1) {
+            // Stack in player inventory if possible
+            if (targetSingleItem != null) {
+                // Stack onto single item
+                NUtils.itemact(targetSingleItem);
+                NUtils.addTask(new WaitFreeHand());
+                // Wait for stack to be created
+                NUtils.addTask(new GetNotFullStack(playerInv, EGG_ALIAS));
+            } else if (targetNotFullStack != null) {
+                // Stack onto existing non-full stack
+                int targetStackSize = targetNotFullStack.wmap.size();
+                NUtils.itemact(((NGItem) ((GItem.ContentsWindow) targetNotFullStack.parent).cont).wi);
+                NUtils.addTask(new WaitFreeHand());
+                NUtils.addTask(new StackSizeChanged(targetNotFullStack, targetStackSize));
+            } else {
+                // No stack target - drop to new slot
+                NUtils.dropToInv(playerInv);
+                NUtils.addTask(new WaitFreeHand());
+            }
+
+            // Wait for source stack to update
+            if (originalSize <= 2) {
+                if (sourceStack.parent != null) {
+                    NUtils.addTask(new ISRemovedLoftar(
+                            ((GItem.ContentsWindow) sourceStack.parent).cont.wdgid(),
+                            sourceStack, originalSize));
+                }
+            } else {
                 NUtils.addTask(new StackSizeChanged(sourceStack, originalSize));
             }
         } else {
-            // Single item (not in a stack) - use simple transfer
-            int itemId = item.item.wdgid();
-            item.item.wdgmsg("transfer", Coord.z);
-            NUtils.addTask(new ISRemoved(itemId));
+            // Single item (not in a stack) in source container
+            NUtils.takeItemToHand(item);
+
+            // Stack in player inventory if possible
+            if (targetSingleItem != null) {
+                // Stack onto single item
+                NUtils.itemact(targetSingleItem);
+                NUtils.addTask(new WaitFreeHand());
+                // Wait for stack to be created
+                NUtils.addTask(new GetNotFullStack(playerInv, EGG_ALIAS));
+            } else if (targetNotFullStack != null) {
+                // Stack onto existing non-full stack
+                int targetStackSize = targetNotFullStack.wmap.size();
+                NUtils.itemact(((NGItem) ((GItem.ContentsWindow) targetNotFullStack.parent).cont).wi);
+                NUtils.addTask(new WaitFreeHand());
+                NUtils.addTask(new StackSizeChanged(targetNotFullStack, targetStackSize));
+            } else {
+                // No stack target - drop to new slot
+                NUtils.dropToInv(playerInv);
+                NUtils.addTask(new WaitFreeHand());
+            }
         }
 
         return true;
