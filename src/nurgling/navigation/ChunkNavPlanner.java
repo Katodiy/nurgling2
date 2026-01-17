@@ -96,6 +96,8 @@ public class ChunkNavPlanner {
     /**
      * Plan a path from player's current position to a specific world coordinate.
      * Used for planning paths to specific corners of an area.
+     * NOTE: This only works reliably within the same layer/area!
+     * For cross-layer navigation, use planToAreaCorner instead.
      */
     public ChunkPath planToCoord(Coord2d worldCoord) {
         if (worldCoord == null) return null;
@@ -133,6 +135,78 @@ public class ChunkNavPlanner {
         unifiedPath.populateChunkPath(path, graph);
 
         return path;
+    }
+    
+    /**
+     * Plan a path to a specific corner of an area using gridId + local coordinates.
+     * This works correctly across different layers/areas because it uses gridId directly.
+     * @param area The target area
+     * @param cornerIndex 0=top-left, 1=bottom-right, 2=bottom-left, 3=top-right
+     */
+    public ChunkPath planToAreaCorner(nurgling.areas.NArea area, int cornerIndex) {
+        if (area == null || area.space == null || area.space.space == null || area.space.space.isEmpty()) {
+            return null;
+        }
+
+        // Get player's current chunk and local position
+        PlayerLocation playerLoc = getPlayerLocation();
+        if (playerLoc == null) {
+            return null;
+        }
+
+        long startChunkId = playerLoc.gridId;
+        Coord playerLocal = playerLoc.localCoord;
+
+        // Find target gridId and local corner coordinate from area's stored data
+        for (java.util.Map.Entry<Long, nurgling.areas.NArea.VArea> entry : area.space.space.entrySet()) {
+            long gridId = entry.getKey();
+            nurgling.areas.NArea.VArea varea = entry.getValue();
+            
+            if (varea == null || varea.area == null) continue;
+            
+            // Check if this grid is in our graph
+            ChunkNavData chunk = graph.getChunk(gridId);
+            if (chunk == null) continue;
+            
+            // Get corner local coordinates based on cornerIndex
+            Coord cornerLocal;
+            switch (cornerIndex) {
+                case 0: // top-left
+                    cornerLocal = varea.area.ul;
+                    break;
+                case 1: // bottom-right  
+                    cornerLocal = varea.area.br.sub(1, 1); // br is exclusive
+                    break;
+                case 2: // bottom-left
+                    cornerLocal = new Coord(varea.area.ul.x, varea.area.br.y - 1);
+                    break;
+                case 3: // top-right
+                    cornerLocal = new Coord(varea.area.br.x - 1, varea.area.ul.y);
+                    break;
+                default:
+                    cornerLocal = varea.area.ul;
+            }
+            
+            // Find walkable tile near this corner
+            Coord walkable = findWalkableTileNear(chunk, cornerLocal);
+            if (walkable == null) {
+                walkable = cornerLocal; // fallback
+            }
+            
+            // Use unified pathfinder
+            UnifiedTilePathfinder.UnifiedPath unifiedPath = unifiedPathfinder.findPath(
+                startChunkId, playerLocal,
+                gridId, walkable
+            );
+
+            if (unifiedPath != null && unifiedPath.reachable) {
+                ChunkPath path = new ChunkPath();
+                unifiedPath.populateChunkPath(path, graph);
+                return path;
+            }
+        }
+        
+        return null;
     }
     
     /**

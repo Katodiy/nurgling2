@@ -307,6 +307,7 @@ public class ChunkNavManager {
     /**
      * Plan a path to a specific world coordinate.
      * Used for planning paths to specific corners of an area.
+     * NOTE: Only works reliably within the same layer/area!
      */
     public ChunkPath planToCoord(haven.Coord2d worldCoord) {
         if (!enabled || !initialized) return null;
@@ -315,6 +316,22 @@ public class ChunkNavManager {
         forceRecordVisibleGrids();
 
         ChunkPath path = planner.planToCoord(worldCoord);
+        return path;
+    }
+    
+    /**
+     * Plan a path to a specific corner of an area using gridId + local coordinates.
+     * This works correctly across different layers/areas.
+     * @param area The target area
+     * @param cornerIndex 0=top-left, 1=bottom-right, 2=bottom-left, 3=top-right
+     */
+    public ChunkPath planToAreaCorner(nurgling.areas.NArea area, int cornerIndex) {
+        if (!enabled || !initialized) return null;
+
+        // Record all visible grids to ensure fresh data before planning
+        forceRecordVisibleGrids();
+
+        ChunkPath path = planner.planToAreaCorner(area, cornerIndex);
         return path;
     }
 
