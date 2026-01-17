@@ -303,6 +303,20 @@ public class ChunkNavManager {
         // The executor handles this case by navigating directly to the area
         return path;
     }
+    
+    /**
+     * Plan a path to a specific world coordinate.
+     * Used for planning paths to specific corners of an area.
+     */
+    public ChunkPath planToCoord(haven.Coord2d worldCoord) {
+        if (!enabled || !initialized) return null;
+
+        // Record all visible grids to ensure fresh data before planning
+        forceRecordVisibleGrids();
+
+        ChunkPath path = planner.planToCoord(worldCoord);
+        return path;
+    }
 
     /**
      * Export path visualization data to JSON file for the Python visualizer.
@@ -380,6 +394,24 @@ public class ChunkNavManager {
 
         // Note: path.isEmpty() is valid when we're already in the target chunk
         // The executor handles this case by navigating directly to the area
+        ChunkNavExecutor executor = new ChunkNavExecutor(path, area, this);
+        nurgling.actions.Results result = executor.run(gui);
+
+        if (result.IsSuccess()) {
+            forceRecordVisibleGrids();
+        }
+
+        return result;
+    }
+    
+    /**
+     * Navigate using a pre-planned path, with area for final adjustments.
+     */
+    public nurgling.actions.Results navigateWithPath(ChunkPath path, NArea area, NGameUI gui) throws InterruptedException {
+        if (!enabled || !initialized || path == null) {
+            return nurgling.actions.Results.FAIL();
+        }
+
         ChunkNavExecutor executor = new ChunkNavExecutor(path, area, this);
         nurgling.actions.Results result = executor.run(gui);
 

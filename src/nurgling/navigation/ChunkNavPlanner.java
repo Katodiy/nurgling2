@@ -92,6 +92,94 @@ public class ChunkNavPlanner {
 
         return path;
     }
+    
+    /**
+     * Plan a path from player's current position to a specific world coordinate.
+     * Used for planning paths to specific corners of an area.
+     */
+    public ChunkPath planToCoord(Coord2d worldCoord) {
+        if (worldCoord == null) return null;
+
+        // Get player's current chunk and local position
+        PlayerLocation playerLoc = getPlayerLocation();
+        if (playerLoc == null) {
+            return null;
+        }
+
+        long startChunkId = playerLoc.gridId;
+        Coord playerLocal = playerLoc.localCoord;
+
+        // Convert world coord to tile coord
+        Coord targetTile = worldCoord.floor(MCache.tilesz);
+        
+        // Find which chunk contains this tile
+        TargetLocation target = findTargetLocationForTile(targetTile);
+        if (target == null) {
+            return null;
+        }
+
+        // Use unified pathfinder to get complete tile-level path
+        UnifiedTilePathfinder.UnifiedPath unifiedPath = unifiedPathfinder.findPath(
+            startChunkId, playerLocal,
+            target.chunkId, target.localCoord
+        );
+
+        if (unifiedPath == null || !unifiedPath.reachable) {
+            return null;
+        }
+
+        // Convert to ChunkPath with segments
+        ChunkPath path = new ChunkPath();
+        unifiedPath.populateChunkPath(path, graph);
+
+        return path;
+    }
+    
+    /**
+     * Find the target chunk and local coordinate for a specific world tile.
+     */
+    private TargetLocation findTargetLocationForTile(Coord targetTile) {
+        try {
+            // Try loaded grid first
+            NGameUI gui = NUtils.getGameUI();
+            if (gui != null && gui.map != null && gui.map.glob != null) {
+                MCache mcache = gui.map.glob.map;
+                MCache.Grid grid = mcache.getgridt(targetTile);
+                if (grid != null) {
+                    Coord localCoord = targetTile.sub(grid.ul);
+                    if (localCoord.x >= 0 && localCoord.x < CHUNK_SIZE &&
+                        localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
+                        // Check if walkable
+                        ChunkNavData chunk = graph.getChunk(grid.id);
+                        if (chunk != null) {
+                            Coord walkable = findWalkableTileNear(chunk, localCoord);
+                            if (walkable != null) {
+                                return new TargetLocation(grid.id, walkable);
+                            }
+                        }
+                        return new TargetLocation(grid.id, localCoord);
+                    }
+                }
+            }
+            
+            // Search recorded chunks by worldTileOrigin
+            for (ChunkNavData chunk : graph.getAllChunks()) {
+                if (chunk.worldTileOrigin == null) continue;
+
+                Coord localCoord = targetTile.sub(chunk.worldTileOrigin);
+                if (localCoord.x >= 0 && localCoord.x < CHUNK_SIZE &&
+                    localCoord.y >= 0 && localCoord.y < CHUNK_SIZE) {
+                    Coord walkable = findWalkableTileNear(chunk, localCoord);
+                    if (walkable != null) {
+                        return new TargetLocation(chunk.gridId, walkable);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return null;
+    }
 
     /**
      * Find the target chunk and local coordinate for an area using stored data.
@@ -197,27 +285,48 @@ public class ChunkNavPlanner {
     }
 
     /**
+     * Check if a specific cell is walkable.
+     */
+    private boolean isCellWalkable(ChunkNavData chunk, int cellX, int cellY) {
+        if (cellX >= 0 && cellX < CELLS_PER_EDGE && cellY >= 0 && cellY < CELLS_PER_EDGE) {
+            return chunk.walkability[cellX][cellY] == 0;
+        }
+        return false;
+    }
+    
+    /**
      * Find a walkable tile near the given coordinate.
+     * Searches in cell grid (half-tile resolution, ~5.5 world units per step)
+     * with max radius of 4 cells from the target.
      */
     private Coord findWalkableTileNear(ChunkNavData chunk, Coord target) {
-        // Check the target itself first
-        if (target.x >= 0 && target.x < CHUNK_SIZE &&
-            target.y >= 0 && target.y < CHUNK_SIZE &&
-            isTileWalkable(chunk, target.x, target.y)) {
+        // Convert target tile to cell coordinates (center of the tile)
+        int targetCellX = target.x * CELLS_PER_TILE;
+        int targetCellY = target.y * CELLS_PER_TILE;
+        
+        // Check the target cell itself first
+        if (isCellWalkable(chunk, targetCellX, targetCellY)) {
             return target;
         }
 
-        // Search in expanding rings around the target
-        for (int radius = 1; radius <= 10; radius++) {
+        // Search in expanding rings around the target in CELL coordinates
+        // Max radius = 4 cells = 2 tiles = ~22 world units
+        final int MAX_CELL_RADIUS = 4;
+        
+        for (int radius = 1; radius <= MAX_CELL_RADIUS; radius++) {
             for (int dx = -radius; dx <= radius; dx++) {
                 for (int dy = -radius; dy <= radius; dy++) {
                     if (Math.abs(dx) != radius && Math.abs(dy) != radius) continue; // Only perimeter
 
-                    int nx = target.x + dx;
-                    int ny = target.y + dy;
-                    if (nx >= 0 && nx < CHUNK_SIZE && ny >= 0 && ny < CHUNK_SIZE) {
-                        if (isTileWalkable(chunk, nx, ny)) {
-                            return new Coord(nx, ny);
+                    int cx = targetCellX + dx;
+                    int cy = targetCellY + dy;
+                    
+                    if (isCellWalkable(chunk, cx, cy)) {
+                        // Convert cell back to tile
+                        int tileX = cx / CELLS_PER_TILE;
+                        int tileY = cy / CELLS_PER_TILE;
+                        if (tileX >= 0 && tileX < CHUNK_SIZE && tileY >= 0 && tileY < CHUNK_SIZE) {
+                            return new Coord(tileX, tileY);
                         }
                     }
                 }

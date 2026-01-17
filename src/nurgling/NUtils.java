@@ -784,13 +784,23 @@ public class NUtils
 
     public static boolean navigateToArea(NArea area) throws InterruptedException
     {
+        if (area == null) return false;
+        
+        // Check if any corner of the area is reachable via local pathfinding
+        // If yes - we're already close enough, no need to use global navigation
+        if (nurgling.navigation.AreaNavigationHelper.isAreaReachableByLocalPF(area)) {
+            return true;
+        }
+        
+        // Area is not reachable by local PF, use chunk navigation
+        // Plan to all 4 corners in parallel and choose the shortest path
         ChunkNavManager chunkNav = ((NMapView) NUtils.getGameUI().map).getChunkNavManager();
         if (chunkNav != null && chunkNav.isInitialized())
         {
-            ChunkPath path = chunkNav.planToArea(area);
-            if (path != null)
+            ChunkPath bestPath = nurgling.navigation.AreaNavigationHelper.findShortestPathToAreaCorners(area, chunkNav);
+            if (bestPath != null)
             {
-                return chunkNav.navigateToArea(area, NUtils.getGameUI()).IsSuccess();
+                return chunkNav.navigateWithPath(bestPath, area, NUtils.getGameUI()).IsSuccess();
             }
         }
         return false;
@@ -798,15 +808,24 @@ public class NUtils
 
     public static boolean navigateToArea(Specialisation string) throws InterruptedException
     {
-        ChunkNavManager chunkNav = ((NMapView) NUtils.getGameUI().map).getChunkNavManager();
         NArea area = NContext.findSpecGlobal(string.toString());
-        if (chunkNav != null && chunkNav.isInitialized() && area!=null)
+        if (area == null) return false;
+        
+        // Check if any corner of the area is reachable via local pathfinding
+        // If yes - we're already close enough, no need to use global navigation
+        if (nurgling.navigation.AreaNavigationHelper.isAreaReachableByLocalPF(area)) {
+            return true;
+        }
+        
+        // Area is not reachable by local PF, use chunk navigation
+        // Plan to all 4 corners in parallel and choose the shortest path
+        ChunkNavManager chunkNav = ((NMapView) NUtils.getGameUI().map).getChunkNavManager();
+        if (chunkNav != null && chunkNav.isInitialized())
         {
-            ChunkPath path = chunkNav.planToArea(area);
-            if (path != null)
+            ChunkPath bestPath = nurgling.navigation.AreaNavigationHelper.findShortestPathToAreaCorners(area, chunkNav);
+            if (bestPath != null)
             {
-
-                return chunkNav.navigateToArea(area, NUtils.getGameUI()).IsSuccess();
+                return chunkNav.navigateWithPath(bestPath, area, NUtils.getGameUI()).IsSuccess();
             }
         }
         return false;
