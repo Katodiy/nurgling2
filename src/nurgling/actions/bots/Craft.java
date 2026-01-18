@@ -254,9 +254,26 @@ public class Craft implements Action {
         }
 
         int count = 0;
-
-        for (Long barrelid : GetBarrelsIds(ncontext)) {
+        ArrayList<Long> barrelIds = GetBarrelsIds(ncontext);
+        gui.msg("Craft: Will try to open " + barrelIds.size() + " barrel(s)");
+        
+        for (Long barrelid : barrelIds) {
             Gob barrel = Finder.findGob(barrelid);
+            if (barrel == null) {
+                gui.msg("Craft: Barrel with id " + barrelid + " not found!");
+                continue;
+            }
+            
+            // Check distance to barrel - need to be close enough to interact
+            double distToBarrel = NUtils.player().rc.dist(barrel.rc);
+            gui.msg("Craft: Distance to barrel " + barrelid + ": " + String.format("%.2f", distToBarrel));
+            
+            if (distToBarrel > 20) {
+                // Too far from barrel, need to move closer
+                gui.msg("Craft: Too far from barrel, moving closer...");
+                new PathFinder(barrel).run(gui);
+            }
+            
             gui.map.wdgmsg("click", Coord.z, barrel.rc.floor(posres), 3, 0, 0, (int) barrel.id,
                     barrel.rc.floor(posres), 0, -1);
             count++;
@@ -269,7 +286,13 @@ public class Craft implements Action {
             });
         }
         ArrayList<Window> windows = NUtils.getGameUI().getWindows("Barrel");
+        gui.msg("Craft: Found " + windows.size() + " barrel window(s) for resource check");
+        
         boolean hasEnoughResources = true;
+        String insufficientItem = null;
+        double foundAmount = 0;
+        double requiredAmount = 0;
+        
         for (NMakewindow.Spec s : mwnd.inputs) {
             // Skip ignored optional ingredients
             if (s.ing != null && s.ing.isIgnored) {
@@ -279,10 +302,25 @@ public class Craft implements Action {
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 double val = gui.findBarrelContent(windows, new NAlias(item));
+                gui.msg("Craft: Barrel content check for '" + item + "': raw value = " + val);
+                
+                // Handle case when barrel content not found (-1 means not found)
+                if (val < 0) {
+                    hasEnoughResources = false;
+                    insufficientItem = item;
+                    foundAmount = 0; // Not found = 0
+                    requiredAmount = s.count;
+                    gui.msg("Craft: Barrel content for '" + item + "' NOT FOUND (barrel may be closed or missing)");
+                    break;
+                }
+                
                 double valInMilligrams = val * 100;
                 if(valInMilligrams < s.count)
                 {
                     hasEnoughResources = false;
+                    insufficientItem = item;
+                    foundAmount = valInMilligrams;
+                    requiredAmount = s.count;
                     break;
                 }
             }
@@ -300,7 +338,9 @@ public class Craft implements Action {
                     new ReturnBarrelFromWorkArea(ncontext, item).run(gui);
                 }
             }
-            return Results.ERROR("Not enough resources in barrels");
+            return Results.ERROR("Not enough resources in barrels: '" + insufficientItem + 
+                    "' found " + String.format("%.2f", foundAmount) + 
+                    ", required " + String.format("%.2f", requiredAmount));
         }
 
         new Drink(0.9, false).run(gui);
@@ -407,6 +447,8 @@ public class Craft implements Action {
     ArrayList<Long> GetBarrelsIds(NContext ncontext) throws InterruptedException
     {
         ArrayList<Long> ids = new ArrayList<>();
+        NUtils.getGameUI().msg("GetBarrelsIds: Checking " + mwnd.inputs.size() + " inputs for barrel items");
+        
         for (NMakewindow.Spec s : mwnd.inputs)
         {
             // Skip ignored optional ingredients
@@ -415,9 +457,15 @@ public class Craft implements Action {
             }
             
             String item = s.ing == null ? s.name : s.ing.name;
+            String storedHash = ncontext.getPlacedBarrelHash(item);
+            NUtils.getGameUI().msg("GetBarrelsIds: Checking item '" + item + "', isInBarrel=" + ncontext.isInBarrel(item) + 
+                    ", storedHash=" + (storedHash != null ? storedHash.substring(0, Math.min(16, storedHash.length())) + "..." : "null"));
+            
             if (ncontext.isInBarrel(item))
             {
                 Gob barrel = ncontext.getBarrelInWorkArea(item);
+                NUtils.getGameUI().msg("GetBarrelsIds: getBarrelInWorkArea('" + item + "') returned " + 
+                        (barrel != null ? "barrel id=" + barrel.id + " hash=" + barrel.ngob.hash.substring(0, Math.min(16, barrel.ngob.hash.length())) + "..." : "NULL"));
                 if (barrel != null)
                     ids.add(barrel.id);
             }

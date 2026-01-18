@@ -279,8 +279,14 @@ public class NMakewindow extends Widget {
             if (s.categories) {
                 if (c.isect(sc, Inventory.sqsz)) {
                     boolean isOpt = s.opt();
-                if (cat == null) {
-                        NUtils.getGameUI().add(cat = new Categories(VSpec.categories.get(s.name), s, isOpt), sc.add(this.parent.c).add(this.c).add(Inventory.sqsz.x / 2, Inventory.sqsz.y * 2).add(UI.scale(2, 2)));
+                    ArrayList<JSONObject> categoryItems = VSpec.categories.get(s.name);
+                    if (cat == null) {
+                        // If category has only one item and it's not optional, auto-select it
+                        if (categoryItems != null && categoryItems.size() == 1 && !isOpt) {
+                            s.ing = new Ingredient(categoryItems.get(0));
+                            return true;
+                        }
+                        NUtils.getGameUI().add(cat = new Categories(categoryItems, s, isOpt), sc.add(this.parent.c).add(this.c).add(Inventory.sqsz.x / 2, Inventory.sqsz.y * 2).add(UI.scale(2, 2)));
                         pack();
                         NUtils.getGameUI().craftwnd.lower();
                         cat.raise();
