@@ -14,173 +14,193 @@ import nurgling.areas.NContext;
 import nurgling.tasks.NTask;
 import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
 import java.util.*;
 
+/**
+ * KFC - Chicken Manager Bot
+ * Manages chicken coops and incubators: replaces low-quality roosters/hens with better ones,
+ * transfers eggs to incubators, and processes low-quality chickens.
+ */
 public class KFC implements Action {
 
-    // Подкласс для информации о курятнике
-    private class CoopInfo {
-        Container container; // Контейнер курятника
-        double roosterQuality; // Качество петуха
-        ArrayList<Float> henQualities = new ArrayList<>(); // Список качеств кур
+    // Coop info class
+    private static class CoopInfo {
+        String gobHash;
+        double roosterQuality;
+        ArrayList<Float> henQualities = new ArrayList<>();
 
-        public CoopInfo(Container container, double roosterQuality) {
-            this.container = container;
+        public CoopInfo(String gobHash, double roosterQuality) {
+            this.gobHash = gobHash;
             this.roosterQuality = roosterQuality;
         }
     }
 
-    // Подкласс для информации об инкубаторе
-    private class IncubatorInfo {
-        Container container; // Контейнер инкубатора
-        double chickenQuality; // Качество курицы
+    // Incubator info class
+    private static class IncubatorInfo {
+        String gobHash;
+        double chickenQuality;
 
-        public IncubatorInfo(Container container, double chickenQuality) {
-            this.container = container;
+        public IncubatorInfo(String gobHash, double chickenQuality) {
+            this.gobHash = gobHash;
             this.chickenQuality = chickenQuality;
         }
     }
 
-    // Подкласс для данных о яйцах
-    private class EggData {
-        double quality; // Качество яйца
-        Container container; // Контейнер, в котором находится яйцо
+    // Maximum chicks per incubator
+    private static final int MAX_CHICKS_PER_INCUBATOR = 24;
+    
+    // Comparator for sorting incubators by quality
+    Comparator<IncubatorInfo> incubatorComparator = (o1, o2) -> Double.compare(o1.chickenQuality, o2.chickenQuality);
 
-        public EggData(double quality, Container container) {
-            this.quality = quality;
-            this.container = container;
-        }
-    }
-
-    // Компаратор для сортировки инкубаторов по качеству
-    Comparator<IncubatorInfo> incubatorComparator = new Comparator<IncubatorInfo>() {
-        @Override
-        public int compare(IncubatorInfo o1, IncubatorInfo o2) {
-            return Double.compare(o1.chickenQuality, o2.chickenQuality);
-        }
-    };
-
-    // Компаратор для сортировки курятников
-    Comparator<CoopInfo> coopComparator = new Comparator<CoopInfo>() {
-        @Override
-        public int compare(CoopInfo o1, CoopInfo o2) {
-            int res = Double.compare(o1.roosterQuality, o2.roosterQuality);
-            if (res == 0) {
-                if (!o1.henQualities.isEmpty() && !o2.henQualities.isEmpty()) {
-                    double avgQuality1 = o1.henQualities.stream().mapToDouble(Float::doubleValue).average().orElse(0);
-                    double avgQuality2 = o2.henQualities.stream().mapToDouble(Float::doubleValue).average().orElse(0);
-                    res = Double.compare(avgQuality1, avgQuality2);
-                }
+    // Comparator for sorting coops
+    Comparator<CoopInfo> coopComparator = (o1, o2) -> {
+        int res = Double.compare(o1.roosterQuality, o2.roosterQuality);
+        if (res == 0) {
+            if (!o1.henQualities.isEmpty() && !o2.henQualities.isEmpty()) {
+                double avgQuality1 = o1.henQualities.stream().mapToDouble(Float::doubleValue).average().orElse(0);
+                double avgQuality2 = o2.henQualities.stream().mapToDouble(Float::doubleValue).average().orElse(0);
+                res = Double.compare(avgQuality1, avgQuality2);
             }
-            return res;
         }
+        return res;
     };
 
-    // Компаратор для сортировки яиц по качеству
-    Comparator<EggData> eggComparator = new Comparator<EggData>() {
-        @Override
-        public int compare(EggData o1, EggData o2) {
-            return Double.compare(o1.quality, o2.quality);
-        }
-    };
-
-    Context context = new Context();
+    NContext context;
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        ArrayList<Container> containers = new ArrayList<>();
-
-        for (Gob cc : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.chicken.toString()),
-                new NAlias("gfx/terobjs/chickencoop"))) {
-            Container cand = new Container(cc, "Chicken Coop",NContext.findSpec(Specialisation.SpecName.chicken.toString()));
-
-            cand.initattr(Container.Space.class);
-
-            containers.add(cand);
+        context = new NContext(gui);
+        
+        // Validate required areas
+        NArea.Specialisation chickenSpec = new NArea.Specialisation(Specialisation.SpecName.chicken.toString());
+        NArea.Specialisation incubatorSpec = new NArea.Specialisation(Specialisation.SpecName.incubator.toString());
+        NArea.Specialisation swillSpec = new NArea.Specialisation(Specialisation.SpecName.swill.toString());
+        NArea.Specialisation waterSpec = new NArea.Specialisation(Specialisation.SpecName.water.toString());
+        
+        ArrayList<NArea.Specialisation> req = new ArrayList<>();
+        req.add(chickenSpec);
+        req.add(incubatorSpec);
+        
+        ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+        opt.add(swillSpec);
+        opt.add(waterSpec);
+        
+        if (!new Validator(req, opt).run(gui).IsSuccess()) {
+            return Results.FAIL();
+        }
+        
+        // Find areas globally
+        NArea chickenArea = NContext.findSpecGlobal(Specialisation.SpecName.chicken.toString());
+        NArea incubatorArea = NContext.findSpecGlobal(Specialisation.SpecName.incubator.toString());
+        NArea swillArea = NContext.findSpecGlobal(Specialisation.SpecName.swill.toString());
+        NArea waterArea = NContext.findSpecGlobal(Specialisation.SpecName.water.toString());
+        
+        if (chickenArea == null) {
+            return Results.ERROR("Chicken area not found!");
+        }
+        if (incubatorArea == null) {
+            return Results.ERROR("Incubator area not found!");
+        }
+        
+        // Navigate to chicken area and collect coop hashes
+        NUtils.navigateToArea(chickenArea);
+        ArrayList<String> coopHashes = new ArrayList<>();
+        for (Gob cc : Finder.findGobs(chickenArea, new NAlias("gfx/terobjs/chickencoop"))) {
+            if (cc.ngob != null && cc.ngob.hash != null) {
+                coopHashes.add(cc.ngob.hash);
+            }
         }
 
-        ArrayList<Container> ccontainers = new ArrayList<>();
-
-        for (Gob cc : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.incubator.toString()),
-                new NAlias("gfx/terobjs/chickencoop"))) {
-            Container cand = new Container(cc, "Chicken Coop", NContext.findSpec(Specialisation.SpecName.incubator.toString()));
-
-            cand.initattr(Container.Space.class);
-
-            ccontainers.add(cand);
+        // Navigate to incubator area and collect incubator hashes
+        NUtils.navigateToArea(incubatorArea);
+        ArrayList<String> incubatorHashes = new ArrayList<>();
+        for (Gob cc : Finder.findGobs(incubatorArea, new NAlias("gfx/terobjs/chickencoop"))) {
+            if (cc.ngob != null && cc.ngob.hash != null) {
+                incubatorHashes.add(cc.ngob.hash);
+            }
         }
 
-        // Заполняем курятники и инкубаторы жидкостями
-        new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 2).run(gui);
-        new FillFluid(ccontainers, NContext.findSpec(Specialisation.SpecName.swill.toString()).getRCArea(), new NAlias("swill"), 2).run(gui);
-        new FillFluid(containers, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 1).run(gui);
-        new FillFluid(ccontainers, NContext.findSpec(Specialisation.SpecName.water.toString()).getRCArea(), new NAlias("water"), 1).run(gui);
+        // Fill chicken coops and incubators with fluids
+        if (swillArea != null || waterArea != null) {
+            ArrayList<Container> containers = getContainersFromHashes(coopHashes, chickenArea);
+            ArrayList<Container> ccontainers = getContainersFromHashes(incubatorHashes, incubatorArea);
+            
+            if (swillArea != null) {
+                new FillFluid(containers, swillArea.getRCArea(), new NAlias("swill"), 2).run(gui);
+                new FillFluid(ccontainers, swillArea.getRCArea(), new NAlias("swill"), 2).run(gui);
+            }
+            if (waterArea != null) {
+                new FillFluid(containers, waterArea.getRCArea(), new NAlias("water"), 1).run(gui);
+                new FillFluid(ccontainers, waterArea.getRCArea(), new NAlias("water"), 1).run(gui);
+            }
+        }
 
-        // Считываем содержимое курятников и сортируем их
+        // Read coop contents and sort them
         ArrayList<CoopInfo> coopInfos = new ArrayList<>();
         ArrayList<IncubatorInfo> qcocks = new ArrayList<>();
         ArrayList<IncubatorInfo> qhens = new ArrayList<>();
-        for (Container container : containers) {
-            new PathFinder( Finder.findGob(container.gobid)).run(gui);
-            if (!(new OpenTargetContainer("Chicken Coop",Finder.findGob(container.gobid)).run(gui).IsSuccess())) {
+        
+        // Navigate to chicken area and read coop contents
+        NUtils.navigateToArea(chickenArea);
+        for (String hash : coopHashes) {
+            Gob gob = Finder.findGob(hash);
+            if (gob == null) continue;
+            
+            new PathFinder(gob).run(gui);
+            if (!(new OpenTargetContainer("Chicken Coop", gob).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
-
-
             double roosterQuality;
-            if(gui.getInventory("Chicken Coop").getItem(new NAlias("Cock"))!=null) {
-                // Получаем информацию о петухе
+            if (gui.getInventory("Chicken Coop").getItem(new NAlias("Cock")) != null) {
                 NGItem roost = (NGItem) gui.getInventory("Chicken Coop").getItem(new NAlias("Cock")).item;
                 roosterQuality = roost.quality;
-            }
-            else
-            {
+            } else {
                 roosterQuality = -1;
             }
 
+            CoopInfo coopInfo = new CoopInfo(hash, roosterQuality);
 
-            // Создаем объект CoopInfo для текущего курятника
-            CoopInfo coopInfo = new CoopInfo(container, roosterQuality);
-
-            // Получаем информацию о курах
             ArrayList<WItem> hens = gui.getInventory("Chicken Coop").getItems(new NAlias("Hen"));
             for (WItem hen : hens) {
-                coopInfo.henQualities.add(((NGItem)hen.item).quality);
+                coopInfo.henQualities.add(((NGItem) hen.item).quality);
             }
             coopInfo.henQualities.sort(Float::compareTo);
 
-            // Добавляем курятник в список
             coopInfos.add(coopInfo);
 
-            new CloseTargetContainer(container).run(gui);
+            new CloseTargetContainer("Chicken Coop").run(gui);
         }
 
-        // Сортируем курятники по качеству петухов и среднему качеству кур
+        // Sort coops by rooster quality and average hen quality
         coopInfos.sort(coopComparator.reversed());
 
-        for (Container container : ccontainers) {
-            new PathFinder(Finder.findGob(container.gobid)).run(gui);
-            if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(container.gobid)).run(gui).IsSuccess())) {
+        // Navigate to incubator area and read contents
+        NUtils.navigateToArea(incubatorArea);
+        for (String hash : incubatorHashes) {
+            Gob gob = Finder.findGob(hash);
+            if (gob == null) continue;
+            
+            new PathFinder(gob).run(gui);
+            if (!(new OpenTargetContainer("Chicken Coop", gob).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
             ArrayList<WItem> roosters = gui.getInventory("Chicken Coop").getItems(new NAlias("Cock"));
             for (WItem rooster : roosters) {
-                qcocks.add(new IncubatorInfo(container, ((NGItem) rooster.item).quality));
+                qcocks.add(new IncubatorInfo(hash, ((NGItem) rooster.item).quality));
             }
 
             ArrayList<WItem> hens = gui.getInventory("Chicken Coop").getItems(new NAlias("Hen"));
             for (WItem hen : hens) {
-                qhens.add(new IncubatorInfo(container, ((NGItem) hen.item).quality));
+                qhens.add(new IncubatorInfo(hash, ((NGItem) hen.item).quality));
             }
 
-            new CloseTargetContainer(container).run(gui);
+            new CloseTargetContainer("Chicken Coop").run(gui);
         }
 
         Results roosterResult = processRoosters(gui, coopInfos, qcocks);
@@ -188,88 +208,244 @@ public class KFC implements Action {
             return roosterResult;
         }
 
-
         Results henResult = processHens(gui, coopInfos, qhens);
         if (!henResult.IsSuccess()) {
             return henResult;
         }
 
-        ArrayList<Context.Output> outputs = new ArrayList<>();
-        for (Container cc :ccontainers) {
-            Context.OutputContainer container = new Context.OutputContainer(Finder.findGob(cc.gobid), NContext.findSpec(Specialisation.SpecName.incubator.toString()), 1);
-            container.cap = "Chicken Coop";
-            container.initattr(Container.Space.class);
-            outputs.add(container);
+        // Transfer chicks from chicken coops to incubators
+        transferChicks(gui, coopHashes, incubatorHashes);
+
+        // Determine threshold quality for eggs from best coop
+        if (coopInfos.isEmpty()) {
+            return Results.ERROR("No chicken coops found!");
         }
-
-        context.addOutput("Chick",outputs);
-        HashSet<String> chicks = new HashSet<>();
-        chicks.add("Chick");
-        new TransferTargetItemsFromContainers(context,containers,chicks, new NAlias(new ArrayList<>(), new ArrayList<>(List.of("Egg", "Feather", "Meat", "Bone")))).run(gui);
-
-        // Выясняем пороговое качество для яиц
-        new PathFinder(Finder.findGob(coopInfos.get(0).container.gobid)).run(gui);
-        if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(coopInfos.get(0).container.gobid)).run(gui).IsSuccess())) {
+        
+        context.getSpecArea(Specialisation.SpecName.chicken);
+        Gob bestCoopGob = Finder.findGob(coopInfos.get(0).gobHash);
+        if (bestCoopGob == null) {
+            return Results.ERROR("Best coop not found!");
+        }
+        
+        new PathFinder(bestCoopGob).run(gui);
+        if (!(new OpenTargetContainer("Chicken Coop", bestCoopGob).run(gui).IsSuccess())) {
             return Results.FAIL();
         }
 
-        // Получаем информацию о курах
+        // Get quality threshold from top hens
         ArrayList<WItem> topHens = gui.getInventory("Chicken Coop").getItems(new NAlias("Hen"));
         ArrayList<Float> qtop = new ArrayList<>();
         for (WItem top : topHens) {
             qtop.add(((NGItem) top.item).quality);
         }
-        qtop.sort(Float::compareTo);
-
-        // Выводим пороговое качество
-        gui.msg(String.valueOf(qtop.get(0)));
-
-        double chicken_th = qtop.get(0);
-
-
-        HashSet<String> eggs = new HashSet<>();
-        eggs.add("Chicken Egg");
-        for(Container container: containers)
-        {
-            PathFinder pf = new PathFinder(Finder.findGob(container.gobid));
-            pf.isHardMode = true;
-            pf.run(gui);
-            new OpenTargetContainer(container).run(gui);
-
-
-            while (!new TakeItemsFromContainer(container, eggs, null, chicken_th).run(gui).isSuccess)
-            {
-                new TransferItems(context, eggs).run(gui);
-                pf = new PathFinder(Finder.findGob(container.gobid));
-                pf.isHardMode = true;
-                pf.run(gui);
-                new OpenTargetContainer(container).run(gui);
-            }
-            new CloseTargetContainer(container).run(gui);
+        
+        if (qtop.isEmpty()) {
+            gui.msg("No hens found in best coop!");
+            return Results.ERROR("No hens in best coop");
         }
-        new TransferItems(context, eggs).run(gui);
+        
+        qtop.sort(Float::compareTo);
+        double chicken_th = qtop.get(0);
+        gui.msg("Egg quality threshold: " + chicken_th);
+        new CloseTargetContainer("Chicken Coop").run(gui);
+
+        // Collect low quality eggs and dispose via FreeInventory2 (like Butcher)
+        collectAndDisposeLowQualityEggs(gui, coopHashes, chicken_th);
+
+        new FreeInventory2(context).run(gui);
         return Results.SUCCESS();
+    }
+    
+    private ArrayList<Container> getContainersFromHashes(ArrayList<String> hashes, NArea area) {
+        ArrayList<Container> containers = new ArrayList<>();
+        for (String hash : hashes) {
+            Gob gob = Finder.findGob(hash);
+            if (gob != null) {
+                Container cand = new Container(gob, "Chicken Coop", area);
+                cand.initattr(Container.Space.class);
+                containers.add(cand);
+            }
+        }
+        return containers;
+    }
+    
+    private void transferChicks(NGameUI gui, ArrayList<String> coopHashes, ArrayList<String> incubatorHashes) throws InterruptedException {
+        NAlias chickAlias = new NAlias(new ArrayList<>(List.of("Chick")), new ArrayList<>(List.of("Egg")));
+        
+        // Collect chicks from chicken coops
+        context.getSpecArea(Specialisation.SpecName.chicken);
+        for (String hash : coopHashes) {
+            Gob gob = Finder.findGob(hash);
+            if (gob == null) continue;
+            
+            new PathFinder(gob).run(gui);
+            if (!(new OpenTargetContainer("Chicken Coop", gob).run(gui).IsSuccess())) {
+                continue;
+            }
+            
+            // Transfer all chicks to inventory (exclude Eggs)
+            ArrayList<WItem> chicks = gui.getInventory("Chicken Coop").getItems(chickAlias);
+            for (WItem chick : chicks) {
+                chick.item.wdgmsg("transfer", Coord.z);
+            }
+            
+            new CloseTargetContainer("Chicken Coop").run(gui);
+            
+            // If inventory getting full, transfer to incubators (don't kill yet)
+            if (shouldDropOffItems(gui)) {
+                transferChicksToIncubators(gui, incubatorHashes);
+                context.getSpecArea(Specialisation.SpecName.chicken);
+            }
+        }
+        
+        // Transfer all remaining chicks to incubators (fills all available space)
+        transferChicksToIncubators(gui, incubatorHashes);
+        
+        // Only after ALL incubators are full, kill excess chicks
+        killExcessChicks(gui, chickAlias);
+    }
+    
+    private void transferChicksToIncubators(NGameUI gui, ArrayList<String> incubatorHashes) throws InterruptedException {
+        NAlias chickAlias = new NAlias(new ArrayList<>(List.of("Chick")), new ArrayList<>(List.of("Egg")));
+        ArrayList<WItem> chicks = gui.getInventory().getItems(chickAlias);
+        if (chicks.isEmpty()) return;
+        
+        context.getSpecArea(Specialisation.SpecName.incubator);
+        for (String hash : incubatorHashes) {
+            chicks = gui.getInventory().getItems(chickAlias);
+            if (chicks.isEmpty()) break;
+            
+            Gob gob = Finder.findGob(hash);
+            if (gob == null) continue;
+            
+            // Create container with ItemCount for chick tracking
+            Container incubatorContainer = new Container(gob, "Chicken Coop", null);
+            Container.ItemCount itemCount = incubatorContainer.initItemCount(chickAlias, MAX_CHICKS_PER_INCUBATOR);
+            
+            new PathFinder(gob).run(gui);
+            if (!(new OpenTargetContainer(incubatorContainer).run(gui).IsSuccess())) {
+                continue;
+            }
+            
+            // Update ItemCount to get current chick count
+            itemCount.update();
+            int canAdd = itemCount.getNeeded();
+            
+            if (canAdd <= 0) {
+                new CloseTargetContainer(incubatorContainer).run(gui);
+                continue;
+            }
+            
+            // Transfer chicks to incubator (up to limit)
+            int transferred = 0;
+            for (WItem chick : chicks) {
+                if (transferred >= canAdd) break;
+                if (gui.getInventory("Chicken Coop").getNumberFreeCoord(new Coord(2, 2)) > 0) {
+                    chick.item.wdgmsg("transfer", Coord.z);
+                    transferred++;
+                } else {
+                    break;
+                }
+            }
+            
+            new CloseTargetContainer(incubatorContainer).run(gui);
+        }
+    }
+    
+    /**
+     * Kill excess chicks that couldn't fit in incubators.
+     * Wring neck -> wait for "A Bloody Mess" -> drop on ground
+     */
+    private void killExcessChicks(NGameUI gui, NAlias chickAlias) throws InterruptedException {
+        ArrayList<WItem> chicks = gui.getInventory().getItems(chickAlias);
+        
+        while (!chicks.isEmpty()) {
+            WItem chick = chicks.get(0);
+            
+            // Wring neck
+            new SelectFlowerAction("Wring neck", chick).run(gui);
+            
+            // Wait for "A Bloody Mess" to appear
+            NUtils.addTask(new WaitItems((NInventory) gui.maininv, new NAlias("A Bloody Mess"), 1));
+            
+            // Drop the bloody mess on ground
+            WItem bloodyMess = gui.getInventory().getItem(new NAlias("A Bloody Mess"));
+            if (bloodyMess != null) {
+                NUtils.drop(bloodyMess);
+                NUtils.addTask(new NTask() {
+                    @Override
+                    public boolean check() {
+                        try {
+                            return gui.getInventory().getItems(new NAlias("A Bloody Mess")).isEmpty();
+                        } catch (InterruptedException e) {
+                            return false;
+                        }
+                    }
+                });
+            }
+            
+            // Get remaining chicks
+            chicks = gui.getInventory().getItems(chickAlias);
+        }
+    }
+    
+    /**
+     * Collect eggs with quality BELOW threshold and dispose them via FreeInventory2 (like Butcher).
+     * Good quality eggs stay in coops for hatching.
+     */
+    private void collectAndDisposeLowQualityEggs(NGameUI gui, ArrayList<String> coopHashes, double qualityThreshold) throws InterruptedException {
+        context.getSpecArea(Specialisation.SpecName.chicken);
+        for (String hash : coopHashes) {
+            Gob gob = Finder.findGob(hash);
+            if (gob == null) continue;
+            
+            new PathFinder(gob).run(gui);
+            if (!(new OpenTargetContainer("Chicken Coop", gob).run(gui).IsSuccess())) {
+                continue;
+            }
+            
+            // Collect eggs BELOW quality threshold (bad eggs to dispose)
+            ArrayList<WItem> eggs = gui.getInventory("Chicken Coop").getItems(new NAlias("Chicken Egg"));
+            for (WItem egg : eggs) {
+                if (((NGItem) egg.item).quality < qualityThreshold) {
+                    egg.item.wdgmsg("transfer", Coord.z);
+                }
+            }
+            
+            new CloseTargetContainer("Chicken Coop").run(gui);
+            
+            // If inventory getting full, dispose via FreeInventory2 and return to chicken area
+            if (shouldDropOffItems(gui)) {
+                new FreeInventory2(context).run(gui);
+                context.getSpecArea(Specialisation.SpecName.chicken);
+            }
+        }
     }
 
 
     private Results processRoosters(NGameUI gui, ArrayList<CoopInfo> coopInfos, ArrayList<IncubatorInfo> qcocks) throws InterruptedException {
-
-        // Сортируем петушков по качеству (от лучшего к худшему)
+        // Sort roosters by quality (best to worst)
         qcocks.sort(incubatorComparator.reversed());
 
         for (IncubatorInfo roosterInfo : qcocks) {
-            // Открываем курятник с петушком
-            new PathFinder(Finder.findGob(roosterInfo.container.gobid)).run(gui);
-            if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(roosterInfo.container.gobid)).run(gui).IsSuccess())) {
+            // Navigate to incubator area and open the coop with rooster
+            context.getSpecArea(Specialisation.SpecName.incubator);
+            
+            Gob roosterGob = Finder.findGob(roosterInfo.gobHash);
+            if (roosterGob == null) continue;
+            
+            new PathFinder(roosterGob).run(gui);
+            if (!(new OpenTargetContainer("Chicken Coop", roosterGob).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
-            // Получаем петушка из инвентаря
-            WItem rooster = (WItem) gui.getInventory("Chicken Coop").getItem(new NAlias("Cock"));
+            // Get rooster from coop inventory
+            WItem rooster = gui.getInventory("Chicken Coop").getItem(new NAlias("Cock"));
             if (rooster == null) {
-                return Results.ERROR("NO_ROOSTER");
+                new CloseTargetContainer("Chicken Coop").run(gui);
+                continue;
             }
-            double roosterQuality = ((NGItem)rooster.item).quality;
+            double roosterQuality = ((NGItem) rooster.item).quality;
 
             Coord pos = rooster.c.div(Inventory.sqsz);
             rooster.item.wdgmsg("transfer", Coord.z);
@@ -280,27 +456,33 @@ public class KFC implements Action {
                     return gui.getInventory("Chicken Coop").isSlotFree(finalPos1);
                 }
             });
+            new CloseTargetContainer("Chicken Coop").run(gui);
 
-            // Ищем курятник с худшим петухом и заменяем его
+            // Find coop with worse rooster and replace it
             for (CoopInfo coopInfo : coopInfos) {
-                if (coopInfo.roosterQuality < roosterQuality && coopInfo.roosterQuality!=-1) {
+                if (coopInfo.roosterQuality < roosterQuality && coopInfo.roosterQuality != -1) {
+                    rooster = gui.getInventory().getItem(new NAlias("Cock"));
+                    if (rooster == null) break;
 
-
-                    rooster = (WItem) gui.getInventory().getItem(new NAlias("Cock"));
-
-                    // Открываем курятник для замены
-                    new PathFinder(Finder.findGob(coopInfo.container.gobid)).run(gui);
-                    if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(coopInfo.container.gobid)).run(gui).IsSuccess())) {
+                    // Navigate to chicken area and open coop for replacement
+                    context.getSpecArea(Specialisation.SpecName.chicken);
+                    
+                    Gob coopGob = Finder.findGob(coopInfo.gobHash);
+                    if (coopGob == null) continue;
+                    
+                    new PathFinder(coopGob).run(gui);
+                    if (!(new OpenTargetContainer("Chicken Coop", coopGob).run(gui).IsSuccess())) {
                         return Results.FAIL();
                     }
 
-                    // Получаем текущего петушка в курятнике
+                    // Get current rooster in coop
                     WItem oldRooster = gui.getInventory("Chicken Coop").getItem(new NAlias("Cock"));
                     if (oldRooster == null) {
-                        return Results.ERROR("NO_ROOSTER_IN_COOP");
+                        new CloseTargetContainer("Chicken Coop").run(gui);
+                        continue;
                     }
 
-                    // Заменяем петушка
+                    // Replace rooster
                     pos = oldRooster.c.div(Inventory.sqsz);
                     oldRooster.item.wdgmsg("transfer", Coord.z);
                     Coord finalPos = pos;
@@ -312,69 +494,46 @@ public class KFC implements Action {
                     });
 
                     NUtils.takeItemToHand(rooster);
-                    gui.getInventory("Chicken Coop").dropOn(pos,"Cock");
+                    gui.getInventory("Chicken Coop").dropOn(pos, "Cock");
 
-
-
-
-                    // Обновляем качество петушка в курятнике
+                    // Update quality
                     coopInfo.roosterQuality = roosterQuality;
-                    roosterQuality = ((NGItem)oldRooster.item).quality;
-                    // Обновляем качество для следующей замены
-                    new CloseTargetContainer(coopInfo.container).run(gui);
+                    roosterQuality = ((NGItem) oldRooster.item).quality;
+                    new CloseTargetContainer("Chicken Coop").run(gui);
                 }
             }
 
-            rooster = (WItem) gui.getInventory().getItem(new NAlias("Cock"));
-            new SelectFlowerAction( "Wring neck", rooster).run(gui);
-            NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Dead Cock"), 1));
-
-            rooster = (WItem) gui.getInventory().getItem(new NAlias("Dead Cock"));
-            new SelectFlowerAction( "Pluck", rooster).run(gui);
-            NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Plucked Chicken"), 1));
-
-            rooster = (WItem) gui.getInventory().getItem(new NAlias("Plucked Chicken"));
-            new SelectFlowerAction( "Clean", rooster).run(gui);
-            NUtils.addTask(new WaitItems((NInventory) gui.maininv,new NAlias("Cleaned Chicken"), 1));
-
-            rooster = (WItem) gui.getInventory().getItem(new NAlias("Cleaned Chicken"));
-            new SelectFlowerAction( "Butcher", rooster).run(gui);
-            NUtils.addTask(new NTask() {
-                @Override
-                public boolean check() {
-                    try {
-                        return gui.getInventory().getItems(new NAlias("Cleaned Chicken")).isEmpty();
-                    } catch (InterruptedException e) {
-                        return false;
-                    }
-                }
-            });
-
-            // Only drop off if insufficient space for another chicken + buffer (6 cells)
-            if (shouldDropOffItems(gui)) {
-                new FreeInventory(context).run(gui);
+            // Process the rooster (butcher it)
+            rooster = gui.getInventory().getItem(new NAlias("Cock"));
+            if (rooster != null) {
+                butcherChicken(gui, rooster, "Cock", "Dead Cock");
             }
         }
-        new FreeInventory(context).run(gui);
+        new FreeInventory2(context).run(gui);
         return Results.SUCCESS();
     }
 
-
     private Results processHens(NGameUI gui, ArrayList<CoopInfo> coopInfos, ArrayList<IncubatorInfo> qhens) throws InterruptedException {
-        // Сортируем кур по качеству (от лучшего к худшему)
+        // Sort hens by quality (best to worst)
         qhens.sort(incubatorComparator.reversed());
 
         for (IncubatorInfo henInfo : qhens) {
-            // Открываем курятник с курицей
-            new PathFinder(Finder.findGob(henInfo.container.gobid)).run(gui);
-            if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(henInfo.container.gobid)).run(gui).IsSuccess())) {
+            // Navigate to incubator area and open coop with hen
+            context.getSpecArea(Specialisation.SpecName.incubator);
+            
+            Gob henGob = Finder.findGob(henInfo.gobHash);
+            if (henGob == null) continue;
+            
+            new PathFinder(henGob).run(gui);
+            if (!(new OpenTargetContainer("Chicken Coop", henGob).run(gui).IsSuccess())) {
                 return Results.FAIL();
             }
 
-            // Получаем курицу из инвентаря
-            WItem hen = (WItem) gui.getInventory("Chicken Coop").getItem(new NAlias("Hen"));
+            // Get hen from coop inventory
+            WItem hen = gui.getInventory("Chicken Coop").getItem(new NAlias("Hen"));
             if (hen == null) {
-                return Results.ERROR("NO_HEN");
+                new CloseTargetContainer("Chicken Coop").run(gui);
+                continue;
             }
             float henQuality = ((NGItem) hen.item).quality;
 
@@ -387,26 +546,34 @@ public class KFC implements Action {
                     return gui.getInventory("Chicken Coop").isSlotFree(finalPos1);
                 }
             });
+            new CloseTargetContainer("Chicken Coop").run(gui);
 
-            // Ищем курятник с худшей курицей и заменяем её
+            // Find coop with worse hen and replace it
             for (CoopInfo coopInfo : coopInfos) {
                 for (int i = 0; i < coopInfo.henQualities.size(); i++) {
                     if (coopInfo.henQualities.get(i) < henQuality) {
-                        // Открываем курятник для замены
-                        new PathFinder(Finder.findGob(coopInfo.container.gobid)).run(gui);
-                        if (!(new OpenTargetContainer("Chicken Coop", Finder.findGob(coopInfo.container.gobid)).run(gui).IsSuccess())) {
+                        hen = gui.getInventory().getItem(new NAlias("Hen"));
+                        if (hen == null) break;
+
+                        // Navigate to chicken area and open coop for replacement
+                        context.getSpecArea(Specialisation.SpecName.chicken);
+                        
+                        Gob coopGob = Finder.findGob(coopInfo.gobHash);
+                        if (coopGob == null) continue;
+                        
+                        new PathFinder(coopGob).run(gui);
+                        if (!(new OpenTargetContainer("Chicken Coop", coopGob).run(gui).IsSuccess())) {
                             return Results.FAIL();
                         }
 
-                        hen = (WItem) gui.getInventory().getItem(new NAlias("Hen"));
-
-                        // Получаем текущую курицу в курятнике
+                        // Get current hen in coop
                         WItem oldHen = gui.getInventory("Chicken Coop").getItem(new NAlias("Hen"), coopInfo.henQualities.get(i));
                         if (oldHen == null) {
-                            return Results.ERROR("NO_HEN_IN_COOP");
+                            new CloseTargetContainer("Chicken Coop").run(gui);
+                            continue;
                         }
 
-                        // Заменяем курицу
+                        // Replace hen
                         pos = oldHen.c.div(Inventory.sqsz);
                         oldHen.item.wdgmsg("transfer", Coord.z);
                         Coord finalPos = pos;
@@ -420,48 +587,69 @@ public class KFC implements Action {
                         NUtils.takeItemToHand(hen);
                         gui.getInventory("Chicken Coop").dropOn(pos, "Hen");
 
-                        // Обновляем качество курицы в курятнике
+                        // Update quality
                         coopInfo.henQualities.set(i, henQuality);
-                        henQuality = ((NGItem) oldHen.item).quality; // Обновляем качество для следующей замены
-                        new CloseTargetContainer(coopInfo.container).run(gui);
+                        henQuality = ((NGItem) oldHen.item).quality;
+                        new CloseTargetContainer("Chicken Coop").run(gui);
                         break;
                     }
                 }
             }
 
-            // Убиваем курицу и обрабатываем её
-            hen = (WItem) gui.getInventory().getItem(new NAlias("Hen"));
-            new SelectFlowerAction("Wring neck", hen).run(gui);
-            NUtils.addTask(new WaitItems((NInventory) gui.maininv, new NAlias("Dead Hen"), 1));
-
-            hen = (WItem) gui.getInventory().getItem(new NAlias("Dead Hen"));
-            new SelectFlowerAction("Pluck", hen).run(gui);
-            NUtils.addTask(new WaitItems((NInventory) gui.maininv, new NAlias("Plucked Chicken"), 1));
-
-            hen = (WItem) gui.getInventory().getItem(new NAlias("Plucked Chicken"));
-            new SelectFlowerAction("Clean", hen).run(gui);
-            NUtils.addTask(new WaitItems((NInventory) gui.maininv, new NAlias("Cleaned Chicken"), 1));
-
-            hen = (WItem) gui.getInventory().getItem(new NAlias("Cleaned Chicken"));
-            new SelectFlowerAction("Butcher", hen).run(gui);
-            NUtils.addTask(new NTask() {
-                @Override
-                public boolean check() {
-                    try {
-                        return gui.getInventory().getItems(new NAlias("Cleaned Chicken")).isEmpty();
-                    } catch (InterruptedException e) {
-                        return false;
-                    }
-                }
-            });
-
-            // Only drop off if insufficient space for another chicken + buffer (8 cells)
-            if (shouldDropOffItems(gui)) {
-                new FreeInventory(context).run(gui);
+            // Process the hen (butcher it)
+            hen = gui.getInventory().getItem(new NAlias("Hen"));
+            if (hen != null) {
+                butcherChicken(gui, hen, "Hen", "Dead Hen");
             }
         }
-        new FreeInventory(context).run(gui);
+        new FreeInventory2(context).run(gui);
         return Results.SUCCESS();
+    }
+    
+    /**
+     * Butcher a chicken - wring neck, pluck, clean, butcher
+     * Similar to Butcher bot approach with FreeInventory2 and return to area
+     */
+    private void butcherChicken(NGameUI gui, WItem chicken, String chickenType, String deadType) throws InterruptedException {
+        // Check inventory space before butchering
+        if (gui.getInventory().getNumberFreeCoord(new Coord(1, 1)) < 2) {
+            new FreeInventory2(context).run(gui);
+        }
+        
+        new SelectFlowerAction("Wring neck", chicken).run(gui);
+        NUtils.addTask(new WaitItems((NInventory) gui.maininv, new NAlias(deadType), 1));
+
+        WItem deadChicken = gui.getInventory().getItem(new NAlias(deadType));
+        if (deadChicken == null) return;
+        
+        new SelectFlowerAction("Pluck", deadChicken).run(gui);
+        NUtils.addTask(new WaitItems((NInventory) gui.maininv, new NAlias("Plucked Chicken"), 1));
+
+        WItem plucked = gui.getInventory().getItem(new NAlias("Plucked Chicken"));
+        if (plucked == null) return;
+        
+        new SelectFlowerAction("Clean", plucked).run(gui);
+        NUtils.addTask(new WaitItems((NInventory) gui.maininv, new NAlias("Cleaned Chicken"), 1));
+
+        WItem cleaned = gui.getInventory().getItem(new NAlias("Cleaned Chicken"));
+        if (cleaned == null) return;
+        
+        new SelectFlowerAction("Butcher", cleaned).run(gui);
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+                try {
+                    return gui.getInventory().getItems(new NAlias("Cleaned Chicken")).isEmpty();
+                } catch (InterruptedException e) {
+                    return false;
+                }
+            }
+        });
+
+        // Drop off if insufficient space for another chicken
+        if (shouldDropOffItems(gui)) {
+            new FreeInventory2(context).run(gui);
+        }
     }
 
     /**
