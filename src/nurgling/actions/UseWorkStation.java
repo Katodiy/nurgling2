@@ -23,22 +23,16 @@ public class UseWorkStation implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        gui.msg("UseWorkStation: Looking for station '" + cnt.workstation.station + "'");
-        
         if(cnt.workstation.selected==-1)
         {
             Gob ws = Finder.findGob(new NAlias(cnt.workstation.station));
-            gui.msg("UseWorkStation: Initial search result: " + (ws != null ? "found id=" + ws.id : "NOT FOUND"));
             
             boolean isReachable = ws != null && PathFinder.isAvailable(ws);
-            gui.msg("UseWorkStation: isReachable=" + isReachable);
             
             if(!isReachable) {
                 // Workstation not visible or not reachable - need global navigation
-                gui.msg("UseWorkStation: Workstation not reachable locally, using global navigation");
                 cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
                 ws = Finder.findGob(new NAlias(cnt.workstation.station));
-                gui.msg("UseWorkStation: After navigation: " + (ws != null ? "found id=" + ws.id : "NOT FOUND"));
                 if(ws == null)
                     return Results.FAIL();
             }
@@ -46,14 +40,11 @@ public class UseWorkStation implements Action
         }
         // Check if workstation is visible AND reachable
         Gob ws = Finder.findGob(cnt.workstation.selected);
-        gui.msg("UseWorkStation: Selected workstation " + cnt.workstation.selected + ": " + (ws != null ? "found" : "NOT FOUND"));
         
         if (ws == null) {
-            gui.msg("UseWorkStation: Workstation not found, using global navigation");
             cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
             ws = Finder.findGob(cnt.workstation.selected);
         } else if (!PathFinder.isAvailable(ws)) {
-            gui.msg("UseWorkStation: Workstation found but not reachable, using global navigation");
             cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
             ws = Finder.findGob(cnt.workstation.selected);
         }
@@ -67,14 +58,8 @@ public class UseWorkStation implements Action
             Gob barrel = findBarrelNearWorkstation(ws);
             
             if (barrel != null) {
-                gui.msg("UseWorkStation: Found barrel near workstation (storedHashes=" + 
-                        (cnt.workstation != null ? cnt.workstation.placedBarrelHashes.size() : 0) + 
-                        ", id=" + barrel.id + ", pos=" + barrel.rc + ")");
-                
                 Coord2d commonPoint = PathFinder.findNearestCommonApproachPoint(ws, barrel);
                 if (commonPoint != null) {
-                    gui.msg("UseWorkStation: Using aligned common approach point at " + commonPoint);
-                    
                     // Use PathFinder to workstation with the knowledge that we want to end up at commonPoint
                     // PathFinder to workstation will use its hardMode logic
                     PathFinder pf = new PathFinder(ws);
@@ -83,23 +68,12 @@ public class UseWorkStation implements Action
                     
                     if (pfResult.IsSuccess()) {
                         usedCommonPoint = true;
-                        double distToBarrel = NUtils.player().rc.dist(barrel.rc);
-                        double distToWs = NUtils.player().rc.dist(ws.rc);
-                        gui.msg("UseWorkStation: At position, dist to ws: " + String.format("%.2f", distToWs) + 
-                                ", dist to barrel: " + String.format("%.2f", distToBarrel));
-                    } else {
-                        gui.msg("UseWorkStation: PathFinder hardMode FAILED, will try regular path");
                     }
-                } else {
-                    gui.msg("UseWorkStation: No common approach point found, will use workstation path");
                 }
-            } else {
-                gui.msg("UseWorkStation: No barrel found near workstation");
             }
             
             // Fallback to regular pathfinding if no common point found
             if (!usedCommonPoint) {
-                gui.msg("UseWorkStation: Using regular PathFinder to workstation");
                 new PathFinder(ws).run(gui);
             }
             

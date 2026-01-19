@@ -60,17 +60,11 @@ public class TransferBarrelInWorkArea implements Action {
                 }
                 
                 if (placedPos != null) {
-                    gui.msg("TransferBarrelInWorkArea: Barrel placed at " + placedPos + " for item '" + item + "'");
-                    
                     // Get updated barrel reference after placement
                     barrel = Finder.findGob(barrelId);
                     if (barrel != null) {
                         // Store barrel tracking info
                         context.storeBarrelInfo(item, barrel.ngob.hash, new NGlobalCoord(originalPos));
-                        gui.msg("TransferBarrelInWorkArea: Stored barrel hash = " + barrel.ngob.hash + " for item '" + item + "'");
-                        gui.msg("TransferBarrelInWorkArea: Original barrel pos = " + originalPos);
-                    } else {
-                        gui.msg("TransferBarrelInWorkArea: ERROR - barrel not found after placement!");
                     }
                 }
             }

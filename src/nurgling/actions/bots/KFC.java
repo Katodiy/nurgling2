@@ -240,13 +240,11 @@ public class KFC implements Action {
         }
         
         if (qtop.isEmpty()) {
-            gui.msg("No hens found in best coop!");
             return Results.ERROR("No hens in best coop");
         }
         
         qtop.sort(Float::compareTo);
         double chicken_th = qtop.get(0);
-        gui.msg("Egg quality threshold: " + chicken_th);
         new CloseTargetContainer("Chicken Coop").run(gui);
 
         // Collect low quality eggs and dispose via FreeInventory2 (like Butcher)

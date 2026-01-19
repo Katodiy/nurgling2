@@ -71,8 +71,6 @@ public class TransferBarrelToWorkstation implements Action {
             Coord2d placedPos = placeBarrelAtDiagonal(gui, ws, barrel, barrelId);
             
             if (placedPos != null) {
-                gui.msg("TransferBarrelToWorkstation: Barrel placed at " + placedPos + " for item '" + item + "'");
-                
                 // Get updated barrel reference after placement
                 barrel = Finder.findGob(barrelId);
                 if (barrel != null) {
@@ -80,21 +78,14 @@ public class TransferBarrelToWorkstation implements Action {
                     // Hash may change after moving to new position
                     context.storeBarrelInfo(item, barrel.ngob.hash, new NGlobalCoord(originalPos));
                     
-                    gui.msg("TransferBarrelToWorkstation: Stored barrel hash = " + barrel.ngob.hash + " for item '" + item + "'");
-                    gui.msg("TransferBarrelToWorkstation: Original barrel pos = " + originalPos);
-                    
                     // Find common approach point for workstation and barrel
                     Coord2d commonPoint = PathFinder.findNearestCommonApproachPoint(ws, barrel);
                     if (commonPoint != null) {
                         context.workstation.targetPoint = new NGlobalCoord(commonPoint);
-                        gui.msg("TransferBarrelToWorkstation: Common approach point = " + commonPoint);
                     } else {
                         // Fallback: use placed position as target point
                         context.workstation.targetPoint = new NGlobalCoord(placedPos);
-                        gui.msg("TransferBarrelToWorkstation: No common point, using placed pos as target");
                     }
-                } else {
-                    gui.msg("TransferBarrelToWorkstation: ERROR - barrel not found after placement!");
                 }
             } else {
                 return Results.ERROR("Could not find free diagonal position for barrel");

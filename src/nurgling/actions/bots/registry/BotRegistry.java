@@ -209,6 +209,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("clay_cheker", BotDescriptor.BotType.UTILS, "Check Clay", "Checks clay.", false, true, CheckClay.class, "clay_cheker", true));
         bots.add(new BotDescriptor("clover", BotDescriptor.BotType.UTILS, "Feed Clover", "Feeds clover.", false, true, FeedClover.class, "clover", false));
         bots.add(new BotDescriptor("collectalltopile", BotDescriptor.BotType.UTILS, "Collect To Pile", "Collects same items from earth.", false, true, CollectSameItemsFromEarth.class, "collectalltopile", false));
+        bots.add(new BotDescriptor("collectswilltotrough", BotDescriptor.BotType.UTILS, "Collect Swill To Trough", "Collects swill items from area to a selected trough (click to select).", false, true, CollectSwillToTrough.class, "swillcollector", false));
         bots.add(new BotDescriptor("worldexplorer", BotDescriptor.BotType.UTILS, "World Explorer", "Explores the world.", false, true, WorldExplorer.class, "worldexplorer", true));
         bots.add(new BotDescriptor("lift", BotDescriptor.BotType.UTILS, "Transfer Liftable", "Lifts items.", false, true, TransferLiftable.class, "lift", false));
         bots.add(new BotDescriptor("loading", BotDescriptor.BotType.UTILS, "Transfer To Vehicle", "Loads vehicle.", false, true, TransferToVeh.class, "loading", false));

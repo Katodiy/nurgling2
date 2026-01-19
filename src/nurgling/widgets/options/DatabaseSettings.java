@@ -26,8 +26,8 @@ public class DatabaseSettings extends Panel {
     private Button initDbButton;
     private CheckBox enableCheckbox;
     private Dropbox<String> dbType;
-    private final int labelWidth = UI.scale(80); // Ширина лейблов
-    private final int entryX = UI.scale(110);    // X-координата для TextEntry (was 90, increased for better space)
+    private final int labelWidth = UI.scale(80); // РЁРёСЂРёРЅР° Р»РµР№Р±Р»РѕРІ
+    private final int entryX = UI.scale(110);    // X-РєРѕРѕСЂРґРёРЅР°С‚Р° РґР»СЏ TextEntry (was 90, increased for better space)
     private final int margin = UI.scale(10);
 
     private boolean enabled;
@@ -38,7 +38,7 @@ public class DatabaseSettings extends Panel {
         super("");
         int y = margin;
 
-        // Чекбокс включения/выключения базы данных
+        // Р§РµРєР±РѕРєСЃ РІРєР»СЋС‡РµРЅРёСЏ/РІС‹РєР»СЋС‡РµРЅРёСЏ Р±Р°Р·С‹ РґР°РЅРЅС‹С…
         prev = enableCheckbox = add(new CheckBox(L10n.get("database.enable")) {
             public void set(boolean val) {
                 a = val;
@@ -48,11 +48,11 @@ public class DatabaseSettings extends Panel {
         }, new Coord(margin, y));
         y += enableCheckbox.sz.y + UI.scale(8);
 
-        // Заголовок раздела
+        // Р—Р°РіРѕР»РѕРІРѕРє СЂР°Р·РґРµР»Р°
         prev = add(new Label(L10n.get("database.settings")), new Coord(margin, y));
         y += prev.sz.y + UI.scale(5);
 
-        // Выпадающий список для выбора типа базы данных
+        // Р’С‹РїР°РґР°СЋС‰РёР№ СЃРїРёСЃРѕРє РґР»СЏ РІС‹Р±РѕСЂР° С‚РёРїР° Р±Р°Р·С‹ РґР°РЅРЅС‹С…
         prev = add(new Label(L10n.get("database.type")), new Coord(margin, y));
         dbType = add(new Dropbox<String>(UI.scale(150), 5, UI.scale(16)) {
             @Override
@@ -81,7 +81,7 @@ public class DatabaseSettings extends Panel {
 
         int firstSettingY = y;
 
-        // Создаем виджеты для PostgreSQL
+        // РЎРѕР·РґР°РµРј РІРёРґР¶РµС‚С‹ РґР»СЏ PostgreSQL
         hostLabel = add(new Label(L10n.get("database.host")), new Coord(margin, firstSettingY));
         hostEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, firstSettingY));
         y += hostEntry.sz.y + UI.scale(5);
@@ -95,12 +95,12 @@ public class DatabaseSettings extends Panel {
         passwordEntry.pw = true;
         y += passwordEntry.sz.y + UI.scale(10);
 
-        // Создаем виджеты для SQLite
+        // РЎРѕР·РґР°РµРј РІРёРґР¶РµС‚С‹ РґР»СЏ SQLite
         fileLabel = add(new Label(L10n.get("database.filepath")), new Coord(margin, firstSettingY));
         filePathEntry = add(new TextEntry(UI.scale(150), ""), new Coord(entryX, firstSettingY));
         y += filePathEntry.sz.y + UI.scale(5);
 
-        // Кнопка инициализации новой базы данных
+        // РљРЅРѕРїРєР° РёРЅРёС†РёР°Р»РёР·Р°С†РёРё РЅРѕРІРѕР№ Р±Р°Р·С‹ РґР°РЅРЅС‹С…
         initDbButton = add(new Button(UI.scale(200), L10n.get("database.init_new")) {
             @Override
             public void click() {
@@ -117,11 +117,11 @@ public class DatabaseSettings extends Panel {
                     }
 
                     try {
-                        // Создаем новую базу данных
+                        // РЎРѕР·РґР°РµРј РЅРѕРІСѓСЋ Р±Р°Р·Сѓ РґР°РЅРЅС‹С…
                         Files.deleteIfExists(Paths.get(dbPathLocal));
                         Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbPathLocal);
 
-                        // Инициализируем таблицы
+                        // РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј С‚Р°Р±Р»РёС†С‹
                         try (Statement stmt = conn.createStatement()) {
                             stmt.executeUpdate("CREATE TABLE recipes (" +
                                     "recipe_hash VARCHAR(64) PRIMARY KEY, " +
@@ -159,7 +159,7 @@ public class DatabaseSettings extends Panel {
 
                         conn.close();
 
-                        // Устанавливаем путь в текстовое поле
+                        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РїСѓС‚СЊ РІ С‚РµРєСЃС‚РѕРІРѕРµ РїРѕР»Рµ
                         filePathEntry.settext(dbPathLocal);
                         dbPath = dbPathLocal;
                         NUtils.getGameUI().msg("Database successfully created and initialized", Color.YELLOW);
@@ -314,7 +314,7 @@ public class DatabaseSettings extends Panel {
         boolean isSQLite = isEnabled && !isPostgres;
 
         if (hostLabel != null) {
-            // Управляем видимостью всех элементов в зависимости от включения базы данных
+            // РЈРїСЂР°РІР»СЏРµРј РІРёРґРёРјРѕСЃС‚СЊСЋ РІСЃРµС… СЌР»РµРјРµРЅС‚РѕРІ РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РІРєР»СЋС‡РµРЅРёСЏ Р±Р°Р·С‹ РґР°РЅРЅС‹С…
             hostLabel.visible = isPostgres;
             hostEntry.visible = isPostgres;
             userLabel.visible = isPostgres;
@@ -328,7 +328,7 @@ public class DatabaseSettings extends Panel {
             // Don't reconnect here - it's just visibility update, not settings change
         }
 
-        // Переупаковываем виджет
+        // РџРµСЂРµСѓРїР°РєРѕРІС‹РІР°РµРј РІРёРґР¶РµС‚
         pack();
         sz.y = UI.scale(200);
     }

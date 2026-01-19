@@ -47,7 +47,6 @@ public class ProcessCheeseOrderInBatches implements Action {
         // Find the current step that needs work
         CheeseOrder.StepStatus currentStep = getCurrentStep(order);
         if (currentStep == null) {
-            gui.msg("No work needed for " + cheeseType);
             return Results.SUCCESS();
         }
         
@@ -229,7 +228,6 @@ public class ProcessCheeseOrderInBatches implements Action {
         }
         
         if (emptyCount > 0) {
-            gui.msg("Returning " + emptyCount + " empty trays to storage");
             nurgling.areas.NContext context = new nurgling.areas.NContext(gui);
             context.addOutItem("Cheese Tray", null, 0);
             new FreeInventory2(context).run(gui);

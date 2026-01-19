@@ -41,7 +41,6 @@ public class CreateTraysWithCurds implements Action {
         // Step 2: Scan all curd containers ONCE and cache item counts
         ArrayList<ContainerCurdInfo> curdContainers = scanCurdContainers(gui, context);
         int totalCurdsAvailable = calculateTotalCurds(curdContainers);
-        gui.msg("CreateTrays: Scanned " + curdContainers.size() + " containers, total curds available: " + totalCurdsAvailable);
         
         while (traysCreated < count) {
             // 1. Find an empty tray (should be available from pre-fetch)
@@ -93,10 +92,6 @@ public class CreateTraysWithCurds implements Action {
         // 2. Returning empty trays to storage after that
         // This prevents FreeInventory2 from interfering with tray placement logic.
         
-        int filledTrays = countFilledTraysInInventory(gui);
-        int emptyTrays = countEmptyTraysInInventory(gui);
-        gui.msg("CreateTrays: Done. Created " + traysCreated + " trays. Inventory has " + filledTrays + " filled, " + emptyTrays + " empty.");
-        
         return Results.SUCCESS();
     }
     
@@ -112,8 +107,6 @@ public class CreateTraysWithCurds implements Action {
             return result;
         }
         
-        gui.msg("CreateTrays: Scanning " + curdStorages.size() + " curd storage locations...");
-        
         for (NContext.ObjectStorage storage : curdStorages) {
             if (storage instanceof Container) {
                 Container container = (Container) storage;
@@ -121,7 +114,6 @@ public class CreateTraysWithCurds implements Action {
                 if (containerGob != null) {
                     // Skip visually empty containers
                     if (containerGob.ngob.isContainerEmpty()) {
-                        gui.msg("CreateTrays: Container " + container.gobid + " is visually empty, skipping");
                         continue;
                     }
                     
@@ -130,8 +122,6 @@ public class CreateTraysWithCurds implements Action {
                     
                     ArrayList<WItem> curdsInContainer = gui.getInventory(container.cap).getItems(curdType);
                     int curdCount = curdsInContainer.size();
-                    
-                    gui.msg("CreateTrays: Container " + container.gobid + " has " + curdCount + " curds");
                     
                     result.add(new ContainerCurdInfo(container, curdCount));
                     

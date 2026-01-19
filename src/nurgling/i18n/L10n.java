@@ -33,7 +33,7 @@ public final class L10n {
     // Supported languages for UI selection (only languages with translation files)
     public static final String[][] SUPPORTED_LANGUAGES = {
         {"en", "English"},
-        {"ru", "Русский"}
+        {"ru", "Р СѓСЃСЃРєРёР№"}
     };
     
     static {
@@ -116,7 +116,7 @@ public final class L10n {
     private static boolean loadFromFile(Properties props, Locale locale) {
         if (langDir == null) return false;
         
-        // Try: messages_ru_RU.properties → messages_ru.properties
+        // Try: messages_ru_RU.properties в†’ messages_ru.properties
         String[] suffixes = {
             "_" + locale.getLanguage() + "_" + locale.getCountry(),
             "_" + locale.getLanguage()

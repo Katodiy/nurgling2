@@ -31,27 +31,17 @@ public class ReturnBarrelFromWorkArea implements Action {
         // First try to find barrel by stored hash for this specific item
         String storedHash = context.getPlacedBarrelHash(item);
         if (storedHash != null) {
-            gui.msg("ReturnBarrelFromWorkArea: Looking for barrel with hash " + storedHash.substring(0, Math.min(16, storedHash.length())) + "... for item '" + item + "'");
             // First try to find locally and check if reachable
             gob = findBarrelByHashLocal(storedHash);
             if (gob != null && PathFinder.isAvailable(gob)) {
-                gui.msg("ReturnBarrelFromWorkArea: Found barrel by hash locally and reachable, id=" + gob.id);
                 new LiftObject(gob).run(gui);
                 barrelid = gob.id;
             } else {
                 // Barrel not in local cache or not reachable - need to navigate
-                if (gob != null) {
-                    gui.msg("ReturnBarrelFromWorkArea: Barrel found but not reachable, navigating...");
-                } else {
-                    gui.msg("ReturnBarrelFromWorkArea: Barrel not in local cache, navigating...");
-                }
                 gob = findBarrelByHash(gui, storedHash);
                 if (gob != null) {
-                    gui.msg("ReturnBarrelFromWorkArea: Found barrel by hash after navigation, id=" + gob.id);
                     new LiftObject(gob).run(gui);
                     barrelid = gob.id;
-                } else {
-                    gui.msg("ReturnBarrelFromWorkArea: Barrel with stored hash not found!");
                 }
             }
         }
@@ -62,7 +52,6 @@ public class ReturnBarrelFromWorkArea implements Action {
             if (gob != null && NUtils.barrelHasContent(gob) && 
                 context.getBarrelStorage(item) != null &&
                 NUtils.getContentsOfBarrel(gob).equals(context.getBarrelStorage(item).olname)) {
-                gui.msg("ReturnBarrelFromWorkArea: Found barrel by content match");
                 new LiftObject(gob).run(gui);
                 barrelid = gob.id;
             }
@@ -72,14 +61,12 @@ public class ReturnBarrelFromWorkArea implements Action {
         if (barrelid == -1) {
             gob = context.getBarrelInWorkArea(item);
             if (gob != null && !NUtils.barrelHasContent(gob)) {
-                gui.msg("ReturnBarrelFromWorkArea: Found empty barrel in work area");
                 new LiftObject(gob).run(gui);
                 barrelid = gob.id;
             }
         }
         
         if (barrelid == -1) {
-            gui.msg("ReturnBarrelFromWorkArea: Could not find barrel to return for item '" + item + "'");
             return Results.ERROR("Could not find barrel to return");
         }
         
@@ -90,17 +77,14 @@ public class ReturnBarrelFromWorkArea implements Action {
         }
         
         if (targetCoord == null) {
-            gui.msg("ReturnBarrelFromWorkArea: No target position for barrel return");
             return Results.ERROR("No target position for barrel return");
         }
         
-        gui.msg("ReturnBarrelFromWorkArea: Returning barrel to " + targetCoord.getCurrentCoord());
         context.navigateToBarrelArea(item);
         new PlaceObject(Finder.findGob(barrelid), targetCoord.getCurrentCoord(), 0).run(gui);
         
         // Clear barrel tracking info for this item after returning
         context.clearBarrelInfo(item);
-        gui.msg("ReturnBarrelFromWorkArea: Cleared barrel info for item '" + item + "'");
         
         return Results.SUCCESS();
     }
@@ -134,8 +118,6 @@ public class ReturnBarrelFromWorkArea implements Action {
         }
         
         // Barrel not in cache - try to navigate to workstation area to reload objects
-        gui.msg("findBarrelByHash: Barrel not in cache, navigating to workstation area...");
-        
         NArea area;
         if (context.workstation == null) {
             area = context.getSpecArea(Specialisation.SpecName.barrelworkarea);
@@ -155,7 +137,6 @@ public class ReturnBarrelFromWorkArea implements Action {
             barrels = Finder.findGobs(new NAlias("barrel"));
             for (Gob barrel : barrels) {
                 if (hash.equals(barrel.ngob.hash)) {
-                    gui.msg("findBarrelByHash: Found barrel after navigation");
                     return barrel;
                 }
             }
@@ -180,12 +161,7 @@ public class ReturnBarrelFromWorkArea implements Action {
                                     barrelContent.equalsIgnoreCase(expectedContent);
                             
                             if (isEmpty || contentMatches) {
-                                gui.msg("findBarrelByHash: Found barrel near workstation (empty=" + isEmpty + 
-                                        ", contentMatches=" + contentMatches + ", content=" + barrelContent + ")");
                                 return barrel;
-                            } else {
-                                gui.msg("findBarrelByHash: Skipping barrel - wrong content: '" + barrelContent + 
-                                        "' (expected: '" + expectedContent + "')");
                             }
                         }
                     }

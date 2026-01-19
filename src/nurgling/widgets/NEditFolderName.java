@@ -37,7 +37,7 @@ public class NEditFolderName extends Window {
             @Override
             public void click() {
                 NEditFolderName.this.hide();
-                // Показываем предыдущее окно
+                // РџРѕРєР°Р·С‹РІР°РµРј РїСЂРµРґС‹РґСѓС‰РµРµ РѕРєРЅРѕ
                 areasWidget.showPath(rootPath);
             }
         }, prev.pos("ur").adds(70, -6));

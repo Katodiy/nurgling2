@@ -617,7 +617,7 @@ public class NGob
                 {
                     if (NStyle.iconMap.containsKey(name))
                     {
-                        //TODO трюфель
+                        //TODO С‚СЂСЋС„РµР»СЊ
                         parent.setattr(new GobIcon(parent, NStyle.iconMap.get(name), new byte[0]));
                     }
 

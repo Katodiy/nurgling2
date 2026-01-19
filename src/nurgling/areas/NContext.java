@@ -879,7 +879,6 @@ public class NContext {
     public void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
         NArea area = areas.get(areaId);
         if(area == null) {
-            gui.msg(areaId + " Not found!");
             return;
         }
         NUtils.navigateToArea(area);
