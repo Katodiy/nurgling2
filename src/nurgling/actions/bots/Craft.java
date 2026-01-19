@@ -417,12 +417,12 @@ public class Craft implements Action {
         int maxRetries = 3;
         
         for (int retry = 0; retry < maxRetries; retry++) {
-            // РЎР±СЂР°СЃС‹РІР°РµРј РѕС€РёР±РєСѓ РїРµСЂРµРґ РїРѕРїС‹С‚РєРѕР№ РєСЂР°С„С‚Р°
+            // Сбрасываем ошибку перед попыткой крафта
             NUtils.getUI().dropLastError();
             
             mwnd.wdgmsg("make", 1);
             
-            // Р–РґС‘Рј РїРѕСЏРІР»РµРЅРёСЏ РїСЂРѕРіСЂРµСЃСЃ-Р±Р°СЂР° РёР»Рё РѕС€РёР±РєРё
+            // Ждём появления прогресс-бара или ошибки
             final boolean[] progAppeared = {false};
             NUtils.addTask(new NTask() {
                 private int waitTicks = 0;
@@ -430,13 +430,13 @@ public class Craft implements Action {
                 
                 @Override
                 public boolean check() {
-                    // РџСЂРѕРІРµСЂСЏРµРј РѕС€РёР±РєСѓ
+                    // Проверяем ошибку
                     String error = NUtils.getUI().getLastError();
                     if (error != null) {
                         return true;
                     }
                     
-                    // РџСЂРѕРіСЂРµСЃСЃ-Р±Р°СЂ РїРѕСЏРІРёР»СЃСЏ
+                    // Прогресс-бар появился
                     if (gui.prog != null && gui.prog.prog > 0) {
                         boolean wsReady = (ncontext.workstation == null) || 
                                           (ncontext.workstation.selected == -1) || 
@@ -447,24 +447,24 @@ public class Craft implements Action {
                         }
                     }
                     
-                    // РўР°Р№РјР°СѓС‚ РѕР¶РёРґР°РЅРёСЏ РїСЂРѕРіСЂРµСЃСЃ-Р±Р°СЂР°
+                    // Таймаут ожидания прогресс-бара
                     waitTicks++;
                     return waitTicks >= MAX_WAIT_FOR_PROG;
                 }
             });
             
-            // Р•СЃР»Рё Р±С‹Р»Р° РѕС€РёР±РєР° РїСЂРё СЃС‚Р°СЂС‚Рµ - РїСЂРѕРІРµСЂСЏРµРј РЅСѓР¶РµРЅ Р»Рё retry
+            // Если была ошибка при старте - проверяем нужен ли retry
             String startError = NUtils.getUI().getLastError();
             if (startError != null || !progAppeared[0]) {
                 if (hasEnoughIngredientsForCraft(ncontext, gui)) {
-                    continue; // РџРѕРІС‚РѕСЂСЏРµРј РїРѕРїС‹С‚РєСѓ
+                    continue; // Повторяем попытку
                 } else {
-                    // РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РёРЅРіСЂРµРґРёРµРЅС‚РѕРІ - РІС‹С…РѕРґРёРј
+                    // Недостаточно ингредиентов - выходим
                     break;
                 }
             }
             
-            // Р–РґС‘Рј Р·Р°РІРµСЂС€РµРЅРёСЏ РєСЂР°С„С‚Р° - РїСЂРµРґРјРµС‚С‹ РёР»Рё РѕС€РёР±РєР°
+            // Ждём завершения крафта - предметы или ошибка
             final boolean[] craftSucceeded = {false};
             NUtils.addTask(new NTask() {
                 private int ticksAfterProgGone = 0;
@@ -472,13 +472,13 @@ public class Craft implements Action {
                 
                 @Override
                 public boolean check() {
-                    // РџСЂРѕРІРµСЂСЏРµРј РѕС€РёР±РєСѓ
+                    // Проверяем ошибку
                     String error = NUtils.getUI().getLastError();
                     if (error != null) {
                         return true;
                     }
                     
-                    // РџСЂРѕРІРµСЂСЏРµРј РєРѕР»РёС‡РµСЃС‚РІРѕ РїСЂРµРґРјРµС‚РѕРІ
+                    // Проверяем количество предметов
                     GetItems gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(finalTargetName));
                     gi.check();
                     if (gi.getResult().size() >= finalResfc) {
@@ -486,38 +486,38 @@ public class Craft implements Action {
                         return true;
                     }
                     
-                    // РџСЂРѕРіСЂРµСЃСЃ-Р±Р°СЂ РµС‰С‘ РІРёРґРёРј - РїСЂРѕРґРѕР»Р¶Р°РµРј Р¶РґР°С‚СЊ
+                    // Прогресс-бар ещё видим - продолжаем ждать
                     if (gui.prog != null && gui.prog.visible) {
                         ticksAfterProgGone = 0;
                         return false;
                     }
                     
-                    // РџСЂРѕРіСЂРµСЃСЃ-Р±Р°СЂ РёСЃС‡РµР· - РґР°С‘Рј РЅРµРјРЅРѕРіРѕ РІСЂРµРјРµРЅРё РЅР° РїРѕСЏРІР»РµРЅРёРµ РїСЂРµРґРјРµС‚РѕРІ
+                    // Прогресс-бар исчез - даём немного времени на появление предметов
                     ticksAfterProgGone++;
                     return ticksAfterProgGone >= MAX_TICKS_AFTER_PROG;
                 }
             });
             
-            // РџСЂРѕРІРµСЂСЏРµРј СЂРµР·СѓР»СЊС‚Р°С‚ РєСЂР°С„С‚Р°
+            // Проверяем результат крафта
             if (craftSucceeded[0]) {
-                // РЈСЃРїРµС…! Р”РµР»Р°РµРј РєР»РёРєРё РґР»СЏ СЃР±СЂРѕСЃР° СЃРѕСЃС‚РѕСЏРЅРёСЏ Рё РІС‹С…РѕРґРёРј
+                // Успех! Делаем клики для сброса состояния и выходим
                 NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 3, 0);
                 NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 1, 0);
                 return;
             }
             
-            // РљСЂР°С„С‚ РЅРµ Р·Р°РІРµСЂС€РёР»СЃСЏ СѓСЃРїРµС€РЅРѕ - РїСЂРѕРІРµСЂСЏРµРј РЅСѓР¶РµРЅ Р»Рё retry
+            // Крафт не завершился успешно - проверяем нужен ли retry
             if (hasEnoughIngredientsForCraft(ncontext, gui)) {
-                continue; // РџРѕРІС‚РѕСЂСЏРµРј РїРѕРїС‹С‚РєСѓ
+                continue; // Повторяем попытку
             } else {
-                // РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РёРЅРіСЂРµРґРёРµРЅС‚РѕРІ - РґРµР»Р°РµРј РєР»РёРєРё Рё РІС‹С…РѕРґРёРј
+                // Недостаточно ингредиентов - делаем клики и выходим
                 NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 3, 0);
                 NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 1, 0);
                 return;
             }
         }
         
-        // РСЃС‡РµСЂРїР°Р»Рё РІСЃРµ РїРѕРїС‹С‚РєРё
+        // Исчерпали все попытки
         NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 3, 0);
         NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 1, 0);
     }
