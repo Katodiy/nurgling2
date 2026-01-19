@@ -23,15 +23,41 @@ public class UseWorkStation implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
+        gui.msg("UseWorkStation: Looking for station '" + cnt.workstation.station + "'");
+        
         if(cnt.workstation.selected==-1)
         {
             Gob ws = Finder.findGob(new NAlias(cnt.workstation.station));
-            if(ws == null)
-                return Results.FAIL();
+            gui.msg("UseWorkStation: Initial search result: " + (ws != null ? "found id=" + ws.id : "NOT FOUND"));
+            
+            boolean isReachable = ws != null && PathFinder.isAvailable(ws);
+            gui.msg("UseWorkStation: isReachable=" + isReachable);
+            
+            if(!isReachable) {
+                // Workstation not visible or not reachable - need global navigation
+                gui.msg("UseWorkStation: Workstation not reachable locally, using global navigation");
+                cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
+                ws = Finder.findGob(new NAlias(cnt.workstation.station));
+                gui.msg("UseWorkStation: After navigation: " + (ws != null ? "found id=" + ws.id : "NOT FOUND"));
+                if(ws == null)
+                    return Results.FAIL();
+            }
             cnt.workstation.selected = ws.id;
         }
-        cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
+        // Check if workstation is visible AND reachable
         Gob ws = Finder.findGob(cnt.workstation.selected);
+        gui.msg("UseWorkStation: Selected workstation " + cnt.workstation.selected + ": " + (ws != null ? "found" : "NOT FOUND"));
+        
+        if (ws == null) {
+            gui.msg("UseWorkStation: Workstation not found, using global navigation");
+            cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
+            ws = Finder.findGob(cnt.workstation.selected);
+        } else if (!PathFinder.isAvailable(ws)) {
+            gui.msg("UseWorkStation: Workstation found but not reachable, using global navigation");
+            cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
+            ws = Finder.findGob(cnt.workstation.selected);
+        }
+        
         if(ws == null)
             return Results.ERROR("NO WORKSTATION");
         else

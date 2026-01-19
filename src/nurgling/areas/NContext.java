@@ -191,21 +191,28 @@ public class NContext {
     }
 
     public NArea getSpecArea(NContext.Workstation workstation) throws InterruptedException {
-        if(!areas.containsKey(workstation_spec_map.get(workstation.station).toString())) {
-            NArea area = findSpec(workstation_spec_map.get(workstation.station).toString());
+        String specName = workstation_spec_map.get(workstation.station).toString();
+        NUtils.getGameUI().msg("getSpecArea: Looking for spec '" + specName + "' for station '" + workstation.station + "'");
+        
+        if(!areas.containsKey(specName)) {
+            NUtils.getGameUI().msg("getSpecArea: Area not in cache, searching...");
+            NArea area = findSpec(specName);
+            NUtils.getGameUI().msg("getSpecArea: findSpec returned " + (area != null ? "area" : "null"));
             if (area == null) {
-                area = findSpecGlobal(workstation_spec_map.get(workstation.station).toString());
+                area = findSpecGlobal(specName);
+                NUtils.getGameUI().msg("getSpecArea: findSpecGlobal returned " + (area != null ? "area" : "null"));
             }
             if (area != null) {
-                areas.put(String.valueOf(workstation_spec_map.get(workstation.station).toString()), area);
+                areas.put(specName, area);
             }
             else
             {
+                NUtils.getGameUI().msg("getSpecArea: No area found, returning null");
                 return null;
             }
         }
-        navigateToAreaIfNeeded(workstation_spec_map.get(workstation.station).toString());
-        return areas.get(workstation_spec_map.get(workstation.station).toString());
+        navigateToAreaIfNeeded(specName);
+        return areas.get(specName);
     }
 
     public static class BarrelStorage
@@ -276,13 +283,24 @@ public class NContext {
                         NUtils.getGameUI().msg("getBarrelInWorkArea: Already near workstation (dist=" + 
                                 String.format("%.2f", distToWs) + "), searching nearby barrels...");
                         
-                        // Search by proximity without navigation
+                        // Search by proximity without navigation - verify content
+                        String expectedContent = barrelstorage.containsKey(item) ? barrelstorage.get(item).olname : null;
                         for (Gob gob : allBarrels) {
                             if (gob.rc.dist(ws.rc) < 30) {
-                                NUtils.getGameUI().msg("getBarrelInWorkArea: Found barrel near workstation (dist=" + 
-                                        String.format("%.2f", gob.rc.dist(ws.rc)) + "), updating hash");
-                                storeBarrelInfo(item, gob.ngob.hash, getOriginalBarrelCoord(item));
-                                return gob;
+                                // Check if barrel has correct content or is empty
+                                boolean isEmpty = !NUtils.barrelHasContent(gob);
+                                String barrelContent = NUtils.getContentsOfBarrel(gob);
+                                boolean contentMatches = expectedContent != null && 
+                                        barrelContent != null && 
+                                        barrelContent.equalsIgnoreCase(expectedContent);
+                                
+                                if (isEmpty || contentMatches) {
+                                    NUtils.getGameUI().msg("getBarrelInWorkArea: Found barrel near workstation (dist=" + 
+                                            String.format("%.2f", gob.rc.dist(ws.rc)) + ", empty=" + isEmpty + 
+                                            ", content=" + barrelContent + "), updating hash");
+                                    storeBarrelInfo(item, gob.ngob.hash, getOriginalBarrelCoord(item));
+                                    return gob;
+                                }
                             }
                         }
                     }
@@ -315,16 +333,27 @@ public class NContext {
                             }
                         }
                         
-                        // Search by proximity after navigation
+                        // Search by proximity after navigation - verify content
                         if (workstation != null && workstation.selected != -1) {
                             Gob ws = nurgling.tools.Finder.findGob(workstation.selected);
                             if (ws != null) {
+                                String expectedContent = barrelstorage.containsKey(item) ? barrelstorage.get(item).olname : null;
                                 for (Gob gob : allBarrels) {
                                     if (gob.rc.dist(ws.rc) < 30) {
-                                        NUtils.getGameUI().msg("getBarrelInWorkArea: Found barrel near workstation (dist=" + 
-                                                String.format("%.2f", gob.rc.dist(ws.rc)) + "), updating hash");
-                                        storeBarrelInfo(item, gob.ngob.hash, getOriginalBarrelCoord(item));
-                                        return gob;
+                                        // Check if barrel has correct content or is empty
+                                        boolean isEmpty = !NUtils.barrelHasContent(gob);
+                                        String barrelContent = NUtils.getContentsOfBarrel(gob);
+                                        boolean contentMatches = expectedContent != null && 
+                                                barrelContent != null && 
+                                                barrelContent.equalsIgnoreCase(expectedContent);
+                                        
+                                        if (isEmpty || contentMatches) {
+                                            NUtils.getGameUI().msg("getBarrelInWorkArea: Found barrel near workstation (dist=" + 
+                                                    String.format("%.2f", gob.rc.dist(ws.rc)) + ", empty=" + isEmpty + 
+                                                    ", content=" + barrelContent + "), updating hash");
+                                            storeBarrelInfo(item, gob.ngob.hash, getOriginalBarrelCoord(item));
+                                            return gob;
+                                        }
                                     }
                                 }
                             }

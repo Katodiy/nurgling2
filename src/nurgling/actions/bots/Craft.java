@@ -419,29 +419,158 @@ public class Craft implements Action {
 
     private void craftProc(NContext ncontext, NGameUI gui, int resfc, String targetName) throws InterruptedException
     {
-        mwnd.wdgmsg("make", 1);
         int finalResfc = resfc;
         String finalTargetName = targetName;
-        NUtils.addTask(new NTask() {
-            @Override
-            public boolean check() {
-
-                return (((gui.prog != null) && (gui.prog.prog > 0) && ((ncontext.workstation == null) || (ncontext.workstation.selected == -1) || NUtils.isWorkStationReady(ncontext.workstation.station, Finder.findGob(ncontext.workstation.selected)))));
+        int maxRetries = 3;
+        
+        for (int retry = 0; retry < maxRetries; retry++) {
+            // Сбрасываем ошибку перед попыткой крафта
+            NUtils.getUI().dropLastError();
+            
+            mwnd.wdgmsg("make", 1);
+            
+            // Ждём появления прогресс-бара или ошибки
+            final boolean[] progAppeared = {false};
+            NUtils.addTask(new NTask() {
+                private int waitTicks = 0;
+                private static final int MAX_WAIT_FOR_PROG = 100;
+                
+                @Override
+                public boolean check() {
+                    // Проверяем ошибку
+                    String error = NUtils.getUI().getLastError();
+                    if (error != null) {
+                        return true;
+                    }
+                    
+                    // Прогресс-бар появился
+                    if (gui.prog != null && gui.prog.prog > 0) {
+                        boolean wsReady = (ncontext.workstation == null) || 
+                                          (ncontext.workstation.selected == -1) || 
+                                          NUtils.isWorkStationReady(ncontext.workstation.station, Finder.findGob(ncontext.workstation.selected));
+                        if (wsReady) {
+                            progAppeared[0] = true;
+                            return true;
+                        }
+                    }
+                    
+                    // Таймаут ожидания прогресс-бара
+                    waitTicks++;
+                    return waitTicks >= MAX_WAIT_FOR_PROG;
+                }
+            });
+            
+            // Если была ошибка при старте - проверяем нужен ли retry
+            String startError = NUtils.getUI().getLastError();
+            if (startError != null || !progAppeared[0]) {
+                if (hasEnoughIngredientsForCraft(ncontext, gui)) {
+                    gui.msg("Craft: Retry attempt " + (retry + 1) + " - craft didn't start but ingredients available");
+                    continue; // Повторяем попытку
+                } else {
+                    // Недостаточно ингредиентов - выходим
+                    break;
+                }
             }
-        });
-
-
-
-        NUtils.addTask(new NTask() {
-            @Override
-            public boolean check() {
-                GetItems gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(finalTargetName));
-                gi.check();
-                return gui.prog == null || !gui.prog.visible || gi.getResult().size() >= finalResfc;
+            
+            // Ждём завершения крафта - предметы или ошибка
+            final boolean[] craftSucceeded = {false};
+            NUtils.addTask(new NTask() {
+                private int ticksAfterProgGone = 0;
+                private static final int MAX_TICKS_AFTER_PROG = 50;
+                
+                @Override
+                public boolean check() {
+                    // Проверяем ошибку
+                    String error = NUtils.getUI().getLastError();
+                    if (error != null) {
+                        return true;
+                    }
+                    
+                    // Проверяем количество предметов
+                    GetItems gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(finalTargetName));
+                    gi.check();
+                    if (gi.getResult().size() >= finalResfc) {
+                        craftSucceeded[0] = true;
+                        return true;
+                    }
+                    
+                    // Прогресс-бар ещё видим - продолжаем ждать
+                    if (gui.prog != null && gui.prog.visible) {
+                        ticksAfterProgGone = 0;
+                        return false;
+                    }
+                    
+                    // Прогресс-бар исчез - даём немного времени на появление предметов
+                    ticksAfterProgGone++;
+                    return ticksAfterProgGone >= MAX_TICKS_AFTER_PROG;
+                }
+            });
+            
+            // Проверяем результат крафта
+            if (craftSucceeded[0]) {
+                // Успех! Делаем клики для сброса состояния и выходим
+                NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 3, 0);
+                NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 1, 0);
+                return;
             }
-        });
-        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),3, 0);
-        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres),1, 0);
+            
+            // Крафт не завершился успешно - проверяем нужен ли retry
+            if (hasEnoughIngredientsForCraft(ncontext, gui)) {
+                gui.msg("Craft: Retry attempt " + (retry + 1) + " - craft interrupted but ingredients still available");
+                continue; // Повторяем попытку
+            } else {
+                // Недостаточно ингредиентов - делаем клики и выходим
+                gui.msg("Craft: Not enough ingredients to continue, stopping");
+                NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 3, 0);
+                NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 1, 0);
+                return;
+            }
+        }
+        
+        // Исчерпали все попытки
+        gui.msg("Craft: Max retries reached");
+        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 3, 0);
+        NUtils.getGameUI().map.wdgmsg("click", Coord.z, NUtils.player().rc.floor(posres), 1, 0);
+    }
+    
+    /**
+     * Check if there are enough ingredients in inventory and open containers to continue crafting
+     */
+    private boolean hasEnoughIngredientsForCraft(NContext ncontext, NGameUI gui) {
+        try {
+            ArrayList<Window> barrelWindows = gui.getWindows("Barrel");
+            
+            for (NMakewindow.Spec s : mwnd.inputs) {
+                // Skip ignored optional ingredients
+                if (s.ing != null && s.ing.isIgnored) {
+                    continue;
+                }
+                
+                String itemName = s.ing == null ? s.name : s.ing.name;
+                int required = s.count;
+                
+                if (ncontext.isInBarrel(itemName)) {
+                    // Check barrel content
+                    double val = gui.findBarrelContent(barrelWindows, new NAlias(itemName));
+                    if (val < 0 || val * 100 < required) {
+                        return false;
+                    }
+                } else {
+                    // Check inventory
+                    ArrayList<WItem> items = gui.getInventory().getItems(new NAlias(itemName));
+                    int available = 0;
+                    for (WItem item : items) {
+                        available += getActualItemCount(item);
+                    }
+                    if (available < required) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     ArrayList<Long> GetBarrelsIds(NContext ncontext) throws InterruptedException
