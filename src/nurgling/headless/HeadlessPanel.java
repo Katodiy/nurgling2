@@ -34,6 +34,11 @@ public class HeadlessPanel implements UIPanel, UI.Context {
         UI newui = new NUI(this, size, fun);
         UI.setInstance((NUI) newui);
 
+        // Initialize headless rendering environment
+        // This is critical for operations that use hit-testing (placement, clicks)
+        newui.env = new HeadlessEnvironment();
+        log("Initialized HeadlessEnvironment for UI");
+
         synchronized (uiLock) {
             prevui = this.ui;
             this.ui = newui;
@@ -46,6 +51,10 @@ public class HeadlessPanel implements UIPanel, UI.Context {
         }
 
         return newui;
+    }
+
+    private static void log(String message) {
+        System.out.println("[HeadlessPanel] " + message);
     }
 
     @Override
@@ -114,6 +123,8 @@ public class HeadlessPanel implements UIPanel, UI.Context {
     public void run() {
         try {
             double lastTick = Utils.rtime();
+            int tickCount = 0;
+            long lastLogTime = System.currentTimeMillis();
 
             while (running) {
                 double now = Utils.rtime();
@@ -137,6 +148,24 @@ public class HeadlessPanel implements UIPanel, UI.Context {
                         currentui.tick();
                         currentui.lastevent = now;
                     }
+                }
+
+                tickCount++;
+                // Log every 5 seconds
+                if (System.currentTimeMillis() - lastLogTime > 5000) {
+                    String rootInfo = "root: no";
+                    if (currentui != null && currentui.root != null) {
+                        int childCount = 0;
+                        for (Widget w = currentui.root.child; w != null; w = w.next) {
+                            childCount++;
+                        }
+                        rootInfo = "root children: " + childCount;
+                    }
+                    log("Running: " + tickCount + " ticks" +
+                        ", gui: " + (currentui != null && currentui.gui != null ? "yes" : "no") +
+                        ", sess: " + (currentui != null && currentui.sess != null ? "connected" : "no") +
+                        ", " + rootInfo);
+                    lastLogTime = System.currentTimeMillis();
                 }
 
                 // Maintain tick rate

@@ -2070,11 +2070,14 @@ public class Resource implements Serializable {
 	return(loadrimg(name).img);
     }
 
-    // Dummy image for headless mode - 1x1 transparent pixel
+    // Dummy image for headless mode - 16x16 with correct color model for convolution operations
     private static BufferedImage dummyImg = null;
     private static BufferedImage getDummyImage() {
 	if (dummyImg == null) {
-	    dummyImg = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+	    // Use cm_rgba format compatible with PUtils.convolve
+	    java.awt.image.WritableRaster buf = java.awt.image.Raster.createInterleavedRaster(
+		java.awt.image.DataBuffer.TYPE_BYTE, 16, 16, 4, null);
+	    dummyImg = new BufferedImage(PUtils.cm_rgba, buf, false, null);
 	}
 	return dummyImg;
     }
