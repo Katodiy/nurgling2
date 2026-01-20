@@ -47,29 +47,22 @@ public class AutocraftBot implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        System.out.println("[AutocraftBot] Starting...");
         if (presetId == null || presetId.isEmpty()) {
-            System.out.println("[AutocraftBot] ERROR: No preset selected");
             return Results.ERROR("No craft preset selected");
         }
-        System.out.println("[AutocraftBot] Looking for preset: " + presetId);
 
         CraftPreset preset = CraftPresetManager.getInstance().getPreset(presetId);
         if (preset == null) {
-            System.out.println("[AutocraftBot] ERROR: Preset not found");
             return Results.ERROR("Craft preset not found: " + presetId);
         }
-        System.out.println("[AutocraftBot] Found preset: " + preset.getName());
 
         gui.msg("Starting autocraft: " + preset.getName() + " x" + quantity);
 
         // Get the recipe resource path and activate it via menu
         String recipeResource = preset.getRecipeResource();
         if (recipeResource == null || recipeResource.isEmpty()) {
-            System.out.println("[AutocraftBot] ERROR: No recipe resource");
             return Results.ERROR("No recipe resource in preset");
         }
-        System.out.println("[AutocraftBot] Recipe resource: " + recipeResource);
 
         // Check if craft window is already open with the correct recipe
         boolean needToOpenRecipe = true;
@@ -77,53 +70,40 @@ public class AutocraftBot implements Action {
             NMakewindow existingMwnd = gui.craftwnd.makeWidget;
             if (existingMwnd.recipeResource != null && existingMwnd.recipeResource.equals(recipeResource)) {
                 needToOpenRecipe = false;
-                System.out.println("[AutocraftBot] Craft window already open with correct recipe");
             }
         }
 
         if (needToOpenRecipe) {
-            System.out.println("[AutocraftBot] Opening recipe via menu...");
             // Load the resource and find the pagina
             Indir<Resource> res = Resource.remote().load(recipeResource);
             MenuGrid.Pagina pag = gui.menu.paginafor(res);
 
             if (pag == null) {
-                System.out.println("[AutocraftBot] ERROR: Recipe not found in menu");
                 return Results.ERROR("Could not find recipe in menu: " + recipeResource);
             }
-            System.out.println("[AutocraftBot] Found pagina, activating...");
 
             // Activate the recipe via menu
             gui.menu.use(pag.button(), new MenuGrid.Interaction(), false);
-            System.out.println("[AutocraftBot] Waiting for craft window...");
 
             // Wait for the crafting window to appear with makeWidget initialized
             NUtils.addTask(new NTask() {
                 @Override
                 public boolean check() {
-                    boolean ready = gui.craftwnd != null && gui.craftwnd.makeWidget != null;
-                    if (!ready) {
-                        System.out.println("[AutocraftBot] Still waiting for craft window... craftwnd=" + (gui.craftwnd != null) + ", makeWidget=" + (gui.craftwnd != null ? gui.craftwnd.makeWidget != null : "N/A"));
-                    }
-                    return ready;
+                    return gui.craftwnd != null && gui.craftwnd.makeWidget != null;
                 }
             });
-            System.out.println("[AutocraftBot] Craft window ready");
         }
 
         NMakewindow mwnd = gui.craftwnd.makeWidget;
         if (mwnd == null) {
-            System.out.println("[AutocraftBot] ERROR: makeWidget is null");
             return Results.ERROR("Crafting window did not open");
         }
-        System.out.println("[AutocraftBot] Got makeWidget, enabling auto mode...");
 
         // Enable auto mode FIRST - this is needed for tick() to populate categories
         mwnd.autoMode = true;
         if (mwnd.noTransfer != null) {
             mwnd.noTransfer.visible = true;
         }
-        System.out.println("[AutocraftBot] Waiting for inputs to populate...");
 
         // Wait for inputs to be fully populated (names loaded and categories checked)
         // In headless mode, skip sprite check since sprites won't render
@@ -132,25 +112,20 @@ public class AutocraftBot implements Action {
             @Override
             public boolean check() {
                 if (mwnd.inputs == null || mwnd.inputs.isEmpty()) {
-                    System.out.println("[AutocraftBot] Inputs not ready: " + (mwnd.inputs == null ? "null" : "empty"));
                     return false;
                 }
                 // Ensure all specs have their names loaded (skip sprite check in headless mode)
                 for (NMakewindow.Spec spec : mwnd.inputs) {
                     if (spec.name == null) {
-                        System.out.println("[AutocraftBot] Spec name not loaded yet");
                         return false;
                     }
                     if (!isHeadless && spec.spr == null) {
-                        System.out.println("[AutocraftBot] Spec sprite not loaded yet (non-headless)");
                         return false;
                     }
                 }
-                System.out.println("[AutocraftBot] All " + mwnd.inputs.size() + " inputs ready");
                 return true;
             }
         });
-        System.out.println("[AutocraftBot] Inputs populated");
 
         // Verify recipe name matches
         if (preset.getRecipeName() != null && !preset.getRecipeName().isEmpty()) {
@@ -159,16 +134,13 @@ public class AutocraftBot implements Action {
             }
         }
 
-        System.out.println("[AutocraftBot] Configuring ingredients...");
         // Configure ingredients from preset
         configureIngredients(mwnd, preset);
 
-        System.out.println("[AutocraftBot] Starting craft of " + quantity + " items...");
         // Run the craft
         Craft craft = new Craft(mwnd, quantity);
         Results result = craft.run(gui);
 
-        System.out.println("[AutocraftBot] Craft result: " + (result.IsSuccess() ? "SUCCESS" : "FAIL/ERROR"));
         gui.msg("Autocraft completed: " + preset.getName());
         return result;
     }
