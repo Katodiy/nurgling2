@@ -16,7 +16,6 @@ import java.util.function.Consumer;
  */
 public class HeadlessRender implements Render {
     private final HeadlessEnvironment env;
-    private static final String LOG_PREFIX = "[HeadlessRender] ";
 
     public HeadlessRender(HeadlessEnvironment env) {
         this.env = env;

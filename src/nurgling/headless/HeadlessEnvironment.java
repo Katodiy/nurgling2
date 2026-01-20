@@ -14,11 +14,9 @@ import haven.render.*;
  * - compatible() returns true for headless objects, false for real GL objects
  */
 public class HeadlessEnvironment implements Environment {
-    private static final String LOG_PREFIX = "[HeadlessEnv] ";
     private final HeadlessCaps caps = new HeadlessCaps();
 
     public HeadlessEnvironment() {
-        log("HeadlessEnvironment initialized");
     }
 
     @Override
@@ -66,11 +64,6 @@ public class HeadlessEnvironment implements Environment {
 
     @Override
     public void dispose() {
-        log("HeadlessEnvironment disposed");
-    }
-
-    private static void log(String message) {
-        System.out.println(LOG_PREFIX + message);
     }
 
     /**
