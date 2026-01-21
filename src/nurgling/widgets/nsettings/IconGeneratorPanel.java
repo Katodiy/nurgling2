@@ -3,8 +3,11 @@ package nurgling.widgets.nsettings;
 import haven.*;
 import haven.res.lib.itemtex.ItemTex;
 import nurgling.tools.VSpec;
+import nurgling.widgets.CustomIcon;
 import nurgling.widgets.CustomIconGenerator;
 import nurgling.widgets.CustomIconGenerator.IconBackground;
+import nurgling.widgets.CustomIconManager;
+import nurgling.widgets.SavedIconsWindow;
 import org.json.JSONObject;
 
 import java.awt.image.BufferedImage;
@@ -12,15 +15,23 @@ import java.util.*;
 import java.util.List;
 
 /**
- * Settings panel for generating custom icons.
+ * Settings panel for generating and managing custom icons.
  * Allows users to select a background and an in-game item
- * to create custom bot-style icons.
+ * to create custom bot-style icons that can be used for scenarios and equipment presets.
  */
 public class IconGeneratorPanel extends Panel {
 
-    private static final int MARGIN = UI.scale(10);
+    private static final int MARGIN = UI.scale(15);
     private static final int SWATCH_SIZE = UI.scale(32);
-    private static final int SWATCH_GAP = UI.scale(4);
+    private static final int SWATCH_GAP = UI.scale(5);
+    private static final int SECTION_GAP = UI.scale(20);
+    private static final int LINE_HEIGHT = UI.scale(24);
+
+    // Currently editing icon
+    private CustomIcon editingIcon = null;
+
+    // Icon name
+    private TextEntry iconNameEntry;
 
     // Background selection
     private IconBackground selectedBackground = CustomIconGenerator.PRESET_BACKGROUNDS.get(0);
@@ -39,6 +50,11 @@ public class IconGeneratorPanel extends Panel {
     private BufferedImage[] previewIcons = null;
     private Tex[] previewTextures = null;
     private int previewIconsY = 0;
+
+    // Buttons
+    private Button saveNewBtn;
+    private Button saveBtn;
+    private Button deleteBtn;
 
     public IconGeneratorPanel() {
         super();
@@ -67,13 +83,41 @@ public class IconGeneratorPanel extends Panel {
     }
 
     private void buildUI() {
-        int y = MARGIN;
+        int y = UI.scale(10);
 
-        // Title: Background
-        add(new Label("Background:"), new Coord(MARGIN, y));
-        y += UI.scale(20);
+        // ==================== Saved Icons Section ====================
+        add(new Label("Saved Icons"), MARGIN, y);
+        y += LINE_HEIGHT;
 
-        // Background swatches
+        // Buttons on their own row, aligned
+        int topBtnWidth = UI.scale(100);
+        int topBtnGap = UI.scale(10);
+        add(new Button(topBtnWidth, "Browse Icons") {
+            @Override
+            public void click() {
+                openSavedIconsWindow();
+            }
+        }, MARGIN, y);
+
+        add(new Button(topBtnWidth, "New Icon") {
+            @Override
+            public void click() {
+                startNewIcon();
+            }
+        }, MARGIN + topBtnWidth + topBtnGap, y);
+
+        y += UI.scale(28) + UI.scale(10);
+
+        // ==================== Icon Name ====================
+        add(new Label("Name:"), MARGIN, y + UI.scale(3));
+        iconNameEntry = add(new TextEntry(UI.scale(200), ""), MARGIN + UI.scale(50), y);
+        y += LINE_HEIGHT + UI.scale(15);
+
+        // ==================== Background Selection ====================
+        add(new Label("Background:"), MARGIN, y);
+        y += LINE_HEIGHT;
+
+        // Background swatches - 8 per row
         int swatchX = MARGIN;
         int swatchesPerRow = 8;
         List<IconBackground> backgrounds = CustomIconGenerator.PRESET_BACKGROUNDS;
@@ -83,71 +127,106 @@ public class IconGeneratorPanel extends Panel {
             add(swatch, new Coord(swatchX, y));
             backgroundSwatches.add(swatch);
 
-            swatchX += SWATCH_SIZE + SWATCH_GAP;
             if ((i + 1) % swatchesPerRow == 0) {
                 swatchX = MARGIN;
                 y += SWATCH_SIZE + SWATCH_GAP;
+            } else {
+                swatchX += SWATCH_SIZE + SWATCH_GAP;
             }
         }
-
+        // If last row wasn't complete, move y forward
         if (backgrounds.size() % swatchesPerRow != 0) {
             y += SWATCH_SIZE + SWATCH_GAP;
         }
-
         y += UI.scale(10);
 
-        // Title: Item Selection
-        add(new Label("Item Selection:"), new Coord(MARGIN, y));
-        y += UI.scale(20);
+        // ==================== Item Selection Section ====================
+        add(new Label("Item (optional):"), MARGIN, y);
+        y += LINE_HEIGHT;
 
         // Category list (left side)
-        add(new Label("Categories"), new Coord(MARGIN, y));
         int catListWidth = UI.scale(150);
-        int catListHeight = UI.scale(200);
-        categoryList = add(new CategoryList(new Coord(catListWidth, catListHeight)), new Coord(MARGIN, y + UI.scale(16)));
+        int catListHeight = UI.scale(140);
+        categoryList = add(new CategoryList(new Coord(catListWidth, catListHeight)), new Coord(MARGIN, y));
 
         // Item list (right side)
-        int itemListX = MARGIN + catListWidth + UI.scale(10);
-        add(new Label("Items"), new Coord(itemListX, y));
+        int itemListX = MARGIN + catListWidth + UI.scale(15);
 
         // Search box
-        int searchWidth = UI.scale(280);
+        add(new Label("Search:"), itemListX, y + UI.scale(3));
+        int searchWidth = UI.scale(200);
         searchBox = add(new TextEntry(searchWidth, "") {
             @Override
             public void changed() {
                 filterItems();
             }
-        }, new Coord(itemListX, y + UI.scale(16)));
+        }, new Coord(itemListX + UI.scale(55), y));
 
-        int itemListWidth = UI.scale(280);
-        int itemListHeight = UI.scale(180);
+        int itemListWidth = UI.scale(255);
+        int itemListHeight = UI.scale(115);
         itemList = add(new ItemList(new Coord(itemListWidth, itemListHeight)),
-            new Coord(itemListX, y + UI.scale(16) + searchBox.sz.y + UI.scale(4)));
+            new Coord(itemListX, y + searchBox.sz.y + UI.scale(5)));
 
-        y += UI.scale(16) + catListHeight + UI.scale(20);
+        y += catListHeight + UI.scale(15);
 
-        // Preview section
-        add(new Label("Preview:"), new Coord(MARGIN, y));
-        y += UI.scale(20);
+        // ==================== Preview Section ====================
+        add(new Label("Preview:"), MARGIN, y);
+        y += LINE_HEIGHT;
 
         // Store where preview icons will be drawn
         previewIconsY = y;
         int iconSize = UI.scale(32);
-        y += iconSize + UI.scale(4); // Icons + small gap
 
         // State labels centered under each icon
         int previewX = MARGIN;
-        int previewSpacing = UI.scale(44); // Slightly more than icon width for some breathing room
-        String[] labels = {"Normal", "Pressed", "Hover"};
+        int previewSpacing = UI.scale(50);
+        String[] labels = {"Up", "Down", "Hover"};
         for (int i = 0; i < labels.length; i++) {
             Text.Line labelText = Text.render(labels[i]);
             int labelWidth = labelText.sz().x;
             int iconCenterX = previewX + (previewSpacing * i) + (iconSize / 2);
             int labelX = iconCenterX - (labelWidth / 2);
-            add(new Label(labels[i]), new Coord(labelX, y));
+            add(new Label(labels[i]), new Coord(labelX, y + iconSize + UI.scale(4)));
         }
 
+        // ==================== Action Buttons ====================
+        // All three buttons on the same row, aligned with item list area
+        int btnWidth = UI.scale(80);
+        int btnGap = UI.scale(8);
+        int btnX = itemListX;  // Align with item list / search area
+
+        saveNewBtn = add(new Button(btnWidth, "Save New") {
+            @Override
+            public void click() {
+                saveAsNew();
+            }
+        }, new Coord(btnX, y));
+
+        saveBtn = add(new Button(btnWidth, "Save") {
+            @Override
+            public void click() {
+                saveIcon();
+            }
+        }, new Coord(btnX + btnWidth + btnGap, y));
+
+        deleteBtn = add(new Button(btnWidth, "Delete") {
+            @Override
+            public void click() {
+                deleteIcon();
+            }
+        }, new Coord(btnX + (btnWidth + btnGap) * 2, y));
+
+        // Add padding at bottom so buttons aren't cut off
+        y += UI.scale(35);
+
+        updateButtonStates();
         pack();
+    }
+
+    private void openSavedIconsWindow() {
+        SavedIconsWindow window = new SavedIconsWindow(this::editIcon);
+        window.setSelectedIconId(editingIcon != null ? editingIcon.getId() : null);
+        ui.gui.add(window, ui.gui.sz.div(2).sub(window.sz.div(2)));
     }
 
     @Override
@@ -168,7 +247,7 @@ public class IconGeneratorPanel extends Panel {
         // Draw preview icons
         if (previewTextures != null) {
             int previewX = MARGIN;
-            int spacing = UI.scale(44);
+            int spacing = UI.scale(50);
 
             for (int i = 0; i < previewTextures.length; i++) {
                 if (previewTextures[i] != null) {
@@ -176,6 +255,98 @@ public class IconGeneratorPanel extends Panel {
                 }
             }
         }
+    }
+
+    private void startNewIcon() {
+        editingIcon = null;
+        iconNameEntry.settext("");
+        selectedBackground = CustomIconGenerator.PRESET_BACKGROUNDS.get(0);
+        selectedItem = null;
+        if (searchBox != null) {
+            searchBox.settext("");
+        }
+        updatePreview();
+        updateButtonStates();
+    }
+
+    private void editIcon(CustomIcon icon) {
+        editingIcon = icon;
+        iconNameEntry.settext(icon.getName());
+
+        // Find and select the background
+        String bgId = icon.getBackgroundId();
+        for (IconBackground bg : CustomIconGenerator.PRESET_BACKGROUNDS) {
+            if (bg.getId().equals(bgId)) {
+                selectedBackground = bg;
+                break;
+            }
+        }
+
+        // Find and select the item if available
+        selectedItem = null;
+        JSONObject itemRes = icon.getItemResource();
+        if (itemRes != null && itemRes.has("name")) {
+            String itemName = itemRes.getString("name");
+            for (ItemEntry entry : allItems) {
+                if (entry.getName().equals(itemName)) {
+                    selectedItem = entry;
+                    break;
+                }
+            }
+        }
+
+        if (searchBox != null) {
+            searchBox.settext("");
+        }
+        updatePreview();
+        updateButtonStates();
+    }
+
+    private void saveAsNew() {
+        String name = iconNameEntry.text().trim();
+        if (name.isEmpty()) {
+            name = "Icon " + (CustomIconManager.getInstance().getIconList().size() + 1);
+        }
+
+        JSONObject itemRes = selectedItem != null ? selectedItem.getResource() : null;
+        CustomIcon newIcon = new CustomIcon(name, selectedBackground.getId(), itemRes);
+        CustomIconManager.getInstance().addOrUpdateIcon(newIcon);
+
+        editingIcon = newIcon;
+        updateButtonStates();
+    }
+
+    private void saveIcon() {
+        if (editingIcon == null) {
+            saveAsNew();
+            return;
+        }
+
+        String name = iconNameEntry.text().trim();
+        if (name.isEmpty()) {
+            name = "Unnamed";
+        }
+
+        editingIcon.setName(name);
+        editingIcon.setBackgroundId(selectedBackground.getId());
+        editingIcon.setItemResource(selectedItem != null ? selectedItem.getResource() : null);
+        editingIcon.invalidateCache();
+
+        CustomIconManager.getInstance().addOrUpdateIcon(editingIcon);
+        updateButtonStates();
+    }
+
+    private void deleteIcon() {
+        if (editingIcon != null) {
+            CustomIconManager.getInstance().deleteIcon(editingIcon.getId());
+            editingIcon = null;
+            startNewIcon();
+        }
+    }
+
+    private void updateButtonStates() {
+        saveBtn.show(editingIcon != null);
+        deleteBtn.show(editingIcon != null);
     }
 
     private void selectBackground(IconBackground background) {
@@ -235,18 +406,12 @@ public class IconGeneratorPanel extends Panel {
 
     @Override
     public void load() {
-        // Reset to defaults when panel is shown
-        selectedBackground = CustomIconGenerator.PRESET_BACKGROUNDS.get(0);
-        selectedItem = null;
-        if (searchBox != null) {
-            searchBox.settext("");
-        }
-        updatePreview();
+        startNewIcon();
     }
 
     @Override
     public void save() {
-        // Currently just for preview - no persistence yet
+        // Icons are saved immediately when Save button is clicked
     }
 
     // ==================== Inner Classes ====================
@@ -262,7 +427,6 @@ public class IconGeneratorPanel extends Panel {
             super(new Coord(SWATCH_SIZE, SWATCH_SIZE));
             this.background = background;
 
-            // Load preview image
             BufferedImage preview = background.getPreview();
             if (preview != null) {
                 previewTex = new TexI(preview);
@@ -272,10 +436,8 @@ public class IconGeneratorPanel extends Panel {
         @Override
         public void draw(GOut g) {
             if (previewTex != null) {
-                // Scale to fit swatch size
                 g.image(previewTex, Coord.z, sz);
             } else {
-                // Fallback if image not loaded
                 g.chcolor(128, 128, 128, 255);
                 g.frect(Coord.z, sz);
                 g.chcolor();
@@ -289,11 +451,6 @@ public class IconGeneratorPanel extends Panel {
                 return true;
             }
             return super.mousedown(ev);
-        }
-
-        @Override
-        public Object tooltip(Coord c, Widget prev) {
-            return "Background " + background.getId();
         }
     }
 
@@ -373,7 +530,6 @@ public class IconGeneratorPanel extends Panel {
         public void change(Category item) {
             selected = item;
             super.change(item);
-            // Update item list when category changes
             if (searchBox.text().isEmpty()) {
                 List<ItemEntry> categoryItemList = categoryItems.get(item.getName());
                 itemList.setItems(categoryItemList != null ? categoryItemList : Collections.emptyList());
@@ -398,7 +554,6 @@ public class IconGeneratorPanel extends Panel {
 
         @Override
         public void draw(GOut g) {
-            // Highlight if selected
             if (((CategoryList) list).getSelected() == item) {
                 g.chcolor(70, 70, 120, 180);
                 g.frect(Coord.z, sz);
@@ -467,7 +622,6 @@ public class IconGeneratorPanel extends Panel {
             super(list, sz, item);
             this.text = Text.render(item.getName());
 
-            // Load icon lazily
             BufferedImage icon = item.getIcon();
             if (icon != null) {
                 iconTex = new TexI(icon);
@@ -476,7 +630,6 @@ public class IconGeneratorPanel extends Panel {
 
         @Override
         public void draw(GOut g) {
-            // Highlight if selected
             if (((ItemList) list).getSelected() == item) {
                 g.chcolor(70, 70, 120, 180);
                 g.frect(Coord.z, sz);
@@ -486,9 +639,7 @@ public class IconGeneratorPanel extends Panel {
             int iconSize = UI.scale(24);
             int textX = iconSize + UI.scale(6);
 
-            // Draw icon
             if (iconTex != null) {
-                // Scale icon to fit
                 Coord texSz = iconTex.sz();
                 double scale = Math.min((double) iconSize / texSz.x, (double) iconSize / texSz.y);
                 Coord scaledSz = new Coord((int)(texSz.x * scale), (int)(texSz.y * scale));
@@ -499,7 +650,6 @@ public class IconGeneratorPanel extends Panel {
                 g.image(iconTex, iconPos, scaledSz);
             }
 
-            // Draw text
             g.image(text.tex(), new Coord(textX, (sz.y - text.sz().y) / 2));
         }
 

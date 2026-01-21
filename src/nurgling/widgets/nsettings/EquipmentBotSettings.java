@@ -7,6 +7,7 @@ import nurgling.actions.bots.EquipmentBot;
 import nurgling.equipment.EquipmentPreset;
 import nurgling.equipment.EquipmentPresetIcons;
 import nurgling.equipment.EquipmentPresetManager;
+import nurgling.widgets.CustomIconDropdown;
 import nurgling.widgets.NEquipmentPresetButton;
 import nurgling.widgets.TextInputWindow;
 
@@ -33,6 +34,7 @@ public class EquipmentBotSettings extends Panel implements DTarget {
 
     private final SListBox<EquipmentPreset, Widget> presetList;
     private final TextEntry presetNameEntry;
+    private CustomIconDropdown iconDropdown;
 
     private EquipmentPreset editingPreset = null;
 
@@ -146,6 +148,16 @@ public class EquipmentBotSettings extends Panel implements DTarget {
 
         presetNameEntry = editorPanel.add(new TextEntry(contentWidth - margin * 2 - 10, ""), new Coord(margin, y));
         y += UI.scale(36);
+
+        // Custom icon selection
+        editorPanel.add(new Label("Icon:"), new Coord(margin, y));
+        y += UI.scale(18);
+        iconDropdown = editorPanel.add(new CustomIconDropdown(iconId -> {
+            if (editingPreset != null) {
+                editingPreset.setCustomIconId(iconId);
+            }
+        }), new Coord(margin, y));
+        y += UI.scale(44);
 
         editorPanel.add(new Label(L10n.get("equipment.drag_items")), new Coord(margin, y));
         y += UI.scale(18);
@@ -321,6 +333,7 @@ public class EquipmentBotSettings extends Panel implements DTarget {
         listPanel.hide();
         editorPanel.show();
         presetNameEntry.settext(editingPreset != null ? editingPreset.getName() : "");
+        iconDropdown.setSelectedIconId(editingPreset != null ? editingPreset.getCustomIconId() : null);
 
         // Load slot config from editing preset
         slotConfig.clear();

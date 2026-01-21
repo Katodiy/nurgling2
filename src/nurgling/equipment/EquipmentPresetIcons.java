@@ -1,6 +1,8 @@
 package nurgling.equipment;
 
 import haven.UI;
+import nurgling.widgets.CustomIcon;
+import nurgling.widgets.CustomIconManager;
 
 import java.awt.image.BufferedImage;
 import java.awt.Color;
@@ -11,6 +13,14 @@ import java.awt.RenderingHints;
 public class EquipmentPresetIcons {
 
     public static BufferedImage loadPresetIcon(EquipmentPreset preset, String state) {
+        // Check for custom icon first
+        if (preset != null && preset.getCustomIconId() != null) {
+            CustomIcon customIcon = CustomIconManager.getInstance().getIcon(preset.getCustomIconId());
+            if (customIcon != null) {
+                int stateIndex = getStateIndex(state);
+                return customIcon.getImage(stateIndex);
+            }
+        }
         return generateTextIcon(preset, state);
     }
 
@@ -24,6 +34,15 @@ public class EquipmentPresetIcons {
 
     public static BufferedImage loadPresetIconHover(EquipmentPreset preset) {
         return loadPresetIcon(preset, "h");
+    }
+
+    private static int getStateIndex(String state) {
+        switch (state) {
+            case "d": return 1;
+            case "h": return 2;
+            case "u":
+            default: return 0;
+        }
     }
 
     private static BufferedImage generateTextIcon(EquipmentPreset preset, String state) {

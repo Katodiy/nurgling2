@@ -9,6 +9,7 @@ import nurgling.actions.bots.ScenarioRunner;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
 import nurgling.scenarios.*;
+import nurgling.widgets.CustomIconDropdown;
 import nurgling.widgets.NScenarioButton;
 import nurgling.widgets.ScenarioBotSelectionDialog;
 import nurgling.widgets.StepSettingsPanel;
@@ -33,6 +34,7 @@ public class ScenarioPanel extends Panel {
     private SListBox<BotStep, Widget> stepList;
 
     private StepSettingsPanel stepSettingsPanel;
+    private CustomIconDropdown iconDropdown;
 
     private BotStep selectedStep = null;
     private Scenario editingScenario = null;
@@ -125,6 +127,16 @@ public class ScenarioPanel extends Panel {
 
         scenarioNameEntry = editorPanel.add(new TextEntry(contentWidth - margin * 2 - 10, ""), new Coord(margin, y));
         y += UI.scale(36);
+
+        // Custom icon selection
+        editorPanel.add(new Label("Icon:"), new Coord(margin, y));
+        y += UI.scale(18);
+        iconDropdown = editorPanel.add(new CustomIconDropdown(iconId -> {
+            if (editingScenario != null) {
+                editingScenario.setCustomIconId(iconId);
+            }
+        }), new Coord(margin, y));
+        y += UI.scale(44);
 
         int colSpacing = UI.scale(12);
         int stepPanelWidth = (contentWidth - margin * 2 - colSpacing) * 2 / 3;
@@ -300,6 +312,7 @@ public class ScenarioPanel extends Panel {
         listPanel.hide();
         editorPanel.show();
         scenarioNameEntry.settext(editingScenario != null ? editingScenario.getName() : "");
+        iconDropdown.setSelectedIconId(editingScenario != null ? editingScenario.getCustomIconId() : null);
         stepList.update();
         List<BotStep> steps = editingScenario != null ? editingScenario.getSteps() : Collections.emptyList();
         if (!steps.isEmpty()) {
