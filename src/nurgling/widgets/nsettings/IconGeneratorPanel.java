@@ -225,7 +225,6 @@ public class IconGeneratorPanel extends Panel {
 
     private void openSavedIconsWindow() {
         SavedIconsWindow window = new SavedIconsWindow(this::editIcon);
-        window.setSelectedIconId(editingIcon != null ? editingIcon.getId() : null);
         ui.gui.add(window, ui.gui.sz.div(2).sub(window.sz.div(2)));
     }
 
