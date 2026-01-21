@@ -38,6 +38,7 @@ public class IconGeneratorPanel extends Panel {
     // Preview
     private BufferedImage[] previewIcons = null;
     private Tex[] previewTextures = null;
+    private int previewIconsY = 0;
 
     public IconGeneratorPanel() {
         super();
@@ -129,16 +130,22 @@ public class IconGeneratorPanel extends Panel {
         add(new Label("Preview:"), new Coord(MARGIN, y));
         y += UI.scale(20);
 
-        // Preview will be drawn in draw() method
-        // Reserve space for preview
-        y += UI.scale(50);
+        // Store where preview icons will be drawn
+        previewIconsY = y;
+        int iconSize = UI.scale(32);
+        y += iconSize + UI.scale(4); // Icons + small gap
 
-        // State labels under preview area
-        int previewX = MARGIN + UI.scale(10);
-        int previewSpacing = UI.scale(50);
-        add(new Label("Normal", Text.std), new Coord(previewX + UI.scale(4), y));
-        add(new Label("Pressed", Text.std), new Coord(previewX + previewSpacing + UI.scale(1), y));
-        add(new Label("Hover", Text.std), new Coord(previewX + previewSpacing * 2 + UI.scale(4), y));
+        // State labels centered under each icon
+        int previewX = MARGIN;
+        int previewSpacing = UI.scale(44); // Slightly more than icon width for some breathing room
+        String[] labels = {"Normal", "Pressed", "Hover"};
+        for (int i = 0; i < labels.length; i++) {
+            Text.Line labelText = Text.render(labels[i]);
+            int labelWidth = labelText.sz().x;
+            int iconCenterX = previewX + (previewSpacing * i) + (iconSize / 2);
+            int labelX = iconCenterX - (labelWidth / 2);
+            add(new Label(labels[i]), new Coord(labelX, y));
+        }
 
         pack();
     }
@@ -160,13 +167,12 @@ public class IconGeneratorPanel extends Panel {
 
         // Draw preview icons
         if (previewTextures != null) {
-            int previewY = sz.y - UI.scale(70);
-            int previewX = MARGIN + UI.scale(10);
-            int spacing = UI.scale(50);
+            int previewX = MARGIN;
+            int spacing = UI.scale(44);
 
             for (int i = 0; i < previewTextures.length; i++) {
                 if (previewTextures[i] != null) {
-                    g.image(previewTextures[i], new Coord(previewX + spacing * i, previewY));
+                    g.image(previewTextures[i], new Coord(previewX + spacing * i, previewIconsY));
                 }
             }
         }
