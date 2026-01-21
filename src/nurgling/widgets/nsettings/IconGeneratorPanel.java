@@ -4,27 +4,27 @@ import haven.*;
 import haven.res.lib.itemtex.ItemTex;
 import nurgling.tools.VSpec;
 import nurgling.widgets.CustomIconGenerator;
+import nurgling.widgets.CustomIconGenerator.IconBackground;
 import org.json.JSONObject;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 
 /**
  * Settings panel for generating custom icons.
- * Allows users to select a background color and an in-game item
+ * Allows users to select a background and an in-game item
  * to create custom bot-style icons.
  */
 public class IconGeneratorPanel extends Panel {
 
     private static final int MARGIN = UI.scale(10);
-    private static final int SWATCH_SIZE = UI.scale(24);
+    private static final int SWATCH_SIZE = UI.scale(32);
     private static final int SWATCH_GAP = UI.scale(4);
 
-    // Color selection
-    private Color selectedColor = CustomIconGenerator.PRESET_COLORS[0];
-    private final List<ColorSwatch> colorSwatches = new ArrayList<>();
+    // Background selection
+    private IconBackground selectedBackground = CustomIconGenerator.PRESET_BACKGROUNDS.get(0);
+    private final List<BackgroundSwatch> backgroundSwatches = new ArrayList<>();
 
     // Item selection
     private final List<Category> categories = new ArrayList<>();
@@ -40,7 +40,7 @@ public class IconGeneratorPanel extends Panel {
     private Tex[] previewTextures = null;
 
     public IconGeneratorPanel() {
-        super("Icon Generator");
+        super();
 
         initializeItemData();
         buildUI();
@@ -68,18 +68,19 @@ public class IconGeneratorPanel extends Panel {
     private void buildUI() {
         int y = MARGIN;
 
-        // Title: Background Color
-        add(new Label("Background Color:"), new Coord(MARGIN, y));
+        // Title: Background
+        add(new Label("Background:"), new Coord(MARGIN, y));
         y += UI.scale(20);
 
-        // Color swatches
+        // Background swatches
         int swatchX = MARGIN;
-        int swatchesPerRow = 9;
-        for (int i = 0; i < CustomIconGenerator.PRESET_COLORS.length; i++) {
-            Color color = CustomIconGenerator.PRESET_COLORS[i];
-            ColorSwatch swatch = new ColorSwatch(color);
+        int swatchesPerRow = 8;
+        List<IconBackground> backgrounds = CustomIconGenerator.PRESET_BACKGROUNDS;
+        for (int i = 0; i < backgrounds.size(); i++) {
+            IconBackground bg = backgrounds.get(i);
+            BackgroundSwatch swatch = new BackgroundSwatch(bg);
             add(swatch, new Coord(swatchX, y));
-            colorSwatches.add(swatch);
+            backgroundSwatches.add(swatch);
 
             swatchX += SWATCH_SIZE + SWATCH_GAP;
             if ((i + 1) % swatchesPerRow == 0) {
@@ -88,7 +89,7 @@ public class IconGeneratorPanel extends Panel {
             }
         }
 
-        if (CustomIconGenerator.PRESET_COLORS.length % swatchesPerRow != 0) {
+        if (backgrounds.size() % swatchesPerRow != 0) {
             y += SWATCH_SIZE + SWATCH_GAP;
         }
 
@@ -146,9 +147,9 @@ public class IconGeneratorPanel extends Panel {
     public void draw(GOut g) {
         super.draw(g);
 
-        // Draw selection highlight on color swatches
-        for (ColorSwatch swatch : colorSwatches) {
-            if (swatch.color.equals(selectedColor)) {
+        // Draw selection highlight on background swatches
+        for (BackgroundSwatch swatch : backgroundSwatches) {
+            if (swatch.background == selectedBackground) {
                 Coord pos = swatch.c.sub(2, 2);
                 Coord size = swatch.sz.add(4, 4);
                 g.chcolor(255, 255, 255, 255);
@@ -171,8 +172,8 @@ public class IconGeneratorPanel extends Panel {
         }
     }
 
-    private void selectColor(Color color) {
-        selectedColor = color;
+    private void selectBackground(IconBackground background) {
+        selectedBackground = background;
         updatePreview();
     }
 
@@ -216,7 +217,7 @@ public class IconGeneratorPanel extends Panel {
 
     private void updatePreview() {
         JSONObject itemRes = selectedItem != null ? selectedItem.getResource() : null;
-        previewIcons = CustomIconGenerator.generateIconSet(selectedColor, itemRes);
+        previewIcons = CustomIconGenerator.generateIconSet(selectedBackground, itemRes);
 
         previewTextures = new Tex[3];
         for (int i = 0; i < 3; i++) {
@@ -229,7 +230,7 @@ public class IconGeneratorPanel extends Panel {
     @Override
     public void load() {
         // Reset to defaults when panel is shown
-        selectedColor = CustomIconGenerator.PRESET_COLORS[0];
+        selectedBackground = CustomIconGenerator.PRESET_BACKGROUNDS.get(0);
         selectedItem = null;
         if (searchBox != null) {
             searchBox.settext("");
@@ -245,32 +246,40 @@ public class IconGeneratorPanel extends Panel {
     // ==================== Inner Classes ====================
 
     /**
-     * A clickable color swatch widget.
+     * A clickable background swatch widget.
      */
-    private class ColorSwatch extends Widget {
-        final Color color;
+    private class BackgroundSwatch extends Widget {
+        final IconBackground background;
+        private Tex previewTex;
 
-        ColorSwatch(Color color) {
+        BackgroundSwatch(IconBackground background) {
             super(new Coord(SWATCH_SIZE, SWATCH_SIZE));
-            this.color = color;
+            this.background = background;
+
+            // Load preview image
+            BufferedImage preview = background.getPreview();
+            if (preview != null) {
+                previewTex = new TexI(preview);
+            }
         }
 
         @Override
         public void draw(GOut g) {
-            // Draw background
-            g.chcolor(color);
-            g.frect(Coord.z, sz);
-
-            // Draw border
-            g.chcolor(0, 0, 0, 200);
-            g.rect(Coord.z, sz);
-            g.chcolor();
+            if (previewTex != null) {
+                // Scale to fit swatch size
+                g.image(previewTex, Coord.z, sz);
+            } else {
+                // Fallback if image not loaded
+                g.chcolor(128, 128, 128, 255);
+                g.frect(Coord.z, sz);
+                g.chcolor();
+            }
         }
 
         @Override
         public boolean mousedown(MouseDownEvent ev) {
             if (ev.b == 1) {
-                selectColor(color);
+                selectBackground(background);
                 return true;
             }
             return super.mousedown(ev);
@@ -278,7 +287,7 @@ public class IconGeneratorPanel extends Panel {
 
         @Override
         public Object tooltip(Coord c, Widget prev) {
-            return String.format("RGB(%d, %d, %d)", color.getRed(), color.getGreen(), color.getBlue());
+            return "Background " + background.getId();
         }
     }
 
