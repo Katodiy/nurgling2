@@ -34,6 +34,10 @@ public class HeadlessPanel implements UIPanel, UI.Context {
         UI newui = new NUI(this, size, fun);
         UI.setInstance((NUI) newui);
 
+        // Initialize headless rendering environment
+        // This is critical for operations that use hit-testing (placement, clicks)
+        newui.env = new HeadlessEnvironment();
+
         synchronized (uiLock) {
             prevui = this.ui;
             this.ui = newui;
@@ -117,7 +121,6 @@ public class HeadlessPanel implements UIPanel, UI.Context {
 
             while (running) {
                 double now = Utils.rtime();
-                double elapsed = now - lastTick;
 
                 UI currentui;
                 synchronized (uiLock) {
@@ -146,7 +149,6 @@ public class HeadlessPanel implements UIPanel, UI.Context {
                     Thread.sleep((long)(sleepTime * 1000));
                 }
                 lastTick = targetTime;
-
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

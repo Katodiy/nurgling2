@@ -106,15 +106,20 @@ public class AutocraftBot implements Action {
         }
 
         // Wait for inputs to be fully populated (names loaded and categories checked)
+        // In headless mode, skip sprite check since sprites won't render
+        final boolean isHeadless = nurgling.headless.Headless.isHeadless();
         NUtils.addTask(new NTask() {
             @Override
             public boolean check() {
                 if (mwnd.inputs == null || mwnd.inputs.isEmpty()) {
                     return false;
                 }
-                // Ensure all specs have their names loaded and sprites initialized
+                // Ensure all specs have their names loaded (skip sprite check in headless mode)
                 for (NMakewindow.Spec spec : mwnd.inputs) {
-                    if (spec.name == null || spec.spr == null) {
+                    if (spec.name == null) {
+                        return false;
+                    }
+                    if (!isHeadless && spec.spr == null) {
                         return false;
                     }
                 }

@@ -174,7 +174,8 @@ public class NMakewindow extends Widget {
 
         void tick(double dt)
         {
-            if (name == null && spr != null)
+            // Load name from sprite, or directly from resource in headless mode
+            if (name == null && (spr != null || nurgling.headless.Headless.isHeadless()))
             {
                 if (!res.get().name.contains("coin"))
                 {
