@@ -7,8 +7,10 @@ import nurgling.actions.bots.EquipmentBot;
 import nurgling.equipment.EquipmentPreset;
 import nurgling.equipment.EquipmentPresetIcons;
 import nurgling.equipment.EquipmentPresetManager;
-import nurgling.widgets.CustomIconDropdown;
+import nurgling.widgets.CustomIcon;
+import nurgling.widgets.CustomIconManager;
 import nurgling.widgets.NEquipmentPresetButton;
+import nurgling.widgets.SavedIconsWindow;
 import nurgling.widgets.TextInputWindow;
 
 import nurgling.i18n.L10n;
@@ -34,7 +36,9 @@ public class EquipmentBotSettings extends Panel implements DTarget {
 
     private final SListBox<EquipmentPreset, Widget> presetList;
     private final TextEntry presetNameEntry;
-    private CustomIconDropdown iconDropdown;
+    private IButton iconPreview;
+    private Button iconSelectBtn;
+    private Button iconClearBtn;
 
     private EquipmentPreset editingPreset = null;
 
@@ -152,12 +156,31 @@ public class EquipmentBotSettings extends Panel implements DTarget {
         // Custom icon selection
         editorPanel.add(new Label("Icon:"), new Coord(margin, y));
         y += UI.scale(18);
-        iconDropdown = editorPanel.add(new CustomIconDropdown(iconId -> {
-            if (editingPreset != null) {
-                editingPreset.setCustomIconId(iconId);
+
+        // Icon preview (32x32)
+        BufferedImage defaultIcon = createDefaultIconImage();
+        iconPreview = editorPanel.add(new IButton(defaultIcon, defaultIcon, defaultIcon), new Coord(margin, y));
+
+        // Select icon button
+        iconSelectBtn = editorPanel.add(new Button(UI.scale(80), "Select") {
+            @Override
+            public void click() {
+                openIconSelectWindow();
             }
-        }), new Coord(margin, y));
-        y += UI.scale(44);
+        }, new Coord(margin + UI.scale(40), y));
+
+        // Clear icon button
+        iconClearBtn = editorPanel.add(new Button(UI.scale(60), "Clear") {
+            @Override
+            public void click() {
+                if (editingPreset != null) {
+                    editingPreset.setCustomIconId(null);
+                    updateIconPreview();
+                }
+            }
+        }, new Coord(margin + UI.scale(128), y));
+
+        y += UI.scale(36);
 
         editorPanel.add(new Label(L10n.get("equipment.drag_items")), new Coord(margin, y));
         y += UI.scale(18);
@@ -333,7 +356,7 @@ public class EquipmentBotSettings extends Panel implements DTarget {
         listPanel.hide();
         editorPanel.show();
         presetNameEntry.settext(editingPreset != null ? editingPreset.getName() : "");
-        iconDropdown.setSelectedIconId(editingPreset != null ? editingPreset.getCustomIconId() : null);
+        updateIconPreview();
 
         // Load slot config from editing preset
         slotConfig.clear();
@@ -491,5 +514,55 @@ public class EquipmentBotSettings extends Panel implements DTarget {
             }
             return super.mouseup(ev);
         }
+    }
+
+    private void openIconSelectWindow() {
+        SavedIconsWindow window = new SavedIconsWindow(icon -> {
+            if (editingPreset != null && icon != null) {
+                editingPreset.setCustomIconId(icon.getId());
+                updateIconPreview();
+            }
+        });
+        ui.root.add(window, ui.root.sz.div(2).sub(window.sz.div(2)));
+    }
+
+    private void updateIconPreview() {
+        String iconId = editingPreset != null ? editingPreset.getCustomIconId() : null;
+        BufferedImage img;
+
+        if (iconId != null) {
+            CustomIcon customIcon = CustomIconManager.getInstance().getIcon(iconId);
+            if (customIcon != null) {
+                img = customIcon.getImage(0);
+            } else {
+                img = createDefaultIconImage();
+            }
+        } else {
+            img = createDefaultIconImage();
+        }
+
+        if (iconPreview != null) {
+            // IButton fields are final, so we need to recreate it
+            Coord pos = iconPreview.c;
+            iconPreview.reqdestroy();
+            iconPreview = editorPanel.add(new IButton(img, img, img), pos);
+        }
+    }
+
+    private BufferedImage createDefaultIconImage() {
+        int size = UI.scale(32);
+        BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g = img.createGraphics();
+        g.setColor(new java.awt.Color(60, 80, 60));
+        g.fillRoundRect(0, 0, size, size, 4, 4);
+        g.setColor(new java.awt.Color(100, 120, 100));
+        g.drawRoundRect(0, 0, size - 1, size - 1, 4, 4);
+        g.setColor(java.awt.Color.WHITE);
+        g.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, UI.scale(10)));
+        String text = "None";
+        int textWidth = g.getFontMetrics().stringWidth(text);
+        g.drawString(text, (size - textWidth) / 2, size / 2 + UI.scale(4));
+        g.dispose();
+        return img;
     }
 }
