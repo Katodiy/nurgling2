@@ -1,17 +1,14 @@
 package nurgling.widgets.nsettings;
 
 import haven.*;
-import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.actions.bots.EquipmentBot;
 import nurgling.equipment.EquipmentPreset;
-import nurgling.equipment.EquipmentPresetIcons;
 import nurgling.equipment.EquipmentPresetManager;
 import nurgling.widgets.CustomIcon;
 import nurgling.widgets.CustomIconManager;
 import nurgling.widgets.NEquipmentPresetButton;
 import nurgling.widgets.SavedIconsWindow;
-import nurgling.widgets.TextInputWindow;
 
 import nurgling.i18n.L10n;
 

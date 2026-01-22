@@ -35,10 +35,6 @@ public class CustomIconGenerator {
             return id;
         }
 
-        public String getResourcePath() {
-            return resourcePath;
-        }
-
         /**
          * Loads a specific state image for this background.
          * @param state "u", "d", or "h"
@@ -165,13 +161,5 @@ public class CustomIconGenerator {
         }
 
         g2d.drawImage(itemIcon, x, y, destWidth, destHeight, null);
-    }
-
-    /**
-     * Generates a preview icon (just the up state) for quick display.
-     */
-    public static BufferedImage generatePreview(IconBackground background, JSONObject itemResource) {
-        BufferedImage itemIcon = loadItemIcon(itemResource);
-        return generateIcon(background.loadState("u"), itemIcon, "u");
     }
 }

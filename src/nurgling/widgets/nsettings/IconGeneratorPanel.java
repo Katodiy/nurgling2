@@ -24,7 +24,6 @@ public class IconGeneratorPanel extends Panel {
     private static final int MARGIN = UI.scale(15);
     private static final int SWATCH_SIZE = UI.scale(32);
     private static final int SWATCH_GAP = UI.scale(5);
-    private static final int SECTION_GAP = UI.scale(20);
     private static final int LINE_HEIGHT = UI.scale(24);
 
     // Currently editing icon

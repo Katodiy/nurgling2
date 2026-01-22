@@ -66,14 +66,6 @@ public class EquipmentPreset {
         this.slotConfig = slotConfig;
     }
 
-    public void setSlot(int slot, String resName) {
-        slotConfig.put(slot, resName);
-    }
-
-    public void clearSlot(int slot) {
-        slotConfig.remove(slot);
-    }
-
     public String getCustomIconId() {
         return customIconId;
     }
