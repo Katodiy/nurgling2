@@ -64,7 +64,7 @@ public class EquipmentBotSettings extends Panel implements DTarget {
     }
 
     // Grid offset for drawing equipment slots in editor
-    private static final Coord gridOffset = UI.scale(new Coord(10, 100));
+    private static final Coord gridOffset = UI.scale(new Coord(10, 156));
     private static final Coord slotSize = Inventory.sqsz;
 
     public EquipmentBotSettings() {
