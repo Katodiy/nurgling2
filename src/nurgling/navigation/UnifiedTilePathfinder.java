@@ -43,6 +43,96 @@ public class UnifiedTilePathfinder {
     }
 
     /**
+     * Find a walkable cell within a tile and return its world coordinate.
+     * This targets the center of a specific walkable cell rather than the tile center,
+     * which prevents pathfinding to blocked areas when only part of a tile is walkable.
+     *
+     * The method picks the walkable cell that is furthest from any blocked cells
+     * to avoid edge cases where rounding puts the coordinate in blocked territory.
+     *
+     * @param chunk The chunk data
+     * @param tileX Tile X coordinate (0-99)
+     * @param tileY Tile Y coordinate (0-99)
+     * @param worldTileOrigin The chunk's world tile origin
+     * @return World coordinate of a walkable cell's center, or tile center if no cell info
+     */
+    public static haven.Coord2d findWalkableCellWorldCoord(ChunkNavData chunk, int tileX, int tileY, haven.Coord worldTileOrigin) {
+        if (chunk == null || worldTileOrigin == null) {
+            // Fallback to tile center
+            haven.Coord worldTile = worldTileOrigin != null ? worldTileOrigin.add(tileX, tileY) : new haven.Coord(tileX, tileY);
+            return worldTile.mul(haven.MCache.tilesz).add(haven.MCache.tilehsz);
+        }
+
+        int cellX = tileX * CELLS_PER_TILE;
+        int cellY = tileY * CELLS_PER_TILE;
+
+        // Find the walkable cell with the most distance from blocked cells
+        // This avoids edge cases where the target is right at a blocked boundary
+        int bestCx = -1, bestCy = -1;
+        int bestScore = -1;
+
+        int[][] cellOffsets = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+
+        for (int[] offset : cellOffsets) {
+            int cx = cellX + offset[0];
+            int cy = cellY + offset[1];
+            if (cx >= 0 && cx < CELLS_PER_EDGE && cy >= 0 && cy < CELLS_PER_EDGE) {
+                if (chunk.walkability[cx][cy] == 0) {
+                    // Count how many of the 8 neighbors are also walkable (higher = safer)
+                    int score = 0;
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            if (dx == 0 && dy == 0) continue;
+                            int nx = cx + dx;
+                            int ny = cy + dy;
+                            if (nx >= 0 && nx < CELLS_PER_EDGE && ny >= 0 && ny < CELLS_PER_EDGE) {
+                                if (chunk.walkability[nx][ny] == 0) {
+                                    score++;
+                                }
+                            }
+                        }
+                    }
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestCx = cx;
+                        bestCy = cy;
+                    }
+                }
+            }
+        }
+
+        if (bestCx >= 0 && bestCy >= 0) {
+            // Found a walkable cell - compute its world coordinate
+            // Add extra offset (1.0) towards center of walkable area to avoid boundary rounding issues
+            double worldX = worldTileOrigin.x * haven.MCache.tilesz.x + bestCx * haven.MCache.tilehsz.x + haven.MCache.tilehsz.x / 2;
+            double worldY = worldTileOrigin.y * haven.MCache.tilesz.y + bestCy * haven.MCache.tilehsz.y + haven.MCache.tilehsz.y / 2;
+
+            // Apply small offset away from blocked neighbors to avoid boundary issues
+            // Check if there's a blocked cell adjacent and offset away from it
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    if (dx == 0 && dy == 0) continue;
+                    int nx = bestCx + dx;
+                    int ny = bestCy + dy;
+                    if (nx >= 0 && nx < CELLS_PER_EDGE && ny >= 0 && ny < CELLS_PER_EDGE) {
+                        if (chunk.walkability[nx][ny] != 0) {
+                            // Blocked neighbor - offset away from it
+                            worldX -= dx * 1.5;
+                            worldY -= dy * 1.5;
+                        }
+                    }
+                }
+            }
+
+            return new haven.Coord2d(worldX, worldY);
+        }
+
+        // No walkable cell found - fallback to tile center
+        haven.Coord worldTile = worldTileOrigin.add(tileX, tileY);
+        return worldTile.mul(haven.MCache.tilesz).add(haven.MCache.tilehsz);
+    }
+
+    /**
      * Find a path from a starting tile to a target tile.
      * Both tiles are specified as (chunkGridId, localCoord).
      *
@@ -642,7 +732,11 @@ public class UnifiedTilePathfinder {
                 }
 
                 if (currentSegment != null) {
-                    currentSegment.steps.add(new ChunkPath.TileStep(step.localCoord, currentChunk.worldTileOrigin));
+                    // Use cell-level coordinate to target a walkable cell within the tile
+                    // This prevents targeting blocked parts of partially-walkable tiles
+                    haven.Coord2d cellWorldCoord = findWalkableCellWorldCoord(
+                        currentChunk, step.localCoord.x, step.localCoord.y, currentChunk.worldTileOrigin);
+                    currentSegment.steps.add(new ChunkPath.TileStep(step.localCoord, cellWorldCoord));
                 }
             }
 
