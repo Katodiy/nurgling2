@@ -14,6 +14,7 @@ import nurgling.actions.TransferWItemsToContainer;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
+import nurgling.actions.bots.cheese.CheeseRackOverlayUtils;
 import nurgling.cheese.CheeseOrdersManager;
 import nurgling.cheese.CheeseOrder;
 
@@ -72,7 +73,7 @@ public class CheeseRackManager {
                 if (moved >= quantity) break;
                 
                 // Skip visually full racks before walking to them
-                if (rack.ngob.isContainerFull()) {
+                if (CheeseRackOverlayUtils.isRackFull(rack)) {
                     continue;
                 }
                 
