@@ -9,17 +9,23 @@ public class Scenario {
     private int id;
     private String name;
     private ArrayList<BotStep> steps;
+    private String customIconId;
 
     public Scenario(int id, String name) {
         this.id = id;
         this.name = name;
         this.steps = new ArrayList<>();
+        this.customIconId = null;
     }
 
     public Scenario(JSONObject obj) {
         this.id = obj.optInt("id", 0);
         this.name = obj.getString("name");
         this.steps = new ArrayList<>();
+        this.customIconId = obj.optString("customIconId", null);
+        if (this.customIconId != null && this.customIconId.isEmpty()) {
+            this.customIconId = null;
+        }
 
         if (obj.has("steps")) {
             JSONArray arr = obj.getJSONArray("steps");
@@ -54,10 +60,21 @@ public class Scenario {
         this.steps.add(step);
     }
 
+    public String getCustomIconId() {
+        return customIconId;
+    }
+
+    public void setCustomIconId(String customIconId) {
+        this.customIconId = customIconId;
+    }
+
     public JSONObject toJson() {
         JSONObject obj = new JSONObject();
         obj.put("id", id);
         obj.put("name", name);
+        if (customIconId != null) {
+            obj.put("customIconId", customIconId);
+        }
 
         JSONArray arr = new JSONArray();
         for (BotStep step : steps) {

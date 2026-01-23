@@ -10,17 +10,23 @@ public class EquipmentPreset {
     private String id;
     private String name;
     private Map<Integer, String> slotConfig;
+    private String customIconId;
 
     public EquipmentPreset(String name) {
         this.id = UUID.randomUUID().toString();
         this.name = name;
         this.slotConfig = new HashMap<>();
+        this.customIconId = null;
     }
 
     public EquipmentPreset(JSONObject obj) {
         this.id = obj.optString("id", UUID.randomUUID().toString());
         this.name = obj.getString("name");
         this.slotConfig = new HashMap<>();
+        this.customIconId = obj.optString("customIconId", null);
+        if (this.customIconId != null && this.customIconId.isEmpty()) {
+            this.customIconId = null;
+        }
 
         if (obj.has("slots")) {
             JSONObject slots = obj.getJSONObject("slots");
@@ -60,18 +66,21 @@ public class EquipmentPreset {
         this.slotConfig = slotConfig;
     }
 
-    public void setSlot(int slot, String resName) {
-        slotConfig.put(slot, resName);
+    public String getCustomIconId() {
+        return customIconId;
     }
 
-    public void clearSlot(int slot) {
-        slotConfig.remove(slot);
+    public void setCustomIconId(String customIconId) {
+        this.customIconId = customIconId;
     }
 
     public JSONObject toJson() {
         JSONObject obj = new JSONObject();
         obj.put("id", id);
         obj.put("name", name);
+        if (customIconId != null) {
+            obj.put("customIconId", customIconId);
+        }
 
         JSONObject slots = new JSONObject();
         for (Map.Entry<Integer, String> entry : slotConfig.entrySet()) {

@@ -801,6 +801,14 @@ public class NConfig
         return NUtils.getDataFile("craft_presets.nurgling.json");
     }
 
+    /**
+     * Gets the dynamic path for custom icons configuration file
+     * Note: custom icons are always stored globally, not per-profile
+     */
+    public String getCustomIconsPath() {
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "custom_icons.nurgling.json";
+    }
+
     @SuppressWarnings("unchecked")
     private ArrayList<Object> readArray(ArrayList<HashMap<String, Object>> objs)
     {
