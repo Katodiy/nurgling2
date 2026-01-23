@@ -30,8 +30,7 @@ public class Pointer extends Widget {
     }
 
     public static Widget mkwidget(UI ui, Object... args) {
-	int iconid = (Integer)args[0];
-	Indir<Resource> icon = (iconid < 0) ? null : ui.sess.getres(iconid);
+	Indir<Resource> icon = ui.sess.getresv(args[0]);
 	return(new Pointer(icon));
     }
 	
@@ -144,10 +143,9 @@ public class Pointer extends Widget {
 	    if(args[1] == null)
 		gobid = -1;
 	    else
-		gobid = Utils.uint32((Integer)args[1]);
+		gobid = Utils.uiv(args[1]);
 	} else if(name == "icon") {
-	    int iconid = (Integer)args[0];
-	    Indir<Resource> icon = (iconid < 0) ? null : ui.sess.getres(iconid);
+	    Indir<Resource> icon = ui.sess.getresv(args[0]);
 	    this.icon = icon;
 	    licon = null;
 	} else if(name == "cl") {

@@ -9,7 +9,7 @@ import nurgling.conf.TeimDeerHerd;
 
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/teimdeer", version = 3)
+@haven.FromResource(name = "gfx/hud/rosters/teimdeer", version = 4)
 public class Teimdeer extends Entry {
     public int meat, milk;
     public int meatq, milkq, hideq;
