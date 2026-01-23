@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.nio.file.Path;
 
 import static haven.OCache.posres;
 
@@ -830,4 +831,20 @@ public class NUtils
         }
         return false;
     }
+
+    public static String getDataFile(String... pathElements){
+        Path path = getDataFilePath(pathElements);
+        return path.toString();
+    }
+
+    public static Path getDataFilePath(String... pathElements) {
+        Path path = ((HashDirCache) ResCache.global).base;
+        path = path.resolve("..").normalize();
+        for (String pathElement: pathElements) {
+            path = path.resolve(pathElement);
+        }
+        System.out.println("generated path for" + path);
+        return path;
+    }
+
 }

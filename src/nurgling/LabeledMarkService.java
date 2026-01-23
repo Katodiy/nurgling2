@@ -32,7 +32,7 @@ public class LabeledMarkService implements ProfileAwareService {
 
     public LabeledMarkService(NGameUI gui) {
         this.gui = gui;
-        this.dataFile = ((HashDirCache) ResCache.global).base + "\\..\\" + "labeled_marks.nurgling.json";
+        this.dataFile = NUtils.getDataFile("labeled_marks.nurgling.json");
         loadLabeledMarks();
     }
 
