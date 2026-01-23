@@ -11,7 +11,7 @@ import static haven.resutil.FoodInfo.Effect;
 import static haven.resutil.FoodInfo.Event;
 
 /* >tt: Fac */
-@haven.FromResource(name = "ui/tt/food", version = 14)
+@haven.FromResource(name = "ui/tt/food", version = 15)
 public class Fac implements ItemInfo.InfoFactory {
     public ItemInfo build(ItemInfo.Owner owner, ItemInfo.Raw raw, Object... args) {
 	int c = 1;
@@ -27,7 +27,7 @@ public class Fac implements ItemInfo.InfoFactory {
 	Collection<Effect> efs = new LinkedList<Effect>();
 	Resource.Resolver rr = owner.context(Resource.Resolver.class);
 	for(int a = 0; a < evd.length; a += 2)
-	    evs.add(new Event(rr.getres((Integer)evd[a]).get(),
+	    evs.add(new Event(rr.getresv(evd[a]).get(),
 			      ((Number)evd[a + 1]).doubleValue()));
 	for(int a = 0; a < efd.length; a += 2)
 	    efs.add(new Effect(ItemInfo.buildinfo(owner, new Object[] {(Object[])efd[a]}),
