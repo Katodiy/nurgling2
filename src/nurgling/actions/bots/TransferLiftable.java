@@ -14,6 +14,12 @@ import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
+/**
+ * Transfers liftable objects by always prompting user to select zones.
+ * Always prompts for input zone selection.
+ * Uses global CarrierOut zone if exists, otherwise prompts for output zone selection.
+ * For automatic global zone navigation, use TransferLiftableGlobal instead.
+ */
 public class TransferLiftable implements Action
 {
     @Override
@@ -38,17 +44,18 @@ public class TransferLiftable implements Action
             return Results.ERROR("No config");
         }
 
-        // Create context for global transfer
+        // Create context for transfer
         NContext context = new NContext(gui);
 
-        // Find CarrierOut areas for output
-        NArea.Specialisation carrierOutSpec = new NArea.Specialisation(Specialisation.SpecName.carrierout.toString());
-        NArea carrierOutArea = NContext.findSpecGlobal(carrierOutSpec);
-
+        // Always prompt for input area selection
         String insaId = context.createArea("Please, select input area", Resource.loadsimg("baubles/inputArea"));
         NArea inarea = context.getAreaById(insaId);
 
-        if(carrierOutArea == null)
+        // Find CarrierOut area for output - use global if exists, otherwise prompt
+        NArea.Specialisation carrierOutSpec = new NArea.Specialisation(Specialisation.SpecName.carrierout.toString());
+        NArea carrierOutArea = NContext.findSpecGlobal(carrierOutSpec);
+
+        if (carrierOutArea == null)
         {
             String outsaId = context.createArea("Please, select output area", Resource.loadsimg("baubles/outputArea"));
             carrierOutArea = context.getAreaById(outsaId);
