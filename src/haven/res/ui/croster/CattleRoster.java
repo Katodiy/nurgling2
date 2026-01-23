@@ -54,12 +54,10 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	    }, sz.x, HEADH);
 	Widget prev;
 	prev = add(new Button(UI.scale(100), "Select all", false).action(() -> {
-		    // Select only animals in current filtered display
 		    for(Entry entry : this.display)
 			entry.mark.set(true);
 		}), entrycont.pos("bl").adds(0, 5));
 	prev = add(new Button(UI.scale(100), "Select none", false).action(() -> {
-		    // Deselect all animals
 		    for(Entry entry : this.entries.values())
 			entry.mark.set(false);
 		}), prev.pos("ur").adds(5, 0));
@@ -426,8 +424,8 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	} else if(msg == "rm") {
 	    delentry((UID)args[0]);
 	} else if(msg == "addto") {
-	    GameUI gui = (GameUI)ui.getwidget((Integer)args[0]);
-	    Pagina pag = gui.menu.paginafor(ui.sess.getres((Integer)args[1]));
+	    GameUI gui = (GameUI)ui.getwidget(Utils.iv(args[0]));
+	    Pagina pag = gui.menu.paginafor(ui.sess.getresv(args[1]));
 	    RosterButton btn = (RosterButton)Loading.waitfor(pag::button);
 	    btn.add(this);
 	} else {
