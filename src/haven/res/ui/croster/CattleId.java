@@ -12,7 +12,7 @@ import nurgling.overlays.NCattleMarkRing;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 
-@haven.FromResource(name = "ui/croster", version = 76)
+@haven.FromResource(name = "ui/croster", version = 77)
 public class CattleId extends GAttrib implements RenderTree.Node, PView.Render2D {
     public final UID id;
 

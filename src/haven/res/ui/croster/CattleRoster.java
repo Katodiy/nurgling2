@@ -24,7 +24,7 @@ import nurgling.widgets.settings.*;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-@haven.FromResource(name = "ui/croster", version = 76)
+@haven.FromResource(name = "ui/croster", version = 77)
 public abstract class CattleRoster <T extends Entry> extends Widget {
     public static final int WIDTH = UI.scale(980);
     public static final Comparator<Entry> namecmp = (a, b) -> a.name.compareTo(b.name);

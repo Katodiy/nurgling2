@@ -13,7 +13,7 @@ import static haven.MCache.tilesz;
 import static java.lang.Math.*;
 
 /* >wdg: Pointer */
-@haven.FromResource(name = "ui/locptr", version = 22)
+@haven.FromResource(name = "ui/locptr", version = 23)
 public class Pointer extends Widget {
     public static final BaseColor col = new BaseColor(new Color(241, 227, 157, 255));
     public Indir<Resource> icon;
