@@ -110,14 +110,14 @@ public class Chipper implements Action {
                         case BUMLINGFORDRINK: {
                             if (prop.autorefill) {
                                 if (FillWaterskins.checkIfNeed())
-                                    if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                    if (!(new FillWaterskins().run(gui).IsSuccess()))
                                         return Results.FAIL();
                                 new PathFinder(bumling).run(gui);
                             }
                             if(!(new Drink(0.9,true).run(gui).IsSuccess()))
                             {
                                 if (prop.autorefill) {
-                                    if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                    if (!(new FillWaterskins().run(gui).IsSuccess()))
                                         return Results.FAIL();
                                 }
                                 else
@@ -168,14 +168,14 @@ public class Chipper implements Action {
                     case BUMLINGFORDRINK: {
                         if (prop.autorefill) {
                             if (FillWaterskins.checkIfNeed())
-                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                if (!(new FillWaterskins().run(gui).IsSuccess()))
                                     return Results.FAIL();
                             new PathFinder(mountain).run(gui);
                         }
                         if(!(new Drink(0.9, true).run(gui).IsSuccess()))
                         {
                             if (prop.autorefill) {
-                                if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                                if (!(new FillWaterskins().run(gui).IsSuccess()))
                                     return Results.FAIL();
                                 else
                                     new PathFinder( mountain ).run (gui);

@@ -102,28 +102,9 @@ public class UnifiedTilePathfinder {
         }
 
         if (bestCx >= 0 && bestCy >= 0) {
-            // Found a walkable cell - compute its world coordinate
-            // Add extra offset (1.0) towards center of walkable area to avoid boundary rounding issues
+            // Found a walkable cell - compute its world coordinate (center of the subcell)
             double worldX = worldTileOrigin.x * haven.MCache.tilesz.x + bestCx * haven.MCache.tilehsz.x + haven.MCache.tilehsz.x / 2;
             double worldY = worldTileOrigin.y * haven.MCache.tilesz.y + bestCy * haven.MCache.tilehsz.y + haven.MCache.tilehsz.y / 2;
-
-            // Apply small offset away from blocked neighbors to avoid boundary issues
-            // Check if there's a blocked cell adjacent and offset away from it
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    if (dx == 0 && dy == 0) continue;
-                    int nx = bestCx + dx;
-                    int ny = bestCy + dy;
-                    if (nx >= 0 && nx < CELLS_PER_EDGE && ny >= 0 && ny < CELLS_PER_EDGE) {
-                        if (chunk.walkability[nx][ny] != 0) {
-                            // Blocked neighbor - offset away from it
-                            worldX -= dx * 1.5;
-                            worldY -= dy * 1.5;
-                        }
-                    }
-                }
-            }
-
             return new haven.Coord2d(worldX, worldY);
         }
 

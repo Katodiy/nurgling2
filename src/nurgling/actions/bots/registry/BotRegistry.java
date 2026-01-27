@@ -203,7 +203,6 @@ public class BotRegistry {
         bots.add(new BotDescriptor("equipment_bot", BotDescriptor.BotType.UTILS, "Equipment Bot", "Equip items from a saved preset.", true, false, EquipmentBot.class, "shieldsword", false));
         bots.add(new BotDescriptor("shieldsword", BotDescriptor.BotType.UTILS, "Equip Shield/Sword", "Equips shield and sword.", true, true, EquipShieldSword.class, "shieldsword", false));
         bots.add(new BotDescriptor("filwater", BotDescriptor.BotType.UTILS, "Fill Waterskins (Select Zone)", "Fills waterskins - always prompts to select water zone.", false, true, FillWaterskins.class, "filwater", false));
-        bots.add(new BotDescriptor("filwater_global", BotDescriptor.BotType.UTILS, "Fill Waterskins (Global Zone)", "Fills waterskins using global water zone with chunk navigation.", true, true, FillWaterskinsGlobal.class, "filwater", false));
         bots.add(new BotDescriptor("unbox", BotDescriptor.BotType.UTILS, "Free Containers", "Frees containers in area.", false, true, FreeContainersInArea.class, "unbox", false));
         bots.add(new BotDescriptor("unbox_zone", BotDescriptor.BotType.UTILS, "Free Containers in Unbox Zone", "Automatically navigates to unbox zone and frees containers.", true, true, FreeContainersInUnboxZone.class, "unbox_zone", false));
         bots.add(new BotDescriptor("water_cheker", BotDescriptor.BotType.UTILS, "Check Water", "Checks water.", false, true, CheckWater.class, "water_cheker", false));
@@ -213,7 +212,6 @@ public class BotRegistry {
         bots.add(new BotDescriptor("collectswilltotrough", BotDescriptor.BotType.UTILS, "Collect Swill To Trough", "Collects swill items from area to a selected trough (click to select).", false, true, CollectSwillToTrough.class, "swillcollector", false));
         bots.add(new BotDescriptor("worldexplorer", BotDescriptor.BotType.UTILS, "World Explorer", "Explores the world.", false, true, WorldExplorer.class, "worldexplorer", true));
         bots.add(new BotDescriptor("lift", BotDescriptor.BotType.UTILS, "Transfer Liftable (Select Zone)", "Lifts items - always prompts for input zone selection.", false, true, TransferLiftable.class, "lift", false));
-        bots.add(new BotDescriptor("lift_global", BotDescriptor.BotType.UTILS, "Transfer Liftable (Global Zone)", "Lifts items using global zones with chunk navigation.", true, true, TransferLiftableGlobal.class, "lift", false));
         bots.add(new BotDescriptor("loading", BotDescriptor.BotType.UTILS, "Transfer To Vehicle", "Loads vehicle.", false, true, TransferToVeh.class, "loading", false));
         bots.add(new BotDescriptor("unloading", BotDescriptor.BotType.UTILS, "Transfer From Vehicle", "Unloads vehicle.", false, true, TransferFromVeh.class, "unloading", false));
         bots.add(new BotDescriptor("swap", BotDescriptor.BotType.UTILS, "Swap Vehicles", "Swaps between vehicles.", false, true, TransferFromVehToVeh.class, "swap", false));

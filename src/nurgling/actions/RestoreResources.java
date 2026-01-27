@@ -20,7 +20,7 @@ public class RestoreResources implements Action{
             double stamina = NUtils.getStamina();
             if (stamina >= 0 && stamina < 0.5) {
                 if (!new Drink(0.9, false).run(gui).IsSuccess()) {
-                    new FillWaterskins(true).run(gui);
+                    new FillWaterskins().run(gui);
                     if (!new Drink(0.9, false).run(gui).IsSuccess()) {
                         return Results.ERROR("Failed to restore stamina - no water available");
                     }
