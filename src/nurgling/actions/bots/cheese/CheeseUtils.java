@@ -92,20 +92,25 @@ public class CheeseUtils {
     
     /**
      * Check if cheese is ready to slice using provided orders manager (more efficient)
+     * Only returns true if an order still needs more of this cheese type (step.left > 0)
      */
     public static boolean isCheeseReadyToSlice(WItem tray, CheeseOrdersManager ordersManager) {
         String contentName = getContentName(tray);
         if (contentName == null) return false; // Empty tray
-        
-        // Check if this cheese type is in any active order
+
+        // Check if this cheese type is in any active order that still needs more
         for (CheeseOrder order : ordersManager.getOrders().values()) {
             if (order.getCheeseType().equals(contentName)) {
-                // This cheese type has been ordered, so it's ready to slice
-                return true;
+                // Check if we still need more of this cheese type
+                for (CheeseOrder.StepStatus step : order.getStatus()) {
+                    if (step.name.equals(contentName) && step.left > 0) {
+                        return true; // Still need more of this cheese type
+                    }
+                }
             }
         }
-        
-        return false; // This cheese type hasn't been ordered
+
+        return false; // No order needs more of this cheese type
     }
     
     /**
