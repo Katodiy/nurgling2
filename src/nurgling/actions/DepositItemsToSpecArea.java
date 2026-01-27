@@ -19,11 +19,14 @@ import java.util.Map;
 /**
  * Deposits items to containers in a specialized area.
  * Uses Container.ItemCount updater to track specific item counts per container.
- * 
- * Optimized algorithm:
+ *
+ * Algorithm:
  * 1. Scan all containers, calculate total needed items using ItemCount updater
- * 2. Fetch ALL needed items at once from source
- * 3. Distribute items to containers in a single pass
+ * 2. Fetch-Distribute Loop (makes multiple trips until done):
+ *    a. Calculate how many items still needed across all containers
+ *    b. Fetch what fits in inventory from source
+ *    c. Distribute to containers until inventory empty
+ *    d. Repeat until all containers full OR source exhausted
  */
 public class DepositItemsToSpecArea implements Action {
     private final NContext context;
@@ -125,80 +128,112 @@ public class DepositItemsToSpecArea implements Action {
             context.addInItem(key, null);
         }
 
-        // Step 3: Fetch ALL needed items at once from source
-        gui.msg("DepositItems: Fetching " + totalNeeded + " items from source...");
-        int itemsFetched = 0;
-        for (String key : this.itemAlias.getKeys()) {
-            int stillNeeded = totalNeeded - itemsFetched;
-            if (stillNeeded <= 0) break;
+        // Step 3-4: Fetch-Distribute Loop (multiple trips until done or source empty)
+        int tripNumber = 0;
 
-            gui.msg("DepositItems: Taking " + stillNeeded + " of '" + key + "'");
-            
-            if (this.originSpec != null) {
-                new TakeItems2(context, key, stillNeeded, originSpec, NInventory.QualityType.High).run(gui);
-            } else {
-                new TakeItems2(context, key, stillNeeded, NInventory.QualityType.High).run(gui);
+        while (!containersNeedingItems.isEmpty()) {
+            tripNumber++;
+
+            // Calculate how many items still needed across all containers
+            int totalStillNeeded = 0;
+            for (Container container : containersNeedingItems) {
+                Container.ItemCount itemCount = container.getattr(Container.ItemCount.class);
+                Container.Space space = container.getattr(Container.Space.class);
+                int needed = itemCount.getNeeded();
+                int freeSpace = space.getFreeSpace();
+                totalStillNeeded += Math.min(needed, freeSpace);
             }
 
-            itemsFetched = gui.getInventory().getItems(itemAlias).size();
-            gui.msg("DepositItems: Fetched " + itemsFetched + " items total");
-        }
-
-        if (itemsFetched == 0) {
-            gui.msg("DepositItems: No items available from source");
-            return Results.SUCCESS(); // No items available from source
-        }
-
-        // Step 4: Distribute items to all containers in one pass
-        gui.msg("DepositItems: Distributing " + itemsFetched + " items to " + containersNeedingItems.size() + " containers...");
-        int fillIndex = 0;
-        
-        for (Container container : containersNeedingItems) {
-            fillIndex++;
-            ArrayList<WItem> itemsInInventory = gui.getInventory().getItems(itemAlias);
-            gui.msg("DepositItems: Fill container #" + fillIndex + " [gob=" + container.gobid + "], items in inventory=" + itemsInInventory.size());
-            
-            if (itemsInInventory.isEmpty()) {
-                gui.msg("DepositItems: No more items in inventory, stopping");
-                break; // No more items to distribute
+            if (totalStillNeeded == 0) {
+                gui.msg("DepositItems: All containers are now full");
+                break;
             }
 
-            // Refresh the area context
-            context.getSpecArea(destinationSpec);
+            gui.msg("DepositItems: Trip #" + tripNumber + " - fetching up to " + totalStillNeeded + " items from source...");
 
-            // Get current state before transfer
-            Container.ItemCount itemCount = container.getattr(Container.ItemCount.class);
-            int neededForThis = itemCount.getNeeded();
-            gui.msg("DepositItems: Container needs " + neededForThis + " items (cached from scan, will update when opened)");
+            // Fetch items from source
+            for (String key : this.itemAlias.getKeys()) {
+                int currentInInventory = gui.getInventory().getItems(itemAlias).size();
+                int stillNeeded = totalStillNeeded - currentInInventory;
+                if (stillNeeded <= 0) break;
 
-            // Transfer items to this container
-            // TransferToContainer will open container, call ItemCount.update(), and limit transfer to getNeeded()
-            new TransferToContainer(container, itemAlias).run(gui);
+                gui.msg("DepositItems: Taking " + stillNeeded + " of '" + key + "'");
 
-            // Update container info after transfer (container should still be open from TransferToContainer)
-            Container.Space space = container.getattr(Container.Space.class);
-            if (space.isReady()) {
-                space.update();
-                containerFreeSpaceMap.put(container.gobid, space.getFreeSpace());
+                if (this.originSpec != null) {
+                    new TakeItems2(context, key, stillNeeded, originSpec, NInventory.QualityType.High).run(gui);
+                } else {
+                    new TakeItems2(context, key, stillNeeded, NInventory.QualityType.High).run(gui);
+                }
             }
 
-            // ItemCount was updated by TransferToContainer, get current values
-            int afterCount = itemCount.getCurrentCount();
-            int afterNeeded = itemCount.getNeeded();
-            gui.msg("DepositItems: Container #" + fillIndex + " after transfer: count=" + afterCount + ", stillNeeded=" + afterNeeded);
+            int itemsFetched = gui.getInventory().getItems(itemAlias).size();
+            gui.msg("DepositItems: Trip #" + tripNumber + " - fetched " + itemsFetched + " items");
 
-            // Check if container is full (either by item count or space)
-            if (itemCount.isFull() || space.getFreeSpace() == 0) {
-                gui.msg("DepositItems: Container #" + fillIndex + " is now FULL");
+            if (itemsFetched == 0) {
+                gui.msg("DepositItems: No items available from source, stopping");
+                break;
+            }
+
+            // Distribute items to containers
+            gui.msg("DepositItems: Trip #" + tripNumber + " - distributing to " + containersNeedingItems.size() + " containers...");
+            ArrayList<Container> stillNeedingItems = new ArrayList<>();
+            int fillIndex = 0;
+
+            for (Container container : containersNeedingItems) {
+                fillIndex++;
+                ArrayList<WItem> itemsInInventory = gui.getInventory().getItems(itemAlias);
+
+                if (itemsInInventory.isEmpty()) {
+                    // No more items in inventory, but this container still needs - add to next trip
+                    stillNeedingItems.add(container);
+                    gui.msg("DepositItems: Container #" + fillIndex + " [gob=" + container.gobid + "] - no items left, will try next trip");
+                    continue;
+                }
+
+                gui.msg("DepositItems: Fill container #" + fillIndex + " [gob=" + container.gobid + "], items in inventory=" + itemsInInventory.size());
+
+                // Refresh the area context
+                context.getSpecArea(destinationSpec);
+
+                // Transfer items to this container
+                // TransferToContainer will open container, call ItemCount.update(), and limit transfer to getNeeded()
+                new TransferToContainer(container, itemAlias).run(gui);
+
+                // Update container info after transfer (container should still be open from TransferToContainer)
+                Container.ItemCount itemCount = container.getattr(Container.ItemCount.class);
+                Container.Space space = container.getattr(Container.Space.class);
+                if (space.isReady()) {
+                    space.update();
+                    containerFreeSpaceMap.put(container.gobid, space.getFreeSpace());
+                }
+
+                // ItemCount was updated by TransferToContainer, get current values
+                int afterCount = itemCount.getCurrentCount();
+                int afterNeeded = itemCount.getNeeded();
+                int afterFreeSpace = space.getFreeSpace();
+                gui.msg("DepositItems: Container #" + fillIndex + " after transfer: count=" + afterCount + ", stillNeeded=" + afterNeeded + ", freeSpace=" + afterFreeSpace);
+
+                // Check if container still needs more items
+                boolean isFull = itemCount.isFull() || afterFreeSpace == 0;
+                if (isFull) {
+                    gui.msg("DepositItems: Container #" + fillIndex + " is now FULL");
+                } else if (afterNeeded > 0) {
+                    // Container still needs items - add to next trip
+                    stillNeedingItems.add(container);
+                    gui.msg("DepositItems: Container #" + fillIndex + " still needs " + afterNeeded + " items, will try next trip");
+                }
+
                 new CloseTargetContainer(container).run(gui);
-                continue;
             }
 
-            new CloseTargetContainer(container).run(gui);
+            // Update list for next iteration
+            containersNeedingItems = stillNeedingItems;
+
+            gui.msg("DepositItems: Trip #" + tripNumber + " complete. Containers still needing items: " + containersNeedingItems.size());
         }
 
         int remainingItems = gui.getInventory().getItems(itemAlias).size();
-        gui.msg("DepositItems: DONE. Remaining items in inventory: " + remainingItems);
+        gui.msg("DepositItems: DONE after " + tripNumber + " trip(s). Remaining items in inventory: " + remainingItems);
 
         return Results.SUCCESS();
     }
