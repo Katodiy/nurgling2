@@ -614,16 +614,13 @@ public class ChunkNavExecutor implements Action {
 
             int targetIndex = Math.min(currentStepIndex + waypointInterval, segment.steps.size() - 1);
             ChunkPath.TileStep targetStep = segment.steps.get(targetIndex);
-            // Use pre-computed cell-level worldCoord if available (targets walkable cell, not tile center)
-            Coord2d waypoint;
-            if (targetStep.worldCoord != null) {
-                waypoint = targetStep.worldCoord;
-            } else {
-                Coord worldTile = currentWorldTileOrigin.add(targetStep.localCoord);
-                waypoint = worldTile.mul(MCache.tilesz).add(MCache.tilehsz);
-            }
+            // Always compute waypoint from live worldTileOrigin - pre-computed worldCoord may be stale
+            // (computed at plan time with different/missing worldTileOrigin)
+            Coord worldTile = currentWorldTileOrigin.add(targetStep.localCoord);
+            Coord2d waypoint = worldTile.mul(MCache.tilesz).add(MCache.tilehsz);
 
             double distToWaypoint = player.rc.dist(waypoint);
+
             // Skip if already close enough
             if (distToWaypoint < tileSize * 1.5) {
                 currentStepIndex = targetIndex + 1;
@@ -643,14 +640,9 @@ public class ChunkNavExecutor implements Action {
             boolean madeProgress = false;
             for (int midIndex = currentStepIndex + 5; midIndex < targetIndex; midIndex += 5) {
                 ChunkPath.TileStep midStep = segment.steps.get(midIndex);
-                // Use pre-computed cell-level worldCoord if available
-                Coord2d midWaypoint;
-                if (midStep.worldCoord != null) {
-                    midWaypoint = midStep.worldCoord;
-                } else {
-                    Coord midWorldTile = currentWorldTileOrigin.add(midStep.localCoord);
-                    midWaypoint = midWorldTile.mul(MCache.tilesz).add(MCache.tilehsz);
-                }
+                // Always compute from live worldTileOrigin
+                Coord midWorldTile = currentWorldTileOrigin.add(midStep.localCoord);
+                Coord2d midWaypoint = midWorldTile.mul(MCache.tilesz).add(MCache.tilehsz);
 
                 double midDist = player.rc.dist(midWaypoint);
                 if (midDist < tileSize * 1.5) continue;
@@ -667,14 +659,9 @@ public class ChunkNavExecutor implements Action {
                 // Try single tile steps as last resort
                 for (int singleIndex = currentStepIndex + 1; singleIndex <= targetIndex; singleIndex++) {
                     ChunkPath.TileStep singleStep = segment.steps.get(singleIndex);
-                    // Use pre-computed cell-level worldCoord if available
-                    Coord2d singleWaypoint;
-                    if (singleStep.worldCoord != null) {
-                        singleWaypoint = singleStep.worldCoord;
-                    } else {
-                        Coord singleWorldTile = currentWorldTileOrigin.add(singleStep.localCoord);
-                        singleWaypoint = singleWorldTile.mul(MCache.tilesz).add(MCache.tilehsz);
-                    }
+                    // Always compute from live worldTileOrigin
+                    Coord singleWorldTile = currentWorldTileOrigin.add(singleStep.localCoord);
+                    Coord2d singleWaypoint = singleWorldTile.mul(MCache.tilesz).add(MCache.tilehsz);
 
                     double singleDist = player.rc.dist(singleWaypoint);
                     if (singleDist < tileSize * 1.5) {
@@ -1063,6 +1050,8 @@ public class ChunkNavExecutor implements Action {
             case CELLAR:
             case STAIRS_UP:
             case STAIRS_DOWN:
+            case MINEHOLE:
+            case LADDER:
             case MINE_ENTRANCE:
                 return true;
             case GATE:
