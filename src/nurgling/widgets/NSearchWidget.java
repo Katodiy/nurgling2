@@ -156,14 +156,22 @@ public class NSearchWidget extends Widget {
         helpwnd.resize(new Coord(helpLayer.sz()));
     }
 
+    private double searchTickAccum = 0;
+    private static final double SEARCH_TICK_INTERVAL = 1.0; // Only check once per second
+    
     @Override
     public void tick(double dt) {
         super.tick(dt);
         history.visible = parent.visible && list.a;
         
-        // Periodically refresh global search results
-        if (NUtils.getGameUI() != null && NUtils.getGameUI().itemsForSearch != null) {
-            NUtils.getGameUI().itemsForSearch.tick();
+        // Throttle search refresh to once per second instead of every frame
+        searchTickAccum += dt;
+        if (searchTickAccum >= SEARCH_TICK_INTERVAL) {
+            searchTickAccum = 0;
+            // Periodically refresh global search results
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().itemsForSearch != null) {
+                NUtils.getGameUI().itemsForSearch.tick();
+            }
         }
     }
     String path = NUtils.getDataFile("searchcmd.dat");

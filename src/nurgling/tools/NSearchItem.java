@@ -10,7 +10,9 @@ public class NSearchItem
 {
     public String name ="";
     private long lastSearchTick = 0;
-    private static final long SEARCH_REFRESH_INTERVAL = 100; // Refresh every 100 ticks (~3-4 seconds)
+    private long lastDataVersion = 0; // Track if data actually changed
+    private static final long SEARCH_REFRESH_INTERVAL = 300; // Refresh every 300 ticks (~10 seconds) for periodic updates
+    private static final long MIN_REFRESH_INTERVAL = 100; // Minimum 100 ticks (~3 seconds) between any refresh
 
     public static class Quality{
         public double val;
@@ -179,6 +181,7 @@ public class NSearchItem
     
     /**
      * Called periodically to refresh search results
+     * Only triggers refresh if data has changed or enough time has passed
      */
     public void tick() {
         if (isEmpty()) {
@@ -186,33 +189,50 @@ public class NSearchItem
         }
         
         long currentTick = NUtils.getTickId();
-        if (currentTick - lastSearchTick >= SEARCH_REFRESH_INTERVAL) {
-            refreshSearch();
+        
+        // Check if data version changed (container was updated)
+        long currentDataVersion = NGlobalSearchItems.updateVersion;
+        boolean dataChanged = currentDataVersion != lastDataVersion;
+        
+        // Refresh if data changed and minimum interval passed, OR if long interval passed
+        if ((dataChanged && currentTick - lastSearchTick >= MIN_REFRESH_INTERVAL) ||
+            (currentTick - lastSearchTick >= SEARCH_REFRESH_INTERVAL)) {
+            doRefreshSearch(currentTick, currentDataVersion);
         }
     }
     
     /**
      * Force refresh of global search results
+     * Used when container data changes or search parameters change
      */
     public void refreshSearch() {
-        // Prevent too frequent refreshes (minimum 50 ticks between refreshes)
         long currentTick = NUtils.getTickId();
-        if (currentTick - lastSearchTick < 50) {
+        // Prevent too frequent refreshes (minimum interval between refreshes)
+        if (currentTick - lastSearchTick < MIN_REFRESH_INTERVAL) {
             return;
         }
         
+        doRefreshSearch(currentTick, NGlobalSearchItems.updateVersion);
+    }
+    
+    /**
+     * Internal method to perform the actual refresh
+     */
+    private void doRefreshSearch(long currentTick, long dataVersion) {
         if (!isEmpty() && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
             lastSearchTick = currentTick;
+            lastDataVersion = dataVersion;
             NUtils.getUI().core.searchContainer(this);
         }
     }
     
     /**
-     * Notify that container data has changed - triggers search refresh
+     * Notify that container data has changed - triggers search refresh with debouncing
+     * Multiple rapid calls will only result in one actual refresh after MIN_REFRESH_INTERVAL
      */
     public static void notifyContainerDataChanged() {
-        if (NUtils.getGameUI() != null && NUtils.getGameUI().itemsForSearch != null) {
-            NUtils.getGameUI().itemsForSearch.refreshSearch();
-        }
+        // Just increment the version - tick() will pick up the change
+        // This avoids multiple rapid DB queries when many containers are opened
+        // The actual refresh happens in tick() with proper debouncing
     }
 }

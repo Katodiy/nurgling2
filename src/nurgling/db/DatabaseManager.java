@@ -34,6 +34,114 @@ public class DatabaseManager {
     private static final long RETRY_DELAY_MS = 2000; // 2 seconds between retries
     private final AtomicInteger queuedTaskCount = new AtomicInteger(0);
     
+    // ========== DEBUG STATISTICS ==========
+    private static final AtomicInteger totalOperations = new AtomicInteger(0);
+    private static final AtomicInteger operationsPerSecond = new AtomicInteger(0);
+    private static final AtomicInteger lastSecondOperations = new AtomicInteger(0);
+    private static final AtomicInteger pendingTasks = new AtomicInteger(0);
+    private static final AtomicInteger failedOperations = new AtomicInteger(0);
+    private static final AtomicInteger skippedByCache = new AtomicInteger(0);
+    private static final AtomicInteger skippedContainerCache = new AtomicInteger(0);
+    private static final AtomicInteger skippedRecipeCache = new AtomicInteger(0);
+    private static final AtomicInteger skippedSearchCache = new AtomicInteger(0);
+    private static volatile long lastStatsResetTime = System.currentTimeMillis();
+    
+    /**
+     * Debug statistics holder for UI display
+     */
+    public static class DbStats {
+        public int totalOps;
+        public int opsPerSecond;
+        public int pending;
+        public int failed;
+        public int skippedCache;
+        public int skippedContainer;
+        public int skippedRecipe;
+        public int skippedSearch;
+        public int queueSize;
+        public boolean isReady;
+        
+        @Override
+        public String toString() {
+            return String.format("DB: %d/s | Total: %d | Pending: %d | Queue: %d | Skip: %d | Fail: %d | %s",
+                opsPerSecond, totalOps, pending, queueSize, skippedCache, failed, 
+                isReady ? "READY" : "NOT READY");
+        }
+    }
+    
+    /**
+     * Get current database statistics for debug display
+     */
+    public static DbStats getStats() {
+        DbStats stats = new DbStats();
+        stats.totalOps = totalOperations.get();
+        stats.opsPerSecond = operationsPerSecond.get();
+        stats.pending = pendingTasks.get();
+        stats.failed = failedOperations.get();
+        stats.skippedCache = skippedByCache.get();
+        stats.skippedContainer = skippedContainerCache.get();
+        stats.skippedRecipe = skippedRecipeCache.get();
+        stats.skippedSearch = skippedSearchCache.get();
+        stats.queueSize = nurgling.NCore.databaseManager != null ? 
+            nurgling.NCore.databaseManager.getQueuedTaskCount() : 0;
+        stats.isReady = nurgling.NCore.databaseManager != null && 
+            nurgling.NCore.databaseManager.isReady();
+        return stats;
+    }
+    
+    /**
+     * Increment skipped by cache counter (called from caching layers)
+     * @deprecated Use specific methods instead
+     */
+    public static void incrementSkippedByCache() {
+        skippedByCache.incrementAndGet();
+    }
+    
+    /** Skip from container item cache */
+    public static void incrementSkippedContainer() {
+        skippedByCache.incrementAndGet();
+        skippedContainerCache.incrementAndGet();
+    }
+    
+    /** Skip from recipe cache */
+    public static void incrementSkippedRecipe() {
+        skippedByCache.incrementAndGet();
+        skippedRecipeCache.incrementAndGet();
+    }
+    
+    /** Skip from search query cache */
+    public static void incrementSkippedSearch() {
+        skippedByCache.incrementAndGet();
+        skippedSearchCache.incrementAndGet();
+    }
+    
+    /**
+     * Update operations per second (call periodically)
+     */
+    private static void updateOpsPerSecond() {
+        long now = System.currentTimeMillis();
+        if (now - lastStatsResetTime >= 1000) {
+            operationsPerSecond.set(lastSecondOperations.getAndSet(0));
+            lastStatsResetTime = now;
+        }
+    }
+    
+    /**
+     * Record a completed operation
+     */
+    private static void recordOperation() {
+        totalOperations.incrementAndGet();
+        lastSecondOperations.incrementAndGet();
+        updateOpsPerSecond();
+    }
+    
+    /**
+     * Record a failed operation
+     */
+    private static void recordFailure() {
+        failedOperations.incrementAndGet();
+    }
+    
     /**
      * Wrapper for queued database tasks with retry support
      */
@@ -286,6 +394,7 @@ public class DatabaseManager {
      * Execute database operation with automatic connection management
      */
     public <T> T executeOperation(DatabaseOperation<T> operation) throws SQLException {
+        pendingTasks.incrementAndGet();
         Connection conn = null;
         boolean connectionBroken = false;
         try {
@@ -297,8 +406,10 @@ public class DatabaseManager {
             DatabaseAdapter operationAdapter = DatabaseAdapterFactory.createAdapter(conn);
             T result = operation.execute(operationAdapter);
             conn.commit();
+            recordOperation(); // Stats: successful operation
             return result;
         } catch (SQLException e) {
+            recordFailure(); // Stats: failed operation
             // Check if this is an I/O error (connection is broken)
             if (isConnectionBroken(e)) {
                 connectionBroken = true;
@@ -314,6 +425,7 @@ public class DatabaseManager {
             }
             throw e;
         } finally {
+            pendingTasks.decrementAndGet();
             if (conn != null) {
                 if (connectionBroken) {
                     // Close broken connection and notify pool

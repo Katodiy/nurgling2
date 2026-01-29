@@ -7,8 +7,22 @@ import nurgling.db.DatabaseManager;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ItemWatcher implements Runnable {
+
+    // Cache of container hashes with their item signature (hash of all item hashes)
+    // Key = containerHash, Value = combined hash of all items in that container
+    private static final ConcurrentHashMap<String, String> containerItemCache = new ConcurrentHashMap<>();
+    private static final int MAX_CONTAINER_CACHE_SIZE = 1000;
+    
+    /**
+     * Get current container cache size for debug display
+     */
+    public static int getContainerCacheSize() {
+        return containerItemCache.size();
+    }
 
     public static class ItemInfo {
         String name;
@@ -38,6 +52,18 @@ public class ItemWatcher implements Runnable {
             return;
         }
 
+        String containerHash = iis.get(0).container;
+        
+        // Build a signature of all items in this container
+        String itemsSignature = buildItemsSignature();
+        
+        // Check if this container already has the same items (skip duplicate write)
+        String cachedSignature = containerItemCache.get(containerHash);
+        if (itemsSignature.equals(cachedSignature)) {
+            nurgling.db.DatabaseManager.incrementSkippedContainer();
+            return; // Same items, no need to write to DB
+        }
+
         try {
             databaseManager.executeOperation(adapter -> {
                 // Delete old items from container
@@ -49,11 +75,40 @@ public class ItemWatcher implements Runnable {
                 return null;
             });
             
-            // Notify that container data has changed - refresh global search
+            // Update cache after successful write
+            if (containerItemCache.size() >= MAX_CONTAINER_CACHE_SIZE) {
+                // Simple eviction - remove random entries
+                int toRemove = MAX_CONTAINER_CACHE_SIZE / 4;
+                java.util.Iterator<String> it = containerItemCache.keySet().iterator();
+                while (it.hasNext() && toRemove > 0) {
+                    it.next();
+                    it.remove();
+                    toRemove--;
+                }
+            }
+            containerItemCache.put(containerHash, itemsSignature);
+            
+            // Clear search query cache so next search will query fresh data
+            NGlobalSearchItems.clearQueryCache();
+            
+            // Notify that container data has changed - increment version for debounced refresh
             nurgling.tools.NSearchItem.notifyContainerDataChanged();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Build a hash signature representing all items in this container
+     */
+    private String buildItemsSignature() {
+        StringBuilder sb = new StringBuilder();
+        // Sort by hash to ensure consistent signature regardless of item order
+        iis.stream()
+            .map(this::generateItemHash)
+            .sorted()
+            .forEach(sb::append);
+        return NUtils.calculateSHA256(sb.toString());
     }
 
     private void deleteItems(nurgling.db.DatabaseAdapter adapter) throws SQLException {
@@ -73,22 +128,24 @@ public class ItemWatcher implements Runnable {
     }
 
     private void insertItems(nurgling.db.DatabaseAdapter adapter) throws SQLException {
-        // Use LinkedHashMap to preserve column order
-        java.util.LinkedHashMap<String, Object> columns = new java.util.LinkedHashMap<>();
-        columns.put("item_hash", "?");
-        columns.put("name", "?");
-        columns.put("quality", "?");
-        columns.put("coordinates", "?");
-        columns.put("container", "?");
+        if (iis.isEmpty()) return;
         
-        String insertSql = adapter.getUpsertSql("storageitems", columns, java.util.List.of("item_hash"));
-
-        // For simplicity, insert items one by one since batch operations are complex with different SQL syntax
+        // Use batch upsert for efficient bulk insert
+        java.util.List<String> columns = java.util.List.of("item_hash", "name", "quality", "coordinates", "container");
+        java.util.List<String> conflictColumns = java.util.List.of("item_hash");
+        java.util.List<String> updateColumns = java.util.List.of("name", "quality", "coordinates", "container");
+        
+        String batchSql = adapter.getBatchUpsertSql("storageitems", columns, conflictColumns, updateColumns);
+        
+        // Prepare batch parameters
+        java.util.List<Object[]> paramList = new java.util.ArrayList<>(iis.size());
         for (ItemInfo item : iis) {
             String itemHash = generateItemHash(item);
-            adapter.executeUpdate(insertSql,
-                itemHash, item.name, item.q, item.c.toString(), item.container);
+            paramList.add(new Object[]{itemHash, item.name, item.q, item.c.toString(), item.container});
         }
+        
+        // Execute batch insert - much more efficient than individual inserts
+        adapter.executeBatch(batchSql, paramList);
     }
 
     private String generateItemHash(ItemInfo item) {

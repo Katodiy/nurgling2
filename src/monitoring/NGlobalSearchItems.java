@@ -13,6 +13,11 @@ public class NGlobalSearchItems implements Runnable {
 
     public static final ArrayList<String> containerHashes = new ArrayList<>();
     public static volatile long updateVersion = 0; // Incremented when containerHashes changes
+    
+    // Cache for last search query to avoid duplicate DB queries
+    private static volatile String lastSearchQuery = "";
+    private static volatile long lastQueryTime = 0;
+    private static final long QUERY_CACHE_DURATION_MS = 2000; // Cache results for 2 seconds
 
     public NGlobalSearchItems(NSearchItem item, DatabaseManager databaseManager) {
         this.item = item;
@@ -22,6 +27,16 @@ public class NGlobalSearchItems implements Runnable {
     @Override
     public void run() {
         if (item.name.isEmpty() && item.q.isEmpty()) {
+            return;
+        }
+        
+        // Build search signature for deduplication
+        String searchSignature = buildSearchSignature();
+        long now = System.currentTimeMillis();
+        
+        // Skip if same search was just performed (within cache duration)
+        if (searchSignature.equals(lastSearchQuery) && (now - lastQueryTime) < QUERY_CACHE_DURATION_MS) {
+            nurgling.db.DatabaseManager.incrementSkippedSearch();
             return;
         }
 
@@ -80,8 +95,32 @@ public class NGlobalSearchItems implements Runnable {
 
                 return null;
             });
+            
+            // Update cache after successful query
+            lastSearchQuery = searchSignature;
+            lastQueryTime = System.currentTimeMillis();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Build a signature representing the current search parameters
+     */
+    private String buildSearchSignature() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(item.name);
+        for (NSearchItem.Quality quality : item.q) {
+            sb.append("|").append(quality.type).append(":").append(quality.val);
+        }
+        return sb.toString();
+    }
+    
+    /**
+     * Clear the query cache - called when container data changes
+     */
+    public static void clearQueryCache() {
+        lastSearchQuery = "";
+        lastQueryTime = 0;
     }
 }

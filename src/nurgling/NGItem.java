@@ -28,6 +28,7 @@ public class NGItem extends GItem
     public int softArmor = 0;
 
     boolean sent = false;
+    boolean checkedForFood = false; // Optimization: only check NFoodInfo once
     public NGItem(Indir<Resource> res, Message sdt)
     {
         super(res, sdt);
@@ -152,9 +153,28 @@ public class NGItem extends GItem
         }
         if(name!= null) {
             if((Boolean)NConfig.get(NConfig.Key.ndbenable)) {
-                if (!sent && info != null && getInfo(NFoodInfo.class) != null) {
-                    sent = true; // Set immediately to prevent duplicate submissions
-                    ui.core.writeNGItem(this);
+                // Optimization: only check NFoodInfo once per item after info is loaded
+                // checkedForFood prevents repeated getInfo() calls every tick
+                if (!sent && !checkedForFood && info != null) {
+                    NFoodInfo foodInfo = getInfo(NFoodInfo.class);
+                    if (foodInfo != null) {
+                        checkedForFood = true;
+                        
+                        // Early cache check using quick key (name + energy)
+                        // This prevents creating tasks for recipes we've already seen
+                        String quickKey = name + "|" + (int)(foodInfo.energy() * 100);
+                        if (NCore.isRecipeQuickCached(quickKey)) {
+                            sent = true; // Already processed, skip
+                            nurgling.db.DatabaseManager.incrementSkippedRecipe();
+                        } else {
+                            NCore.addRecipeQuickCache(quickKey);
+                            sent = true; // Set immediately to prevent duplicate submissions
+                            ui.core.writeNGItem(this);
+                        }
+                    } else {
+                        // Not a food item - mark as checked so we don't check every tick
+                        checkedForFood = true;
+                    }
                 }
             }
             if (lastQuestUpdate < NQuestInfo.lastUpdate.get()) {
@@ -215,8 +235,8 @@ public class NGItem extends GItem
                                         break;
                                     case "ui/tt/armor":
                                         if (a.length >= 3) {
-                                            hardArmor = (Integer) a[1];  // Жесткая броня
-                                            softArmor = (Integer) a[2];  // Мягкая броня
+                                            hardArmor = (Integer) a[1];  // Р–РµСЃС‚РєР°СЏ Р±СЂРѕРЅСЏ
+                                            softArmor = (Integer) a[2];  // РњСЏРіРєР°СЏ Р±СЂРѕРЅСЏ
                                         }
                                         break;
                                     case "ui/tt/cont":
