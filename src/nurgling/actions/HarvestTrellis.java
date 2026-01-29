@@ -149,7 +149,7 @@ public class HarvestTrellis implements Action {
             if (!new Drink(0.9, false).run(gui).isSuccess) {
                 if ((Boolean) NConfig.get(NConfig.Key.harvestautorefill)) {
                     if (FillWaterskins.checkIfNeed()) {
-                        if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                        if (!(new FillWaterskins().run(gui).IsSuccess()))
                             throw new InterruptedException();
                         else if (!new Drink(0.9, false).run(gui).isSuccess)
                             throw new InterruptedException();
