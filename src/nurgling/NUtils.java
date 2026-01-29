@@ -261,8 +261,10 @@ public class NUtils
     }
 
     public static void activateGob(Gob gob) {
-        getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 1, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
-    }
+        // Use player's position if gob is being carried (has Following attribute)
+        // to avoid stale gob.rc from pickup location
+        Coord2d pos = gob.getattr(Following.class) != null ? player().rc : gob.rc;
+        getGameUI().map.wdgmsg("click", Coord.z, pos.floor(posres), 3, 1, 0, (int) gob.id, pos.floor(posres), 0, -1);    }
 
     public static void takeAllGob(Gob gob) {
         getGameUI().map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 3, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
