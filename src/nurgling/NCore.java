@@ -149,6 +149,27 @@ public class NCore extends Widget
 
     private final LinkedList<NTask> for_remove = new LinkedList<>();
     private final ConcurrentLinkedQueue<NTask> tasks = new ConcurrentLinkedQueue<>();
+    
+    /**
+     * Get list of active task names for debug display
+     */
+    public String[] getActiveTaskNames() {
+        synchronized (tasks) {
+            if (tasks.isEmpty()) {
+                return new String[0];
+            }
+            return tasks.stream()
+                .map(t -> t.getClass().getSimpleName())
+                .toArray(String[]::new);
+        }
+    }
+    
+    /**
+     * Get count of active tasks
+     */
+    public int getActiveTaskCount() {
+        return tasks.size();
+    }
 
     public BotmodSettings getBotMod()
     {
