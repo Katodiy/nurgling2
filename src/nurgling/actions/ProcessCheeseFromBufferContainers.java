@@ -266,6 +266,38 @@ public class ProcessCheeseFromBufferContainers implements Action {
     }
 
     /**
+     * Re-find all containers in an area after returning from a different area.
+     * This refreshes stale Gob references that become invalid when the character moves far away.
+     *
+     * @param gui         The game UI
+     * @param area        The area where containers should be found
+     * @param originalContainers The original list of containers (used for matching by gobid)
+     * @return Fresh list of container Gobs with valid references
+     */
+    private ArrayList<Gob> refindContainersInArea(NGameUI gui, NArea area, ArrayList<Gob> originalContainers) throws InterruptedException {
+        // Find all containers in the area with fresh references
+        ArrayList<Gob> freshContainers = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet()), new ArrayList<>()));
+
+        if (freshContainers.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Match original containers by gobid to preserve processing order
+        ArrayList<Gob> result = new ArrayList<>();
+        for (Gob originalGob : originalContainers) {
+            long originalId = originalGob.id;
+            for (Gob freshGob : freshContainers) {
+                if (freshGob.id == originalId) {
+                    result.add(freshGob);
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Phase 2: Move remaining cheese to next aging stages
      * Process one cheese type at a time for efficient batching
      *
@@ -384,9 +416,20 @@ public class ProcessCheeseFromBufferContainers implements Action {
             }
         }
 
+        // Refresh container references at the start - they may be stale from previous cheese type processing
+        // This is necessary because cheeseLocations was captured before any area navigation
+        if (!containers.isEmpty()) {
+            containers = refindContainersInArea(gui, area, containers);
+        }
+
+        if (containers.isEmpty()) {
+            return; // No containers found
+        }
+
         // Continue collecting until all containers are empty or destination capacity reached
         while (remainingDestinationCapacity > 0) {
             boolean foundAnyTrays = false;
+            boolean containersRefreshed = false;
 
             // Check each container for remaining trays
             for (Gob containerGob : containers) {
@@ -402,7 +445,19 @@ public class ProcessCheeseFromBufferContainers implements Action {
                     // Navigate back to source area
                     NContext context = new NContext(gui);
                     context.getAreaById(area.id);
-                    availableSpace = CheeseInventoryOperations.getAvailableCheeseTraySlotsInInventory(gui);
+
+                    // CRITICAL FIX: Refresh container references after returning from destination
+                    // The original Gob references become stale when character moves far away
+                    containers = refindContainersInArea(gui, area, containers);
+                    if (containers.isEmpty()) {
+                        break; // No containers found, exit the while loop
+                    }
+
+                    // Mark that we refreshed containers so the while-loop continues
+                    containersRefreshed = true;
+
+                    // Restart the for-loop with fresh container references
+                    break;
                 }
 
                 // Take what fits in inventory, limited by remaining destination capacity
@@ -419,8 +474,8 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 }
             }
 
-            // If no trays were found in any container, all containers are empty
-            if (!foundAnyTrays) {
+            // If no trays were found in any container and we didn't just refresh, all containers are empty
+            if (!foundAnyTrays && !containersRefreshed) {
                 break;
             }
         }
