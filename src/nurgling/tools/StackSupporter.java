@@ -40,6 +40,7 @@ public class StackSupporter {
         customStackSizes.put("Green Kelp", 4);
         customStackSizes.put("Cattail Roots", 4);
         customStackSizes.put("Heartwood Leaves", 4);
+        customStackSizes.put("Oyster", 4);
 
         putAll(3,
                 "Tuber", "Onion", "Beetroot", "Carrot", "Cucumber",
@@ -51,7 +52,7 @@ public class StackSupporter {
                 "Finer Plant Fibre", "Wicker", "Cloth", "Pigment",
                 "Fine Clay", "Any Brick", "Clay", "Casting Material",
                 "Ore", "Stone", "Lures", "Hooks", "Dried Fish",
-                "Medicine", "Intestines", "Bait", "Pipeweed"
+                "Medicine", "Intestines", "Bait", "Pipeweed", "Animal Fat"
         );
 
         putAll(4,
@@ -108,6 +109,9 @@ public class StackSupporter {
         catExceptions.add("Cave Louse Chitin");
         catExceptions.add("Driftkelp");
         catExceptions.add("A Beautiful Dream");
+        catExceptions.add("Opened Oyster");
+        catExceptions.add("Boiled River Pearl Mussel");
+        catExceptions.add("Mammoth Tusk");
     }
 
     private static final NAlias unstackableContainers = new NAlias(

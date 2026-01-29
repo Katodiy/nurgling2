@@ -2058,7 +2058,7 @@ public class VSpec {
         raw.addAll(rawMutton);
         raw.addAll(rawPork);
         raw.addAll(rawHorse);
-        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-mammoth\"], \"name\": \"Mammoth Meat\"}"));
+        raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-mammoth\"], \"name\": \"Raw Mammoth\",}"));
         raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-adder\"], \"name\": \"Raw Adder\"}"));
         raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-badger\"], \"name\": \"Raw Badger\"}"));
         raw.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-bat\"], \"name\": \"Raw Bat\"}"));
