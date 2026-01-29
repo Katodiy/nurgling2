@@ -40,6 +40,7 @@ public class StackSupporter {
         customStackSizes.put("Green Kelp", 4);
         customStackSizes.put("Cattail Roots", 4);
         customStackSizes.put("Heartwood Leaves", 4);
+        customStackSizes.put("Oyster", 4);
 
         putAll(3,
                 "Tuber", "Onion", "Beetroot", "Carrot", "Cucumber",
@@ -108,6 +109,8 @@ public class StackSupporter {
         catExceptions.add("Cave Louse Chitin");
         catExceptions.add("Driftkelp");
         catExceptions.add("A Beautiful Dream");
+        catExceptions.add("Opened Oyster");
+        catExceptions.add("Boiled River Pearl Mussel");
     }
 
     private static final NAlias unstackableContainers = new NAlias(

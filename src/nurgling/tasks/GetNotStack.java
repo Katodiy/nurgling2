@@ -39,7 +39,10 @@ public class GetNotStack extends NTask
                     return true;
                 } else {
                     if (NParser.checkName(((NGItem)item.item).name(), name)) {
-                        if (item.item.contents == null) {
+                        if (
+                                item.item.contents == null
+                                && StackSupporter.isStackable((NInventory) item.item.parent, ((NGItem) item.item).name())
+                        ) {
                             result = item;
                             return false;
                         }
