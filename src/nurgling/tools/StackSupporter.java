@@ -52,7 +52,7 @@ public class StackSupporter {
                 "Finer Plant Fibre", "Wicker", "Cloth", "Pigment",
                 "Fine Clay", "Any Brick", "Clay", "Casting Material",
                 "Ore", "Stone", "Lures", "Hooks", "Dried Fish",
-                "Medicine", "Intestines", "Bait", "Pipeweed"
+                "Medicine", "Intestines", "Bait", "Pipeweed", "Animal Fat"
         );
 
         putAll(4,
