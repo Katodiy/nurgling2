@@ -120,10 +120,18 @@ public class TunnelingBot implements Action {
             handleBumlings(gui);
 
             // Dig wings based on wing option
-            Results wingResult = mineWings(gui, nextSupportPos, direction, wingOption, wingSide, supportType.radius);
-            if (!wingResult.IsSuccess()) {
-                gui.msg("Wing mining had issues, continuing anyway");
-                // Continue anyway, wings are optional
+            if (wingOption != WingOption.NONE) {
+                // First, mine connector from tunnel to wing start area
+                Results connectorResult = mineWingConnector(gui, nextSupportPos, direction, tunnelSide, wingSide);
+                if (!connectorResult.IsSuccess()) {
+                    gui.msg("Wing connector mining had issues, skipping wings");
+                } else {
+                    Results wingResult = mineWings(gui, nextSupportPos, direction, wingOption, wingSide, supportType.radius);
+                    if (!wingResult.IsSuccess()) {
+                        gui.msg("Wing mining had issues, continuing anyway");
+                        // Continue anyway, wings are optional
+                    }
+                }
             }
 
             // Update current support position for next iteration
@@ -458,6 +466,54 @@ public class TunnelingBot implements Action {
                 }
             }
         }
+    }
+
+    /**
+     * Mine a connector path from the tunnel to the wing start position.
+     * If wingSide is in the same direction as travel, we extend the tunnel one more tile,
+     * then mine from there to the wing start.
+     */
+    private Results mineWingConnector(NGameUI gui, Coord2d supportPos, Direction direction,
+                                       TunnelSide tunnelSide, TunnelSide wingSide)
+            throws InterruptedException {
+
+        Coord supportTile = supportPos.div(tilesz).floor();
+
+        // Calculate the tunnel end tile (at support position, offset by tunnelSide)
+        Coord tunnelEndTile = new Coord(supportTile.x + tunnelSide.dx, supportTile.y + tunnelSide.dy);
+
+        // First, navigate back to the tunnel area (which is definitely open)
+        Coord2d tunnelEndPos = tileCenter(tunnelEndTile);
+        PathFinder pf = new PathFinder(NGob.getDummy(tunnelEndPos, 0,
+                new NHitBox(new Coord2d(-5.5, -5.5), new Coord2d(5.5, 5.5))), true);
+        pf.isHardMode = true;
+        pf.run(gui);
+
+        // Extend tunnel one more tile in the main direction
+        // This opens up access to the wing start area
+        Coord extendedTunnelTile = new Coord(tunnelEndTile.x + direction.dx, tunnelEndTile.y + direction.dy);
+        Results extendResult = mineTileIfNeeded(gui, extendedTunnelTile);
+        if (!extendResult.IsSuccess()) {
+            return extendResult;
+        }
+
+        // Now mine from extended tunnel to the wing start tile
+        // Wing start is at support + wingSide offset
+        Coord wingStartTile = new Coord(supportTile.x + wingSide.dx, supportTile.y + wingSide.dy);
+
+        // Mine the tile connecting extended tunnel to wing start (perpendicular to main direction)
+        // This is the tile at: extendedTunnel position, but moved toward wing start
+        if (!extendedTunnelTile.equals(wingStartTile)) {
+            // Mine from extended tunnel toward wing start (one tile perpendicular)
+            Coord connectorTile = new Coord(extendedTunnelTile.x - tunnelSide.dx,
+                                             extendedTunnelTile.y - tunnelSide.dy);
+            Results connectorResult = mineTileIfNeeded(gui, connectorTile);
+            if (!connectorResult.IsSuccess()) {
+                return connectorResult;
+            }
+        }
+
+        return Results.SUCCESS();
     }
 
     /**
