@@ -35,7 +35,7 @@ public class FillWaterskinsGlobal implements Action {
         }
         
         if (nArea == null) {
-            return Results.ERROR("No water zone found! Please create a zone with 'water' specialization.");
+            return Results.ERROR("No water area found! Please create an area with 'water' specialization.");
         }
         
         // Navigate to the area using chunk navigation

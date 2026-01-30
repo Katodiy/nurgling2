@@ -3,6 +3,7 @@ package nurgling.areas;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.bots.SelectArea;
+import nurgling.navigation.AreaNavigationHelper;
 import nurgling.navigation.ChunkNavManager;
 import nurgling.navigation.ChunkPath;
 import nurgling.tools.*;
@@ -1197,14 +1198,20 @@ public class NContext {
             return Double.MAX_VALUE;
         }
 
-        // Try ChunkNav first
+        // Try ChunkNav first - plan paths to all 4 corners and pick shortest
         if (gui.map instanceof NMapView) {
             ChunkNavManager chunkNav = ((NMapView) gui.map).getChunkNavManager();
             if (chunkNav != null && chunkNav.isInitialized()) {
-                ChunkPath path = chunkNav.planToArea(area);
-                if (path != null) {
-                    // ChunkNav has a path - use its cost
-                    return path.totalCost;
+                try {
+                    // Use AreaNavigationHelper to find shortest path to any of the 4 corners
+                    ChunkPath path = AreaNavigationHelper.findShortestPathToAreaCorners(area, chunkNav);
+                    if (path != null) {
+                        // ChunkNav has a path - use its cost
+                        return path.totalCost;
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return Double.MAX_VALUE;
                 }
             }
         }

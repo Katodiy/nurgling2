@@ -34,7 +34,7 @@ public class CollectSwillToTrough implements Action {
         // Step 1: Select trough by clicking on it
         SelectGob troughSel;
         gui.msg("Please select trough");
-        (troughSel = new SelectGob(Resource.loadsimg("baubles/outputArea"))).run(gui);
+        (troughSel = new SelectGob(Resource.loadsimg("baubles/trough"))).run(gui);
         Gob trough = troughSel.result;
         if (trough == null) {
             return Results.ERROR("Trough not selected");
