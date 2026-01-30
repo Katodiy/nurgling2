@@ -252,7 +252,7 @@ public class TunnelingDialog extends Window {
         // [Direction:] gap [W][windrose][E] gap [Wings:] gap [←][column][→]
 
         int dirLabelWidth = 65;  // "Direction:" label width
-        int labelToAssemblyGap = 10;
+        int labelToAssemblyGap = 40;
 
         // Direction label starts at leftMargin
         // W button starts after label + gap
