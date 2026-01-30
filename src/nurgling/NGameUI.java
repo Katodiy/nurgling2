@@ -52,6 +52,7 @@ public class NGameUI extends GameUI
     private CrimeStatusBuff crimeBuff = null;
     private AllowVisitingStatusBuff allowVisitingBuff = null;
     public NRecentActionsPanel recentActionsPanel;
+    public DrinkMeter drinkMeter;
     public LocalizedResourceTimersWindow localizedResourceTimersWindow = null;
     private LocalizedResourceTimerDialog localizedResourceTimerDialog = null;
     public LocalizedResourceTimerService localizedResourceTimerService;
@@ -172,7 +173,7 @@ public class NGameUI extends GameUI
         add(new NDraggableWidget(questinfo = new NQuestInfo(), "quests", questinfo.sz.add(NDraggableWidget.delta)));
         add(new NDraggableWidget(recentActionsPanel = new NRecentActionsPanel(), "recentactions", recentActionsPanel.sz.add(NDraggableWidget.delta)));
         // Add drink meter widget to show water/tea capacity (uses IMeter.fsz to match other meters)
-        DrinkMeter drinkMeter = new DrinkMeter();
+        drinkMeter = new DrinkMeter();
         add(new NDraggableWidget(drinkMeter, "drinkmeter", IMeter.fsz));
         add(guiinfo = new NGUIInfo(),new Coord(sz.x/2 - NGUIInfo.xs/2,sz.y/5 ));
         if(!(Boolean) NConfig.get(NConfig.Key.show_drag_menu))

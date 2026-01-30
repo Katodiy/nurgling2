@@ -38,6 +38,30 @@ public class DrinkMeter extends Widget {
     private float max = 0f;
     private double wait = 0;
 
+    /**
+     * Returns the total amount of drinkable liquid (water + tea) in liters.
+     * @return total water and tea amount in liters
+     */
+    public float getTotalDrinkable() {
+        return water + tea;
+    }
+
+    /**
+     * Returns the current water amount in liters.
+     * @return water amount in liters
+     */
+    public float getWater() {
+        return water;
+    }
+
+    /**
+     * Returns the current tea amount in liters.
+     * @return tea amount in liters
+     */
+    public float getTea() {
+        return tea;
+    }
+
     // Text displayed on the meter bar
     private Tex text = null;
     private String lastTextValue = null;
