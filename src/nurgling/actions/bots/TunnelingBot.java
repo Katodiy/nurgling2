@@ -28,9 +28,6 @@ public class TunnelingBot implements Action {
     // Tiles that need mining
     private static final NAlias MINEABLE_TILES = new NAlias("rock", "tiles/cave");
 
-    // Safety margin - overlap between support radii (in world units)
-    private static final int SAFETY_MARGIN = 11; // One tile overlap
-
     // Tile size in world units
     private static final double TILE_SIZE = 11.0;
 
@@ -85,7 +82,7 @@ public class TunnelingBot implements Action {
             gui.msg("Tunneling iteration " + iteration);
 
             // Calculate next support position (on the support axis, not tunnel axis)
-            int placementDistance = supportType.radius - SAFETY_MARGIN;
+            int placementDistance = supportType.radius;
             Coord2d dirVector = new Coord2d(direction.dx, direction.dy);
             Coord2d nextSupportPos = currentSupportPos.add(dirVector.mul(placementDistance));
 
@@ -554,7 +551,7 @@ public class TunnelingBot implements Action {
     private boolean canContinueTunneling(NGameUI gui, Coord2d currentPos, Direction direction, int radius)
             throws InterruptedException {
         // Check if the next target position is within reasonable bounds
-        int placementDistance = radius - SAFETY_MARGIN;
+        int placementDistance = radius;
         Coord2d nextPos = currentPos.add(new Coord2d(direction.dx, direction.dy).mul(placementDistance));
         Coord nextTile = nextPos.div(tilesz).floor();
 
