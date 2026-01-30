@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 
 import java.awt.Color;
+import java.awt.image.BufferedImage;
 
 public class TunnelingDialog extends Window {
     public enum Direction {
@@ -74,17 +75,19 @@ public class TunnelingDialog extends Window {
     }
 
     public enum SupportType {
-        MINE_SUPPORT("Mine Support", "gfx/terobjs/minesupport", 100),
-        STONE_COLUMN("Stone Column", "gfx/terobjs/column", 125),
-        MINE_BEAM("Mine Beam", "gfx/terobjs/minebeam", 150);
+        MINE_SUPPORT("Mine Support", "gfx/terobjs/minesupport", "paginae/bld/minesupport", 100),
+        STONE_COLUMN("Stone Column", "gfx/terobjs/column", "paginae/bld/column", 125),
+        MINE_BEAM("Mine Beam", "gfx/terobjs/minebeam", "paginae/bld/minebeam", 150);
 
         public final String menuName;
         public final String resourcePath;
+        public final String paginaPath;
         public final int radius;
 
-        SupportType(String menuName, String resourcePath, int radius) {
+        SupportType(String menuName, String resourcePath, String paginaPath, int radius) {
             this.menuName = menuName;
             this.resourcePath = resourcePath;
+            this.paginaPath = paginaPath;
             this.radius = radius;
         }
 
@@ -95,7 +98,7 @@ public class TunnelingDialog extends Window {
 
     // Current selections
     private Direction selectedDirection = Direction.NORTH;
-    private TunnelSide selectedTunnelSide = TunnelSide.EAST;
+    private TunnelSide selectedTunnelSide = TunnelSide.WEST;
     private TunnelSide selectedWingSide = TunnelSide.NORTH;
     private SupportType selectedSupportType = SupportType.MINE_SUPPORT;
     private boolean wingNorth = false;
@@ -113,13 +116,14 @@ public class TunnelingDialog extends Window {
     private boolean[] cancelRef = null;
 
     // UI Elements
-    private Button btnDirN, btnDirS, btnDirE, btnDirW;
-    private Button btnTunnelLeft, btnTunnelRight;
-    private Button btnWingN, btnWingS, btnWingE, btnWingW;
-    private Button btnWingSideA, btnWingSideB;
+    private IButton btnDirN, btnDirS, btnDirE, btnDirW;
+    private IButton btnTunnelLeft, btnTunnelRight;
+    private IButton btnWingLeft, btnWingRight;
+    private IButton btnWingSideUp, btnWingSideDown;
     private Dropbox<SupportType> supportTypeDropbox;
     private PreviewGrid previewGrid;
-    private Label tunnelSideLabel;
+    private SupportIconWidget supportIconWidget;
+    private Widget columnIconWidget;
 
     private static final Direction[] DIRECTIONS = Direction.values();
     private static final SupportType[] SUPPORT_TYPES = SupportType.values();
@@ -142,29 +146,50 @@ public class TunnelingDialog extends Window {
 
     // Colors for preview grid
     private static final Color COLOR_BG = new Color(30, 30, 30);
-    private static final Color COLOR_SUPPORT = new Color(205, 92, 92); // Indian red (brighter)
-    private static final Color COLOR_TUNNEL = new Color(100, 180, 255); // Bright blue
-    private static final Color COLOR_WING = new Color(100, 220, 150); // Bright green
-    private static final Color COLOR_ARROW = new Color(255, 215, 0); // Gold
+    private static final Color COLOR_SUPPORT = new Color(205, 92, 92);
+    private static final Color COLOR_TUNNEL = new Color(100, 180, 255);
+    private static final Color COLOR_WING = new Color(100, 220, 150);
+    private static final Color COLOR_ARROW = new Color(255, 215, 0);
     private static final Color COLOR_GRID = new Color(60, 60, 60);
+    private static final Color COLOR_PREVIEW_BORDER = new Color(210, 160, 60);
+
+    // Button images
+    private static final BufferedImage[] BTN_N = loadBtnSet("nurgling/hud/buttons/n/cbtn");
+    private static final BufferedImage[] BTN_S = loadBtnSet("nurgling/hud/buttons/s/cbtn");
+    private static final BufferedImage[] BTN_E = loadBtnSet("nurgling/hud/buttons/e/cbtn");
+    private static final BufferedImage[] BTN_W = loadBtnSet("nurgling/hud/buttons/w/cbtn");
+    private static final BufferedImage[] BTN_LEFT = loadBtnSet("nurgling/hud/buttons/left_new/cbtn");
+    private static final BufferedImage[] BTN_RIGHT = loadBtnSet("nurgling/hud/buttons/right_new/cbtn");
+    private static final BufferedImage[] BTN_UP = loadBtnSet("nurgling/hud/buttons/up_new/cbtn");
+    private static final BufferedImage[] BTN_DOWN = loadBtnSet("nurgling/hud/buttons/down_new/cbtn");
+
+    // Static images
+    private static final Tex WINDROSE = Resource.loadtex("nurgling/hud/tunneling/windrose");
+
+    private static BufferedImage[] loadBtnSet(String basePath) {
+        return new BufferedImage[] {
+            Resource.loadsimg(basePath + "u"),
+            Resource.loadsimg(basePath + "d"),
+            Resource.loadsimg(basePath + "h")
+        };
+    }
 
     public TunnelingDialog() {
-        super(UI.scale(new Coord(340, 470)), "Tunneling Bot");
+        super(new Coord(560, 620), "Tunneling Bot");
         initializeWidgets();
     }
 
     private void initializeWidgets() {
-        int windowWidth = UI.scale(340);
-        int y = UI.scale(10);
-        int centerX = windowWidth / 2;
+        int y = 20;
+        int leftMargin = 20;
 
-        // === 1. SUPPORT TYPE (first, centered) ===
-        int dropWidth = UI.scale(180);
-        int dropHeight = UI.scale(18);
-        int supportRowWidth = UI.scale(90) + dropWidth; // label + dropdown
-        int supportStartX = (windowWidth - supportRowWidth) / 2;
+        // === 1. SUPPORT TYPE with icon ===
+        // Label and dropdown on same baseline, with proper spacing
+        add(new Label("Support Type:"), new Coord(leftMargin, y + 4));
 
-        add(new Label("Support Type:"), new Coord(supportStartX, y + UI.scale(3)));
+        int dropWidth = 200;
+        int dropHeight = 28;
+        int dropX = leftMargin + 115;
         supportTypeDropbox = new Dropbox<SupportType>(dropWidth, SUPPORT_TYPES.length, dropHeight) {
             @Override
             protected SupportType listitem(int i) {
@@ -178,196 +203,268 @@ public class TunnelingDialog extends Window {
 
             @Override
             protected void drawitem(GOut g, SupportType item, int idx) {
-                g.text(item.menuName + " (r:" + item.getTileRadius() + " tiles)", new Coord(3, 1));
+                g.text(item.menuName + " (r:" + item.getTileRadius() + " tiles)", new Coord(5, 3));
             }
 
             @Override
             public void change(SupportType item) {
                 super.change(item);
                 selectedSupportType = item;
+                if (supportIconWidget != null) {
+                    supportIconWidget.updateIcon(item);
+                }
                 updatePreview();
             }
         };
         supportTypeDropbox.change(selectedSupportType);
-        add(supportTypeDropbox, new Coord(supportStartX + UI.scale(90), y));
-        y += UI.scale(35);
+        add(supportTypeDropbox, new Coord(dropX, y));
 
-        // === 2. DIRECTION AND TUNNEL SIDE (side by side, centered) ===
-        int groupSpacing = UI.scale(40);
-        int compassWidth = UI.scale(90);
-        int sideSelectWidth = UI.scale(100);
-        int totalRowWidth = compassWidth + groupSpacing + sideSelectWidth;
-        int rowStartX = (windowWidth - totalRowWidth) / 2;
+        // Support icon next to dropdown
+        supportIconWidget = new SupportIconWidget(selectedSupportType, true);
+        add(supportIconWidget, new Coord(dropX + dropWidth + 15, y - 10));
 
-        // Direction label and compass
-        int compassCenterX = rowStartX + compassWidth / 2;
-        add(new Label("Direction:"), new Coord(compassCenterX - UI.scale(30), y));
-        y += UI.scale(20);
+        y += 55;
 
-        int compassCenterY = y + UI.scale(25);
-        int btnSize = UI.scale(28);
-        int spacing = UI.scale(30);
+        // === 2. DIRECTION with windrose and WINGS with column ===
+        int btnGap = 5;
 
-        btnDirN = new Button(btnSize, "N") {
+        // Create buttons first to get their sizes
+        btnDirN = new IButton(BTN_N[0], BTN_N[1], BTN_N[2]) {
             @Override
             public void click() { selectDirection(Direction.NORTH); }
         };
-        add(btnDirN, new Coord(compassCenterX - btnSize/2, compassCenterY - spacing));
-
-        btnDirS = new Button(btnSize, "S") {
+        btnDirS = new IButton(BTN_S[0], BTN_S[1], BTN_S[2]) {
             @Override
             public void click() { selectDirection(Direction.SOUTH); }
         };
-        add(btnDirS, new Coord(compassCenterX - btnSize/2, compassCenterY + spacing - btnSize));
-
-        btnDirW = new Button(btnSize, "W") {
+        btnDirW = new IButton(BTN_W[0], BTN_W[1], BTN_W[2]) {
             @Override
             public void click() { selectDirection(Direction.WEST); }
         };
-        add(btnDirW, new Coord(compassCenterX - spacing - btnSize/2, compassCenterY - btnSize/2));
-
-        btnDirE = new Button(btnSize, "E") {
+        btnDirE = new IButton(BTN_E[0], BTN_E[1], BTN_E[2]) {
             @Override
             public void click() { selectDirection(Direction.EAST); }
         };
-        add(btnDirE, new Coord(compassCenterX + spacing - btnSize/2, compassCenterY - btnSize/2));
 
-        // Tunnel side selector (right of direction)
-        int tunnelSideX = rowStartX + compassWidth + groupSpacing;
-        add(new Label("Tunnel Side:"), new Coord(tunnelSideX, y - UI.scale(20)));
-        tunnelSideLabel = new Label("");
-        add(tunnelSideLabel, new Coord(tunnelSideX, y - UI.scale(5)));
+        Coord windroseSize = WINDROSE.sz();
 
-        btnTunnelLeft = new Button(UI.scale(38), "") {
+        // Calculate positions from LEFT to RIGHT:
+        // [Direction:] gap [W][windrose][E] gap [Wings:] gap [←][column][→]
+
+        int dirLabelWidth = 65;  // "Direction:" label width
+        int labelToAssemblyGap = 10;
+
+        // Direction label starts at leftMargin
+        // W button starts after label + gap
+        int wButtonLeftEdge = leftMargin + dirLabelWidth + labelToAssemblyGap;
+
+        // Calculate compassCenterX so W button is at wButtonLeftEdge
+        // W button X = compassCenterX - windroseSize.x/2 - btnGap - btnDirW.sz.x
+        // So: compassCenterX = wButtonLeftEdge + btnDirW.sz.x + btnGap + windroseSize.x/2
+        int compassCenterX = wButtonLeftEdge + btnDirW.sz.x + btnGap + windroseSize.x / 2;
+        int compassCenterY = y + windroseSize.y / 2 + btnDirN.sz.y + btnGap;
+
+        // Direction label - vertically centered with compass, to the LEFT
+        add(new Label("Direction:"), new Coord(leftMargin, compassCenterY - 6));
+
+        // Windrose in center
+        add(new Widget(windroseSize) {
+            @Override
+            public void draw(GOut g) {
+                g.image(WINDROSE, Coord.z);
+            }
+        }, new Coord(compassCenterX - windroseSize.x / 2, compassCenterY - windroseSize.y / 2));
+
+        // Direction buttons around windrose
+        add(btnDirN, new Coord(compassCenterX - btnDirN.sz.x / 2, compassCenterY - windroseSize.y / 2 - btnGap - btnDirN.sz.y));
+        add(btnDirS, new Coord(compassCenterX - btnDirS.sz.x / 2, compassCenterY + windroseSize.y / 2 + btnGap));
+        add(btnDirW, new Coord(compassCenterX - windroseSize.x / 2 - btnGap - btnDirW.sz.x, compassCenterY - btnDirW.sz.y / 2));
+        add(btnDirE, new Coord(compassCenterX + windroseSize.x / 2 + btnGap, compassCenterY - btnDirE.sz.y / 2));
+
+        // Wings section - starts after direction section
+        int directionSectionRightEdge = compassCenterX + windroseSize.x / 2 + btnGap + btnDirE.sz.x;
+        int sectionGap = 25;
+        int wingsLabelX = directionSectionRightEdge + sectionGap;
+        int wingsLabelWidth = 45;  // "Wings:" label width
+        int wingBtnGap = 10;
+
+        // Wings label - vertically centered, to the LEFT of wing buttons
+        add(new Label("Wings:"), new Coord(wingsLabelX, compassCenterY - 6));
+
+        // Create wing buttons to get sizes
+        btnWingLeft = new IButton(BTN_LEFT[0], BTN_LEFT[1], BTN_LEFT[2]) {
+            @Override
+            public void click() {
+                if (selectedDirection.isVertical()) {
+                    wingWest = !wingWest;
+                } else {
+                    wingNorth = !wingNorth;
+                }
+                updatePreview();
+            }
+        };
+        btnWingRight = new IButton(BTN_RIGHT[0], BTN_RIGHT[1], BTN_RIGHT[2]) {
+            @Override
+            public void click() {
+                if (selectedDirection.isVertical()) {
+                    wingEast = !wingEast;
+                } else {
+                    wingSouth = !wingSouth;
+                }
+                updatePreview();
+            }
+        };
+
+        // Column icon (created to get size)
+        columnIconWidget = new SupportIconWidget(SupportType.STONE_COLUMN, true);
+
+        // Left button starts after Wings label + gap
+        int leftBtnLeftEdge = wingsLabelX + wingsLabelWidth + labelToAssemblyGap;
+
+        // Calculate wingCenterX so left button is at leftBtnLeftEdge
+        // Left button X = wingCenterX - columnIconWidget.sz.x/2 - wingBtnGap - btnWingLeft.sz.x
+        // So: wingCenterX = leftBtnLeftEdge + btnWingLeft.sz.x + wingBtnGap + columnIconWidget.sz.x/2
+        int wingCenterX = leftBtnLeftEdge + btnWingLeft.sz.x + wingBtnGap + columnIconWidget.sz.x / 2;
+
+        // Position wing elements
+        add(columnIconWidget, new Coord(wingCenterX - columnIconWidget.sz.x / 2, compassCenterY - columnIconWidget.sz.y / 2));
+        add(btnWingLeft, new Coord(wingCenterX - columnIconWidget.sz.x / 2 - wingBtnGap - btnWingLeft.sz.x, compassCenterY - btnWingLeft.sz.y / 2));
+        add(btnWingRight, new Coord(wingCenterX + columnIconWidget.sz.x / 2 + wingBtnGap, compassCenterY - btnWingRight.sz.y / 2));
+
+        y = compassCenterY + windroseSize.y / 2 + btnDirS.sz.y + btnGap + 25;
+
+        // === 3. TUNNEL SIDE and WING SIDE ===
+        // Both on same line: "Tunnel Side: (East/West)" [←] [→]    "Wing Side:" [↑] [↓]
+
+        int arrowBtnGap = 10; // Gap between arrow buttons (same for both)
+
+        btnTunnelLeft = new IButton(BTN_LEFT[0], BTN_LEFT[1], BTN_LEFT[2]) {
             @Override
             public void click() { selectTunnelSide(0); }
         };
-        add(btnTunnelLeft, new Coord(tunnelSideX, y + UI.scale(12)));
-
-        btnTunnelRight = new Button(UI.scale(38), "") {
+        btnTunnelRight = new IButton(BTN_RIGHT[0], BTN_RIGHT[1], BTN_RIGHT[2]) {
             @Override
             public void click() { selectTunnelSide(1); }
         };
-        add(btnTunnelRight, new Coord(tunnelSideX + UI.scale(42), y + UI.scale(12)));
-
-        y += UI.scale(70);
-
-        // === 3. WINGS AND WING SIDE (side by side, centered) ===
-        int wingCenterX = rowStartX + compassWidth / 2;
-        add(new Label("Wings:"), new Coord(wingCenterX - UI.scale(20), y));
-        y += UI.scale(20);
-
-        int wingCenterY = y + UI.scale(25);
-        int wingBtnSize = UI.scale(28);
-        int wingSpacing = UI.scale(30);
-
-        btnWingN = new Button(wingBtnSize, "N") {
-            @Override
-            public void click() {
-                wingNorth = !wingNorth;
-                updateWingButtons();
-                updatePreview();
-            }
-        };
-        add(btnWingN, new Coord(wingCenterX - wingBtnSize/2, wingCenterY - wingSpacing));
-
-        btnWingS = new Button(wingBtnSize, "S") {
-            @Override
-            public void click() {
-                wingSouth = !wingSouth;
-                updateWingButtons();
-                updatePreview();
-            }
-        };
-        add(btnWingS, new Coord(wingCenterX - wingBtnSize/2, wingCenterY + wingSpacing - wingBtnSize));
-
-        btnWingW = new Button(wingBtnSize, "W") {
-            @Override
-            public void click() {
-                wingWest = !wingWest;
-                updateWingButtons();
-                updatePreview();
-            }
-        };
-        add(btnWingW, new Coord(wingCenterX - wingSpacing - wingBtnSize/2, wingCenterY - wingBtnSize/2));
-
-        btnWingE = new Button(wingBtnSize, "E") {
-            @Override
-            public void click() {
-                wingEast = !wingEast;
-                updateWingButtons();
-                updatePreview();
-            }
-        };
-        add(btnWingE, new Coord(wingCenterX + wingSpacing - wingBtnSize/2, wingCenterY - wingBtnSize/2));
-
-        // Center dot for wings
-        add(new Label("\u25A0"), new Coord(wingCenterX - UI.scale(4), wingCenterY - UI.scale(6)));
-
-        // Wing side selector (right of wings)
-        int wingSideX = rowStartX + compassWidth + groupSpacing;
-        add(new Label("Wing Side:"), new Coord(wingSideX, y - UI.scale(20)));
-
-        btnWingSideA = new Button(UI.scale(38), "") {
+        btnWingSideUp = new IButton(BTN_UP[0], BTN_UP[1], BTN_UP[2]) {
             @Override
             public void click() { selectWingSide(0); }
         };
-        add(btnWingSideA, new Coord(wingSideX, y + UI.scale(12)));
-
-        btnWingSideB = new Button(UI.scale(38), "") {
+        btnWingSideDown = new IButton(BTN_DOWN[0], BTN_DOWN[1], BTN_DOWN[2]) {
             @Override
             public void click() { selectWingSide(1); }
         };
-        add(btnWingSideB, new Coord(wingSideX + UI.scale(42), y + UI.scale(12)));
 
-        y += UI.scale(75);
+        // Tunnel Side: label on two lines, then buttons (aligned with Direction section)
+        int tunnelLabelWidth = 75;
+        int tunnelBtnStartX = leftMargin + tunnelLabelWidth + labelToAssemblyGap;
 
-        // === 4. PREVIEW WITH COLORED LEGEND (centered) ===
-        int legendTotalWidth = UI.scale(220);
-        int legendStartX = (windowWidth - legendTotalWidth) / 2;
+        add(new Label("Tunnel Side:"), new Coord(leftMargin, y));
+        add(new Label("(East/West)"), new Coord(leftMargin, y + 16));
+        add(btnTunnelLeft, new Coord(tunnelBtnStartX, y + 5));
+        add(btnTunnelRight, new Coord(tunnelBtnStartX + btnTunnelLeft.sz.x + arrowBtnGap, y + 5));
 
-        add(new Label("Preview:"), new Coord(legendStartX, y));
-        y += UI.scale(16);
+        // Wing Side: label on two lines, then buttons (aligned with Wings section)
+        int wingSideLabelX = wingsLabelX;
+        int wingSideLabelWidth = 75;
+        int wingSideBtnStartX = wingSideLabelX + wingSideLabelWidth + labelToAssemblyGap;
+        add(new Label("Wing Side:"), new Coord(wingSideLabelX, y));
+        add(new Label("(North/South)"), new Coord(wingSideLabelX, y + 16));
+        add(btnWingSideUp, new Coord(wingSideBtnStartX, y + 5));
+        add(btnWingSideDown, new Coord(wingSideBtnStartX + btnWingSideUp.sz.x + arrowBtnGap, y + 5));
 
-        addColoredLegend(legendStartX, y, COLOR_SUPPORT, "Support");
-        addColoredLegend(legendStartX + UI.scale(75), y, COLOR_TUNNEL, "Tunnel");
-        addColoredLegend(legendStartX + UI.scale(145), y, COLOR_WING, "Wing");
-        y += UI.scale(18);
+        y += btnTunnelLeft.sz.y + 30;
 
-        // === 5. PREVIEW GRID (centered) ===
+        // === 4. PREVIEW with border (left) and LEGEND (right) ===
+        add(new Label("Preview:"), new Coord(leftMargin, y));
+        y += 25; // Space between label and preview
+
         previewGrid = new PreviewGrid();
-        int previewX = (windowWidth - previewGrid.sz.x) / 2;
-        add(previewGrid, new Coord(previewX, y));
-        y += previewGrid.sz.y + UI.scale(15);
+        add(previewGrid, new Coord(leftMargin, y));
 
-        // === BUTTONS (centered) ===
-        int btnWidth = UI.scale(100);
-        int totalBtnWidth = btnWidth * 2 + UI.scale(20);
-        int btnStartX = (windowWidth - totalBtnWidth) / 2;
+        // Legend aligned to bottom of preview
+        int legendX = leftMargin + previewGrid.sz.x + 25;
+        int previewBottom = y + previewGrid.sz.y;
+        int legendItemHeight = 22;
+        addColoredLegend(legendX, previewBottom - 3 * legendItemHeight, COLOR_SUPPORT, "Support");
+        addColoredLegend(legendX, previewBottom - 2 * legendItemHeight, COLOR_TUNNEL, "Tunnel");
+        addColoredLegend(legendX, previewBottom - legendItemHeight, COLOR_WING, "Wing");
 
+        y += previewGrid.sz.y + 25;
+
+        // === 5. BUTTONS (left aligned) ===
+        int btnWidth = 140;
         Button confirmButton = new Button(btnWidth, "Start") {
             @Override
             public void click() { confirm(); }
         };
-        add(confirmButton, new Coord(btnStartX, y));
+        add(confirmButton, new Coord(leftMargin, y));
 
         Button cancelButton = new Button(btnWidth, "Cancel") {
             @Override
             public void click() { cancel(); }
         };
-        add(cancelButton, new Coord(btnStartX + btnWidth + UI.scale(20), y));
+        add(cancelButton, new Coord(leftMargin + btnWidth + 15, y));
 
         // Initialize state
         selectDirection(Direction.NORTH);
-        updateTunnelSideButtons();
-        updateWingSideButtons();
-        updateWingButtons();
         updatePreview();
     }
 
+    // Widget to display support type icon loaded from game resources
+    private class SupportIconWidget extends Widget {
+        private Tex icon = null;
+        private SupportType currentType;
+        private boolean showBorder;
+
+        public SupportIconWidget(SupportType type, boolean showBorder) {
+            super(new Coord(48, 48));
+            this.currentType = type;
+            this.showBorder = showBorder;
+            loadIcon();
+        }
+
+        private void loadIcon() {
+            try {
+                Resource res = Resource.remote().loadwait(currentType.paginaPath);
+                if (res != null) {
+                    Resource.Image img = res.layer(Resource.imgc);
+                    if (img != null) {
+                        icon = img.tex();
+                    }
+                }
+            } catch (Exception e) {
+                icon = null;
+            }
+        }
+
+        public void updateIcon(SupportType type) {
+            this.currentType = type;
+            loadIcon();
+        }
+
+        @Override
+        public void draw(GOut g) {
+            if (showBorder) {
+                // Draw border (2 pixel thick)
+                g.chcolor(COLOR_PREVIEW_BORDER);
+                g.frect(Coord.z, new Coord(sz.x, 2)); // top
+                g.frect(Coord.z, new Coord(2, sz.y)); // left
+                g.frect(new Coord(sz.x - 2, 0), new Coord(2, sz.y)); // right
+                g.frect(new Coord(0, sz.y - 2), new Coord(sz.x, 2)); // bottom
+                g.chcolor();
+            }
+
+            if (icon != null) {
+                Coord iconSz = icon.sz();
+                Coord pos = sz.sub(iconSz).div(2);
+                g.image(icon, pos);
+            }
+        }
+    }
+
     private void addColoredLegend(int x, int y, Color color, String text) {
-        // Add a colored widget for the legend
-        Widget colorBox = new Widget(new Coord(UI.scale(12), UI.scale(12))) {
+        Widget colorBox = new Widget(new Coord(UI.scale(14), UI.scale(14))) {
             @Override
             public void draw(GOut g) {
                 g.chcolor(color);
@@ -376,7 +473,7 @@ public class TunnelingDialog extends Window {
             }
         };
         add(colorBox, new Coord(x, y));
-        add(new Label(text), new Coord(x + UI.scale(15), y));
+        add(new Label(text), new Coord(x + UI.scale(18), y));
     }
 
     private void selectDirection(Direction dir) {
@@ -392,10 +489,6 @@ public class TunnelingDialog extends Window {
         wingEast = false;
         wingWest = false;
 
-        updateDirectionButtons();
-        updateTunnelSideButtons();
-        updateWingSideButtons();
-        updateWingButtons();
         updatePreview();
     }
 
@@ -403,7 +496,6 @@ public class TunnelingDialog extends Window {
         TunnelSide[] sides = selectedDirection.isVertical() ? VERTICAL_TUNNEL_SIDES : HORIZONTAL_TUNNEL_SIDES;
         if (index >= 0 && index < sides.length) {
             selectedTunnelSide = sides[index];
-            updateTunnelSideButtons();
             updatePreview();
         }
     }
@@ -412,126 +504,80 @@ public class TunnelingDialog extends Window {
         TunnelSide[] sides = selectedDirection.isVertical() ? VERTICAL_WING_SIDES : HORIZONTAL_WING_SIDES;
         if (index >= 0 && index < sides.length) {
             selectedWingSide = sides[index];
-            updateWingSideButtons();
             updatePreview();
         }
     }
 
-    private void updateDirectionButtons() {
-        if (btnDirN == null) return;
-        updateButtonHighlight(btnDirN, selectedDirection == Direction.NORTH);
-        updateButtonHighlight(btnDirS, selectedDirection == Direction.SOUTH);
-        updateButtonHighlight(btnDirE, selectedDirection == Direction.EAST);
-        updateButtonHighlight(btnDirW, selectedDirection == Direction.WEST);
-    }
-
-    private void updateButtonHighlight(Button btn, boolean selected) {
-        if (btn == null || btn.text == null) return;
-        String base = btn.text.text.replace("[", "").replace("]", "");
-        btn.change(selected ? "[" + base + "]" : base);
-    }
-
-    private void updateTunnelSideButtons() {
-        if (btnTunnelLeft == null) return;
-        TunnelSide[] sides = selectedDirection.isVertical() ? VERTICAL_TUNNEL_SIDES : HORIZONTAL_TUNNEL_SIDES;
-        btnTunnelLeft.change(sides[0].name.substring(0, 1));
-        btnTunnelRight.change(sides[1].name.substring(0, 1));
-
-        updateButtonHighlight(btnTunnelLeft, selectedTunnelSide == sides[0]);
-        updateButtonHighlight(btnTunnelRight, selectedTunnelSide == sides[1]);
-
-        tunnelSideLabel.settext("(" + sides[0].name + "/" + sides[1].name + ")");
-    }
-
-    private void updateWingSideButtons() {
-        if (btnWingSideA == null) return;
-        TunnelSide[] sides = selectedDirection.isVertical() ? VERTICAL_WING_SIDES : HORIZONTAL_WING_SIDES;
-        btnWingSideA.change(sides[0].name.substring(0, 1));
-        btnWingSideB.change(sides[1].name.substring(0, 1));
-
-        updateButtonHighlight(btnWingSideA, selectedWingSide == sides[0]);
-        updateButtonHighlight(btnWingSideB, selectedWingSide == sides[1]);
-    }
-
-    private void updateWingButtons() {
-        if (btnWingN == null) return;
-        boolean isVertical = selectedDirection.isVertical();
-
-        btnWingN.show(!isVertical);
-        btnWingS.show(!isVertical);
-        btnWingE.show(isVertical);
-        btnWingW.show(isVertical);
-
-        if (isVertical) {
-            updateButtonHighlight(btnWingE, wingEast);
-            updateButtonHighlight(btnWingW, wingWest);
-        } else {
-            updateButtonHighlight(btnWingN, wingNorth);
-            updateButtonHighlight(btnWingS, wingSouth);
+    private void updatePreview() {
+        // PreviewGrid reads state directly, just trigger redraw
+        if (previewGrid != null) {
+            previewGrid.redraw();
         }
     }
 
-    private void updatePreview() {
-        // PreviewGrid reads state directly
-    }
-
-    // Custom widget for visual grid preview - larger size showing actual proportions
+    // Custom widget for visual grid preview
     private class PreviewGrid extends Widget {
-        private static final int CELL_SIZE = 8;
-        private static final int GRID_SIZE = 19; // 19x19 grid
+        private static final int CELL_SIZE = 10;
+        private static final int GRID_SIZE = 19;
+        private static final int BORDER_WIDTH = 4;
 
         public PreviewGrid() {
-            super(new Coord(CELL_SIZE * GRID_SIZE, CELL_SIZE * GRID_SIZE));
+            super(new Coord(CELL_SIZE * GRID_SIZE + BORDER_WIDTH * 2, CELL_SIZE * GRID_SIZE + BORDER_WIDTH * 2));
         }
 
         @Override
         public void draw(GOut g) {
-            // Fill background
-            g.chcolor(COLOR_BG);
+            // Draw border
+            g.chcolor(COLOR_PREVIEW_BORDER);
             g.frect(Coord.z, sz);
+
+            // Draw background inside border
+            g.chcolor(COLOR_BG);
+            g.frect(new Coord(BORDER_WIDTH, BORDER_WIDTH),
+                    new Coord(CELL_SIZE * GRID_SIZE, CELL_SIZE * GRID_SIZE));
+
+            // Offset all drawing by border width
+            Coord offset = new Coord(BORDER_WIDTH, BORDER_WIDTH);
 
             // Draw grid lines
             g.chcolor(COLOR_GRID);
             for (int i = 0; i <= GRID_SIZE; i++) {
-                g.line(new Coord(i * CELL_SIZE, 0), new Coord(i * CELL_SIZE, sz.y), 1);
-                g.line(new Coord(0, i * CELL_SIZE), new Coord(sz.x, i * CELL_SIZE), 1);
+                g.line(offset.add(i * CELL_SIZE, 0), offset.add(i * CELL_SIZE, GRID_SIZE * CELL_SIZE), 1);
+                g.line(offset.add(0, i * CELL_SIZE), offset.add(GRID_SIZE * CELL_SIZE, i * CELL_SIZE), 1);
             }
 
-            int center = GRID_SIZE / 2; // Center cell (10 for 21x21)
+            int center = GRID_SIZE / 2;
             int radius = selectedSupportType.getTileRadius();
 
-            boolean isVertical = selectedDirection.isVertical();
-
-            if (isVertical) {
-                drawVerticalPreview(g, center, radius);
+            if (selectedDirection.isVertical()) {
+                drawVerticalPreview(g, offset, center, radius);
             } else {
-                drawHorizontalPreview(g, center, radius);
+                drawHorizontalPreview(g, offset, center, radius);
             }
 
             g.chcolor();
         }
 
-        private void drawVerticalPreview(GOut g, int center, int radius) {
+        private void drawVerticalPreview(GOut g, Coord offset, int center, int radius) {
             boolean tunnelEast = (selectedTunnelSide == TunnelSide.EAST);
             int tunnelX = tunnelEast ? center + 1 : center - 1;
             int wingYOffset = (selectedWingSide == TunnelSide.NORTH) ? -1 : 1;
 
-            // Support positions (two supports, spaced by radius)
             int support1Y = center - radius / 2;
             int support2Y = center + radius / 2;
 
             // Draw supports
             g.chcolor(COLOR_SUPPORT);
-            fillCell(g, center, support1Y);
-            fillCell(g, center, support2Y);
+            fillCell(g, offset, center, support1Y);
+            fillCell(g, offset, center, support2Y);
 
-            // Draw tunnel (vertical line)
+            // Draw tunnel
             g.chcolor(COLOR_TUNNEL);
             for (int y = support1Y; y <= support2Y; y++) {
-                fillCell(g, tunnelX, y);
+                fillCell(g, offset, tunnelX, y);
             }
 
-            // Draw wings at each support
+            // Draw wings
             g.chcolor(COLOR_WING);
             int[] supportYs = {support1Y, support2Y};
             for (int supY : supportYs) {
@@ -540,45 +586,44 @@ public class TunnelingDialog extends Window {
 
                 if (wingWest) {
                     for (int x = tunnelX; x >= Math.max(0, center - radius); x--) {
-                        fillCell(g, x, wingY);
+                        fillCell(g, offset, x, wingY);
                     }
                 }
                 if (wingEast) {
                     for (int x = tunnelX; x <= Math.min(GRID_SIZE - 1, center + radius); x++) {
-                        fillCell(g, x, wingY);
+                        fillCell(g, offset, x, wingY);
                     }
                 }
             }
 
-            // Draw direction arrow
+            // Draw arrow
             g.chcolor(COLOR_ARROW);
             int arrowY = (selectedDirection == Direction.NORTH) ? support1Y - 2 : support2Y + 2;
             if (arrowY >= 0 && arrowY < GRID_SIZE) {
-                drawArrow(g, tunnelX, arrowY, selectedDirection);
+                drawArrow(g, offset, tunnelX, arrowY, selectedDirection);
             }
         }
 
-        private void drawHorizontalPreview(GOut g, int center, int radius) {
+        private void drawHorizontalPreview(GOut g, Coord offset, int center, int radius) {
             boolean tunnelSouth = (selectedTunnelSide == TunnelSide.SOUTH);
             int tunnelY = tunnelSouth ? center + 1 : center - 1;
             int wingXOffset = (selectedWingSide == TunnelSide.WEST) ? -1 : 1;
 
-            // Support positions (two supports, spaced by radius)
             int support1X = center - radius / 2;
             int support2X = center + radius / 2;
 
             // Draw supports
             g.chcolor(COLOR_SUPPORT);
-            fillCell(g, support1X, center);
-            fillCell(g, support2X, center);
+            fillCell(g, offset, support1X, center);
+            fillCell(g, offset, support2X, center);
 
-            // Draw tunnel (horizontal line)
+            // Draw tunnel
             g.chcolor(COLOR_TUNNEL);
             for (int x = support1X; x <= support2X; x++) {
-                fillCell(g, x, tunnelY);
+                fillCell(g, offset, x, tunnelY);
             }
 
-            // Draw wings at each support
+            // Draw wings
             g.chcolor(COLOR_WING);
             int[] supportXs = {support1X, support2X};
             for (int supX : supportXs) {
@@ -587,32 +632,32 @@ public class TunnelingDialog extends Window {
 
                 if (wingNorth) {
                     for (int y = tunnelY; y >= Math.max(0, center - radius); y--) {
-                        fillCell(g, wingX, y);
+                        fillCell(g, offset, wingX, y);
                     }
                 }
                 if (wingSouth) {
                     for (int y = tunnelY; y <= Math.min(GRID_SIZE - 1, center + radius); y++) {
-                        fillCell(g, wingX, y);
+                        fillCell(g, offset, wingX, y);
                     }
                 }
             }
 
-            // Draw direction arrow
+            // Draw arrow
             g.chcolor(COLOR_ARROW);
             int arrowX = (selectedDirection == Direction.EAST) ? support2X + 2 : support1X - 2;
             if (arrowX >= 0 && arrowX < GRID_SIZE) {
-                drawArrow(g, arrowX, tunnelY, selectedDirection);
+                drawArrow(g, offset, arrowX, tunnelY, selectedDirection);
             }
         }
 
-        private void fillCell(GOut g, int gridX, int gridY) {
-            g.frect(new Coord(gridX * CELL_SIZE + 1, gridY * CELL_SIZE + 1),
+        private void fillCell(GOut g, Coord offset, int gridX, int gridY) {
+            g.frect(offset.add(gridX * CELL_SIZE + 1, gridY * CELL_SIZE + 1),
                     new Coord(CELL_SIZE - 1, CELL_SIZE - 1));
         }
 
-        private void drawArrow(GOut g, int gridX, int gridY, Direction dir) {
-            int cx = gridX * CELL_SIZE + CELL_SIZE / 2;
-            int cy = gridY * CELL_SIZE + CELL_SIZE / 2;
+        private void drawArrow(GOut g, Coord offset, int gridX, int gridY, Direction dir) {
+            int cx = offset.x + gridX * CELL_SIZE + CELL_SIZE / 2;
+            int cy = offset.y + gridY * CELL_SIZE + CELL_SIZE / 2;
             int size = CELL_SIZE / 2;
 
             Coord tip, left, right;
@@ -644,6 +689,10 @@ public class TunnelingDialog extends Window {
 
             g.line(tip, left, 2);
             g.line(tip, right, 2);
+        }
+
+        public void redraw() {
+            // Widget will be redrawn on next frame
         }
     }
 
