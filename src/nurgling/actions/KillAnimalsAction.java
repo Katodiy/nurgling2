@@ -3,8 +3,8 @@ package nurgling.actions;
 import haven.Gob;
 import haven.res.ui.croster.CattleId;
 import haven.res.ui.croster.Entry;
-import haven.res.ui.croster.RosterWindow;
-import nurgling.*;
+import nurgling.NGameUI;
+import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tasks.AnimalIsDead;
@@ -86,6 +86,9 @@ public class KillAnimalsAction<C extends Entry> implements Action {
         } else {
             forkill.addAll(targets);
         }
+
+        new Equip(new NAlias("Butcher's cleaver"), new NAlias("Traveller's Sack", "Wanderer's Bindle")).run(gui);
+        new Equip(new NAlias("Traveller's Sack", "Wanderer's Bindle"), new NAlias("Butcher's cleaver")).run(gui);
 
         // Mark animals for kill in roster (red highlight)
         for(Gob gob : forkill) {

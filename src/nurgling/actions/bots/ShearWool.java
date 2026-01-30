@@ -2,17 +2,14 @@ package nurgling.actions.bots;
 
 import haven.Coord;
 import haven.Gob;
-import haven.MenuSearch;
 import nurgling.NFlowerMenu;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
-import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tasks.NFlowerMenuIsClosed;
 import nurgling.tasks.WaitCollectState;
 import nurgling.tasks.WaitPose;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
@@ -34,6 +31,9 @@ public class ShearWool implements Action {
     public Results run(NGameUI gui) throws InterruptedException {
         NContext context = new NContext(gui);
         ArrayList<Gob> gobs = Finder.findGobs(context.getSpecArea(spec), type);
+
+        new Equip(new NAlias("Shears"), new NAlias("Traveller's Sack", "Wanderer's Bindle")).run(gui);
+        new Equip(new NAlias("Traveller's Sack", "Wanderer's Bindle"), new NAlias("Shears")).run(gui);
 
         boolean needRestart = true;
         while (needRestart) {
