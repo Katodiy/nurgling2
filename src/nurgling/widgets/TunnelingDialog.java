@@ -118,12 +118,16 @@ public class TunnelingDialog extends Window {
     // UI Elements
     private IButton btnDirN, btnDirS, btnDirE, btnDirW;
     private IButton btnTunnelLeft, btnTunnelRight;
+    private IButton btnTunnelUp, btnTunnelDown;
     private IButton btnWingLeft, btnWingRight;
     private IButton btnWingSideUp, btnWingSideDown;
+    private IButton btnWingSideLeft, btnWingSideRight;
     private Dropbox<SupportType> supportTypeDropbox;
     private PreviewGrid previewGrid;
     private SupportIconWidget supportIconWidget;
     private Widget columnIconWidget;
+    private Label tunnelSideOptionsLabel;
+    private Label wingSideOptionsLabel;
 
     private static final Direction[] DIRECTIONS = Direction.values();
     private static final SupportType[] SUPPORT_TYPES = SupportType.values();
@@ -334,10 +338,13 @@ public class TunnelingDialog extends Window {
         y = compassCenterY + windroseSize.y / 2 + btnDirS.sz.y + btnGap + 25;
 
         // === 3. TUNNEL SIDE and WING SIDE ===
-        // Both on same line: "Tunnel Side: (East/West)" [←] [→]    "Wing Side:" [↑] [↓]
+        // Buttons swap based on direction:
+        // Vertical (N/S): Tunnel=←→, WingSide=↑↓
+        // Horizontal (E/W): Tunnel=↑↓, WingSide=←→
 
-        int arrowBtnGap = 10; // Gap between arrow buttons (same for both)
+        int arrowBtnGap = 10;
 
+        // Tunnel Side buttons - both sets (left/right for vertical, up/down for horizontal)
         btnTunnelLeft = new IButton(BTN_LEFT[0], BTN_LEFT[1], BTN_LEFT[2]) {
             @Override
             public void click() { selectTunnelSide(0); }
@@ -346,11 +353,29 @@ public class TunnelingDialog extends Window {
             @Override
             public void click() { selectTunnelSide(1); }
         };
+        btnTunnelUp = new IButton(BTN_UP[0], BTN_UP[1], BTN_UP[2]) {
+            @Override
+            public void click() { selectTunnelSide(0); }
+        };
+        btnTunnelDown = new IButton(BTN_DOWN[0], BTN_DOWN[1], BTN_DOWN[2]) {
+            @Override
+            public void click() { selectTunnelSide(1); }
+        };
+
+        // Wing Side buttons - both sets (up/down for vertical, left/right for horizontal)
         btnWingSideUp = new IButton(BTN_UP[0], BTN_UP[1], BTN_UP[2]) {
             @Override
             public void click() { selectWingSide(0); }
         };
         btnWingSideDown = new IButton(BTN_DOWN[0], BTN_DOWN[1], BTN_DOWN[2]) {
+            @Override
+            public void click() { selectWingSide(1); }
+        };
+        btnWingSideLeft = new IButton(BTN_LEFT[0], BTN_LEFT[1], BTN_LEFT[2]) {
+            @Override
+            public void click() { selectWingSide(0); }
+        };
+        btnWingSideRight = new IButton(BTN_RIGHT[0], BTN_RIGHT[1], BTN_RIGHT[2]) {
             @Override
             public void click() { selectWingSide(1); }
         };
@@ -360,18 +385,30 @@ public class TunnelingDialog extends Window {
         int tunnelBtnStartX = leftMargin + tunnelLabelWidth + labelToAssemblyGap;
 
         add(new Label("Tunnel Side:"), new Coord(leftMargin, y));
-        add(new Label("(East/West)"), new Coord(leftMargin, y + 16));
+        tunnelSideOptionsLabel = new Label("(East/West)");
+        add(tunnelSideOptionsLabel, new Coord(leftMargin, y + 16));
         add(btnTunnelLeft, new Coord(tunnelBtnStartX, y + 5));
         add(btnTunnelRight, new Coord(tunnelBtnStartX + btnTunnelLeft.sz.x + arrowBtnGap, y + 5));
+        add(btnTunnelUp, new Coord(tunnelBtnStartX, y + 5));
+        add(btnTunnelDown, new Coord(tunnelBtnStartX + btnTunnelUp.sz.x + arrowBtnGap, y + 5));
+        // Initially hide horizontal tunnel buttons
+        btnTunnelUp.hide();
+        btnTunnelDown.hide();
 
         // Wing Side: label on two lines, then buttons (aligned with Wings section)
         int wingSideLabelX = wingsLabelX;
         int wingSideLabelWidth = 75;
         int wingSideBtnStartX = wingSideLabelX + wingSideLabelWidth + labelToAssemblyGap;
         add(new Label("Wing Side:"), new Coord(wingSideLabelX, y));
-        add(new Label("(North/South)"), new Coord(wingSideLabelX, y + 16));
+        wingSideOptionsLabel = new Label("(North/South)");
+        add(wingSideOptionsLabel, new Coord(wingSideLabelX, y + 16));
         add(btnWingSideUp, new Coord(wingSideBtnStartX, y + 5));
         add(btnWingSideDown, new Coord(wingSideBtnStartX + btnWingSideUp.sz.x + arrowBtnGap, y + 5));
+        add(btnWingSideLeft, new Coord(wingSideBtnStartX, y + 5));
+        add(btnWingSideRight, new Coord(wingSideBtnStartX + btnWingSideLeft.sz.x + arrowBtnGap, y + 5));
+        // Initially hide horizontal wing side buttons
+        btnWingSideLeft.hide();
+        btnWingSideRight.hide();
 
         y += btnTunnelLeft.sz.y + 30;
 
@@ -488,6 +525,39 @@ public class TunnelingDialog extends Window {
         wingSouth = false;
         wingEast = false;
         wingWest = false;
+
+        // Update dynamic labels based on direction
+        if (tunnelSideOptionsLabel != null) {
+            tunnelSideOptionsLabel.settext(dir.isVertical() ? "(East/West)" : "(North/South)");
+        }
+        if (wingSideOptionsLabel != null) {
+            wingSideOptionsLabel.settext(dir.isVertical() ? "(North/South)" : "(East/West)");
+        }
+
+        // Update button visibility based on direction
+        // Vertical direction: Tunnel uses ←→, WingSide uses ↑↓
+        // Horizontal direction: Tunnel uses ↑↓, WingSide uses ←→
+        if (btnTunnelLeft != null) {
+            if (dir.isVertical()) {
+                btnTunnelLeft.show();
+                btnTunnelRight.show();
+                btnTunnelUp.hide();
+                btnTunnelDown.hide();
+                btnWingSideUp.show();
+                btnWingSideDown.show();
+                btnWingSideLeft.hide();
+                btnWingSideRight.hide();
+            } else {
+                btnTunnelLeft.hide();
+                btnTunnelRight.hide();
+                btnTunnelUp.show();
+                btnTunnelDown.show();
+                btnWingSideUp.hide();
+                btnWingSideDown.hide();
+                btnWingSideLeft.show();
+                btnWingSideRight.show();
+            }
+        }
 
         updatePreview();
     }
