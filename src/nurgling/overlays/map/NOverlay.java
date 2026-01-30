@@ -41,6 +41,7 @@ public class NOverlay extends MapView.MapRaster
             base.tick();
             outl.tick();
         }
+        requpdate2 = false;
     }
 
     public void added(RenderTree.Slot slot) {
