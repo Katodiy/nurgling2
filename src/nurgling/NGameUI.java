@@ -67,7 +67,7 @@ public class NGameUI extends GameUI
     public TerrainSearchWindow terrainSearchWindow = null;
     public StudyDeskPlannerWidget studyDeskPlanner = null;
     public NDraggableWidget studyReportWidget = null;
-    // public DbStatsOverlay dbStatsOverlay = null; // TODO: class not found
+     public DbStatsOverlay dbStatsOverlay = null;
     
     // Local storage for ring settings
     public IconRingConfig iconRingConfig;
@@ -204,9 +204,8 @@ public class NGameUI extends GameUI
         add(localizedResourceTimersWindow = new LocalizedResourceTimersWindow(localizedResourceTimerService), new Coord(100, 100));
         
         // Database debug overlay - shows in top-right corner
-        // TODO: DbStatsOverlay class not found
-        // add(dbStatsOverlay = new DbStatsOverlay(), new Coord(sz.x - 290, 10));
-        // dbStatsOverlay.hide(); // Hidden by default, toggle with F11 or settings
+         add(dbStatsOverlay = new DbStatsOverlay(), new Coord(sz.x - 290, 10));
+         dbStatsOverlay.hide(); // Hidden by default, toggle with F11 or settings
 
         // Profile-aware components are now initialized in attached() before super.attached()
     }
@@ -1092,18 +1091,17 @@ public class NGameUI extends GameUI
         nurgling.tasks.WaitKeyPress.setLastKeyPressed(ev.code);
         
         // F11 - Toggle DB stats overlay
-        // TODO: DbStatsOverlay class not found
-        // if (ev.code == KeyEvent.VK_F11 && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
-        //     if (dbStatsOverlay != null) {
-        //         if (dbStatsOverlay.visible()) {
-        //             dbStatsOverlay.hide();
-        //         } else {
-        //             dbStatsOverlay.show();
-        //             dbStatsOverlay.raise();
-        //         }
-        //     }
-        //     return true;
-        // }
+         if (ev.code == KeyEvent.VK_F11 && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+             if (dbStatsOverlay != null) {
+                 if (dbStatsOverlay.visible()) {
+                     dbStatsOverlay.hide();
+                 } else {
+                     dbStatsOverlay.show();
+                     dbStatsOverlay.raise();
+                 }
+             }
+             return true;
+         }
         
         return super.keydown(ev);
     }
