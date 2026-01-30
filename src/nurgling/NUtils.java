@@ -40,6 +40,17 @@ public class NUtils
             System.err.println("[NUtils] Failed to load NCaveTile: " + e.getMessage());
         }
     }
+    
+    // Static FPS value updated from render loop
+    private static volatile int currentFps = 0;
+    
+    public static int getFps() {
+        return currentFps;
+    }
+    
+    public static void setFps(int fps) {
+        currentFps = fps;
+    }
 
     public static long getTickId()
     {

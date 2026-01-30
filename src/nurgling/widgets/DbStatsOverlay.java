@@ -58,20 +58,31 @@ public class DbStatsOverlay extends Widget {
             addLine("=== DEBUG OVERLAY ===", HEADER_COLOR);
             addLine(String.format("FPS: %d", fps), fps < 30 ? WARN_COLOR : TEXT_COLOR);
             
-            // === ACTIVE TASKS ===
+            // === ACTIVE BOTS (from wheel) ===
+            if (NUtils.getGameUI() != null && NUtils.getGameUI().biw != null) {
+                BotsInterruptWidget biw = NUtils.getGameUI().biw;
+                int botCount = biw.obs.size();
+                addLine(String.format("--- BOTS: %d ---", botCount), HEADER_COLOR);
+                
+                synchronized (biw.obs) {
+                    for (BotsInterruptWidget.Gear gear : biw.obs) {
+                        String actionInfo = getBotActionInfo(gear.t);
+                        addLine("  " + actionInfo, TASK_COLOR);
+                    }
+                }
+            }
+            
+            // === NTASKS (waiting tasks) ===
             if (NUtils.getUI() != null && NUtils.getUI().core != null) {
                 String[] taskNames = NUtils.getUI().core.getActiveTaskNames();
-                int taskCount = taskNames.length;
-                addLine(String.format("--- TASKS: %d ---", taskCount), HEADER_COLOR);
-                
-                if (taskCount > 0) {
-                    // Show up to 5 tasks
-                    int shown = Math.min(taskCount, 5);
+                if (taskNames.length > 0) {
+                    addLine(String.format("--- NTASKS: %d ---", taskNames.length), HEADER_COLOR);
+                    int shown = Math.min(taskNames.length, 5);
                     for (int i = 0; i < shown; i++) {
                         addLine("  " + taskNames[i], TASK_COLOR);
                     }
-                    if (taskCount > 5) {
-                        addLine(String.format("  ... +%d more", taskCount - 5), TASK_COLOR);
+                    if (taskNames.length > 5) {
+                        addLine(String.format("  +%d more...", taskNames.length - 5), TASK_COLOR);
                     }
                 }
             }
@@ -110,22 +121,32 @@ public class DbStatsOverlay extends Widget {
     }
     
     private int getFps() {
-        try {
-            if (ui != null && ui.root != null) {
-                // Get FPS from GLPanel via reflection or public field
-                Widget root = ui.root;
-                if (root.parent instanceof GLPanel) {
-                    GLPanel panel = (GLPanel) root.parent;
-                    // fps is protected, try to access it
-                    java.lang.reflect.Field fpsField = GLPanel.class.getDeclaredField("fps");
-                    fpsField.setAccessible(true);
-                    return fpsField.getInt(panel);
+        return NUtils.getFps();
+    }
+    
+    /**
+     * Get action info from bot thread (similar to gear tooltip)
+     */
+    private String getBotActionInfo(Thread t) {
+        if (t == null) return "?";
+        
+        String threadName = t.getName();
+        
+        for (StackTraceElement el : t.getStackTrace()) {
+            String className = el.getClassName();
+            if (className.contains("actions.")) {
+                // Extract class name, method and line number
+                String simpleClass = el.getClassName();
+                // Remove package prefix
+                int lastDot = simpleClass.lastIndexOf('.');
+                if (lastDot > 0) {
+                    simpleClass = simpleClass.substring(lastDot + 1);
                 }
+                return String.format("%s.%s:%d", simpleClass, el.getMethodName(), el.getLineNumber());
             }
-        } catch (Exception e) {
-            // Fallback
         }
-        return -1;
+        
+        return threadName;
     }
     
     @Override

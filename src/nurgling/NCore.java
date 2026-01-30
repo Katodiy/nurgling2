@@ -159,7 +159,25 @@ public class NCore extends Widget
                 return new String[0];
             }
             return tasks.stream()
-                .map(t -> t.getClass().getSimpleName())
+                .map(t -> {
+                    String name = t.getClass().getName();
+                    // Shorten package names
+                    name = name.replace("nurgling.actions.", "");
+                    name = name.replace("nurgling.tasks.", "");
+                    // For anonymous classes, show parent class
+                    if (name.contains("$")) {
+                        int dollarIdx = name.indexOf('$');
+                        String parent = name.substring(0, dollarIdx);
+                        String suffix = name.substring(dollarIdx);
+                        // Get just class name from parent
+                        int lastDot = parent.lastIndexOf('.');
+                        if (lastDot > 0) {
+                            parent = parent.substring(lastDot + 1);
+                        }
+                        name = parent + suffix;
+                    }
+                    return name;
+                })
                 .toArray(String[]::new);
         }
     }
