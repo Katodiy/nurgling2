@@ -38,11 +38,12 @@ public class TunnelingBot implements Action {
         int[] tunnelSideRef = new int[]{0};
         int[] supportTypeRef = new int[]{0};
         int[] wingOptionRef = new int[]{0};
+        int[] wingSideRef = new int[]{0};
         boolean[] confirmRef = new boolean[]{false};
         boolean[] cancelRef = new boolean[]{false};
 
         TunnelingDialog dialog = new TunnelingDialog();
-        dialog.setReferences(directionRef, tunnelSideRef, supportTypeRef, wingOptionRef, confirmRef, cancelRef);
+        dialog.setReferences(directionRef, tunnelSideRef, supportTypeRef, wingOptionRef, wingSideRef, confirmRef, cancelRef);
         gui.add(dialog, UI.scale(200, 200));
 
         // Wait for user input
@@ -61,9 +62,10 @@ public class TunnelingBot implements Action {
         TunnelSide tunnelSide = TunnelingDialog.getTunnelSide(directionRef[0], tunnelSideRef[0]);
         SupportType supportType = TunnelingDialog.getSupportType(supportTypeRef[0]);
         WingOption wingOption = TunnelingDialog.getWingOption(directionRef[0], wingOptionRef[0]);
+        TunnelSide wingSide = TunnelingDialog.getWingSide(directionRef[0], wingSideRef[0]);
 
         gui.msg("Tunneling: " + direction.name + ", Side: " + tunnelSide.name +
-                ", Support: " + supportType.menuName + ", Wings: " + wingOption.name);
+                ", Support: " + supportType.menuName + ", Wings: " + wingOption.name + ", Wing Side: " + wingSide.name);
 
         // Find nearest support of ANY type as starting point
         Gob startSupport = findNearestSupport(gui);
@@ -118,7 +120,7 @@ public class TunnelingBot implements Action {
             handleBumlings(gui);
 
             // Dig wings based on wing option
-            Results wingResult = mineWings(gui, nextSupportPos, direction, wingOption, supportType.radius);
+            Results wingResult = mineWings(gui, nextSupportPos, direction, wingOption, wingSide, supportType.radius);
             if (!wingResult.IsSuccess()) {
                 gui.msg("Wing mining had issues, continuing anyway");
                 // Continue anyway, wings are optional
@@ -460,17 +462,23 @@ public class TunnelingBot implements Action {
 
     /**
      * Mine wings based on the wing option selected by user.
+     * Wings are offset from the support position by wingSide, similar to how the main tunnel is offset.
      */
     private Results mineWings(NGameUI gui, Coord2d supportPos, Direction mainDirection,
-                              WingOption wingOption, int supportRadius)
+                              WingOption wingOption, TunnelSide wingSide, int supportRadius)
             throws InterruptedException {
 
         if (wingOption == WingOption.NONE) {
             return Results.SUCCESS();
         }
 
-        Coord supportTile = supportPos.div(tilesz).floor();
-        int wingTiles = (supportRadius / 11) - 1;
+        // Calculate wing offset (same concept as tunnel offset)
+        Coord2d wingOffset = new Coord2d(wingSide.dx * TILE_SIZE, wingSide.dy * TILE_SIZE);
+        Coord2d wingStartPos = supportPos.add(wingOffset);
+        Coord wingStartTile = wingStartPos.div(tilesz).floor();
+
+        // Full radius in tiles (no safety margin for wings)
+        int wingTiles = supportRadius / 11;
 
         // Determine which directions to mine based on wing option
         boolean mineEast = false, mineWest = false, mineNorth = false, mineSouth = false;
@@ -500,11 +508,11 @@ public class TunnelingBot implements Action {
                 break;
         }
 
-        // Mine wings in each enabled direction
+        // Mine wings in each enabled direction, starting from the offset position
         if (mineEast) {
             gui.msg("Mining wing: East");
-            for (int i = 1; i <= wingTiles; i++) {
-                Coord wingTile = new Coord(supportTile.x + i, supportTile.y);
+            for (int i = 0; i <= wingTiles; i++) {
+                Coord wingTile = new Coord(wingStartTile.x + i, wingStartTile.y);
                 Results result = mineTileIfNeeded(gui, wingTile);
                 if (!result.IsSuccess()) {
                     break; // Stop this wing but continue with others
@@ -514,8 +522,8 @@ public class TunnelingBot implements Action {
 
         if (mineWest) {
             gui.msg("Mining wing: West");
-            for (int i = 1; i <= wingTiles; i++) {
-                Coord wingTile = new Coord(supportTile.x - i, supportTile.y);
+            for (int i = 0; i <= wingTiles; i++) {
+                Coord wingTile = new Coord(wingStartTile.x - i, wingStartTile.y);
                 Results result = mineTileIfNeeded(gui, wingTile);
                 if (!result.IsSuccess()) {
                     break;
@@ -525,8 +533,8 @@ public class TunnelingBot implements Action {
 
         if (mineNorth) {
             gui.msg("Mining wing: North");
-            for (int i = 1; i <= wingTiles; i++) {
-                Coord wingTile = new Coord(supportTile.x, supportTile.y - i);
+            for (int i = 0; i <= wingTiles; i++) {
+                Coord wingTile = new Coord(wingStartTile.x, wingStartTile.y - i);
                 Results result = mineTileIfNeeded(gui, wingTile);
                 if (!result.IsSuccess()) {
                     break;
@@ -536,8 +544,8 @@ public class TunnelingBot implements Action {
 
         if (mineSouth) {
             gui.msg("Mining wing: South");
-            for (int i = 1; i <= wingTiles; i++) {
-                Coord wingTile = new Coord(supportTile.x, supportTile.y + i);
+            for (int i = 0; i <= wingTiles; i++) {
+                Coord wingTile = new Coord(wingStartTile.x, wingStartTile.y + i);
                 Results result = mineTileIfNeeded(gui, wingTile);
                 if (!result.IsSuccess()) {
                     break;

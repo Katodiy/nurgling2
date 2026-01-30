@@ -92,12 +92,14 @@ public class TunnelingDialog extends Window {
     private int tunnelSideIndex = 0;
     private int supportTypeIndex = 0;
     private int wingOptionIndex = 0;
+    private int wingSideIndex = 0;
 
     // Reference arrays for communication with bot
     private int[] directionRef = null;
     private int[] tunnelSideRef = null;
     private int[] supportTypeRef = null;
     private int[] wingOptionRef = null;
+    private int[] wingSideRef = null;
     private boolean[] confirmRef = null;
     private boolean[] cancelRef = null;
 
@@ -106,10 +108,12 @@ public class TunnelingDialog extends Window {
     private Dropbox<String> tunnelSideDropbox;
     private Dropbox<SupportType> supportTypeDropbox;
     private Dropbox<String> wingOptionDropbox;
+    private Dropbox<String> wingSideDropbox;
 
     // Position for dynamic dropboxes
     private Coord tunnelSidePos;
     private Coord wingOptionPos;
+    private Coord wingSidePos;
 
     // Flag to prevent rebuilding during initialization
     private boolean initialized = false;
@@ -117,9 +121,15 @@ public class TunnelingDialog extends Window {
     private static final Direction[] DIRECTIONS = Direction.values();
     private static final SupportType[] SUPPORT_TYPES = SupportType.values();
 
-    // Tunnel side options depend on direction
+    // Tunnel side options depend on direction (perpendicular to travel direction)
     private static final TunnelSide[] VERTICAL_TUNNEL_SIDES = {TunnelSide.EAST, TunnelSide.WEST};
     private static final TunnelSide[] HORIZONTAL_TUNNEL_SIDES = {TunnelSide.NORTH, TunnelSide.SOUTH};
+
+    // Wing side options depend on direction (parallel to travel direction, perpendicular to wing direction)
+    // For N/S travel: wings go E/W, so wing offset is N or S
+    // For E/W travel: wings go N/S, so wing offset is E or W
+    private static final TunnelSide[] VERTICAL_WING_SIDES = {TunnelSide.NORTH, TunnelSide.SOUTH};
+    private static final TunnelSide[] HORIZONTAL_WING_SIDES = {TunnelSide.EAST, TunnelSide.WEST};
 
     // Wing options depend on direction
     private static final WingOption[] VERTICAL_WING_OPTIONS = {
@@ -130,7 +140,7 @@ public class TunnelingDialog extends Window {
     };
 
     public TunnelingDialog() {
-        super(UI.scale(new Coord(300, 195)), "Tunneling Bot");
+        super(UI.scale(new Coord(300, 225)), "Tunneling Bot");
         initializeWidgets();
     }
 
@@ -170,6 +180,7 @@ public class TunnelingDialog extends Window {
                 if (initialized) {
                     rebuildTunnelSideDropbox();
                     rebuildWingOptionDropbox();
+                    rebuildWingSideDropbox();
                 }
             }
 
@@ -232,9 +243,15 @@ public class TunnelingDialog extends Window {
         add(new Label("Wings:"), new Coord(col1, y + 3));
         wingOptionPos = new Coord(col2, y);
         createWingOptionDropbox();
+        y += UI.scale(28);
+
+        // Row 5: Wing side selection (which side of support the wings are offset to)
+        add(new Label("Wing Side:"), new Coord(col1, y + 3));
+        wingSidePos = new Coord(col2, y);
+        createWingSideDropbox();
         y += UI.scale(35);
 
-        // Row 5: Confirm and Cancel buttons
+        // Row 6: Confirm and Cancel buttons
         Button confirmButton = new Button(UI.scale(100), "Start") {
             @Override
             public void click() {
@@ -363,9 +380,68 @@ public class TunnelingDialog extends Window {
         createWingOptionDropbox();
     }
 
+    private void createWingSideDropbox() {
+        final TunnelSide[] sides = getCurrentWingSides();
+        int dropWidth = UI.scale(150);
+        int dropHeight = UI.scale(18);
+
+        wingSideDropbox = new Dropbox<String>(dropWidth, sides.length, dropHeight) {
+            @Override
+            protected String listitem(int i) {
+                return sides[i].name;
+            }
+
+            @Override
+            protected int listitems() {
+                return sides.length;
+            }
+
+            @Override
+            protected void drawitem(GOut g, String item, int idx) {
+                g.text(item, new Coord(3, 1));
+            }
+
+            @Override
+            public void change(String item) {
+                super.change(item);
+                for (int i = 0; i < sides.length; i++) {
+                    if (sides[i].name.equals(item)) {
+                        wingSideIndex = i;
+                        break;
+                    }
+                }
+                if (wingSideRef != null) {
+                    wingSideRef[0] = wingSideIndex;
+                }
+            }
+        };
+
+        if (wingSideIndex >= sides.length) {
+            wingSideIndex = 0;
+        }
+        wingSideDropbox.change(sides[wingSideIndex].name);
+        add(wingSideDropbox, wingSidePos);
+    }
+
+    private void rebuildWingSideDropbox() {
+        if (wingSideDropbox != null) {
+            wingSideDropbox.destroy();
+        }
+        wingSideIndex = 0;
+        if (wingSideRef != null) {
+            wingSideRef[0] = 0;
+        }
+        createWingSideDropbox();
+    }
+
     private TunnelSide[] getCurrentTunnelSides() {
         Direction dir = DIRECTIONS[directionIndex];
         return dir.isVertical() ? VERTICAL_TUNNEL_SIDES : HORIZONTAL_TUNNEL_SIDES;
+    }
+
+    private TunnelSide[] getCurrentWingSides() {
+        Direction dir = DIRECTIONS[directionIndex];
+        return dir.isVertical() ? VERTICAL_WING_SIDES : HORIZONTAL_WING_SIDES;
     }
 
     private WingOption[] getCurrentWingOptions() {
@@ -374,11 +450,12 @@ public class TunnelingDialog extends Window {
     }
 
     public void setReferences(int[] directionRef, int[] tunnelSideRef, int[] supportTypeRef,
-                              int[] wingOptionRef, boolean[] confirmRef, boolean[] cancelRef) {
+                              int[] wingOptionRef, int[] wingSideRef, boolean[] confirmRef, boolean[] cancelRef) {
         this.directionRef = directionRef;
         this.tunnelSideRef = tunnelSideRef;
         this.supportTypeRef = supportTypeRef;
         this.wingOptionRef = wingOptionRef;
+        this.wingSideRef = wingSideRef;
         this.confirmRef = confirmRef;
         this.cancelRef = cancelRef;
 
@@ -391,7 +468,7 @@ public class TunnelingDialog extends Window {
             this.supportTypeIndex = supportTypeRef[0];
             supportTypeDropbox.change(SUPPORT_TYPES[supportTypeIndex]);
         }
-        // Tunnel side and wing option are rebuilt when direction changes
+        // Tunnel side, wing option, and wing side are rebuilt when direction changes
     }
 
     private void confirm() {
@@ -457,5 +534,14 @@ public class TunnelingDialog extends Window {
             return options[wingOptionIndex];
         }
         return options[0];
+    }
+
+    public static TunnelSide getWingSide(int directionIndex, int wingSideIndex) {
+        Direction dir = getDirection(directionIndex);
+        TunnelSide[] sides = dir.isVertical() ? VERTICAL_WING_SIDES : HORIZONTAL_WING_SIDES;
+        if (wingSideIndex >= 0 && wingSideIndex < sides.length) {
+            return sides[wingSideIndex];
+        }
+        return sides[0];
     }
 }
