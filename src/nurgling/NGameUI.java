@@ -1091,17 +1091,17 @@ public class NGameUI extends GameUI
         nurgling.tasks.WaitKeyPress.setLastKeyPressed(ev.code);
         
         // F11 - Toggle DB stats overlay
-         if (ev.code == KeyEvent.VK_F11 && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
-             if (dbStatsOverlay != null) {
-                 if (dbStatsOverlay.visible()) {
-                     dbStatsOverlay.hide();
-                 } else {
-                     dbStatsOverlay.show();
-                     dbStatsOverlay.raise();
-                 }
-             }
-             return true;
-         }
+        if (ev.code == KeyEvent.VK_F11 && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+            if (dbStatsOverlay != null) {
+                if (dbStatsOverlay.visible()) {
+                    dbStatsOverlay.hide();
+                } else {
+                    dbStatsOverlay.show();
+                    dbStatsOverlay.raise();
+                }
+            }
+            return true;
+        }
         
         return super.keydown(ev);
     }
