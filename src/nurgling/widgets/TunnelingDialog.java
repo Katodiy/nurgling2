@@ -129,6 +129,14 @@ public class TunnelingDialog extends Window {
     private Label tunnelSideOptionsLabel;
     private Label wingSideOptionsLabel;
 
+    // Selection outlines
+    private SelectionFrame selDirN, selDirS, selDirE, selDirW;
+    private SelectionFrame selTunnelFirst, selTunnelSecond;
+    private SelectionFrame selWingSideFirst, selWingSideSecond;
+    private SelectionFrame selWingLeft, selWingRight;
+
+    private static final Color COLOR_SELECTION = new Color(255, 200, 50);
+
     private static final Direction[] DIRECTIONS = Direction.values();
     private static final SupportType[] SUPPORT_TYPES = SupportType.values();
 
@@ -279,11 +287,21 @@ public class TunnelingDialog extends Window {
             }
         }, new Coord(compassCenterX - windroseSize.x / 2, compassCenterY - windroseSize.y / 2));
 
-        // Direction buttons around windrose
-        add(btnDirN, new Coord(compassCenterX - btnDirN.sz.x / 2, compassCenterY - windroseSize.y / 2 - btnGap - btnDirN.sz.y));
-        add(btnDirS, new Coord(compassCenterX - btnDirS.sz.x / 2, compassCenterY + windroseSize.y / 2 + btnGap));
-        add(btnDirW, new Coord(compassCenterX - windroseSize.x / 2 - btnGap - btnDirW.sz.x, compassCenterY - btnDirW.sz.y / 2));
-        add(btnDirE, new Coord(compassCenterX + windroseSize.x / 2 + btnGap, compassCenterY - btnDirE.sz.y / 2));
+        // Direction buttons around windrose (with selection frames)
+        Coord posN = new Coord(compassCenterX - btnDirN.sz.x / 2, compassCenterY - windroseSize.y / 2 - btnGap - btnDirN.sz.y);
+        Coord posS = new Coord(compassCenterX - btnDirS.sz.x / 2, compassCenterY + windroseSize.y / 2 + btnGap);
+        Coord posW = new Coord(compassCenterX - windroseSize.x / 2 - btnGap - btnDirW.sz.x, compassCenterY - btnDirW.sz.y / 2);
+        Coord posE = new Coord(compassCenterX + windroseSize.x / 2 + btnGap, compassCenterY - btnDirE.sz.y / 2);
+
+        selDirN = addSelectionFrame(btnDirN, posN);
+        selDirS = addSelectionFrame(btnDirS, posS);
+        selDirW = addSelectionFrame(btnDirW, posW);
+        selDirE = addSelectionFrame(btnDirE, posE);
+
+        add(btnDirN, posN);
+        add(btnDirS, posS);
+        add(btnDirW, posW);
+        add(btnDirE, posE);
 
         // Wings section - starts after direction section
         int directionSectionRightEdge = compassCenterX + windroseSize.x / 2 + btnGap + btnDirE.sz.x;
@@ -304,6 +322,7 @@ public class TunnelingDialog extends Window {
                 } else {
                     wingNorth = !wingNorth;
                 }
+                updateWingToggleSelection();
                 updatePreview();
             }
         };
@@ -315,6 +334,7 @@ public class TunnelingDialog extends Window {
                 } else {
                     wingSouth = !wingSouth;
                 }
+                updateWingToggleSelection();
                 updatePreview();
             }
         };
@@ -330,10 +350,16 @@ public class TunnelingDialog extends Window {
         // So: wingCenterX = leftBtnLeftEdge + btnWingLeft.sz.x + wingBtnGap + columnIconWidget.sz.x/2
         int wingCenterX = leftBtnLeftEdge + btnWingLeft.sz.x + wingBtnGap + columnIconWidget.sz.x / 2;
 
-        // Position wing elements
+        // Position wing elements (with selection frames for wing toggle buttons)
+        Coord wingLeftPos = new Coord(wingCenterX - columnIconWidget.sz.x / 2 - wingBtnGap - btnWingLeft.sz.x, compassCenterY - btnWingLeft.sz.y / 2);
+        Coord wingRightPos = new Coord(wingCenterX + columnIconWidget.sz.x / 2 + wingBtnGap, compassCenterY - btnWingRight.sz.y / 2);
+
+        selWingLeft = addSelectionFrame(btnWingLeft, wingLeftPos);
+        selWingRight = addSelectionFrame(btnWingRight, wingRightPos);
+
         add(columnIconWidget, new Coord(wingCenterX - columnIconWidget.sz.x / 2, compassCenterY - columnIconWidget.sz.y / 2));
-        add(btnWingLeft, new Coord(wingCenterX - columnIconWidget.sz.x / 2 - wingBtnGap - btnWingLeft.sz.x, compassCenterY - btnWingLeft.sz.y / 2));
-        add(btnWingRight, new Coord(wingCenterX + columnIconWidget.sz.x / 2 + wingBtnGap, compassCenterY - btnWingRight.sz.y / 2));
+        add(btnWingLeft, wingLeftPos);
+        add(btnWingRight, wingRightPos);
 
         y = compassCenterY + windroseSize.y / 2 + btnDirS.sz.y + btnGap + 25;
 
@@ -387,10 +413,17 @@ public class TunnelingDialog extends Window {
         add(new Label("Tunnel Side:"), new Coord(leftMargin, y));
         tunnelSideOptionsLabel = new Label("(East/West)");
         add(tunnelSideOptionsLabel, new Coord(leftMargin, y + 16));
-        add(btnTunnelLeft, new Coord(tunnelBtnStartX, y + 5));
-        add(btnTunnelRight, new Coord(tunnelBtnStartX + btnTunnelLeft.sz.x + arrowBtnGap, y + 5));
-        add(btnTunnelUp, new Coord(tunnelBtnStartX, y + 5));
-        add(btnTunnelDown, new Coord(tunnelBtnStartX + btnTunnelUp.sz.x + arrowBtnGap, y + 5));
+
+        Coord tunnelPos1 = new Coord(tunnelBtnStartX, y + 5);
+        Coord tunnelPos2 = new Coord(tunnelBtnStartX + btnTunnelLeft.sz.x + arrowBtnGap, y + 5);
+
+        selTunnelFirst = addSelectionFrame(btnTunnelLeft, tunnelPos1);
+        selTunnelSecond = addSelectionFrame(btnTunnelRight, tunnelPos2);
+
+        add(btnTunnelLeft, tunnelPos1);
+        add(btnTunnelRight, tunnelPos2);
+        add(btnTunnelUp, tunnelPos1);
+        add(btnTunnelDown, tunnelPos2);
         // Initially hide horizontal tunnel buttons
         btnTunnelUp.hide();
         btnTunnelDown.hide();
@@ -402,10 +435,17 @@ public class TunnelingDialog extends Window {
         add(new Label("Wing Side:"), new Coord(wingSideLabelX, y));
         wingSideOptionsLabel = new Label("(North/South)");
         add(wingSideOptionsLabel, new Coord(wingSideLabelX, y + 16));
-        add(btnWingSideUp, new Coord(wingSideBtnStartX, y + 5));
-        add(btnWingSideDown, new Coord(wingSideBtnStartX + btnWingSideUp.sz.x + arrowBtnGap, y + 5));
-        add(btnWingSideLeft, new Coord(wingSideBtnStartX, y + 5));
-        add(btnWingSideRight, new Coord(wingSideBtnStartX + btnWingSideLeft.sz.x + arrowBtnGap, y + 5));
+
+        Coord wingSidePos1 = new Coord(wingSideBtnStartX, y + 5);
+        Coord wingSidePos2 = new Coord(wingSideBtnStartX + btnWingSideUp.sz.x + arrowBtnGap, y + 5);
+
+        selWingSideFirst = addSelectionFrame(btnWingSideUp, wingSidePos1);
+        selWingSideSecond = addSelectionFrame(btnWingSideDown, wingSidePos2);
+
+        add(btnWingSideUp, wingSidePos1);
+        add(btnWingSideDown, wingSidePos2);
+        add(btnWingSideLeft, wingSidePos1);
+        add(btnWingSideRight, wingSidePos2);
         // Initially hide horizontal wing side buttons
         btnWingSideLeft.hide();
         btnWingSideRight.hide();
@@ -446,6 +486,35 @@ public class TunnelingDialog extends Window {
         // Initialize state
         selectDirection(Direction.NORTH);
         updatePreview();
+    }
+
+    // Selection frame constants
+    private static final int SEL_BORDER_WIDTH = 2;
+    private static final int SEL_PADDING = 3;
+
+    // Selection frame widget to show outline around selected buttons
+    private class SelectionFrame extends Widget {
+        public SelectionFrame(Coord buttonSize) {
+            super(buttonSize.add(SEL_PADDING * 2, SEL_PADDING * 2));
+        }
+
+        @Override
+        public void draw(GOut g) {
+            g.chcolor(COLOR_SELECTION);
+            // Draw border (4 rectangles for outline)
+            g.frect(Coord.z, new Coord(sz.x, SEL_BORDER_WIDTH)); // top
+            g.frect(Coord.z, new Coord(SEL_BORDER_WIDTH, sz.y)); // left
+            g.frect(new Coord(sz.x - SEL_BORDER_WIDTH, 0), new Coord(SEL_BORDER_WIDTH, sz.y)); // right
+            g.frect(new Coord(0, sz.y - SEL_BORDER_WIDTH), new Coord(sz.x, SEL_BORDER_WIDTH)); // bottom
+            g.chcolor();
+        }
+    }
+
+    private SelectionFrame addSelectionFrame(IButton btn, Coord btnPos) {
+        SelectionFrame frame = new SelectionFrame(btn.sz);
+        add(frame, btnPos.sub(SEL_PADDING, SEL_PADDING));
+        frame.hide();
+        return frame;
     }
 
     // Widget to display support type icon loaded from game resources
@@ -559,6 +628,18 @@ public class TunnelingDialog extends Window {
             }
         }
 
+        // Update direction selection frames
+        updateDirectionSelection(dir);
+
+        // Reset tunnel side selection to first option
+        updateTunnelSideSelection(0);
+
+        // Reset wing side selection to first option
+        updateWingSideSelection(0);
+
+        // Reset wing toggle selections
+        updateWingToggleSelection();
+
         updatePreview();
     }
 
@@ -566,6 +647,7 @@ public class TunnelingDialog extends Window {
         TunnelSide[] sides = selectedDirection.isVertical() ? VERTICAL_TUNNEL_SIDES : HORIZONTAL_TUNNEL_SIDES;
         if (index >= 0 && index < sides.length) {
             selectedTunnelSide = sides[index];
+            updateTunnelSideSelection(index);
             updatePreview();
         }
     }
@@ -574,7 +656,61 @@ public class TunnelingDialog extends Window {
         TunnelSide[] sides = selectedDirection.isVertical() ? VERTICAL_WING_SIDES : HORIZONTAL_WING_SIDES;
         if (index >= 0 && index < sides.length) {
             selectedWingSide = sides[index];
+            updateWingSideSelection(index);
             updatePreview();
+        }
+    }
+
+    private void updateDirectionSelection(Direction dir) {
+        if (selDirN == null) return;
+        selDirN.hide();
+        selDirS.hide();
+        selDirE.hide();
+        selDirW.hide();
+        switch (dir) {
+            case NORTH: selDirN.show(); break;
+            case SOUTH: selDirS.show(); break;
+            case EAST: selDirE.show(); break;
+            case WEST: selDirW.show(); break;
+        }
+    }
+
+    private void updateTunnelSideSelection(int index) {
+        if (selTunnelFirst == null) return;
+        selTunnelFirst.hide();
+        selTunnelSecond.hide();
+        if (index == 0) {
+            selTunnelFirst.show();
+        } else {
+            selTunnelSecond.show();
+        }
+    }
+
+    private void updateWingSideSelection(int index) {
+        if (selWingSideFirst == null) return;
+        selWingSideFirst.hide();
+        selWingSideSecond.hide();
+        if (index == 0) {
+            selWingSideFirst.show();
+        } else {
+            selWingSideSecond.show();
+        }
+    }
+
+    private void updateWingToggleSelection() {
+        if (selWingLeft == null) return;
+        // Show selection based on wing state
+        boolean leftActive = selectedDirection.isVertical() ? wingWest : wingNorth;
+        boolean rightActive = selectedDirection.isVertical() ? wingEast : wingSouth;
+        if (leftActive) {
+            selWingLeft.show();
+        } else {
+            selWingLeft.hide();
+        }
+        if (rightActive) {
+            selWingRight.show();
+        } else {
+            selWingRight.hide();
         }
     }
 
