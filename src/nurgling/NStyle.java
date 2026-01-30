@@ -103,6 +103,11 @@ public class NStyle {
             new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/d")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/cancel/h"))};
 
+    public static final TexI[] sorti = new TexI[]{
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/sort/sbtnu")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/sort/sbtnd")),
+            new TexI(Resource.loadsimg("nurgling/hud/buttons/sort/sbtnh"))};
+
     public static final TexI[] addarea = new TexI[]{
             new TexI(Resource.loadsimg("nurgling/hud/buttons/addarea/u")),
             new TexI(Resource.loadsimg("nurgling/hud/buttons/addarea/d")),
