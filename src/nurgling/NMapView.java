@@ -1373,35 +1373,37 @@ public class NMapView extends MapView
 
     public void removeArea(String name)
     {
-        for(NArea area : glob.map.areas.values())
-        {
-            if(area.name.equals(name))
-            {
-                area.inWork = true;
-                final int areaId = area.id;
-                glob.map.areas.remove(areaId);
-                // Track locally deleted areas to prevent restoration during sync
-                locallyDeletedAreas.add(areaId);
-                System.out.println("Area deleted locally: " + areaId + " (" + area.name + ")");
-                Gob dummy = dummys.get(area.gid);
-                if(dummy != null) {
-                    glob.oc.remove(dummy);
-                    dummys.remove(area.gid);
-                }
-                NUtils.getGameUI().areas.removeArea(areaId);
+        NArea area = findArea(name);
+        if (area != null) {
+            removeAreaById(area.id);
+        }
+    }
 
-                // Delete from database if enabled
-                if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable) &&
-                    nurgling.NCore.databaseManager != null && 
-                    nurgling.NCore.databaseManager.isReady()) {
-                    String profile = NUtils.getGameUI().getGenus();
-                    if (profile == null || profile.isEmpty()) {
-                        profile = "global";
-                    }
-                    nurgling.NCore.databaseManager.getAreaService().deleteAreaAsync(areaId, profile);
-                }
+    public void removeAreaById(int areaId)
+    {
+        NArea area = glob.map.areas.get(areaId);
+        if (area != null) {
+            area.inWork = true;
+            glob.map.areas.remove(areaId);
+            // Track locally deleted areas to prevent restoration during sync
+            locallyDeletedAreas.add(areaId);
+            System.out.println("Area deleted locally: " + areaId + " (" + area.name + ")");
+            Gob dummy = dummys.get(area.gid);
+            if(dummy != null) {
+                glob.oc.remove(dummy);
+                dummys.remove(area.gid);
+            }
+            NUtils.getGameUI().areas.removeArea(areaId);
 
-                break;
+            // Delete from database if enabled
+            if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable) &&
+                nurgling.NCore.databaseManager != null && 
+                nurgling.NCore.databaseManager.isReady()) {
+                String profile = NUtils.getGameUI().getGenus();
+                if (profile == null || profile.isEmpty()) {
+                    profile = "global";
+                }
+                nurgling.NCore.databaseManager.getAreaService().deleteAreaAsync(areaId, profile);
             }
         }
     }
