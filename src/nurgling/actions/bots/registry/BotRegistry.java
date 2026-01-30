@@ -97,6 +97,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("blueprint_tree_planter", BotDescriptor.BotType.RESOURCES, "bot.blueprint_tree_planter.title", "bot.blueprint_tree_planter.desc", false, true, BlueprintTreePlanter.class, "treegardener", false));
         bots.add(new BotDescriptor("boughbee", BotDescriptor.BotType.RESOURCES, "bot.boughbee.title", "bot.boughbee.desc", false, true, BoughBee.class, "boughpyre", false));
         bots.add(new BotDescriptor("forager", BotDescriptor.BotType.RESOURCES, "bot.forager.title", "bot.forager.desc", true, true, Forager.class, "forager", false));
+        bots.add(new BotDescriptor("tunneling", BotDescriptor.BotType.RESOURCES, "Tunneling Bot", "Automatically digs tunnels from mine supports, placing new supports along the way. Supports wings (perpendicular tunnels).", false, true, TunnelingBot.class, "tunelling", false));
 
         // PRODUCTIONS
         bots.add(new BotDescriptor("smelter", BotDescriptor.BotType.PRODUCTIONS, "Smelter", "Smelts ore.", true, true, SmelterAction.class, "smelter", true));
