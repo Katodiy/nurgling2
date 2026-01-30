@@ -4,8 +4,6 @@ import haven.*;
 import nurgling.*;
 import nurgling.tools.*;
 
-import java.util.Objects;
-
 public class GetItem extends NTask
 {
     NAlias name;
@@ -76,7 +74,7 @@ public class GetItem extends NTask
 
     private WItem result = null;
 
-    public WItem getResult(){
+    public WItem getItem(){
         return result;
     }
 }

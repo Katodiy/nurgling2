@@ -50,7 +50,7 @@ public class SoilStockpileDropper implements Action {
             pile.transfer(toTake);
             WaitItemFromPile wifp = new WaitItemFromPile(toTake);
             NUtils.getUI().core.addTask(wifp);
-            wifp.getResult();
+            wifp.getItems();
             ((NUI) gui.ui).disableMonitor();
 
             // Drop all soil from inventory

@@ -50,9 +50,9 @@ public class NAreaSelector implements Runnable
                     NUtils.getGameUI().areas.createMode = false;
                 }
                 NUtils.getUI().core.addTask(sa = new SelectArea());
-                if (sa.getResult() != null)
+                if (sa.getAreaSpace() != null)
                 {
-                    result = sa.getResult();
+                    result = sa.getAreaSpace();
                 }
                 if(mode!=Mode.SELECT)
                 {

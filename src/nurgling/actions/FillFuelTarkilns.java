@@ -3,11 +3,9 @@ package nurgling.actions;
 import haven.*;
 import nurgling.NGameUI;
 import nurgling.NUtils;
-import nurgling.areas.NArea;
 import nurgling.tasks.HandIsFree;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,7 +83,7 @@ public class FillFuelTarkilns implements Action
                             TakeItemsFromPile tifp;
                             (tifp = new TakeItemsFromPile(pile, gui.getStockpile(), Math.min(target_size, gui.getInventory().getFreeSpace()))).run(gui);
                             new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
-                            target_size = target_size - tifp.getResult();
+                            target_size = target_size - tifp.getTakenItemsCount();
                         }
                     }
                     ArrayList<WItem> fueltitem = NUtils.getGameUI().getInventory().getItems(fuelname);

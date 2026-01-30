@@ -21,7 +21,7 @@ public class FindNFlowerMenu extends NTask
 
     NFlowerMenu res = null;
 
-    public NFlowerMenu getResult(){
+    public NFlowerMenu getFlowerMenu(){
         return res;
     }
 }

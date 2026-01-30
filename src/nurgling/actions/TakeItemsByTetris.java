@@ -3,12 +3,9 @@ package nurgling.actions;
 import haven.Coord;
 import haven.Gob;
 import haven.UI;
-import haven.WItem;
 import nurgling.*;
 import nurgling.tasks.WaitItemFromPile;
 import nurgling.tools.Container;
-import nurgling.tools.NAlias;
-import nurgling.tools.StockpileUtils;
 
 import java.util.ArrayList;
 
@@ -45,7 +42,7 @@ public class TakeItemsByTetris implements Action
             WaitItemFromPile wifp = new WaitItemFromPile();
             NUtils.getUI().core.addTask(wifp);
 
-            for(NGItem item: wifp.getResult()) {
+            for(NGItem item: wifp.getItems()) {
                 for (Container container: conts) {
                     Container.Tetris tetris = container.getattr(Container.Tetris.class);
                     if(tetris.tryPlace(item.spr.sz().div(UI.scale(32)).swapXY()))

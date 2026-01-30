@@ -481,7 +481,7 @@ public class Craft implements Action {
                     // Проверяем количество предметов
                     GetItems gi = new GetItems(NUtils.getGameUI().getInventory(), new NAlias(finalTargetName));
                     gi.check();
-                    if (gi.getResult().size() >= finalResfc) {
+                    if (gi.getItems().size() >= finalResfc) {
                         craftSucceeded[0] = true;
                         return true;
                     }

@@ -41,8 +41,8 @@ public class IsPoseMov extends NTask
         }
         return false;
     }
-    public boolean getResult()
-    {
-        return true;
-    }
+//    public boolean getResult()
+//    {
+//        return true;
+//    }
 }

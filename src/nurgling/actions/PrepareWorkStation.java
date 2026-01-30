@@ -7,9 +7,6 @@ import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tasks.HandIsFree;
-import nurgling.tasks.NTask;
-import nurgling.tools.Container;
-import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
@@ -106,7 +103,7 @@ public class PrepareWorkStation implements Action
                 TakeItemsFromPile tifp;
                 (tifp = new TakeItemsFromPile(pile, gui.getStockpile(), Math.min(target_size, gui.getInventory().getFreeSpace()))).run(gui);
                 new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
-                target_size = target_size - tifp.getResult();
+                target_size = target_size - tifp.getTakenItemsCount();
             }
         }
         new PathFinder(crucible).run(gui);

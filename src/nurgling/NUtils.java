@@ -6,7 +6,6 @@ import haven.Window;
 import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
 import mapv4.StatusWdg;
-import nurgling.actions.Results;
 import nurgling.areas.*;
 import nurgling.navigation.ChunkNavManager;
 import nurgling.navigation.ChunkPath;
@@ -159,14 +158,14 @@ public class NUtils
     {
         FindNFlowerMenu fnf = new FindNFlowerMenu();
         getUI().core.addTask(fnf);
-        return fnf.getResult();
+        return fnf.getFlowerMenu();
     }
 
     public static NFlowerMenu findFlowerMenu() throws InterruptedException
     {
         FindOrWaitNFlowerMenu fnf = new FindOrWaitNFlowerMenu();
         getUI().core.addTask(fnf);
-        return fnf.getResult();
+        return fnf.getFlowerMenu();
     }
 
     public static NArea getArea(int id)
@@ -433,7 +432,7 @@ public class NUtils
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        return gae.getResult();
+        return gae.getEntry();
     }
 
     public static void takeFromEarth(Gob gob) throws InterruptedException {

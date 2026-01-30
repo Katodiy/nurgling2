@@ -1,13 +1,7 @@
 package nurgling.tasks;
 
-import haven.Coord;
 import haven.Resource;
-import haven.WItem;
-import haven.Widget;
-import nurgling.NGItem;
-import nurgling.NInventory;
 import nurgling.NUtils;
-import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
 public class GetCurs extends NTask
@@ -39,7 +33,7 @@ public class GetCurs extends NTask
         return NParser.checkName(cursname, name);
     }
 
-    public String getResult(){
+    public String getCursorName(){
         return cursname;
     }
 }

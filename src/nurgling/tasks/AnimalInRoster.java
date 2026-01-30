@@ -17,7 +17,7 @@ public class AnimalInRoster extends NTask
         this.animal = animal;
         this.cattleRoster = cattleRoster;
         this.rw = rw;
-
+        this.infinite = false;
     }
 
     @Override

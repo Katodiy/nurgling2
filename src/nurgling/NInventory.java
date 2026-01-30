@@ -19,7 +19,6 @@ import nurgling.widgets.NSearchWidget;
 import java.util.Map;
 import java.util.HashMap;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
@@ -330,28 +329,28 @@ public class NInventory extends Inventory
     {
         GetTotalAmountItems gi = new GetTotalAmountItems(this, name);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getCount();
     }
 
     public WItem getItem(NAlias name) throws InterruptedException
     {
         GetItem gi = new GetItem(this, name);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItem();
     }
 
     public WItem getItem(NAlias name, Class<? extends ItemInfo> prop) throws InterruptedException
     {
         GetItem gi = new GetItem(this, name, prop);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItem();
     }
 
     public WItem getItem(NAlias name, Float q) throws InterruptedException
     {
         GetItem gi = new GetItem(this, name, q);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItem();
     }
 
     public WItem getItem(String name) throws InterruptedException
@@ -370,7 +369,7 @@ public class NInventory extends Inventory
     public ArrayList<WItem> getItems(NAlias name, QualityType type) throws InterruptedException {
         GetItems gi = new GetItems(this, name, type);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItems();
     }
 
 
@@ -378,30 +377,28 @@ public class NInventory extends Inventory
     {
         GetItems gi = new GetItems(this);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItems();
     }
 
     public ArrayList<WItem> getItems(NAlias name) throws InterruptedException
     {
         GetItems gi = new GetItems(this, name);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItems();
     }
 
     public ArrayList<WItem> getWItems(NAlias name) throws InterruptedException
     {
         GetWItems gi = new GetWItems(this, name);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItems();
     }
-
-
 
     public ArrayList<WItem> getItems(NAlias name, double th) throws InterruptedException
     {
         GetItems gi = new GetItems(this, name, (float)th);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItems();
     }
 
     public ArrayList<WItem> getItems(String name) throws InterruptedException
@@ -418,7 +415,7 @@ public class NInventory extends Inventory
     {
         GetItems gi = new GetItems(this, target);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItems();
     }
 
     public void activateItem(NAlias name) throws InterruptedException {
@@ -1994,7 +1991,7 @@ public class NInventory extends Inventory
     {
         GetItemsWithInfo gi = new GetItemsWithInfo(this, c);
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItems();
     }
 
     public ArrayList<ItemWatcher.ItemInfo> iis = new ArrayList<>();
@@ -2043,13 +2040,13 @@ public class NInventory extends Inventory
     public ItemStack findNotFullStack(String name) throws InterruptedException {
         GetNotFullStack gi = new GetNotFullStack(this, new NAlias(name));
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItemStack();
     }
 
     public WItem findNotStack(String name) throws InterruptedException {
         GetNotStack gi = new GetNotStack(this, new NAlias(name));
         NUtils.getUI().core.addTask(gi);
-        return gi.getResult();
+        return gi.getItem();
     }
 
 }

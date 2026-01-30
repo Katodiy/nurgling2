@@ -88,7 +88,7 @@ public class WaitMoreItems extends NTask
 
     private ArrayList<WItem> result = new ArrayList<>();
 
-    public ArrayList<WItem> getResult(){
+    public ArrayList<WItem> getItems(){
         return result;
     }
 }

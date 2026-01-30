@@ -1,16 +1,10 @@
 package nurgling.tasks;
 
 import haven.Gob;
-import haven.WItem;
-import haven.Widget;
 import haven.res.ui.croster.CattleId;
 import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
-import nurgling.NGItem;
-import nurgling.NInventory;
 import nurgling.NUtils;
-import nurgling.tools.NAlias;
-import nurgling.tools.NParser;
 
 public class GetAnimalEntry extends NTask
 {
@@ -40,7 +34,7 @@ public class GetAnimalEntry extends NTask
 
     private Entry result = null;
 
-    public Entry getResult(){
+    public Entry getEntry(){
         return result;
     }
 }

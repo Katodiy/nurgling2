@@ -2,7 +2,6 @@ package nurgling.tasks;
 
 import haven.*;
 import haven.res.ui.tt.cn.*;
-import nurgling.iteminfo.*;
 
 public class GetItemCount extends NTask
 {
@@ -36,7 +35,7 @@ public class GetItemCount extends NTask
         return false;
     }
 
-    public float getResult()
+    public float getCount()
     {
         return res;
     }

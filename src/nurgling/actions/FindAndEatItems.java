@@ -62,7 +62,7 @@ public class FindAndEatItems implements Action
             }
             TakeItemsFromPile tifp;
             (tifp = new TakeItemsFromPile(pile.pile, gui.getStockpile(), 1)).run(gui);
-            if(tifp.getResult() == 0)
+            if(tifp.getTakenItemsCount() == 0)
                 break;
         }
         new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);

@@ -8,8 +8,6 @@ import nurgling.NInventory;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-import java.util.ArrayList;
-
 public class GetTotalAmountItems extends NTask
 {
     NAlias name = null;
@@ -71,7 +69,7 @@ public class GetTotalAmountItems extends NTask
 
     private int count = 0;
 
-    public int getResult(){
+    public int getCount(){
         return count;
     }
 }

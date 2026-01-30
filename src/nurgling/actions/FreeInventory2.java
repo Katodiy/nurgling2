@@ -50,7 +50,7 @@ public class FreeInventory2 implements Action
                         GetItems gi = new GetItems(gui.getInventory());
                         gi.check();
                         if(gi.check())
-                            return !gi.getResult().contains(finalFordrop);
+                            return !gi.getItems().contains(finalFordrop);
                         return false;
                     }
                 });

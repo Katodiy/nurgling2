@@ -6,7 +6,6 @@ import nurgling.actions.Action;
 import nurgling.actions.Results;
 import nurgling.areas.NArea;
 import nurgling.overlays.NCustomBauble;
-import nurgling.overlays.TrellisGhostPreview;
 import nurgling.widgets.TrellisDirectionDialog;
 
 import java.awt.image.BufferedImage;
@@ -51,15 +50,15 @@ public class SelectAreaWithRotation implements Action {
 
                 nurgling.tasks.SelectAreaWithGhosts sa;
                 NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectAreaWithGhosts(trellisHitBox, orientationRef, confirmRef));
-                if (sa.getResult() != null) {
-                    result = sa.getResult();
+                if (sa.getAreaSpace() != null) {
+                    result = sa.getAreaSpace();
                     orientation = orientationRef[0];
                 }
             } else {
                 nurgling.tasks.SelectArea sa;
                 NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectArea());
-                if (sa.getResult() != null) {
-                    result = sa.getResult();
+                if (sa.getAreaSpace() != null) {
+                    result = sa.getAreaSpace();
                     orientation = 0;
                 }
             }

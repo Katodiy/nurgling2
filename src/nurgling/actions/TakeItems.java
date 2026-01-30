@@ -97,7 +97,7 @@ public class TakeItems implements Action
         TakeItemsFromPile tifp;
         (tifp = new TakeItemsFromPile(pile.pile, gui.getStockpile(), left.get())).run(gui);
         new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
-        left.set(left.get()-tifp.getResult());
+        left.set(left.get()-tifp.getTakenItemsCount());
         return Results.SUCCESS();
     }
 

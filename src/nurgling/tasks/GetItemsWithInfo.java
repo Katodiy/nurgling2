@@ -1,13 +1,9 @@
 package nurgling.tasks;
 
-import haven.GItem;
 import haven.ItemInfo;
 import haven.WItem;
 import haven.Widget;
-import nurgling.NGItem;
 import nurgling.NInventory;
-import nurgling.tools.NAlias;
-import nurgling.tools.NParser;
 
 import java.util.ArrayList;
 
@@ -54,7 +50,7 @@ public class GetItemsWithInfo extends NTask
 
     private ArrayList<WItem> result = new ArrayList<>();
 
-    public ArrayList<WItem> getResult(){
+    public ArrayList<WItem> getItems(){
         return result;
     }
 }

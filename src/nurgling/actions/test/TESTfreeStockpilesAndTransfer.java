@@ -62,7 +62,7 @@ public class TESTfreeStockpilesAndTransfer extends Test
                 TakeItemsFromPile tifp;
                 (tifp = new TakeItemsFromPile(pile, gui.getStockpile(), Math.min(tsize, gui.getInventory().getFreeSpace()))).run(gui);
                 new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
-                tsize = tsize - tifp.getResult();
+                tsize = tsize - tifp.getTakenItemsCount();
             }
             new TransferToPiles(outsa.getRCArea(), transferedItems).run(gui);
         }

@@ -3,7 +3,6 @@ package nurgling.tasks;
 import haven.Gob;
 import nurgling.NMapView;
 import nurgling.NUtils;
-import nurgling.areas.NArea;
 
 public class SelectGob extends NTask
 {
@@ -28,7 +27,7 @@ public class SelectGob extends NTask
         return false;
     }
 
-    public Gob getResult()
+    public Gob getGob()
     {
         return result;
     }

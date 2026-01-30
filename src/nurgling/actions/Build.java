@@ -8,13 +8,11 @@ import nurgling.NISBox;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.conf.ConstructionMaterialsRegistry;
 import nurgling.overlays.BuildGhostPreview;
 import nurgling.tasks.*;
 import nurgling.tools.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 import static haven.OCache.posres;
 
@@ -582,7 +580,7 @@ public class Build implements Action
                         TakeItemsFromPile tifp;
                         (tifp = new TakeItemsFromPile(pile, NUtils.getGameUI().getStockpile(), Math.min(ingredient.count, NUtils.getGameUI().getInventory().getNumberFreeCoord(ingredient.coord)))).run(gui);
                         new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
-                        ingredient.count = ingredient.count - tifp.getResult();
+                        ingredient.count = ingredient.count - tifp.getTakenItemsCount();
                     }
                 }
             }

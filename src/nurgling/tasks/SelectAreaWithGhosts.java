@@ -97,7 +97,7 @@ public class SelectAreaWithGhosts extends NTask {
         return false;
     }
 
-    public NArea.Space getResult() {
+    public NArea.Space getAreaSpace() {
         return result;
     }
 

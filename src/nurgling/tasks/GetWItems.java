@@ -1,17 +1,13 @@
 package nurgling.tasks;
 
-import haven.GItem;
 import haven.WItem;
 import haven.Widget;
 import nurgling.NGItem;
 import nurgling.NInventory;
-import nurgling.NInventory.QualityType;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class GetWItems extends NTask
 {
@@ -48,7 +44,7 @@ public class GetWItems extends NTask
 
     private ArrayList<WItem> result = new ArrayList<>();
 
-    public ArrayList<WItem> getResult(){
+    public ArrayList<WItem> getItems(){
         return result;
     }
 }

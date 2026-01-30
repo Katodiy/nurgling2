@@ -2,7 +2,6 @@ package nurgling.actions.bots;
 
 import haven.*;
 import nurgling.*;
-import nurgling.actions.Action;
 import nurgling.actions.Results;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
@@ -138,7 +137,7 @@ public class SelectAreaWithLiveGhosts extends SelectArea {
         nurgling.tasks.SelectAreaWithLiveGhosts sa;
         NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectAreaWithLiveGhosts(hitBox, resource, sdt));
 
-        if (sa.getResult() != null)
+        if (sa.getAreaSpace() != null)
         {
             rotationCount = sa.getRotationCount();
             String insaId = context.createAreaWithGhost(sa);

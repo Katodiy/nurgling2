@@ -121,7 +121,7 @@ public class KillAnimalsAction<C extends Entry> implements Action {
             new SelectFlowerAction("Slaughter", target).run(gui);
             AnimalIsDead aid = new AnimalIsDead(target);
             NUtils.getUI().core.addTask(aid);
-            res = aid.getRes();
+            res = aid.getResult();
         }
         new LiftObject(target).run(gui);
         new FindPlaceAndAction(target, NContext.findSpec("deadkritter"), true).run(gui);

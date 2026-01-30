@@ -30,7 +30,7 @@ public class FindSplitWnd extends NTask
 
     Window res;
 
-    public Window getResult()
+    public Window getSplitWindow()
     {
         return res;
     }

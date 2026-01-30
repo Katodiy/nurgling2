@@ -923,7 +923,7 @@ public class NContext {
             return null;
         String id = "temp"+counter++;
         NArea tempArea = new NArea(id);
-        tempArea.space = sa.getResult();
+        tempArea.space = sa.getAreaSpace();
         tempArea.lastLocalChange = System.currentTimeMillis();
         tempArea.grids_id.clear();
         tempArea.grids_id.addAll(tempArea.space.space.keySet());

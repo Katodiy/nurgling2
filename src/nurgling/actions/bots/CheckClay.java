@@ -34,9 +34,9 @@ public class CheckClay implements Action {
         NUtils.dig();
         NUtils.addTask(waitItemsOrError = new WaitItemsOrError((NInventory) NUtils.getGameUI().maininv,new NAlias("clay", "Clay", "Soil", "Moss", "Ash", "Sand"),1,"no clay left", oldItems));
 
-        if(!waitItemsOrError.getResult().isEmpty()) {
+        if(!waitItemsOrError.getItems().isEmpty()) {
 
-            WItem item = waitItemsOrError.getResult().get(0);
+            WItem item = waitItemsOrError.getItems().get(0);
 
             if (item != null) {
                 String itemName = ((NGItem) item.item).name();

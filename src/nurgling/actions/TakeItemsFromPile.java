@@ -33,7 +33,7 @@ public class TakeItemsFromPile implements Action
             NUtils.getUI().core.addTask(wifp);
             took += wifp.getTotalItemCount();
             ((NUI)gui.ui).disableMonitor();
-            items.addAll(wifp.getResult());
+            items.addAll(wifp.getItems());
             if(target_size <=took)
                 return Results.SUCCESS();
         }
@@ -41,7 +41,7 @@ public class TakeItemsFromPile implements Action
         return Results.SUCCESS();
     }
 
-    public int getResult()
+    public int getTakenItemsCount()
     {
         return took;
     }

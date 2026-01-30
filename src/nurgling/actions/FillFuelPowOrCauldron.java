@@ -67,7 +67,7 @@ public class FillFuelPowOrCauldron implements Action
                         TakeItemsFromPile tifp;
                         (tifp = new TakeItemsFromPile(pile, gui.getStockpile(), Math.min(target_size, gui.getInventory().getFreeSpace()))).run(gui);
                         new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
-                        target_size = target_size - tifp.getResult();
+                        target_size = target_size - tifp.getTakenItemsCount();
 
 
                     }

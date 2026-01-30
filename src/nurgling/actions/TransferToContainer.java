@@ -232,11 +232,6 @@ public class TransferToContainer implements Action
 
     int transfer_size = 0;
 
-    public int getResult()
-    {
-        return transfer_size;
-    }
-
     /**
      * РЎРѕСЂС‚РёСЂСѓРµРј РїСЂРµРґРјРµС‚С‹ РїРѕ РїСЂРёРѕСЂРёС‚РµС‚Сѓ РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ СЌС‚Р°РїР°
      *

@@ -1,10 +1,8 @@
 package nurgling.actions.bots;
 
 import haven.*;
-import haven.res.ui.tt.cn.*;
 import nurgling.*;
 import nurgling.actions.*;
-import nurgling.iteminfo.*;
 import nurgling.tasks.*;
 
 import java.util.*;
@@ -45,16 +43,16 @@ public class AutoSplitter implements Action
                 }
                 GetItemCount gic = new GetItemCount(witem);
                 NUtils.getUI().core.addTask(gic);
-                if (gic.getResult() > value)
+                if (gic.getCount() > value)
                 {
-                    int need = (int) (gic.getResult() / value + 0.01) - 1;
+                    int need = (int) (gic.getCount() / value + 0.01) - 1;
                     need = Math.min(need, inv.getNumberFreeCoord(item));
                     for (int i = 0; i < need; i++)
                     {
                         new SelectFlowerAction("Split", (NWItem) witem).run(gui);
                         FindSplitWnd fsw = new FindSplitWnd();
                         NUtils.getUI().core.addTask(fsw);
-                        Window wnd = fsw.getResult();
+                        Window wnd = fsw.getSplitWindow();
                         for (Widget w2 = wnd.lchild; w2 != null; w2 = w2.prev)
                         {
                             if (w2 instanceof TextEntry)

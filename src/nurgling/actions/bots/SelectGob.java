@@ -6,7 +6,6 @@ import nurgling.NMapView;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Results;
-import nurgling.areas.NArea;
 import nurgling.overlays.NCustomBauble;
 
 import java.awt.image.BufferedImage;
@@ -37,8 +36,8 @@ public class SelectGob implements Action {
             }
             nurgling.tasks.SelectGob sa;
             NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectGob());
-            if (sa.getResult() != null) {
-                result = sa.getResult();
+            if (sa.getGob() != null) {
+                result = sa.getGob();
             }
         }
         else

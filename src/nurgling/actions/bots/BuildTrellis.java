@@ -3,7 +3,6 @@ package nurgling.actions.bots;
 import haven.*;
 import nurgling.*;
 import nurgling.actions.*;
-import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.overlays.NCustomBauble;
 import nurgling.overlays.TrellisGhostPreview;
@@ -397,7 +396,7 @@ public class BuildTrellis implements Action {
                             TakeItemsFromPile tifp;
                             (tifp = new TakeItemsFromPile(pile, NUtils.getGameUI().getStockpile(), Math.min(ingredient.count, NUtils.getGameUI().getInventory().getNumberFreeCoord(ingredient.coord)))).run(gui);
                             new CloseTargetWindow(NUtils.getGameUI().getWindow("Stockpile")).run(gui);
-                            ingredient.count = ingredient.count - tifp.getResult();
+                            ingredient.count = ingredient.count - tifp.getTakenItemsCount();
                         }
                     }
                 }

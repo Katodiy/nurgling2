@@ -1,6 +1,5 @@
 package nurgling.actions.bots;
 
-import haven.Coord;
 import haven.Gob;
 import haven.Resource;
 import haven.WItem;
@@ -8,14 +7,10 @@ import nurgling.NGItem;
 import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
-import nurgling.tasks.WaitItemInHand;
 import nurgling.tasks.WaitItems;
-import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class CollectSameItemsFromEarth implements Action {
 
@@ -43,7 +38,7 @@ public class CollectSameItemsFromEarth implements Action {
         NUtils.rclickGob(target);
         WaitItems wi = new WaitItems(NUtils.getGameUI().getInventory(),oldItems.size() + 1);
         NUtils.addTask(wi);
-        for(WItem wItem : wi.getResult())
+        for(WItem wItem : wi.getItems())
         {
             if(!oldItems.contains(wItem))
             {

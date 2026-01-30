@@ -4,7 +4,6 @@ import haven.GItem;
 import haven.WItem;
 import haven.Widget;
 import nurgling.NGItem;
-import nurgling.NUI;
 import nurgling.NUtils;
 
 import java.util.ArrayList;
@@ -70,7 +69,7 @@ public class WaitItemFromPile extends NTask
 
     private ArrayList<NGItem> result = new ArrayList<>();
 
-    public ArrayList<NGItem> getResult(){
+    public ArrayList<NGItem> getItems(){
         return result;
     }
 

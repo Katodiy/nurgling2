@@ -1,10 +1,6 @@
 package nurgling.tasks;
 
-import haven.*;
 import nurgling.*;
-import nurgling.tools.*;
-
-import java.util.*;
 
 public class GetPileSize extends NTask
 {
@@ -25,7 +21,7 @@ public class GetPileSize extends NTask
 
     private int result = -1;
 
-    public int getResult(){
+    public int getCount(){
         return result;
     }
 }

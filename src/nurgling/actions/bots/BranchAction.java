@@ -6,14 +6,9 @@ import nurgling.NInventory;
 import nurgling.NUtils;
 import nurgling.NWItem;
 import nurgling.actions.*;
-import nurgling.areas.NArea;
 import nurgling.tasks.NFlowerMenuIsClosed;
-import nurgling.tasks.WaitForBurnout;
-import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.tools.VSpec;
-import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
 
@@ -47,7 +42,7 @@ public class BranchAction implements Action {
                     new OpenTargetContainer("Stockpile", pile).run(gui);
                     TakeItemsFromPile tifp;
                     (tifp = new TakeItemsFromPile(pile, gui.getStockpile(), 1)).run(gui);
-                    count -= tifp.getResult();
+                    count -= tifp.getTakenItemsCount();
                 } else
                     break;
             }

@@ -3,9 +3,6 @@ package nurgling;
 import haven.*;
 import nurgling.tasks.*;
 
-import java.awt.event.*;
-import java.util.*;
-
 public class NISBox extends ISBox
 {
     private TextEntry.NumberValue value;
@@ -66,7 +63,7 @@ public class NISBox extends ISBox
     {
         GetPileSize gps = new GetPileSize(this);
         NUtils.getUI().core.addTask(gps);
-        return gps.getResult();
+        return gps.getCount();
     }
 
     public void transfer(int amount)

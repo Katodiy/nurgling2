@@ -43,8 +43,8 @@ public class SelectArea implements Action {
             }
             nurgling.tasks.SelectArea sa;
             NUtils.getUI().core.addTask(sa = new nurgling.tasks.SelectArea());
-            if (sa.getResult() != null) {
-                result = sa.getResult();
+            if (sa.getAreaSpace() != null) {
+                result = sa.getAreaSpace();
             }
         }
         else

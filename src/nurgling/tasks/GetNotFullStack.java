@@ -52,7 +52,7 @@ public class GetNotFullStack extends NTask
 
     private ItemStack result = null;
 
-    public ItemStack getResult(){
+    public ItemStack getItemStack(){
         return result;
     }
 }
