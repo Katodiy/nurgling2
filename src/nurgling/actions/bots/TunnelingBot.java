@@ -47,9 +47,12 @@ public class TunnelingBot implements Action {
         gui.add(dialog, UI.scale(200, 200));
 
         // Wait for user input
-        while (!confirmRef[0] && !cancelRef[0]) {
-            Thread.sleep(50);
-        }
+        NUtils.addTask(new NTask() {
+            @Override
+            public boolean check() {
+                return confirmRef[0] || cancelRef[0];
+            }
+        });
 
         dialog.destroy();
 
@@ -410,11 +413,35 @@ public class TunnelingBot implements Action {
         }
 
         // Wait for window to close (construction complete)
-        Thread.sleep(300);
-        int attempts = 0;
-        while (gui.getWindow(supportType.menuName) != null && attempts < 50) {
-            Thread.sleep(100);
-            attempts++;
+        String windowName = supportType.menuName;
+        NUtils.addTask(new NTask() {
+            int count = 0;
+            @Override
+            public boolean check() {
+                return gui.getWindow(windowName) == null || count++ > 100;
+            }
+        });
+
+        // Verify the support was actually built
+        Coord2d targetPos = pos;
+        final Gob[] builtSupport = {null};
+        NUtils.addTask(new NTask() {
+            int count = 0;
+            @Override
+            public boolean check() {
+                ArrayList<Gob> nearbySupports = Finder.findGobs(ALL_SUPPORTS);
+                for (Gob support : nearbySupports) {
+                    if (support.rc.dist(targetPos) < 15) {
+                        builtSupport[0] = support;
+                        return true;
+                    }
+                }
+                return count++ > 50; // Timeout after checking
+            }
+        });
+
+        if (builtSupport[0] == null) {
+            return Results.ERROR("Failed to build support - check if you have required resources");
         }
 
         gui.msg("Support placed successfully");

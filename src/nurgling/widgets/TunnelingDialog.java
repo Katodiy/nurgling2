@@ -96,15 +96,25 @@ public class TunnelingDialog extends Window {
         }
     }
 
-    // Current selections
-    private Direction selectedDirection = Direction.NORTH;
-    private TunnelSide selectedTunnelSide = TunnelSide.WEST;
-    private TunnelSide selectedWingSide = TunnelSide.NORTH;
-    private SupportType selectedSupportType = SupportType.MINE_SUPPORT;
-    private boolean wingNorth = false;
-    private boolean wingSouth = false;
-    private boolean wingEast = false;
-    private boolean wingWest = false;
+    // Session-persistent selections (static to survive dialog close/reopen)
+    private static Direction savedDirection = Direction.NORTH;
+    private static TunnelSide savedTunnelSide = TunnelSide.WEST;
+    private static TunnelSide savedWingSide = TunnelSide.NORTH;
+    private static SupportType savedSupportType = SupportType.MINE_SUPPORT;
+    private static boolean savedWingNorth = false;
+    private static boolean savedWingSouth = false;
+    private static boolean savedWingEast = false;
+    private static boolean savedWingWest = false;
+
+    // Current selections (initialized from saved values)
+    private Direction selectedDirection = savedDirection;
+    private TunnelSide selectedTunnelSide = savedTunnelSide;
+    private TunnelSide selectedWingSide = savedWingSide;
+    private SupportType selectedSupportType = savedSupportType;
+    private boolean wingNorth = savedWingNorth;
+    private boolean wingSouth = savedWingSouth;
+    private boolean wingEast = savedWingEast;
+    private boolean wingWest = savedWingWest;
 
     // Reference arrays for communication with bot
     private int[] directionRef = null;
@@ -483,8 +493,76 @@ public class TunnelingDialog extends Window {
         };
         add(cancelButton, new Coord(leftMargin + btnWidth + 15, y));
 
-        // Initialize state
-        selectDirection(Direction.NORTH);
+        // Initialize state from saved values
+        restoreSavedState();
+    }
+
+    private void restoreSavedState() {
+        // Set support type dropdown
+        supportTypeDropbox.change(selectedSupportType);
+
+        // Update UI for saved direction (without resetting tunnel/wing sides)
+        Direction dir = selectedDirection;
+
+        // Update labels
+        if (tunnelSideOptionsLabel != null) {
+            tunnelSideOptionsLabel.settext(dir.isVertical() ? "(East/West)" : "(North/South)");
+        }
+        if (wingSideOptionsLabel != null) {
+            wingSideOptionsLabel.settext(dir.isVertical() ? "(North/South)" : "(East/West)");
+        }
+
+        // Update button visibility
+        if (btnTunnelLeft != null) {
+            if (dir.isVertical()) {
+                btnTunnelLeft.show();
+                btnTunnelRight.show();
+                btnTunnelUp.hide();
+                btnTunnelDown.hide();
+                btnWingSideUp.show();
+                btnWingSideDown.show();
+                btnWingSideLeft.hide();
+                btnWingSideRight.hide();
+            } else {
+                btnTunnelLeft.hide();
+                btnTunnelRight.hide();
+                btnTunnelUp.show();
+                btnTunnelDown.show();
+                btnWingSideUp.hide();
+                btnWingSideDown.hide();
+                btnWingSideLeft.show();
+                btnWingSideRight.show();
+            }
+        }
+
+        // Update selection frames
+        updateDirectionSelection(dir);
+
+        // Restore tunnel side selection
+        TunnelSide[] tunnelSides = dir.isVertical() ? VERTICAL_TUNNEL_SIDES : HORIZONTAL_TUNNEL_SIDES;
+        int tunnelIndex = 0;
+        for (int i = 0; i < tunnelSides.length; i++) {
+            if (tunnelSides[i] == selectedTunnelSide) {
+                tunnelIndex = i;
+                break;
+            }
+        }
+        updateTunnelSideSelection(tunnelIndex);
+
+        // Restore wing side selection
+        TunnelSide[] wingSides = dir.isVertical() ? VERTICAL_WING_SIDES : HORIZONTAL_WING_SIDES;
+        int wingSideIndex = 0;
+        for (int i = 0; i < wingSides.length; i++) {
+            if (wingSides[i] == selectedWingSide) {
+                wingSideIndex = i;
+                break;
+            }
+        }
+        updateWingSideSelection(wingSideIndex);
+
+        // Restore wing toggle selections
+        updateWingToggleSelection();
+
         updatePreview();
     }
 
@@ -914,6 +992,16 @@ public class TunnelingDialog extends Window {
     }
 
     private void confirm() {
+        // Save selections for session persistence
+        savedDirection = selectedDirection;
+        savedTunnelSide = selectedTunnelSide;
+        savedWingSide = selectedWingSide;
+        savedSupportType = selectedSupportType;
+        savedWingNorth = wingNorth;
+        savedWingSouth = wingSouth;
+        savedWingEast = wingEast;
+        savedWingWest = wingWest;
+
         if (directionRef != null) {
             directionRef[0] = selectedDirection.ordinal();
         }
