@@ -113,6 +113,8 @@ public class TunnelingBot implements Action {
                 return supportTileResult;
             }
 
+            handleBumlings(gui);
+
             // Place the new support
             Results buildResult = placeSupport(gui, nextSupportPos, supportType);
             if (!buildResult.IsSuccess()) {
