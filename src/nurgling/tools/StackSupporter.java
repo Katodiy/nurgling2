@@ -70,7 +70,7 @@ public class StackSupporter {
         putAll(5,
                 "Entrails", "Feather", "Fine Feather", " Meat",
                 "Raw Meat", "Bollock", "Filet of ", "Raw Chevon",
-                "Raw Beef", "Raw Mutton", "Raw Pork", "Raw Horse",
+                "Raw Beef", "Raw Mutton", "Raw Pork", "Raw Horsemeat",
                 "Raw ", "Crab Meat", "Poultry", "Soil", "Nuts"
         );
 

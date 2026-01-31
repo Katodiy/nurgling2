@@ -1652,6 +1652,11 @@ public class VSpec {
         sweeteners.add(new JSONObject("{\"static\":\"gfx/invobjs/honey\",\"name\":\"Wild-bee Honey\"}"));
         categories.put("Sweetener", sweeteners);
 
+        ArrayList<JSONObject> honey = new ArrayList<>();
+        honey.add(new JSONObject("{\"static\":\"gfx/invobjs/honey\",\"name\":\"Domestic Honey\"}"));
+        honey.add(new JSONObject("{\"static\":\"gfx/invobjs/honey\",\"name\":\"Wild-bee Honey\"}"));
+        categories.put("Honey", honey);
+
         ArrayList<JSONObject> leaves = new ArrayList<>();
         leaves.add(new JSONObject("{\"static\":\"gfx/invobjs/beetleaves\",\"name\":\"Beetroot Leaves\"}"));
         leaves.add(new JSONObject("{\"static\":\"gfx/invobjs/tea-black\",\"name\":\"Black Tea Leaves\"}"));
@@ -2050,7 +2055,7 @@ public class VSpec {
         ArrayList<JSONObject> rawHorse = new ArrayList<>();
         rawHorse.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-horse\"], \"name\": \"Raw Horse\"}"));
         rawHorse.add(new JSONObject("{\"layer\": [\"gfx/invobjs/meat-raw\", \"gfx/invobjs/meat-wildhorse\"], \"name\": \"Raw Wildhorse\"}"));
-        categories.put("Raw Horse", rawHorse);
+        categories.put("Raw Horsemeat", rawHorse);
 
         ArrayList<JSONObject> raw = new ArrayList<>();
         raw.addAll(rawChevon);

@@ -1,12 +1,15 @@
 package nurgling;
 
 import haven.*;
+import haven.Button;
+import haven.Label;
 import haven.Window;
 import haven.res.ui.stackinv.ItemStack;
 import haven.res.ui.tt.slot.Slotted;
 import haven.res.ui.tt.stackn.Stack;
 import monitoring.ItemWatcher;
 import nurgling.actions.SortInventory;
+import nurgling.iteminfo.NCuriosity;
 import nurgling.iteminfo.NFoodInfo;
 import nurgling.tasks.*;
 import nurgling.tools.*;
@@ -32,8 +35,6 @@ public class NInventory extends Inventory
     public Widget itemListContent;
     public Scrollport compactListContainer;
     public Widget compactListContent;
-    public Dropbox<String> sortTypeDropbox;
-    public Dropbox<String> orderDropbox;
     public ICheckBox bundle;
     public MenuGrid.PagButton pagBundle = null;
     boolean showPopup = false;
@@ -162,6 +163,35 @@ public class NInventory extends Inventory
     public enum RightPanelMode {
         COMPACT, EXPANDED
     }
+    
+    // Grouping modes for inventory panel (like hafen-client)
+    public enum Grouping {
+        NONE("Type"),
+        Q("Quality"),
+        Q1("Quality 1"),
+        Q5("Quality 5"),
+        Q10("Quality 10");
+        
+        public final String displayName;
+        
+        Grouping(String displayName) {
+            this.displayName = displayName;
+        }
+    }
+    
+    // Display types for item list
+    public enum DisplayType {
+        Name, Quality, Info
+    }
+    
+    // Current display type and grouping
+    private static DisplayType currentDisplayType = DisplayType.Name;
+    private Grouping currentGrouping = Grouping.NONE;
+    public Dropbox<Grouping> groupingDropbox;
+    public Dropbox<DisplayType> displayTypeDropbox;
+    private Label spaceLabel; // Shows filled/total slots
+    private TextEntry qualityFilterEntry; // Min quality filter
+    private Double minQualityFilter = null; // Parsed min quality value
 
     @Override
     public void draw(GOut g) {
@@ -580,6 +610,7 @@ public class NInventory extends Inventory
                 // Update expanded panel contents periodically
                 if (NUtils.getTickId() % 10 == 0) { // Update every 10 ticks
                     updateRightPanelItems();
+                    updateSpaceLabel();
                 }
             }
         }
@@ -834,84 +865,105 @@ public class NInventory extends Inventory
     private void setupExpandedPanel() {
         int panelMargin = UI.scale(8);
         Coord headerPos = rightTogglesExpanded.atl.add(new Coord(panelMargin, panelMargin));
+        int elementGap = UI.scale(5); // Consistent gap between elements
 
-        // View toggle button in top-right of expanded panel  
-        ICheckBox viewToggle = new ICheckBox(
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/u")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/d")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/h")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/dh"))
+        // Position for dropdowns - below header
+        Coord dropdownPos = headerPos.add(new Coord(0, 0));
+        
+        // Grouping dropdown (Type, Quality, Q1, Q5, Q10)
+        int groupingW = UI.scale(85);
+        groupingDropbox = new Dropbox<Grouping>(groupingW, Grouping.values().length, UI.scale(16)) {
+            @Override
+            protected Grouping listitem(int i) {
+                return Grouping.values()[i];
+            }
+            
+            @Override
+            protected int listitems() { return Grouping.values().length; }
+            
+            @Override
+            protected void drawitem(GOut g, Grouping item, int idx) {
+                g.text(item.displayName, new Coord(3, 2));
+            }
+            
+            @Override
+            public void change(Grouping item) {
+                super.change(item);
+                currentGrouping = item;
+                applySorting();
+            }
+        };
+        groupingDropbox.change(Grouping.NONE);
+        rightTogglesExpanded.add(groupingDropbox, dropdownPos);
+        
+        // Display type dropdown
+        int displayTypeX = groupingW + elementGap;
+        int displayTypeW = UI.scale(55);
+        displayTypeDropbox = new Dropbox<DisplayType>(displayTypeW, DisplayType.values().length, UI.scale(16)) {
+            @Override
+            protected DisplayType listitem(int i) {
+                return DisplayType.values()[i];
+            }
+            
+            @Override
+            protected int listitems() { return DisplayType.values().length; }
+            
+            @Override
+            protected void drawitem(GOut g, DisplayType item, int idx) {
+                g.text(item.name(), new Coord(3, 2));
+            }
+            
+            @Override
+            public void change(DisplayType item) {
+                super.change(item);
+                currentDisplayType = item;
+                rebuildItemList();
+            }
+        };
+        displayTypeDropbox.change(currentDisplayType);
+        rightTogglesExpanded.add(displayTypeDropbox, dropdownPos.add(new Coord(displayTypeX, 0)));
+        
+        // Quality filter entry (no label, with tooltip)
+        int qualityX = displayTypeX + displayTypeW + elementGap;
+        int qualityW = UI.scale(32);
+        qualityFilterEntry = new TextEntry(qualityW, "") {
+            @Override
+            public void changed() {
+                super.changed();
+                parseQualityFilter();
+                rebuildItemList();
+            }
+        };
+        qualityFilterEntry.settip("Min quality filter\nEnter a number (e.g. 10)\nto show only items with q >= 10");
+        rightTogglesExpanded.add(qualityFilterEntry, dropdownPos.add(new Coord(qualityX, UI.scale(-2))));
+        
+        // View toggle button (compact mode) - after quality filter  
+        int viewToggleX = qualityX + qualityW + elementGap;
+        IButton viewToggle = new IButton(
+            Resource.loadsimg("nurgling/hud/buttons/lsearch/u"),
+            Resource.loadsimg("nurgling/hud/buttons/lsearch/d"),
+            Resource.loadsimg("nurgling/hud/buttons/lsearch/h")
         ) {
             @Override
-            public void changed(boolean val) {
-                super.changed(val);
+            public void click() {
                 rightPanelMode = RightPanelMode.COMPACT;
                 NConfig.set(NConfig.Key.inventoryRightPanelMode, "COMPACT");
                 updateRightPanelVisibility();
             }
         };
-        viewToggle.a = false; // Start in expanded mode
         viewToggle.settip("Switch to compact view");
-        rightTogglesExpanded.add(viewToggle, new Coord(rightTogglesExpanded.sz.x - UI.scale(50), headerPos.y));
-
-        // Position for dropdowns - below header
-        Coord dropdownPos = headerPos.add(new Coord(8, 0));
+        rightTogglesExpanded.add(viewToggle, dropdownPos.add(new Coord(viewToggleX, 0)));
         
-        // Sort type dropdown (smaller, cleaner)
-        sortTypeDropbox = new Dropbox<String>(UI.scale(85), 4, UI.scale(16)) {
-            @Override
-            protected String listitem(int i) {
-                String[] options = {"Count", "Name", "Resource", "Quality"};
-                return options[i];
-            }
-            
-            @Override
-            protected int listitems() { return 4; }
-            
-            @Override
-            protected void drawitem(GOut g, String item, int idx) {
-                g.text(item, new Coord(3, 2));
-            }
-            
-            @Override
-            public void change(String item) {
-                super.change(item);
-                applySorting();
-            }
-        };
-        sortTypeDropbox.change("Count");
-        rightTogglesExpanded.add(sortTypeDropbox, dropdownPos);
+        // Space label showing filled/total slots
+        spaceLabel = new Label("");
+        spaceLabel.setcolor(new java.awt.Color(200, 200, 200));
+        updateSpaceLabel();
+        rightTogglesExpanded.add(spaceLabel, dropdownPos.add(new Coord(0, UI.scale(20))));
         
-        // Order dropdown (smaller, right aligned)
-        orderDropbox = new Dropbox<String>(UI.scale(60), 2, UI.scale(16)) {
-            @Override
-            protected String listitem(int i) {
-                String[] options = {"Asc", "Desc"};
-                return options[i];
-            }
-            
-            @Override
-            protected int listitems() { return 2; }
-            
-            @Override
-            protected void drawitem(GOut g, String item, int idx) {
-                g.text(item, new Coord(3, 2));
-            }
-            
-            @Override
-            public void change(String item) {
-                super.change(item);
-                applySorting();
-            }
-        };
-        orderDropbox.change("Asc");  // Default to descending
-        rightTogglesExpanded.add(orderDropbox, dropdownPos.add(new Coord(UI.scale(90), 0)));
-
-        
-        // Create Scrollport for item list - following CheeseOrdersPanel pattern
-        Coord listPos = dropdownPos.add(new Coord(0, UI.scale(25)));
+        // Create Scrollport for item list
+        Coord listPos = dropdownPos.add(new Coord(0, UI.scale(35)));
         int listWidth = UI.scale(220);
-        int listHeight = UI.scale(150);
+        int listHeight = UI.scale(140);
         
         itemListContainer = rightTogglesExpanded.add(new Scrollport(new Coord(listWidth, listHeight)), listPos);
         itemListContent = new Widget(new Coord(listWidth, UI.scale(50))) {
@@ -927,26 +979,44 @@ public class NInventory extends Inventory
         rebuildItemList();
     }
     
+    
+    /**
+     * Parse the quality filter text entry to get min quality value
+     */
+    private void parseQualityFilter() {
+        if (qualityFilterEntry == null) {
+            minQualityFilter = null;
+            return;
+        }
+        String text = qualityFilterEntry.text().trim();
+        if (text.isEmpty()) {
+            minQualityFilter = null;
+            return;
+        }
+        try {
+            minQualityFilter = Double.parseDouble(text);
+        } catch (NumberFormatException e) {
+            minQualityFilter = null;
+        }
+    }
+    
     private void setupCompactPanel() {
         int panelMargin = UI.scale(4);
         Coord headerPos = rightTogglesCompact.atl.add(new Coord(panelMargin, panelMargin));
         
         // View toggle button in top-right of compact panel
-        ICheckBox viewToggle = new ICheckBox(
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/u")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/d")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/h")),
-            new TexI(Resource.loadsimg("nurgling/hud/buttons/lsearch/dh"))
+        IButton viewToggle = new IButton(
+            Resource.loadsimg("nurgling/hud/buttons/lsearch/u"),
+            Resource.loadsimg("nurgling/hud/buttons/lsearch/d"),
+            Resource.loadsimg("nurgling/hud/buttons/lsearch/h")
         ) {
             @Override
-            public void changed(boolean val) {
-                super.changed(val);
+            public void click() {
                 rightPanelMode = RightPanelMode.EXPANDED;
                 NConfig.set(NConfig.Key.inventoryRightPanelMode, "EXPANDED");
                 updateRightPanelVisibility();
             }
         };
-        viewToggle.a = false; // Will switch to expanded mode
         viewToggle.settip("Switch to expanded view");
         rightTogglesCompact.add(viewToggle, new Coord(rightTogglesCompact.sz.x - UI.scale(40), headerPos.y));
         
@@ -1016,20 +1086,110 @@ public class NInventory extends Inventory
         rebuildItemList();
     }
     
-    // Helper class to group items by name
+    /**
+     * Update the space label showing filled/total slots
+     */
+    private void updateSpaceLabel() {
+        if (spaceLabel == null) return;
+        int filled = calcFilledSlots();
+        int total = calcTotalSpace();
+        if (total > 0) {
+            spaceLabel.settext(String.format("Slots: %d/%d", filled, total));
+        }
+    }
+    
+    /**
+     * Calculate how many slots are filled
+     */
+    private int calcFilledSlots() {
+        int count = 0;
+        for (Widget wdg = child; wdg != null; wdg = wdg.next) {
+            if (wdg instanceof WItem) {
+                WItem wItem = (WItem) wdg;
+                if (wItem.item.spr != null) {
+                    Coord sz = wItem.item.spr.sz().div(UI.scale(32));
+                    count += sz.x * sz.y;
+                } else {
+                    count += 1;
+                }
+            }
+        }
+        return count;
+    }
+    
+    // Helper class to group items by name and optionally quality
     private static class ItemGroup {
         String name;
+        String groupKey; // Key for grouping (includes quality info if grouped by quality)
+        Double groupQuality; // Quality value if grouped by quality (null for Type grouping)
         int totalQuantity = 0;
         double averageQuality = 0;
+        java.util.List<WItem> wItems = new ArrayList<>(); // Store WItems for actions
         java.util.List<NGItem> items = new ArrayList<>();
+        // Curio info
+        Integer curioLph = null;
+        Integer curioMw = null;
+        Double curioMeter = null; // Study progress (0-1)
         
         ItemGroup(String name) {
             this.name = name;
+            this.groupKey = name;
+            this.groupQuality = null;
+        }
+        
+        ItemGroup(String name, Double quality, Grouping grouping) {
+            this.name = name;
+            this.groupQuality = quality;
+            if (quality != null && grouping != Grouping.NONE) {
+                this.groupKey = name + "@Q" + quantifyQuality(quality, grouping);
+            } else {
+                this.groupKey = name;
+            }
+        }
+        
+        void addItem(NGItem item, WItem wItem) {
+            items.add(item);
+            if (wItem != null) {
+                wItems.add(wItem);
+            }
+            recalculate();
+            
+            // Extract curio info from first item if available
+            if (curioLph == null) {
+                try {
+                    NCuriosity curio = item.getInfo(NCuriosity.class);
+                    if (curio != null) {
+                        curioLph = NCuriosity.lph(curio.lph);
+                        curioMw = curio.mw;
+                        
+                        // Get study progress meter using ItemInfo.find
+                        GItem.MeterInfo meterInfo = ItemInfo.find(GItem.MeterInfo.class, item.info());
+                        if (meterInfo != null) {
+                            curioMeter = meterInfo.meter();
+                        }
+                    }
+                } catch (Exception e) {
+                    // Ignore - not a curio
+                }
+            }
         }
         
         void addItem(NGItem item) {
-            items.add(item);
-            recalculate();
+            addItem(item, null);
+        }
+        
+        static double quantifyQuality(Double q, Grouping g) {
+            if (q == null) return 0;
+            if (g == Grouping.Q1) {
+                return Math.floor(q);
+            } else if (g == Grouping.Q5) {
+                double floored = Math.floor(q);
+                return floored - (floored % 5);
+            } else if (g == Grouping.Q10) {
+                double floored = Math.floor(q);
+                return floored - (floored % 10);
+            }
+            return q;
         }
         
         void recalculate() {
@@ -1095,6 +1255,24 @@ public class NInventory extends Inventory
         }
     }
     
+    /**
+     * Get quality of an item, considering stack quality
+     */
+    private static Double getItemQuality(NGItem item) {
+        try {
+            Stack stackInfo = item.getInfo(Stack.class);
+            if (stackInfo != null && stackInfo.quality > 0) {
+                return (double) stackInfo.quality;
+            }
+            if (item.quality != null && item.quality > 0) {
+                return item.quality.doubleValue();
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return null;
+    }
+    
     private void rebuildItemList() {
         if (itemListContent == null) return;
         
@@ -1103,7 +1281,7 @@ public class NInventory extends Inventory
             child.destroy();
         }
         
-        // Get current inventory items and group by name
+        // Get current inventory items and group by name + quality (depending on grouping mode)
         Map<String, ItemGroup> itemGroupMap = new HashMap<>();
         
         // Access parent inventory's children
@@ -1115,47 +1293,48 @@ public class NInventory extends Inventory
                     String itemName = nitem.name();
                     
                     if (itemName != null) {
-                        ItemGroup group = itemGroupMap.get(itemName);
-                        if (group == null) {
-                            group = new ItemGroup(itemName);
-                            itemGroupMap.put(itemName, group);
+                        Double quality = getItemQuality(nitem);
+                        
+                        // Apply quality filter
+                        if (minQualityFilter != null) {
+                            double itemQ = quality != null ? quality : 0;
+                            if (itemQ < minQualityFilter) {
+                                continue; // Skip items below min quality
+                            }
                         }
-                        group.addItem(nitem);
+                        
+                        String groupKey;
+                        
+                        // Create group key based on grouping mode
+                        if (currentGrouping == Grouping.NONE) {
+                            groupKey = itemName;
+                        } else {
+                            double quantifiedQ = quality != null ? ItemGroup.quantifyQuality(quality, currentGrouping) : 0;
+                            groupKey = itemName + "@Q" + (int) quantifiedQ;
+                        }
+                        
+                        ItemGroup group = itemGroupMap.get(groupKey);
+                        if (group == null) {
+                            group = new ItemGroup(itemName, quality, currentGrouping);
+                            itemGroupMap.put(groupKey, group);
+                        }
+                        group.addItem(nitem, wItem);
                     }
                 }
             }
         }
         
-        // Sort the items based on current dropdown selections
+        // Sort the items: by name first, then by quality (descending) within same name
         List<ItemGroup> itemGroups = new ArrayList<>(itemGroupMap.values());
         itemGroups.sort((a, b) -> {
-            int result = 0;
-            
-            if (sortTypeDropbox != null && sortTypeDropbox.sel != null) {
-                switch (sortTypeDropbox.sel) {
-                    case "Count":
-                        result = Integer.compare(a.totalQuantity, b.totalQuantity);
-                        break;
-                    case "Name":
-                        result = a.name.compareTo(b.name);
-                        break;
-                    case "Resource":
-                        result = a.name.compareTo(b.name); // Same as name for now
-                        break;
-                    case "Quality":
-                        result = Double.compare(a.averageQuality, b.averageQuality);
-                        break;
-                    default:
-                        result = 0;
-                }
+            // First sort by name
+            int nameResult = a.name.compareTo(b.name);
+            if (nameResult != 0) {
+                return nameResult;
             }
             
-            // Apply ascending/descending order
-            if (orderDropbox != null && "Asc".equals(orderDropbox.sel)) {
-                return result;
-            } else {
-                return -result; // Descending
-            }
+            // Then by quality (descending - higher quality first)
+            return -Double.compare(a.averageQuality, b.averageQuality);
         });
         
         // Create widgets for expanded mode (original list layout)
@@ -1182,7 +1361,7 @@ public class NInventory extends Inventory
             child.destroy();
         }
         
-        // Get current inventory items and group by name (same logic as expanded)
+        // Get current inventory items and group by name + quality (same logic as expanded)
         Map<String, ItemGroup> itemGroupMap = new HashMap<>();
         
         for (Widget widget = this.child; widget != null; widget = widget.next) {
@@ -1193,12 +1372,32 @@ public class NInventory extends Inventory
                     String itemName = nitem.name();
                     
                     if (itemName != null) {
-                        ItemGroup group = itemGroupMap.get(itemName);
-                        if (group == null) {
-                            group = new ItemGroup(itemName);
-                            itemGroupMap.put(itemName, group);
+                        Double quality = getItemQuality(nitem);
+                        
+                        // Apply quality filter (same as expanded mode)
+                        if (minQualityFilter != null) {
+                            double itemQ = quality != null ? quality : 0;
+                            if (itemQ < minQualityFilter) {
+                                continue; // Skip items below min quality
+                            }
                         }
-                        group.addItem(nitem);
+                        
+                        String groupKey;
+                        
+                        // Create group key based on grouping mode
+                        if (currentGrouping == Grouping.NONE) {
+                            groupKey = itemName;
+                        } else {
+                            double quantifiedQ = quality != null ? ItemGroup.quantifyQuality(quality, currentGrouping) : 0;
+                            groupKey = itemName + "@Q" + (int) quantifiedQ;
+                        }
+                        
+                        ItemGroup group = itemGroupMap.get(groupKey);
+                        if (group == null) {
+                            group = new ItemGroup(itemName, quality, currentGrouping);
+                            itemGroupMap.put(groupKey, group);
+                        }
+                        group.addItem(nitem, wItem);
                     }
                 }
             }
@@ -1212,10 +1411,10 @@ public class NInventory extends Inventory
                 int nameResult = a.name.compareTo(b.name);
                 if (!compactNameAscending) nameResult = -nameResult;
                 
-                // Secondary sort by quantity for ties
+                // Secondary sort by quality for ties
                 if (nameResult == 0) {
-                    int quantityResult = Integer.compare(a.totalQuantity, b.totalQuantity);
-                    return compactQuantityAscending ? quantityResult : -quantityResult;
+                    int qualityResult = Double.compare(a.averageQuality, b.averageQuality);
+                    return compactQuantityAscending ? qualityResult : -qualityResult;
                 }
                 return nameResult;
             } else {
@@ -1248,13 +1447,25 @@ public class NInventory extends Inventory
         compactListContainer.cont.update();
     }
     
+    // Progress bar color for curio items
+    private static final Color CURIO_PROGRESS_COLOR = new Color(31, 209, 185, 128);
+    
     private Widget createItemWidget(ItemGroup group, Coord sz) {
+        NInventory thisInv = this;
         return new Widget(sz) {
             @Override
             public void draw(GOut g) {
                 int iconSize = UI.scale(19);
                 int margin = UI.scale(1);
                 int textY = UI.scale(2);
+                
+                // Draw curio study progress bar in background
+                if (group.curioMeter != null && group.curioMeter > 0) {
+                    g.chcolor(CURIO_PROGRESS_COLOR);
+                    int progressWidth = (int)((sz.x - iconSize - margin * 2) * group.curioMeter);
+                    g.frect(new Coord(iconSize + margin * 2, 0), new Coord(progressWidth, sz.y));
+                    g.chcolor();
+                }
                 
                 // Draw item icon
                 NGItem representativeItem = group.getRepresentativeItem();
@@ -1266,13 +1477,11 @@ public class NInventory extends Inventory
                         if (img != null) {
                             g.image(img.tex(), iconPos, new Coord(iconSize, iconSize));
                         } else {
-                            // Fallback: draw colored placeholder
                             g.chcolor(100, 150, 100, 200);
                             g.frect(iconPos, new Coord(iconSize, iconSize));
                             g.chcolor();
                         }
                     } catch (Exception e) {
-                        // Fallback: draw colored placeholder
                         g.chcolor(100, 150, 100, 200);
                         g.frect(iconPos, new Coord(iconSize, iconSize));
                         g.chcolor();
@@ -1281,35 +1490,119 @@ public class NInventory extends Inventory
                 
                 // Calculate text positions
                 int textStartX = margin + iconSize + UI.scale(4);
-                int quantityWidth = UI.scale(25);
-                int nameStartX = textStartX + quantityWidth;
-                int qualityX = sz.x - UI.scale(35);
                 
-                // Draw quantity with "x" prefix
-                String quantityText = "x" + group.totalQuantity;
-                g.text(quantityText, new Coord(textStartX, textY));
-                
-                // Draw item name
-                g.text(group.name, new Coord(nameStartX, textY));
-                
-                // Draw quality if available
-                if (group.averageQuality > 0) {
-                    // Draw blue quality dot
-                    try {
-                        Tex qualityIcon = new TexI(Resource.remote().loadwait("ui/tt/q/quality").layer(Resource.imgc, 0).scaled());
-                        int dotSize = UI.scale(12);
-                        int dotX = qualityX - dotSize - UI.scale(2);
-                        g.image(qualityIcon, new Coord(dotX, textY), new Coord(dotSize, dotSize));
-                    } catch (Exception e) {
-                        // Ignore if icon fails to load
-                    }
-                    
-                    // Draw quality value
-                    String qualityText = String.format("%.1f", group.averageQuality);
-                    g.text(qualityText, new Coord(qualityX, textY));
+                // Display based on current DisplayType
+                String displayText;
+                switch (currentDisplayType) {
+                    case Quality:
+                        String qSign = (currentGrouping == Grouping.NONE || currentGrouping == Grouping.Q) ? "" : "+";
+                        if (group.averageQuality > 0) {
+                            displayText = String.format("x%d q%.1f%s", group.totalQuantity, group.averageQuality, qSign);
+                        } else {
+                            displayText = "x" + group.totalQuantity + " " + group.name;
+                        }
+                        break;
+                    case Info:
+                        // Show curio info (LP/H, Mental Weight) if available
+                        if (group.curioLph != null && group.curioMw != null) {
+                            displayText = String.format("x%d lph:%d mw:%d", group.totalQuantity, group.curioLph, group.curioMw);
+                        } else {
+                            displayText = String.format("x%d %s", group.totalQuantity, group.name);
+                        }
+                        break;
+                    case Name:
+                    default:
+                        displayText = String.format("x%d %s", group.totalQuantity, group.name);
+                        if (group.averageQuality > 0) {
+                            displayText += String.format(" (q%.1f)", group.averageQuality);
+                        }
+                        break;
                 }
+                
+                g.text(displayText, new Coord(textStartX, textY));
+            }
+            
+            @Override
+            public boolean mousedown(MouseDownEvent ev) {
+                // Shift+Click = Transfer items in group
+                if (ui.modshift && (ev.b == 1 || ev.b == 3)) {
+                    boolean reverse = (ev.b == 3);
+                    processGroupItems(group, reverse, "transfer");
+                    return true;
+                }
+                
+                // Ctrl+Click = Drop items in group
+                if (ui.modctrl && (ev.b == 1 || ev.b == 3)) {
+                    boolean reverse = (ev.b == 3);
+                    processGroupItems(group, reverse, "drop");
+                    return true;
+                }
+                
+                // Regular click = interact with first item
+                if (ev.b == 1 && !group.wItems.isEmpty()) {
+                    WItem wItem = group.wItems.get(0);
+                    if (wItem != null && wItem.parent != null) {
+                        wItem.item.wdgmsg("take", new Coord(sqsz.x / 2, sqsz.y / 2));
+                    }
+                    return true;
+                }
+                
+                return super.mousedown(ev);
+            }
+            
+            @Override
+            public Object tooltip(Coord c, Widget prev) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(group.name);
+                if (group.averageQuality > 0) {
+                    sb.append(String.format(" (q%.1f)", group.averageQuality));
+                }
+                if (group.curioLph != null && group.curioMw != null) {
+                    sb.append(String.format("\nLP/H: %d  MW: %d", group.curioLph, group.curioMw));
+                }
+                return sb.toString();
             }
         };
+    }
+    
+    /**
+     * Process items in a group (transfer or drop), sorted by quality.
+     * Shift+Click: transfer one item (highest quality first, or lowest if reverse)
+     * Shift+Alt+Click: transfer ALL items in group
+     * Ctrl+Click: drop one item
+     * Ctrl+Alt+Click: drop ALL items in group
+     */
+    private void processGroupItems(ItemGroup group, boolean reverse, String action) {
+        // Sort items by quality
+        List<WItem> items = new ArrayList<>(group.wItems);
+        items.sort((a, b) -> {
+            Double qa = getItemQuality((NGItem) a.item);
+            Double qb = getItemQuality((NGItem) b.item);
+            if (qa == null && qb == null) return 0;
+            if (qa == null) return 1;
+            if (qb == null) return -1;
+            // Default: higher quality first
+            int result = Double.compare(qb, qa);
+            return reverse ? -result : result;
+        });
+        
+        // Process items based on modifier
+        boolean all = ui.modmeta; // Alt key = process all items
+        
+        if (!all && !items.isEmpty()) {
+            // Just process first item
+            WItem item = items.get(0);
+            if (item != null && item.parent != null) {
+                item.item.wdgmsg(action, Coord.z);
+            }
+        } else {
+            // Process all items
+            for (WItem item : items) {
+                if (item != null && item.parent != null) {
+                    item.item.wdgmsg(action, Coord.z);
+                }
+            }
+        }
     }
     
     private Widget createCompactItemWidget(ItemGroup group, Coord sz) {
@@ -1320,6 +1613,14 @@ public class NInventory extends Inventory
                 int margin = UI.scale(1);
                 int textY = UI.scale(2);
                 
+                // Draw curio study progress bar in background
+                if (group.curioMeter != null && group.curioMeter > 0) {
+                    g.chcolor(CURIO_PROGRESS_COLOR);
+                    int progressWidth = (int)((sz.x - iconSize - margin * 2) * group.curioMeter);
+                    g.frect(new Coord(iconSize + margin * 2, 0), new Coord(progressWidth, sz.y));
+                    g.chcolor();
+                }
+                
                 // Draw item icon
                 NGItem representativeItem = group.getRepresentativeItem();
                 if (representativeItem != null) {
@@ -1330,36 +1631,67 @@ public class NInventory extends Inventory
                         if (img != null) {
                             g.image(img.tex(), iconPos, new Coord(iconSize, iconSize));
                         } else {
-                            // Fallback: draw colored placeholder
                             g.chcolor(100, 150, 100, 200);
                             g.frect(iconPos, new Coord(iconSize, iconSize));
                             g.chcolor();
                         }
                     } catch (Exception e) {
-                        // Fallback: draw colored placeholder
                         g.chcolor(100, 150, 100, 200);
                         g.frect(iconPos, new Coord(iconSize, iconSize));
                         g.chcolor();
                     }
                 }
                 
-                // Draw just the quantity next to the icon
+                // Draw quantity next to the icon with quality if grouped
                 int textStartX = margin + iconSize + UI.scale(4);
-                String quantityText = "x" + group.totalQuantity;
-                g.text(quantityText, new Coord(textStartX, textY));
+                String displayText;
+                if (currentGrouping != Grouping.NONE && group.averageQuality > 0) {
+                    displayText = String.format("x%d q%.0f", group.totalQuantity, group.averageQuality);
+                } else {
+                    displayText = "x" + group.totalQuantity;
+                }
+                g.text(displayText, new Coord(textStartX, textY));
+            }
+            
+            @Override
+            public boolean mousedown(MouseDownEvent ev) {
+                // Shift+Click = Transfer items in group
+                if (ui.modshift && (ev.b == 1 || ev.b == 3)) {
+                    boolean reverse = (ev.b == 3);
+                    processGroupItems(group, reverse, "transfer");
+                    return true;
+                }
+                
+                // Ctrl+Click = Drop items in group
+                if (ui.modctrl && (ev.b == 1 || ev.b == 3)) {
+                    boolean reverse = (ev.b == 3);
+                    processGroupItems(group, reverse, "drop");
+                    return true;
+                }
+                
+                // Regular click = interact with first item
+                if (ev.b == 1 && !group.wItems.isEmpty()) {
+                    WItem wItem = group.wItems.get(0);
+                    if (wItem != null && wItem.parent != null) {
+                        wItem.item.wdgmsg("take", new Coord(sqsz.x / 2, sqsz.y / 2));
+                    }
+                    return true;
+                }
+                
+                return super.mousedown(ev);
             }
             
             @Override
             public Object tooltip(Coord c, Widget prev) {
-                // Show item name as tooltip when hovering over the icon area
-                int iconSize = UI.scale(16);
-                int margin = UI.scale(1);
-                Coord iconArea = new Coord(margin + iconSize, iconSize + margin * 2);
-                
-                if (c.isect(new Coord(margin, margin), iconArea)) {
-                    return group.name;
+                StringBuilder sb = new StringBuilder();
+                sb.append(group.name);
+                if (group.averageQuality > 0) {
+                    sb.append(String.format(" (q%.1f)", group.averageQuality));
                 }
-                return super.tooltip(c, prev);
+                if (group.curioLph != null && group.curioMw != null) {
+                    sb.append(String.format("\nLP/H: %d  MW: %d", group.curioLph, group.curioMw));
+                }
+                return sb.toString();
             }
         };
     }
