@@ -202,10 +202,28 @@ public class NMiningOverlay extends NOverlay
         haven.render.Model mod = new haven.render.Model(haven.render.Model.Mode.LINES, mm.olvert.dat,
                 new haven.render.Model.Indices(buf.fn, NumberFormat.UINT16, DataBuffer.Usage.STATIC,
                         DataBuffer.Filler.of(Arrays.copyOf(buf.fl, buf.fn))));
-        return (new MapMesh.ShallowWrap(mod, Pipe.Op.compose(new MapMesh.NOLOrder(id), new States.LineWidth(2))));
+
+        // Check if short walls are enabled
+        boolean shortWalls = false;
+        Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
+        shortWalls = (sw != null && sw);
+
+        if (shortWalls) {
+            // When short walls enabled, use depth override to render through caps
+            return (new MapMesh.ShallowWrap(mod, Pipe.Op.compose(
+                    new MapMesh.NOLOrder(id),
+                    new States.LineWidth(2),
+                    Rendered.last,
+                    States.Depthtest.none,
+                    States.maskdepth
+            )));
+        } else {
+            return (new MapMesh.ShallowWrap(mod, Pipe.Op.compose(new MapMesh.NOLOrder(id), new States.LineWidth(2))));
+        }
     }
 
     boolean isVisible = (Boolean)NConfig.get(NConfig.Key.miningol);
+    boolean shortWallsEnabled = false;
 
     @Override
     public boolean requpdate()
@@ -243,6 +261,17 @@ public class NMiningOverlay extends NOverlay
             res = true;
             isVisible=(Boolean)NConfig.get(NConfig.Key.miningol);
         }
+
+        // Check if short walls setting changed
+        boolean currentShortWalls = false;
+        Boolean sw = (Boolean) NConfig.get(NConfig.Key.shortWalls);
+        currentShortWalls = (sw != null && sw);
+
+        if (shortWallsEnabled != currentShortWalls) {
+            res = true;
+            shortWallsEnabled = currentShortWalls;
+        }
+
         return res;
     }
 }
