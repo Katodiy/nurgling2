@@ -270,6 +270,9 @@ public class TunnelingBot implements Action {
         Resource resBefore = gui.ui.sess.glob.map.tilesetr(gui.ui.sess.glob.map.gettile(tilePos));
 
         while (needsMining(gui, tilePos)) {
+            // Clear any stones that may have fallen during previous mining
+            handleBumlings(gui);
+
             NUtils.mine(worldPos);
             gui.map.wdgmsg("sel", tilePos, tilePos, 0);
 
