@@ -296,8 +296,36 @@ public class NGItem extends GItem
             NInventory inv = (NInventory) parent;
             String containerHash = inv.parentGob.ngob.hash;
             
-            // Add to item info list for batch update on window close
-            inv.iis.add(new ItemWatcher.ItemInfo(name, quality != null ? quality : -1, wi != null ? wi.c : Coord.z, containerHash));
+            // Check if this is a stack (negative quality or contents exist)
+            // If so, add items from inside the stack instead of the stack itself
+            boolean isStack = (quality != null && quality < 0) || 
+                              (contents != null && contents instanceof haven.res.ui.stackinv.ItemStack);
+            
+            if (isStack && contents != null && contents instanceof haven.res.ui.stackinv.ItemStack) {
+                // Add items from inside the stack
+                haven.res.ui.stackinv.ItemStack stack = (haven.res.ui.stackinv.ItemStack) contents;
+                for (java.util.Map.Entry<GItem, WItem> entry : stack.wmap.entrySet()) {
+                    GItem stackItem = entry.getKey();
+                    WItem stackWItem = entry.getValue();
+                    if (stackItem instanceof NGItem) {
+                        NGItem ngStackItem = (NGItem) stackItem;
+                        // Only add items with positive quality
+                        if (ngStackItem.quality != null && ngStackItem.quality > 0 && ngStackItem.name != null) {
+                            inv.iis.add(new ItemWatcher.ItemInfo(
+                                ngStackItem.name, 
+                                ngStackItem.quality, 
+                                stackWItem != null ? stackWItem.c : Coord.z, 
+                                containerHash
+                            ));
+                        }
+                    }
+                }
+            } else if (quality != null && quality > 0) {
+                // Regular item with positive quality - add normally
+                inv.iis.add(new ItemWatcher.ItemInfo(name, quality, wi != null ? wi.c : Coord.z, containerHash));
+            }
+            // Skip items with negative or zero quality
+            
             inv.lastUpdate = NUtils.getTickId();
             
             // Track for deletion if inventory stays open for 10 frames

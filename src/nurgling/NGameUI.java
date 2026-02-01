@@ -577,6 +577,8 @@ public class NGameUI extends GameUI
             areas.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
         if(cookBook != null)
             cookBook.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
+        if(storageItemsWidget != null)
+            storageItemsWidget.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 5));
         if(nean != null)
             nean.move(new Coord(sz.x / 2 - NGUIInfo.xs / 2, sz.y / 7));
         if(spec != null)

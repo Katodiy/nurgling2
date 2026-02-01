@@ -51,6 +51,13 @@ public class ItemWatcher implements Runnable {
         if (iis == null || iis.isEmpty()) {
             return;
         }
+        
+        // Filter out items with negative or zero quality (stacks, invalid items)
+        iis.removeIf(item -> item.q <= 0);
+        
+        if (iis.isEmpty()) {
+            return; // All items were filtered out
+        }
 
         String containerHash = iis.get(0).container;
         
