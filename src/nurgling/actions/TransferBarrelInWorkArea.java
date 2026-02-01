@@ -12,6 +12,8 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.Specialisation;
 
+import static nurgling.tools.Finder.findLiftedbyPlayer;
+
 public class TransferBarrelInWorkArea implements Action {
     NContext context;
     String item;
@@ -31,11 +33,22 @@ public class TransferBarrelInWorkArea implements Action {
         Coord2d originalPos = barrel.rc;
         
         new LiftObject(barrel).run(gui);
-        long barrelId = barrel.id;
         
         if (context.workstation == null) {
+            // Find barrelworkarea globally and navigate to it
             NArea area = context.getSpecArea(Specialisation.SpecName.barrelworkarea);
-            if (area != null && area.getRCArea() != null) {
+            if (area == null) {
+                area = NContext.findSpecGlobal(Specialisation.SpecName.barrelworkarea.toString());
+            }
+            if (area != null) {
+                // Navigate to the area using global pathfinding before placing
+                // This works even if area is not currently visible
+                NUtils.navigateToArea(area);
+                
+                // Now that we've navigated, getRCArea should be available
+                if (area.getRCArea() == null)
+                    return Results.ERROR("Could not get area coordinates after navigation");
+                
                 int count = Finder.findGobs(area, new NAlias("barrel")).size();
 
                 Pair<Coord2d, Coord2d> rcarea = area.getRCArea();
@@ -45,26 +58,31 @@ public class TransferBarrelInWorkArea implements Action {
                 Coord2d placedPos = null;
                 
                 // Place barrels at corners relative to center (diagonal positions)
+                // Use findLiftedbyPlayer() instead of barrelId since ID can change during location transitions
                 if (count == 0) {
                     placedPos = center.sub(4.5, 4.5).sub(bshift);
-                    new PlaceObject(Finder.findGob(barrelId), placedPos, 0).run(gui);
+                    new PlaceObject(findLiftedbyPlayer(), placedPos, 0).run(gui);
                 } else if (count == 1) {
                     placedPos = center.sub(4.5, -4.5).sub(bshift.x, -bshift.y);
-                    new PlaceObject(Finder.findGob(barrelId), placedPos, 0).run(gui);
+                    new PlaceObject(findLiftedbyPlayer(), placedPos, 0).run(gui);
                 } else if (count == 2) {
                     placedPos = center.sub(4.5, 4.5).sub(-bshift.x, bshift.y);
-                    new PlaceObject(Finder.findGob(barrelId), placedPos, 0).run(gui);
+                    new PlaceObject(findLiftedbyPlayer(), placedPos, 0).run(gui);
                 } else if (count == 3) {
                     placedPos = center.sub(4.5, -4.5).sub(-bshift.x, -bshift.y);
-                    new PlaceObject(Finder.findGob(barrelId), placedPos, 0).run(gui);
+                    new PlaceObject(findLiftedbyPlayer(), placedPos, 0).run(gui);
                 }
                 
                 if (placedPos != null) {
-                    // Get updated barrel reference after placement
-                    barrel = Finder.findGob(barrelId);
-                    if (barrel != null) {
+                    // Get updated barrel reference after placement using findLiftedbyPlayer
+                    Gob placedBarrel = findLiftedbyPlayer();
+                    if (placedBarrel == null) {
+                        // Barrel was placed, find it at the placed position
+                        placedBarrel = Finder.findGob(area, new NAlias("barrel"));
+                    }
+                    if (placedBarrel != null) {
                         // Store barrel tracking info
-                        context.storeBarrelInfo(item, barrel.ngob.hash, new NGlobalCoord(originalPos));
+                        context.storeBarrelInfo(item, placedBarrel.ngob.hash, new NGlobalCoord(originalPos));
                     }
                 }
             }
