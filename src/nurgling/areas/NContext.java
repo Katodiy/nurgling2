@@ -448,6 +448,18 @@ public class NContext {
         String areaid = barrels.get(item);
         navigateToAreaIfNeeded(areaid);
     }
+    
+    /**
+     * Get the barrel storage area for a specific item.
+     * Returns null if no barrel area is registered for this item.
+     */
+    public NArea getBarrelAreaForItem(String item) {
+        String areaid = barrels.get(item);
+        if (areaid != null) {
+            return areas.get(areaid);
+        }
+        return null;
+    }
 
     public NArea getSpecArea(Specialisation.SpecName name) throws InterruptedException {
         if(!areas.containsKey(name.toString())) {

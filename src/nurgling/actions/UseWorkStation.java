@@ -53,27 +53,32 @@ public class UseWorkStation implements Action
             return Results.ERROR("NO WORKSTATION");
         else
         {
-            // Try to find common approach point if there's a barrel in work area
-            boolean usedCommonPoint = false;
-            Gob barrel = findBarrelNearWorkstation(ws);
+            // First check if we have a pre-calculated targetPoint (set by TransferBarrelToWorkstation)
+            boolean usedTargetPoint = false;
             
-            if (barrel != null) {
-                Coord2d commonPoint = PathFinder.findNearestCommonApproachPoint(ws, barrel);
-                if (commonPoint != null) {
-                    // Use PathFinder to workstation with the knowledge that we want to end up at commonPoint
-                    // PathFinder to workstation will use its hardMode logic
-                    PathFinder pf = new PathFinder(ws);
-                    pf.isHardMode = true;
-                    Results pfResult = pf.run(gui);
-                    
-                    if (pfResult.IsSuccess()) {
-                        usedCommonPoint = true;
+            if (cnt.workstation.targetPoint != null) {
+                Coord2d targetCoord = cnt.workstation.targetPoint.getCurrentCoord();
+                if (targetCoord != null) {
+                    new PathFinder(targetCoord).run(gui);
+                    usedTargetPoint = true;
+                }
+            }
+            
+            // If no targetPoint, try to find common approach point with nearby barrel
+            if (!usedTargetPoint) {
+                Gob barrel = findBarrelNearWorkstation(ws);
+                
+                if (barrel != null) {
+                    Coord2d commonPoint = PathFinder.findNearestCommonApproachPoint(ws, barrel);
+                    if (commonPoint != null) {
+                        new PathFinder(commonPoint).run(gui);
+                        usedTargetPoint = true;
                     }
                 }
             }
             
-            // Fallback to regular pathfinding if no common point found
-            if (!usedCommonPoint) {
+            // Fallback to regular pathfinding to workstation
+            if (!usedTargetPoint) {
                 new PathFinder(ws).run(gui);
             }
             

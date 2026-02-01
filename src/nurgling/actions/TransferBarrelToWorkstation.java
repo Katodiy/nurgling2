@@ -88,25 +88,33 @@ public class TransferBarrelToWorkstation implements Action {
             Coord2d placedPos = placeBarrelAtDiagonal(gui, ws, liftedBarrel);
             
             if (placedPos != null) {
-                // Get updated barrel reference after placement
-                Gob placedBarrel = findLiftedbyPlayer();
-                if (placedBarrel == null) {
-                    // Barrel was placed, find nearby barrel
-                    ArrayList<Gob> nearbyBarrels = Finder.findGobs(new NAlias("barrel"));
-                    for (Gob b : nearbyBarrels) {
-                        if (b.rc.dist(placedPos) < 5) {
-                            placedBarrel = b;
-                            break;
-                        }
+                // Wait for barrel to be placed (no longer lifted by player)
+                NUtils.addTask(new nurgling.tasks.NTask() {
+                    @Override
+                    public boolean check() {
+                        return findLiftedbyPlayer() == null;
+                    }
+                });
+                
+                // Find placed barrel by proximity to placement position
+                ArrayList<Gob> nearbyBarrels = Finder.findGobs(new NAlias("barrel"));
+                Gob placedBarrel = null;
+                double minDist = Double.MAX_VALUE;
+                for (Gob b : nearbyBarrels) {
+                    double dist = b.rc.dist(placedPos);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        placedBarrel = b;
                     }
                 }
+                
                 if (placedBarrel != null) {
-                    // Recalculate and store barrel hash after placement
-                    // Hash may change after moving to new position
+                    // Store barrel hash after placement
                     context.storeBarrelInfo(item, placedBarrel.ngob.hash, new NGlobalCoord(originalPos));
                     
                     // Find common approach point for workstation and barrel
                     Coord2d commonPoint = PathFinder.findNearestCommonApproachPoint(ws, placedBarrel);
+                    
                     if (commonPoint != null) {
                         context.workstation.targetPoint = new NGlobalCoord(commonPoint);
                     } else {
