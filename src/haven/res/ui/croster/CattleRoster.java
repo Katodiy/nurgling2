@@ -469,4 +469,10 @@ public abstract class CattleRoster <T extends Entry> extends Widget {
 	super.resize(sz);
 	settings.move(new Coord(sz.x-settings.sz.x ,0));
     }
+
+	public void setFilterAreaId(NArea area) {
+		this.filterAreaId = area.id;
+		this.dirty = true;
+		this.areaFilter.change(new NAreaDropbox.AreaEntry(area.id, area.name));
+	}
 }

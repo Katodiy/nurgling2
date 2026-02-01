@@ -1,104 +1,69 @@
 package nurgling.actions.bots;
 
-import haven.Gob;
 import haven.res.gfx.hud.rosters.cow.Ochs;
-import haven.res.gfx.hud.rosters.pig.Pig;
-import haven.res.ui.croster.CattleId;
-import nurgling.NGameUI;
-import nurgling.NUtils;
-import nurgling.actions.*;
-import nurgling.areas.NArea;
+import haven.res.ui.croster.Entry;
+import nurgling.actions.bots.animals.AbstractHerdAction;
 import nurgling.conf.CowsHerd;
-import nurgling.tools.NAlias;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.function.Predicate;
+public class CowsAction extends AbstractHerdAction<Ochs> {
 
-public class CowsAction implements Action {
     @Override
-    public Results run(NGameUI gui) throws InterruptedException {
+    protected Class<? extends Entry> getAnimalClass() {
+        return Ochs.class;
+    }
 
-        NArea.Specialisation cows = new NArea.Specialisation("cows");
-        NArea.Specialisation deadkritter = new NArea.Specialisation("deadkritter");
-        ArrayList<NArea.Specialisation> req = new ArrayList<>();
-        req.add(cows);
-        req.add(deadkritter);
-        ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+    @Override
+    protected String getSpecialisationName() {
+        return "cows";
+    }
 
-        if(new Validator(req, opt).run(gui).IsSuccess()) {
+    @Override
+    protected String getAliasName() {
+        return "cattle";
+    }
 
-            Comparator<Gob> comparator = new Comparator<Gob>() {
-                @Override
-                public int compare(Gob o1, Gob o2) {
-                    if (o1.getattr(CattleId.class) != null && o2.getattr(CattleId.class) != null) {
-                        Ochs p1 = (Ochs) (NUtils.getAnimalEntity(o1, Ochs.class));
-                        ;
-                        Ochs p2 = (Ochs) (NUtils.getAnimalEntity(o2, Ochs.class));
-                        ;
-                        return Double.compare(p2.rang(), p1.rang());
-                    }
-                    return 0;
-                }
-            };
+    private CowsHerd config() {
+        return CowsHerd.getCurrent();
+    }
 
-            Predicate<Gob> wpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    if (CowsHerd.getCurrent().disable_killing)
-                        return false;
-                    Ochs p1 = (Ochs) (NUtils.getAnimalEntity(gob, Ochs.class));
-                    ;
-                    return !p1.bull && !p1.dead && (!p1.calf || !CowsHerd.getCurrent().ignoreChildren);
-                }
-            };
-            Predicate<Gob> mpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    if (CowsHerd.getCurrent().disable_killing)
-                        return false;
-                    Ochs p1 = (Ochs) (NUtils.getAnimalEntity(gob, Ochs.class));
-                    ;
-                    return p1.bull && !p1.dead && (!p1.calf || !CowsHerd.getCurrent().ignoreChildren);
-                }
-            };
+    @Override
+    protected boolean isDisableKilling() {
+        return config().disable_killing;
+    }
 
-            Predicate<Gob> mlpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    Ochs p1 = (Ochs) (NUtils.getAnimalEntity(gob, Ochs.class));
-                    ;
-                    return p1.bull && !p1.dead && !p1.calf;
-                }
-            };
+    @Override
+    protected boolean isIgnoreChildren() {
+        return config().ignoreChildren;
+    }
 
-            Predicate<Gob> wlpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    Ochs p1 = (Ochs) (NUtils.getAnimalEntity(gob, Ochs.class));
-                    ;
-                    return !p1.bull && !p1.dead && !p1.calf;
-                }
-            };
-            if(CowsHerd.getCurrent()!=null) {
-                new MemorizeAnimalsAction(new NAlias("cattle"),"cows", Ochs.class).run(gui);
+    @Override
+    protected boolean isMilkingEnabled() {
+        return !config().skipMilking;
+    }
 
+    @Override
+    protected boolean isShearingEnabled() {
+        return false;
+    }
 
-                if (!CowsHerd.getCurrent().skipMilking) {
-                    new MilkAnimalsAction(new NAlias("cattle")).run(gui);
-                    gui.msg("Milking cycle done!");
-                }
-                new KillAnimalsAction<Ochs>(new NAlias("cattle"), "cows", comparator, Ochs.class, wpred, wlpred, CowsHerd.getCurrent().adultCows).run(gui);
-                gui.msg("Female cows cycle done!");
-                new KillAnimalsAction<Ochs>(new NAlias("cattle"), "cows", comparator, Ochs.class, mpred, mlpred, 1).run(gui);
-                gui.msg("Male cows cycle done!");
-            }
-            else
-            {
-                NUtils.getGameUI().error("Please select rang settings");
-            }
-            return Results.SUCCESS();
-        }
-        return Results.FAIL();
+    @Override
+    protected int getAdultFemaleLimit() {
+        return config().adultCows;
+    }
+
+    // Модель-специфичные методы
+    @Override
+    protected boolean isMale(Ochs animal) {
+        return animal.bull;
+    }
+
+    @Override
+    protected boolean isNotDead(Ochs animal) {
+        return !animal.dead;
+    }
+
+    @Override
+    protected boolean isNotChild(Ochs animal) {
+        return !animal.calf;
     }
 }

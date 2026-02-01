@@ -4,13 +4,14 @@
 package haven.res.gfx.hud.rosters.teimdeer;
 
 import haven.*;
+import haven.res.gfx.hud.rosters.Rangable;
 import haven.res.ui.croster.*;
 import nurgling.conf.TeimDeerHerd;
 
 import java.util.*;
 
 @haven.FromResource(name = "gfx/hud/rosters/teimdeer", version = 4)
-public class Teimdeer extends Entry {
+public class Teimdeer extends Entry implements Rangable {
     public int meat, milk;
     public int meatq, milkq, hideq;
     public int seedq;

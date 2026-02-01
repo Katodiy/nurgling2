@@ -1,97 +1,68 @@
 package nurgling.actions.bots;
 
-import haven.Gob;
-import haven.res.gfx.hud.rosters.goat.Goat;
 import haven.res.gfx.hud.rosters.pig.Pig;
-import haven.res.ui.croster.CattleId;
-import nurgling.NGameUI;
-import nurgling.NUtils;
-import nurgling.actions.*;
-import nurgling.areas.NArea;
+import haven.res.ui.croster.Entry;
+import nurgling.actions.bots.animals.AbstractHerdAction;
 import nurgling.conf.PigsHerd;
-import nurgling.tools.NAlias;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.function.Predicate;
+public class PigsAction extends AbstractHerdAction<Pig> {
 
-public class PigsAction implements Action {
     @Override
-    public Results run(NGameUI gui) throws InterruptedException {
+    protected Class<? extends Entry> getAnimalClass() {
+        return Pig.class;
+    }
 
-        NArea.Specialisation Pigs = new NArea.Specialisation("pigs");
-        NArea.Specialisation deadkritter = new NArea.Specialisation("deadkritter");
-        ArrayList<NArea.Specialisation> req = new ArrayList<>();
-        req.add(Pigs);
-        req.add(deadkritter);
-        ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+    @Override
+    protected String getSpecialisationName() {
+        return "pigs";
+    }
 
-        if(new Validator(req, opt).run(gui).IsSuccess()) {
+    @Override
+    protected String getAliasName() {
+        return "pig";
+    }
 
-            Comparator<Gob> comparator = new Comparator<Gob>() {
-                @Override
-                public int compare(Gob o1, Gob o2) {
-                    if (o1.getattr(CattleId.class) != null && o2.getattr(CattleId.class) != null) {
-                        Pig p1 = (Pig) (NUtils.getAnimalEntity(o1, Pig.class));
-                        Pig p2 = (Pig) (NUtils.getAnimalEntity(o2, Pig.class));
-                        return Double.compare(p2.rang(), p1.rang());
-                    }
-                    return 0;
-                }
-            };
+    private PigsHerd config() {
+        return PigsHerd.getCurrent();
+    }
 
-            Predicate<Gob> wpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    if (PigsHerd.getCurrent().disable_killing)
-                        return false;
-                    Pig p1 = (Pig) (NUtils.getAnimalEntity(gob, Pig.class));
-                    ;
-                    return !p1.hog && !p1.dead && (!p1.piglet || !PigsHerd.getCurrent().ignoreChildren);
-                }
-            };
-            Predicate<Gob> mpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    if (PigsHerd.getCurrent().disable_killing)
-                        return false;
-                    Pig p1 = (Pig) (NUtils.getAnimalEntity(gob, Pig.class));
-                    ;
-                    return p1.hog && !p1.dead && (!p1.piglet || !PigsHerd.getCurrent().ignoreChildren);
-                }
-            };
+    @Override
+    protected boolean isDisableKilling() {
+        return config().disable_killing;
+    }
 
-            Predicate<Gob> mlpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    Pig p1 = (Pig) (NUtils.getAnimalEntity(gob, Pig.class));
-                    ;
-                    return p1.hog && !p1.dead && !p1.piglet;
-                }
-            };
+    @Override
+    protected boolean isIgnoreChildren() {
+        return config().ignoreChildren;
+    }
 
-            Predicate<Gob> wlpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    Pig p1 = (Pig) (NUtils.getAnimalEntity(gob, Pig.class));
-                    ;
-                    return !p1.hog && !p1.dead && !p1.piglet;
-                }
-            };
-            if(PigsHerd.getCurrent()!=null) {
-                new MemorizeAnimalsAction(new NAlias("pig"),"pigs", Pig.class).run(gui);
+    @Override
+    protected boolean isMilkingEnabled() {
+        return false;
+    }
 
-                new KillAnimalsAction<Pig>(new NAlias("pig"), "pigs", comparator, Pig.class, wpred, wlpred, PigsHerd.getCurrent().adultPigs).run(gui);
-                gui.msg("Female pigs cycle done!");
-                new KillAnimalsAction<Pig>(new NAlias("pig"), "pigs", comparator, Pig.class, mpred, mlpred, 1).run(gui);
-                gui.msg("Male pigs cycle done!");
-            }
-            else
-            {
-                NUtils.getGameUI().error("Please select rang settings");
-            }
-            return Results.SUCCESS();
-        }
-        return Results.FAIL();
+    @Override
+    protected boolean isShearingEnabled() {
+        return false;
+    }
+
+    @Override
+    protected int getAdultFemaleLimit() {
+        return config().adultPigs;
+    }
+
+    @Override
+    protected boolean isMale(Pig animal) {
+        return animal.hog;
+    }
+
+    @Override
+    protected boolean isNotDead(Pig animal) {
+        return !animal.dead;
+    }
+
+    @Override
+    protected boolean isNotChild(Pig animal) {
+        return !animal.piglet;
     }
 }
