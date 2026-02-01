@@ -5,7 +5,10 @@ import haven.Button;
 import haven.Label;
 import haven.Window;
 import haven.resutil.Curiosity;
-import nurgling.*;
+import nurgling.NGItem;
+import nurgling.NGameUI;
+import nurgling.NInventory;
+import nurgling.NUtils;
 import nurgling.iteminfo.NCuriosity;
 
 import java.awt.*;
@@ -16,6 +19,10 @@ import java.util.List;
  * Extension for adding Study Desk specific functionality to inventory windows
  */
 public class StudyDeskInventoryExtension {
+
+    private StudyDeskInventoryExtension() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 
     /**
      * Adds a Plan button and details panel to inventory windows that belong to Study Desk containers
@@ -30,18 +37,38 @@ public class StudyDeskInventoryExtension {
 
     /**
      * Checks if the given inventory belongs to a Study Desk container
+     *
      * @param inventory The inventory to check
      * @return true if this is a Study Desk inventory
      */
     public static boolean isStudyDeskInventory(NInventory inventory) {
-        if (inventory.parentGob == null) return false;
+        String resName = getInventoryParentGobResName(inventory);
+        return isStudyDesk(resName) || isBigStudyDesk(resName);
+    }
+
+    private static boolean isBigStudyDesk(String resName) {
+        return "gfx/terobjs/studydesk-big".equals(resName);
+    }
+
+    private static boolean isStudyDesk(String resName) {
+        return "gfx/terobjs/studydesk".equals(resName);
+    }
+
+    /**
+     * Returns the inventory's parent gob res name.
+     *
+     * @param inventory holds the drawable attribute with parent gob res name
+     * @return inventory's parent gob res name
+     */
+    private static String getInventoryParentGobResName(NInventory inventory) {
+        String resName = null;
+        if (inventory.parentGob == null) return resName;
         // Get the drawable attribute from the gob
         Drawable drawable = inventory.parentGob.getattr(Drawable.class);
         if (drawable != null && drawable.getres() != null) {
-            String resName = drawable.getres().name;
-            return "gfx/terobjs/studydesk".equals(resName);
+            resName = drawable.getres().name;
         }
-        return false;
+        return resName;
     }
 
     /**
@@ -78,10 +105,13 @@ public class StudyDeskInventoryExtension {
             String gobHash = null;
             if (inventory.parentGob != null && inventory.parentGob.ngob != null) {
                 gobHash = inventory.parentGob.ngob.hash;
+                // check which version of study desk is being used
             }
 
+            boolean bigStudyDesk = isBigStudyDesk(getInventoryParentGobResName(inventory));
+
             if (gameUI.studyDeskPlanner == null) {
-                gameUI.studyDeskPlanner = new StudyDeskPlannerWidget();
+                gameUI.studyDeskPlanner = new StudyDeskPlannerWidget(bigStudyDesk ? StudyDeskPlannerWidget.DESK_SIZE_BIG : StudyDeskPlannerWidget.DESK_SIZE);
                 gameUI.add(gameUI.studyDeskPlanner, plannerPos);
                 if (gobHash != null) {
                     gameUI.studyDeskPlanner.setStudyDeskHash(gobHash);

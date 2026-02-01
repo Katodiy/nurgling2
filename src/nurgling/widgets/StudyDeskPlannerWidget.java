@@ -4,10 +4,12 @@ import haven.*;
 import haven.Button;
 import haven.Label;
 import haven.resutil.Curiosity;
-import nurgling.*;
+import nurgling.NConfig;
+import nurgling.NGItem;
+import nurgling.NUtils;
 import nurgling.i18n.L10n;
 import nurgling.iteminfo.NCuriosity;
-import org.json.*;
+import org.json.JSONObject;
 
 import java.awt.*;
 import java.awt.image.WritableRaster;
@@ -16,6 +18,7 @@ import java.util.List;
 
 public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     public static final Coord DESK_SIZE = new Coord(7, 7);
+    public static final Coord DESK_SIZE_BIG = new Coord(9, 9);
     public static final Coord sqsz = UI.scale(new Coord(32, 32)).add(1, 1);
     public static final Tex invsq;
 
@@ -41,13 +44,16 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         invsq = new TexI(PUtils.rasterimg(buf));
     }
 
+    private final Coord studyDeskSize;
     private StudyTimePanel timePanel;
     private Scrollport timeScrollport;
     private String studyDeskHash = null; // Hash of the study desk this planner is for
 
-    public StudyDeskPlannerWidget() {
+    public StudyDeskPlannerWidget(Coord studyDeskSize) {
         // Width = grid + gap + time panel (200px)
-        super(sqsz.mul(DESK_SIZE).add(UI.scale(160), UI.scale(40)), L10n.get("study.planner_title"));
+        super(sqsz.mul(studyDeskSize).add(UI.scale(160), UI.scale(40)), L10n.get("study.planner_title"));
+
+        this.studyDeskSize = studyDeskSize;
 
         loadLayout();
         addTimePanel();
@@ -109,8 +115,8 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
         // Draw grid squares
         Coord c = new Coord();
-        for(c.y = 0; c.y < DESK_SIZE.y; c.y++) {
-            for(c.x = 0; c.x < DESK_SIZE.x; c.x++) {
+        for(c.y = 0; c.y < studyDeskSize.y; c.y++) {
+            for(c.x = 0; c.x < studyDeskSize.x; c.x++) {
                 Coord pos = gridStart.add(c.mul(sqsz));
                 g.image(invsq, pos);
             }
@@ -179,9 +185,9 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         // Use the same grid calculation as in cdraw()
         Coord gridStart = new Coord(UI.scale(0), UI.scale(0));
 
-        if(contentCoord.isect(gridStart, DESK_SIZE.mul(sqsz))) {
+        if(contentCoord.isect(gridStart, studyDeskSize.mul(sqsz))) {
             Coord gridPos = contentCoord.sub(gridStart).div(sqsz);
-            if(gridPos.x >= 0 && gridPos.x < DESK_SIZE.x && gridPos.y >= 0 && gridPos.y < DESK_SIZE.y) {
+            if(gridPos.x >= 0 && gridPos.x < studyDeskSize.x && gridPos.y >= 0 && gridPos.y < studyDeskSize.y) {
                 if(ev.b == 3) {
                     // Right-click: delete item at this position
                     PlannedCuriosity clickedItem = findItemAt(gridPos);
@@ -250,10 +256,10 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         // Use the same grid calculation as in cdraw()
         Coord gridStart = new Coord(UI.scale(0), UI.scale(0));
 
-        if(contentCoord.isect(gridStart, DESK_SIZE.mul(sqsz))) {
+        if(contentCoord.isect(gridStart, studyDeskSize.mul(sqsz))) {
             Coord gridPos = contentCoord.sub(gridStart).div(sqsz);
 
-            if(gridPos.x >= 0 && gridPos.x < DESK_SIZE.x && gridPos.y >= 0 && gridPos.y < DESK_SIZE.y) {
+            if(gridPos.x >= 0 && gridPos.x < studyDeskSize.x && gridPos.y >= 0 && gridPos.y < studyDeskSize.y) {
 
                 // Get the item being dragged from vhand
                 WItem handItem = NUtils.getGameUI().vhand;
@@ -378,7 +384,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
     private boolean canPlaceItem(Coord pos, Coord size) {
         // Check if item goes outside grid
-        if(pos.x + size.x > DESK_SIZE.x || pos.y + size.y > DESK_SIZE.y) {
+        if(pos.x + size.x > studyDeskSize.x || pos.y + size.y > studyDeskSize.y) {
             return false;
         }
         return true;
@@ -558,7 +564,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
 
     private void addTimePanel() {
         // Position the time panel to the right of the grid with a gap
-        Coord gridEnd = sqsz.mul(DESK_SIZE);
+        Coord gridEnd = sqsz.mul(studyDeskSize);
         Coord panelPos = new Coord(gridEnd.x + UI.scale(10), 0);
 
         // Reserve space for mental weight label at the bottom
@@ -601,7 +607,7 @@ public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
         };
 
         // Position buttons below the grid
-        Coord gridBottom = sqsz.mul(DESK_SIZE);
+        Coord gridBottom = sqsz.mul(studyDeskSize);
         int buttonY = gridBottom.y + UI.scale(8);
 
         // Center the buttons horizontally
