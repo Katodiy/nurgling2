@@ -21,6 +21,8 @@ public class GetAnimalEntry extends NTask
     {
         this.gob = gob;
         this.cattleRoster = cattleRoster;
+        this.infinite = false;
+        this.maxCounter = 10;
     }
 
     @Override

@@ -1,110 +1,68 @@
 package nurgling.actions.bots;
 
-import haven.Coord;
-import haven.Gob;
 import haven.res.gfx.hud.rosters.goat.Goat;
-import haven.res.gfx.hud.rosters.sheep.Sheep;
-import haven.res.ui.croster.CattleId;
-import nurgling.NGameUI;
-import nurgling.NUtils;
-import nurgling.actions.*;
-import nurgling.areas.NArea;
+import haven.res.ui.croster.Entry;
+import nurgling.actions.bots.animals.AbstractHerdAction;
 import nurgling.conf.GoatsHerd;
-import nurgling.tools.Context;
-import nurgling.tools.Finder;
-import nurgling.tools.NAlias;
-import nurgling.widgets.Specialisation;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.function.Predicate;
+public class GoatsAction extends AbstractHerdAction<Goat> {
 
-public class GoatsAction implements Action {
     @Override
-    public Results run(NGameUI gui) throws InterruptedException {
+    protected Class<? extends Entry> getAnimalClass() {
+        return Goat.class;
+    }
 
-        NArea.Specialisation goats = new NArea.Specialisation("goats");
-        NArea.Specialisation deadkritter = new NArea.Specialisation("deadkritter");
-        ArrayList<NArea.Specialisation> req = new ArrayList<>();
-        req.add(goats);
-        req.add(deadkritter);
-        ArrayList<NArea.Specialisation> opt = new ArrayList<>();
+    @Override
+    protected String getSpecialisationName() {
+        return "goats";
+    }
 
-        if(new Validator(req, opt).run(gui).IsSuccess()) {
+    @Override
+    protected String getAliasName() {
+        return "goat";
+    }
 
-            Comparator<Gob> comparator = new Comparator<Gob>() {
-                @Override
-                public int compare(Gob o1, Gob o2) {
-                    if (o1.getattr(CattleId.class) != null && o2.getattr(CattleId.class) != null) {
-                        Goat p1 = (Goat) (NUtils.getAnimalEntity(o1, Goat.class));
-                        Goat p2 = (Goat) (NUtils.getAnimalEntity(o2, Goat.class));
-                        return Double.compare(p2.rang(), p1.rang());
-                    }
-                    return 0;
-                }
-            };
+    private GoatsHerd config() {
+        return GoatsHerd.getCurrent();
+    }
 
-            Predicate<Gob> wpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    if (GoatsHerd.getCurrent().disable_killing)
-                        return false;
-                    Goat p1 = (Goat) (NUtils.getAnimalEntity(gob, Goat.class));
-                    ;
-                    return !p1.billy && !p1.dead && (!p1.kid || !GoatsHerd.getCurrent().ignoreChildren);
-                }
-            };
-            Predicate<Gob> mpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    if (GoatsHerd.getCurrent().disable_killing)
-                        return false;
-                    Goat p1 = (Goat) (NUtils.getAnimalEntity(gob, Goat.class));
-                    ;
-                    return p1.billy && !p1.dead && (!p1.kid || !GoatsHerd.getCurrent().ignoreChildren);
-                }
-            };
+    @Override
+    protected boolean isDisableKilling() {
+        return config().disable_killing;
+    }
 
-            Predicate<Gob> mlpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    Goat p1 = (Goat) (NUtils.getAnimalEntity(gob, Goat.class));
-                    ;
-                    return p1.billy && !p1.dead && !p1.kid;
-                }
-            };
+    @Override
+    protected boolean isIgnoreChildren() {
+        return config().ignoreChildren;
+    }
 
-            Predicate<Gob> wlpred = new Predicate<Gob>() {
-                @Override
-                public boolean test(Gob gob) {
-                    Goat p1 = (Goat) (NUtils.getAnimalEntity(gob, Goat.class));
-                    ;
-                    return !p1.billy && !p1.dead && !p1.kid;
-                }
-            };
-            if(GoatsHerd.getCurrent()!=null) {
-                new MemorizeAnimalsAction(new NAlias("goat"),"goats",Goat.class).run(gui);
+    @Override
+    protected boolean isMilkingEnabled() {
+        return !config().skipMilking;
+    }
 
-                if (!GoatsHerd.getCurrent().skipMilking) {
-                    new MilkAnimalsAction(new NAlias("goat")).run(gui);
-                    gui.msg("Milking cycle done!");
-                }
+    @Override
+    protected boolean isShearingEnabled() {
+        return !config().skipShearing;
+    }
 
-                if (!GoatsHerd.getCurrent().skipShearing) {
-                    new ShearWool(Specialisation.SpecName.goats, new NAlias("goat")).run(gui);
-                }
+    @Override
+    protected int getAdultFemaleLimit() {
+        return config().adultGoats;
+    }
 
-                new KillAnimalsAction<Goat>(new NAlias("goat"), "goats", comparator, Goat.class, wpred, wlpred, GoatsHerd.getCurrent().adultGoats).run(gui);
-                gui.msg("Female goats cycle done!");
-                new KillAnimalsAction<Goat>(new NAlias("goat"), "goats", comparator, Goat.class, mpred, mlpred, 1).run(gui);
-                gui.msg("Male goats cycle done!");
-            }
-            else
-            {
-                NUtils.getGameUI().error("Please select rang settings");
-            }
-            return Results.SUCCESS();
-        }
-        return Results.FAIL();
+    @Override
+    protected boolean isMale(Goat animal) {
+        return animal.billy;
+    }
+
+    @Override
+    protected boolean isNotDead(Goat animal) {
+        return !animal.dead;
+    }
+
+    @Override
+    protected boolean isNotChild(Goat animal) {
+        return !animal.kid;
     }
 }

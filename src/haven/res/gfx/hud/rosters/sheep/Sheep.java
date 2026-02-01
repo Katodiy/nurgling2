@@ -4,13 +4,14 @@
 package haven.res.gfx.hud.rosters.sheep;
 
 import haven.*;
+import haven.res.gfx.hud.rosters.Rangable;
 import haven.res.ui.croster.*;
 import nurgling.conf.SheepsHerd;
 
 import java.util.*;
 
 @haven.FromResource(name = "gfx/hud/rosters/sheep", version = 67)
-public class Sheep extends Entry {
+public class Sheep extends Entry implements Rangable {
     public int meat, milk, wool;
     public int meatq, milkq, woolq, hideq;
     public int seedq;
