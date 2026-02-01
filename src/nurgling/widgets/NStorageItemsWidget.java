@@ -337,7 +337,7 @@ public class NStorageItemsWidget extends Window {
             .thenAccept(items -> {
                 // Filter out items with negative quality (shouldn't be in DB, but just in case)
                 List<StorageItemDao.StorageItemData> validItems = items.stream()
-                    .filter(item -> item.getQuality() > 0)
+                    .filter(item -> item.getQuality() >= 0)
                     .collect(Collectors.toList());
                 processLoadedItems(validItems);
                 isLoading = false;

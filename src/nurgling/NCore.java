@@ -743,11 +743,11 @@ public class NCore extends Widget
         });
     }
 
-    public void writeItemInfoForContainer(ArrayList<ItemWatcher.ItemInfo> iis) {
+    public void writeItemInfoForContainer(ArrayList<ItemWatcher.ItemInfo> iis, String containerHash) {
         if (databaseManager == null || !databaseManager.isReady()) {
             return;
         }
-        ItemWatcher itemWatcher = new ItemWatcher(iis, databaseManager);
+        ItemWatcher itemWatcher = new ItemWatcher(iis, databaseManager, containerHash);
         databaseManager.submitTask(itemWatcher);
     }
 

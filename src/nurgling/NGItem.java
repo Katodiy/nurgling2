@@ -29,6 +29,9 @@ public class NGItem extends GItem
 
     boolean sent = false;
     boolean checkedForFood = false; // Optimization: only check NFoodInfo once
+    boolean addedToInventoryCache = false; // Track if item was added to container cache for DB sync
+    boolean isStackContainer = false; // True if this item is a stack container (holds other items)
+    ItemWatcher.ItemInfo cachedItemInfo = null; // Reference to ItemInfo in cache for removal
     public NGItem(Indir<Resource> res, Message sdt)
     {
         super(res, sdt);
@@ -148,10 +151,22 @@ public class NGItem extends GItem
                         VSpec.checkLpExplorer(NUtils.getGameUI().map.clickedGob.gob, name);
                     }
                 }
+                
             }
 
         }
         if(name!= null) {
+            // Check if this is a stack container (has contents with ItemStack)
+            // This must be checked early while contents is still available
+            if (!isStackContainer && contents != null && contents instanceof ItemStack) {
+                isStackContainer = true;
+            }
+            
+            // Try to add to inventory cache for DB sync
+            // This is checked every tick until successfully added (quality might not be ready initially)
+            if (!addedToInventoryCache && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+                tryAddToInventoryCache();
+            }
             if((Boolean)NConfig.get(NConfig.Key.ndbenable)) {
                 // Optimization: only check NFoodInfo once per item after info is loaded
                 // checkedForFood prevents repeated getInfo() calls every tick
@@ -289,51 +304,168 @@ public class NGItem extends GItem
         }
         return null;
     }
-
-    @Override
-    public void destroy() {
-        if(parent!=null && parent instanceof NInventory && (((NInventory) parent).parentGob)!=null && ((NInventory) parent).parentGob !=null && name!=null) {
-            NInventory inv = (NInventory) parent;
-            String containerHash = inv.parentGob.ngob.hash;
-            
-            // Check if this is a stack (negative quality or contents exist)
-            // If so, add items from inside the stack instead of the stack itself
-            boolean isStack = (quality != null && quality < 0) || 
-                              (contents != null && contents instanceof haven.res.ui.stackinv.ItemStack);
-            
-            if (isStack && contents != null && contents instanceof haven.res.ui.stackinv.ItemStack) {
-                // Add items from inside the stack
-                haven.res.ui.stackinv.ItemStack stack = (haven.res.ui.stackinv.ItemStack) contents;
-                for (java.util.Map.Entry<GItem, WItem> entry : stack.wmap.entrySet()) {
-                    GItem stackItem = entry.getKey();
-                    WItem stackWItem = entry.getValue();
-                    if (stackItem instanceof NGItem) {
-                        NGItem ngStackItem = (NGItem) stackItem;
-                        // Only add items with positive quality
-                        if (ngStackItem.quality != null && ngStackItem.quality > 0 && ngStackItem.name != null) {
-                            inv.iis.add(new ItemWatcher.ItemInfo(
-                                ngStackItem.name, 
-                                ngStackItem.quality, 
-                                stackWItem != null ? stackWItem.c : Coord.z, 
-                                containerHash
-                            ));
+    
+    /**
+     * Try to add this item to the parent inventory's cache for DB sync.
+     * Called when item name is first determined.
+     */
+    private void tryAddToInventoryCache() {
+        if (addedToInventoryCache || name == null) return;
+        
+        // Find the parent NInventory
+        NInventory inv = findParentInventory();
+        if (inv == null) {
+            return; // No inventory, skip silently
+        }
+        
+        // Check if this inventory should be indexed
+        if (!inv.isIndexable()) {
+            addedToInventoryCache = true; // Mark as handled, but don't add to cache
+            return;
+        }
+        
+        // Skip if no container hash yet
+        if (inv.parentGob == null || inv.parentGob.ngob == null || inv.parentGob.ngob.hash == null) {
+            return; // Will try again later
+        }
+        
+        String containerHash = inv.parentGob.ngob.hash;
+        boolean fromStack = (parent instanceof haven.res.ui.stackinv.ItemStack);
+        
+        // Skip stack containers (items that hold other items inside)
+        // The isStackContainer flag is set in tick() when contents is available
+        // Also check: if quality is null and NOT from stack, it's likely a stack container
+        if (isStackContainer && !fromStack) {
+            System.out.println("NGItem.cache: Skipped stack container (flag): " + name);
+            addedToInventoryCache = true;
+            return;
+        }
+        
+        // Additional check: items with null quality that are NOT from inside a stack are stack containers
+        // (Items from inside stacks have quality, stack containers have null quality)
+        if (quality == null && !fromStack) {
+            // Double check by looking at contents
+            if (contents != null && contents instanceof ItemStack) {
+                isStackContainer = true;
+                System.out.println("NGItem.cache: Skipped stack container (contents): " + name);
+                addedToInventoryCache = true;
+                return;
+            }
+            // Also check Amount info - stacks have this
+            if (getInfo(GItem.Amount.class) != null) {
+                isStackContainer = true;
+                System.out.println("NGItem.cache: Skipped stack container (amount): " + name);
+                addedToInventoryCache = true;
+                return;
+            }
+        }
+        
+        // Skip negative quality items
+        if (quality != null && quality < 0) {
+            addedToInventoryCache = true;
+            return;
+        }
+        
+        // Calculate quality - items with null/0 quality should not be saved
+        // (they are stack containers or items without quality info)
+        if (quality == null || quality <= 0) {
+            System.out.println("NGItem.cache: Skipped zero quality: " + name + " q=" + quality);
+            addedToInventoryCache = true;
+            return;
+        }
+        
+        double q = quality;
+        
+        // Determine coordinates and stack index
+        Coord itemCoord;
+        int stackIndex = -1;
+        
+        if (fromStack) {
+            // Item is inside a stack - use stack container's coords + item's index in stack
+            Widget stackParent = parent.parent; // ContentsWindow
+            if (stackParent instanceof GItem.ContentsWindow) {
+                GItem.ContentsWindow contWnd = (GItem.ContentsWindow) stackParent;
+                GItem stackContainer = contWnd.cont;
+                if (stackContainer != null && stackContainer.parent instanceof NInventory) {
+                    // Get stack container's WItem to find its coords
+                    for (Widget w = ((NInventory)stackContainer.parent).child; w != null; w = w.next) {
+                        if (w instanceof WItem && ((WItem)w).item == stackContainer) {
+                            itemCoord = ((WItem)w).c;
+                            // Get index in stack by counting items before this one
+                            if (parent instanceof haven.res.ui.stackinv.ItemStack) {
+                                haven.res.ui.stackinv.ItemStack stack = (haven.res.ui.stackinv.ItemStack) parent;
+                                int idx = 0;
+                                for (java.util.Map.Entry<GItem, WItem> e : stack.wmap.entrySet()) {
+                                    if (e.getKey() == this) {
+                                        stackIndex = idx;
+                                        break;
+                                    }
+                                    idx++;
+                                }
+                            }
+                            cachedItemInfo = new ItemWatcher.ItemInfo(name, q, itemCoord, containerHash, stackIndex);
+                            inv.iis.add(cachedItemInfo);
+                            addedToInventoryCache = true;
+                            inv.lastUpdate = NUtils.getTickId();
+                            System.out.println("NGItem.cache: ADDED (stack): " + name + " q=" + q + " idx=" + stackIndex + " iis.size=" + inv.iis.size());
+                            return;
                         }
                     }
                 }
-            } else if (quality != null && quality > 0) {
-                // Regular item with positive quality - add normally
-                inv.iis.add(new ItemWatcher.ItemInfo(name, quality, wi != null ? wi.c : Coord.z, containerHash));
             }
-            // Skip items with negative or zero quality
+            // Fallback if we couldn't find coords
+            itemCoord = wi != null ? wi.c : Coord.z;
+        } else {
+            // Regular item - use its own coords
+            itemCoord = wi != null ? wi.c : Coord.z;
+        }
+        
+        cachedItemInfo = new ItemWatcher.ItemInfo(name, q, itemCoord, containerHash, stackIndex);
+        inv.iis.add(cachedItemInfo);
+        addedToInventoryCache = true;
+        inv.lastUpdate = NUtils.getTickId();
+        System.out.println("NGItem.cache: ADDED: " + name + " q=" + q + " iis.size=" + inv.iis.size());
+    }
+    
+    /**
+     * Find the parent NInventory for this item (handles items inside stacks)
+     */
+    private NInventory findParentInventory() {
+        if (parent instanceof NInventory) {
+            return (NInventory) parent;
+        } else if (parent instanceof haven.res.ui.stackinv.ItemStack) {
+            // Item inside a stack - find NInventory through ContentsWindow
+            Widget stackParent = parent.parent; // ContentsWindow
+            if (stackParent instanceof GItem.ContentsWindow) {
+                GItem.ContentsWindow contWnd = (GItem.ContentsWindow) stackParent;
+                GItem stackContainer = contWnd.cont;
+                if (stackContainer != null && stackContainer.parent instanceof NInventory) {
+                    return (NInventory) stackContainer.parent;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void destroy() {
+        if (name != null && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+            // Try to add to cache if not already added (handles fast open/close when tick() didn't run)
+            if (!addedToInventoryCache) {
+                tryAddToInventoryCache();
+            }
             
-            inv.lastUpdate = NUtils.getTickId();
-            
-            // Track for deletion if inventory stays open for 10 frames
-            if (containerHash != null && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
-                String itemHash = generateItemHash();
-                if (itemHash != null) {
-                    long deleteAtTick = NUtils.getTickId() + 10;
-                    inv.pendingDeletions.add(new NInventory.PendingDeletion(itemHash, containerHash, deleteAtTick));
+            // If item was added to cache, schedule removal
+            if (addedToInventoryCache && cachedItemInfo != null) {
+                NInventory inv = findParentInventory();
+                
+                if (inv != null) {
+                    // Schedule cache removal with a delay
+                    // If container closes (reqdestroy), pending removals are cleared and cache is synced
+                    // If container stays open (item consumed), the removal will be processed in tick()
+                    long removeAtTick = NUtils.getTickId() + 15; // 15 ticks delay
+                    inv.pendingCacheRemovals.add(new NInventory.PendingCacheRemoval(cachedItemInfo, removeAtTick));
+                    System.out.println("NGItem.destroy: Scheduled removal: " + name + " at tick " + removeAtTick);
                 }
             }
         }
@@ -346,8 +478,10 @@ public class NGItem extends GItem
      */
     private String generateItemHash() {
         if (name == null || wi == null) return null;
-        // Format quality the same way as ItemWatcher.ItemInfo constructor
-        double q = Double.parseDouble(Utils.odformat2(quality != null ? quality : -1, 2));
+        // Format quality the same way as tryAddToInventoryCache and ItemWatcher.ItemInfo
+        // Use 0 for null/negative quality to match what we store in cache
+        double q = (quality != null && quality > 0) ? quality : 0;
+        q = Double.parseDouble(Utils.odformat2(q, 2));
         String data = name + wi.c.toString() + q;
         return NUtils.calculateSHA256(data);
     }

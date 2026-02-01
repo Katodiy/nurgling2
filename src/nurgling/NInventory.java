@@ -47,19 +47,69 @@ public class NInventory extends Inventory
     public Gob parentGob = null;
     long lastUpdate = 0;
     
-    // Track pending item deletions for database sync
-    public static class PendingDeletion {
-        public final String itemHash;
-        public final long deleteAtTick;
-        public final String containerHash;
+    // Track pending item removals from cache (for items consumed while container is open)
+    public static class PendingCacheRemoval {
+        public final ItemWatcher.ItemInfo itemInfo;
+        public final long removeAtTick;
         
-        public PendingDeletion(String itemHash, String containerHash, long deleteAtTick) {
-            this.itemHash = itemHash;
-            this.containerHash = containerHash;
-            this.deleteAtTick = deleteAtTick;
+        public PendingCacheRemoval(ItemWatcher.ItemInfo itemInfo, long removeAtTick) {
+            this.itemInfo = itemInfo;
+            this.removeAtTick = removeAtTick;
         }
     }
-    public final java.util.List<PendingDeletion> pendingDeletions = new java.util.ArrayList<>();
+    public final java.util.List<PendingCacheRemoval> pendingCacheRemovals = new java.util.ArrayList<>();
+    
+    // Flag to indicate inventory is being closed (to distinguish item consumed vs container closed)
+    public boolean isClosing = false;
+    
+    // Flag to indicate if this inventory should be indexed in database
+    // Only certain container types should be tracked (e.g. Cupboard, Chest, etc.)
+    private Boolean isIndexable = null;
+    
+    // Container types that should be indexed
+    private static final java.util.Set<String> INDEXABLE_CONTAINERS = java.util.Set.of(
+        "Cupboard",
+        "Chest",
+        "Crate",
+        "Barrel",
+        "Basket",
+        "Coffer",
+        "Large Chest",
+        "Metal Cabinet",
+        "Stonecasket"
+    );
+    
+    /**
+     * Check if this inventory should be indexed in database
+     */
+    public boolean isIndexable() {
+        if (isIndexable != null) {
+            return isIndexable;
+        }
+        
+        // Check if this is an indexable container
+        isIndexable = false;
+        
+        // Skip main inventory, equipment, belt, study
+        NGameUI gui = NUtils.getGameUI();
+        if (gui != null && this == gui.maininv) {
+            return false;
+        }
+        
+        // Check parent window title
+        Window wnd = getparent(Window.class);
+        if (wnd != null && wnd.cap != null) {
+            String title = wnd.cap;
+            for (String containerType : INDEXABLE_CONTAINERS) {
+                if (title.contains(containerType)) {
+                    isIndexable = true;
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
     private long pendingSearchRefreshTick = 0;
     
     // Pre-cached slot number textures for performance
@@ -536,29 +586,30 @@ public class NInventory extends Inventory
         {
             lastUpdate = NUtils.getTickId();
         }
-        if(!iis.isEmpty() && NUtils.getTickId() - lastUpdate > 20)
-        {
-            iis.clear();
-        }
+        // Note: removed old iis.clear() logic - in new design iis is managed by
+        // tryAddToInventoryCache (add) and reqdestroy (sync)
         
-        // Process pending deletions - items deleted while inventory stays open
-        if (!pendingDeletions.isEmpty() && (Boolean) NConfig.get(NConfig.Key.ndbenable) && 
-            ui != null && ui.core != null && ui.core.databaseManager != null && ui.core.databaseManager.isReady()) {
+        // Process pending cache removals - items consumed while inventory stays open
+        // These are only processed if the timer expired (container didn't close)
+        if (!pendingCacheRemovals.isEmpty() && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
             long currentTick = NUtils.getTickId();
-            java.util.Iterator<PendingDeletion> it = pendingDeletions.iterator();
-            int deletedCount = 0;
+            java.util.Iterator<PendingCacheRemoval> it = pendingCacheRemovals.iterator();
+            int removedCount = 0;
             while (it.hasNext()) {
-                PendingDeletion pd = it.next();
-                if (currentTick >= pd.deleteAtTick) {
-                    // Delete item from database async
-                    ui.core.databaseManager.getStorageItemService().deleteStorageItemAsync(pd.itemHash);
+                PendingCacheRemoval pr = it.next();
+                if (currentTick >= pr.removeAtTick) {
+                    // Timer expired, container didn't close - item was consumed
+                    // Remove from cache (iis) using direct reference
+                    if (iis.remove(pr.itemInfo)) {
+                        removedCount++;
+                        System.out.println("NInventory.tick: Removed consumed item: " + pr.itemInfo.name);
+                    }
                     it.remove();
-                    deletedCount++;
                 }
             }
-            // Schedule search refresh after a short delay to allow DB operations to complete
-            if (deletedCount > 0) {
-                pendingSearchRefreshTick = currentTick + 5; // Refresh search in 5 ticks
+            // Schedule search refresh after cache changes
+            if (removedCount > 0) {
+                pendingSearchRefreshTick = NUtils.getTickId() + 5;
             }
         }
         
@@ -1947,18 +1998,36 @@ public class NInventory extends Inventory
     }
 
     public ArrayList<ItemWatcher.ItemInfo> iis = new ArrayList<>();
+    
+    /**
+     * Generate a hash for an item for cache identification
+     */
+    public String generateItemHash(ItemWatcher.ItemInfo item) {
+        if (item == null || item.name == null) return null;
+        String data = item.name + item.c.toString() + item.q + "_" + item.stackIndex;
+        return NUtils.calculateSHA256(data);
+    }
 
     @Override
     public void reqdestroy() {
-        // Clear pending deletions - the ItemWatcher will handle bulk update on close
-        pendingDeletions.clear();
+        // Mark as closing
+        isClosing = true;
         
-        if(parentGob!=null && parentGob.ngob.hash!=null)
-        {
-            if((Boolean)NConfig.get(NConfig.Key.ndbenable)) {
-                ui.core.writeItemInfoForContainer(iis);
+        // Only process if this is an indexable container
+        if (isIndexable() && parentGob != null && parentGob.ngob != null && parentGob.ngob.hash != null) {
+            String containerHash = parentGob.ngob.hash;
+            
+            // Clear pending cache removals - container closed, so items weren't consumed
+            int pendingCount = pendingCacheRemovals.size();
+            pendingCacheRemovals.clear();
+            
+            if ((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+                System.out.println("NInventory.reqdestroy: Syncing " + iis.size() + " items for container " + containerHash + " (cleared " + pendingCount + " pending)");
+                ui.core.writeItemInfoForContainer(iis, containerHash);
             }
         }
+        // For non-indexable containers, just clear without logging
+        pendingCacheRemovals.clear();
 
         // Close Study Desk Planner if this is a study desk inventory
         if (nurgling.widgets.StudyDeskInventoryExtension.isStudyDeskInventory(this)) {
