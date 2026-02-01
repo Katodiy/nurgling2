@@ -69,8 +69,11 @@ public class Inventory extends Widget implements DTarget {
 			ni.parentGob = ui.core.getLastActions().gob;
 			if((Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.databaseManager != null && ui.core.databaseManager.isReady()) {
 				ui.core.writeContainerInfo(ni.parentGob);
-				// Items will be refreshed when container closes (via ItemWatcher)
-				// Don't clear here to avoid breaking global search overlay
+				// Invalidate cached signature to force re-sync when container closes
+				// This ensures items removed from container are deleted from DB
+				if(ni.parentGob != null && ni.parentGob.ngob != null && ni.parentGob.ngob.hash != null) {
+					monitoring.ItemWatcher.invalidateContainerCache(ni.parentGob.ngob.hash);
+				}
 			}
 		}
 		return ni;

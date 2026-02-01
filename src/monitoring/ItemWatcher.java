@@ -23,6 +23,15 @@ public class ItemWatcher implements Runnable {
     public static int getContainerCacheSize() {
         return containerItemCache.size();
     }
+    
+    /**
+     * Clear cached signature for a container to force re-sync on next close
+     */
+    public static void invalidateContainerCache(String containerHash) {
+        if (containerHash != null) {
+            containerItemCache.remove(containerHash);
+        }
+    }
 
     public static class ItemInfo {
         public String name;
@@ -147,6 +156,15 @@ public class ItemWatcher implements Runnable {
     private void deleteItems(nurgling.db.DatabaseAdapter adapter) throws SQLException {
         if (iis == null || iis.isEmpty()) return;
         
+        // First, count how many items will be deleted for logging
+        String countSql = "SELECT COUNT(*) FROM storageitems WHERE container = ?";
+        int beforeCount = 0;
+        try (java.sql.ResultSet rs = adapter.executeQuery(countSql, containerHash)) {
+            if (rs.next()) {
+                beforeCount = rs.getInt(1);
+            }
+        }
+        
         // Build parameterized IN clause: DELETE ... WHERE ... NOT IN (?, ?, ?, ...)
         String placeholders = iis.stream().map(i -> "?").collect(java.util.stream.Collectors.joining(","));
         String deleteSql = "DELETE FROM storageitems WHERE container = ? AND item_hash NOT IN (" + placeholders + ")";
@@ -159,7 +177,12 @@ public class ItemWatcher implements Runnable {
             params[i + 1] = generateItemHash(iis.get(i));
         }
 
-        adapter.executeUpdate(deleteSql, params);
+        int deleted = adapter.executeUpdate(deleteSql, params);
+        
+        if (deleted > 0 || beforeCount != iis.size()) {
+            System.out.println("ItemWatcher.deleteItems: container=" + containerHash + 
+                " beforeDB=" + beforeCount + " cache=" + iis.size() + " deleted=" + deleted);
+        }
     }
 
     private void insertItems(nurgling.db.DatabaseAdapter adapter) throws SQLException {

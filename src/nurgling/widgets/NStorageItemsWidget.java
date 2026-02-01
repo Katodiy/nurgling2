@@ -4,8 +4,8 @@ import haven.*;
 import haven.Button;
 import haven.Label;
 import haven.Window;
-import nurgling.NConfig;
-import nurgling.NUtils;
+import nurgling.*;
+import nurgling.actions.bots.FetchStorageItemBot;
 import nurgling.db.dao.StorageItemDao;
 import nurgling.db.service.StorageItemService;
 import nurgling.i18n.L10n;
@@ -518,6 +518,10 @@ public class NStorageItemsWidget extends Window {
             if (ev.b == 1) {
                 showItemDetails();
                 return true;
+            } else if (ev.b == 3) {
+                // Right click - show flower menu
+                showTakeMenu(ev.c);
+                return true;
             }
             return super.mousedown(ev);
         }
@@ -528,6 +532,79 @@ public class NStorageItemsWidget extends Window {
             sb.append(L10n.get("storage.quality")).append(": ").append(item.getQualityDisplay()).append("\n");
             sb.append(L10n.get("storage.count")).append(": ").append(item.count);
             NUtils.getGameUI().msg(sb.toString());
+        }
+        
+        private NFlowerMenu menu;
+        
+        private void showTakeMenu(Coord c) {
+            if (menu != null) {
+                menu.destroy();
+                menu = null;
+            }
+            
+            String[] opts = new String[] { L10n.get("storage.menu_take") };
+            menu = new NFlowerMenu(opts) {
+                @Override
+                public boolean mousedown(MouseDownEvent ev) {
+                    if (super.mousedown(ev)) {
+                        nchoose(null);
+                    }
+                    return true;
+                }
+                
+                @Override
+                public void destroy() {
+                    menu = null;
+                    super.destroy();
+                }
+                
+                @Override
+                public void nchoose(NPetal option) {
+                    if (option != null && option.name.equals(L10n.get("storage.menu_take"))) {
+                        showQuantitySelector();
+                    }
+                    destroy();
+                }
+            };
+            
+            // Add menu to UI at cursor position
+            NUtils.getGameUI().add(menu, NUtils.getGameUI().ui.mc.sub(menu.sz.div(2)));
+        }
+        
+        private void showQuantitySelector() {
+            if (item.count <= 1) {
+                // Only one item, fetch directly
+                startFetchBot(1);
+            } else {
+                // Show quantity selection dialog
+                NQuantitySelector selector = new NQuantitySelector(
+                    L10n.get("storage.select_quantity"),
+                    item.count,
+                    (selectedCount) -> startFetchBot(selectedCount)
+                );
+                NUtils.getGameUI().add(selector, NUtils.getGameUI().sz.div(2).sub(selector.sz.div(2)));
+            }
+        }
+        
+        private void startFetchBot(int count) {
+            // Get all raw items for this group
+            List<StorageItemDao.StorageItemData> matchingItems = rawItems.stream()
+                .filter(i -> i.getName().equals(item.name) && 
+                            i.getQuality() >= item.minQuality && 
+                            i.getQuality() <= item.maxQuality)
+                .collect(Collectors.toList());
+            
+            FetchStorageItemBot bot = new FetchStorageItemBot(item, count, matchingItems);
+            
+            Thread t = new Thread(() -> {
+                try {
+                    bot.run(NUtils.getGameUI());
+                } catch (InterruptedException e) {
+                    // Bot interrupted
+                }
+            }, "FetchStorageItemBot");
+            t.start();
+            NUtils.getGameUI().biw.addObserve(t);
         }
     }
 

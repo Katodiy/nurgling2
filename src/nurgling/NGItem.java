@@ -162,6 +162,17 @@ public class NGItem extends GItem
                 isStackContainer = true;
             }
             
+            // Check if transfer attempt timed out (item still exists after TRANSFER_TIMEOUT_TICKS)
+            // This means transfer failed (e.g. no space in target inventory)
+            if (wasTransferred && transferAttemptTick > 0) {
+                long currentTick = NUtils.getTickId();
+                if (currentTick > transferAttemptTick + TRANSFER_TIMEOUT_TICKS) {
+                    // Transfer failed - reset flag so item uses normal removal logic
+                    wasTransferred = false;
+                    transferAttemptTick = 0;
+                }
+            }
+            
             // Try to add to inventory cache for DB sync
             // This is checked every tick until successfully added (quality might not be ready initially)
             if (!addedToInventoryCache && (Boolean) NConfig.get(NConfig.Key.ndbenable)) {
@@ -200,6 +211,15 @@ public class NGItem extends GItem
     }
 
 
+    // Flag to indicate item was transferred/dropped (should be removed from cache immediately if successful)
+    private boolean wasTransferred = false;
+    private long transferAttemptTick = 0;
+    private static final int TRANSFER_TIMEOUT_TICKS = 30; // If item still exists after this many ticks, transfer failed
+    
+    public boolean wasTransferred() {
+        return wasTransferred;
+    }
+    
     @Override
     public void wdgmsg(String msg, Object... args)
     {
@@ -215,6 +235,11 @@ public class NGItem extends GItem
                         NUtils.getGameUI().getCharInfo().setFlowerCandidate(this);
                     }
                 }
+            }
+            // Mark item as transferred for immediate cache removal (if successful)
+            if (msg.equals("transfer") || msg.equals("drop")) {
+                wasTransferred = true;
+                transferAttemptTick = NUtils.getTickId();
             }
         }
         super.wdgmsg(msg, args);
@@ -455,17 +480,28 @@ public class NGItem extends GItem
                 tryAddToInventoryCache();
             }
             
-            // If item was added to cache, schedule removal
+            // If item was added to cache, handle removal
             if (addedToInventoryCache && cachedItemInfo != null) {
                 NInventory inv = findParentInventory();
                 
                 if (inv != null) {
-                    // Schedule cache removal with a delay
-                    // If container closes (reqdestroy), pending removals are cleared and cache is synced
-                    // If container stays open (item consumed), the removal will be processed in tick()
-                    long removeAtTick = NUtils.getTickId() + 15; // 15 ticks delay
-                    inv.pendingCacheRemovals.add(new NInventory.PendingCacheRemoval(cachedItemInfo, removeAtTick));
-                    System.out.println("NGItem.destroy: Scheduled removal: " + name + " at tick " + removeAtTick);
+                    if (wasTransferred) {
+                        // Item was transferred/dropped - remove from cache immediately
+                        inv.iis.removeIf(item -> 
+                            item.name.equals(cachedItemInfo.name) &&
+                            item.c.equals(cachedItemInfo.c) &&
+                            item.q == cachedItemInfo.q &&
+                            item.stackIndex == cachedItemInfo.stackIndex
+                        );
+                        System.out.println("NGItem.destroy: Immediate removal (transferred): " + name);
+                    } else {
+                        // Schedule cache removal with a delay
+                        // If container closes (reqdestroy), pending removals are cleared and cache is synced
+                        // If container stays open (item consumed), the removal will be processed in tick()
+                        long removeAtTick = NUtils.getTickId() + 15; // 15 ticks delay
+                        inv.pendingCacheRemovals.add(new NInventory.PendingCacheRemoval(cachedItemInfo, removeAtTick));
+                        System.out.println("NGItem.destroy: Scheduled removal: " + name + " at tick " + removeAtTick);
+                    }
                 }
             }
         }
