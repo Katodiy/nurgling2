@@ -288,6 +288,12 @@ public class NGameUI extends GameUI
             labeledMarkService.dispose();
         if(nurgling.NUtils.getUI().core!=null)
             NUtils.getUI().core.dispose();
+        // Shutdown ChunkNav to prevent thread accumulation on game restart
+        if(map instanceof NMapView) {
+            NMapView nmapView = (NMapView) map;
+            if(nmapView.getChunkNavManager() != null)
+                nmapView.getChunkNavManager().shutdown();
+        }
         super.dispose();
     }
 
