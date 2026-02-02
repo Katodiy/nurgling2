@@ -7,6 +7,7 @@ import haven.res.ui.croster.RosterWindow;
 import nurgling.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
+import nurgling.overlays.NCattleMarkRing;
 import nurgling.tasks.AnimalInRoster;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -50,9 +51,14 @@ public class MemorizeAnimalsAction implements Action {
         gobs.sort(NUtils.d_comp);
         for (Gob gob : gobs) {
             if (gob.getattr(CattleId.class) == null && gob.pose() != null && !NParser.checkName(gob.pose(), "knocked")) {
-                new DynamicPf(gob).run(gui);
-                new SelectFlowerAction("Memorize", gob).run(gui);
-                NUtils.getUI().core.addTask(new AnimalInRoster(gob, cattleRoster, w));
+                gob.addcustomol(new NCattleMarkRing(gob));
+                try {
+                    new DynamicPf(gob).run(gui);
+                    new SelectFlowerAction("Memorize", gob).run(gui);
+                    NUtils.getUI().core.addTask(new AnimalInRoster(gob, cattleRoster, w));
+                } finally {
+                    gob.delol(NCattleMarkRing.class);
+                }
                 return true;
             }
         }

@@ -11,6 +11,7 @@ import nurgling.actions.bots.GotoArea;
 import nurgling.actions.bots.ShearWool;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
+import nurgling.overlays.NCattleMarkRing;
 import nurgling.tasks.AnimalRangLoad;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -184,10 +185,15 @@ public abstract class AbstractHerdAction<T extends Rangable> implements Action {
             targets.sort(NUtils.d_comp);
 
             for (Gob target : targets) {
-                new GotoArea(animalArea).run(gui);
-                new DynamicPf(target).run(gui);
-                new LiftObject(target).run(gui);
-                new FindPlaceAndAction(target, NContext.findSpec("deadkritter"), true).run(gui);
+                target.addcustomol(new NCattleMarkRing(target));
+                try {
+                    new GotoArea(animalArea).run(gui);
+                    new DynamicPf(target).run(gui);
+                    new LiftObject(target).run(gui);
+                    new FindPlaceAndAction(target, NContext.findSpec("deadkritter"), true).run(gui);
+                } finally {
+                    target.delol(NCattleMarkRing.class);
+                }
 
                 CattleId cattleId = target.getattr(CattleId.class);
                 if (cattleId != null) {

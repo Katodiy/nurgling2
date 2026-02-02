@@ -114,14 +114,15 @@ public class KillAnimalsAction<C extends Entry> implements Action {
             return;
         forkill.sort(NUtils.d_comp);
         Gob target = forkill.get(0);
-        new GotoArea(animalArea).run(gui);
         target.addcustomol(new NCattleMarkRing(target));
+        try {
+            new GotoArea(animalArea).run(gui);
+            target.addcustomol(new NCattleMarkRing(target));
         boolean res = false;
         try {
-            while (!res) {
-                new DynamicPf(target).run(gui);
-                new SelectFlowerAction("Slaughter", target).run(gui);
-                AnimalIsDead aid = new AnimalIsDead(target.id);
+            while (!res) {new DynamicPf(target).run(gui);
+            new SelectFlowerAction("Slaughter", target).run(gui);
+            AnimalIsDead aid = new AnimalIsDead(target.id);
                 NUtils.getUI().core.addTask(aid);
                 res = aid.getResult();
             }
