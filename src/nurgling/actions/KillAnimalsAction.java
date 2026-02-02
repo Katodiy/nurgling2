@@ -3,10 +3,12 @@ package nurgling.actions;
 import haven.Gob;
 import haven.res.ui.croster.CattleId;
 import haven.res.ui.croster.Entry;
-import haven.res.ui.croster.RosterWindow;
-import nurgling.*;
+import nurgling.NGameUI;
+import nurgling.NUtils;
+import nurgling.actions.bots.GotoArea;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
+import nurgling.overlays.NCattleMarkRing;
 import nurgling.tasks.AnimalIsDead;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -24,15 +26,11 @@ public class KillAnimalsAction<C extends Entry> implements Action {
     private final Predicate<Gob> pred;
     private final Predicate<Gob> forpred;
     private final int flcount;
-
-    public KillAnimalsAction(NAlias animal, String type, Comparator<Gob> comp,
-                             Class<? extends Entry> cattleRoster, Predicate<Gob> pred) {
-        this(animal, type, comp, cattleRoster, pred, null, 0);
-    }
+    private final NArea animalArea;
 
     public KillAnimalsAction(NAlias animal, String type, Comparator<Gob> comp,
                              Class<? extends Entry> cattleRoster, Predicate<Gob> pred,
-                             Predicate<Gob> forpred, int flcount) {
+                             Predicate<Gob> forpred, int flcount, NArea animalArea) {
         this.animal = animal;
         this.type = type;
         this.cattleRoster = cattleRoster;
@@ -40,6 +38,7 @@ public class KillAnimalsAction<C extends Entry> implements Action {
         this.pred = pred;
         this.forpred = forpred;
         this.flcount = flcount;
+        this.animalArea = animalArea;
     }
 
     @Override
@@ -88,9 +87,9 @@ public class KillAnimalsAction<C extends Entry> implements Action {
         }
 
         // Mark animals for kill in roster (red highlight)
-        for(Gob gob : forkill) {
+        for (Gob gob : forkill) {
             CattleId cattleId = gob.getattr(CattleId.class);
-            if(cattleId != null && cattleId.entry() != null) {
+            if (cattleId != null && cattleId.entry() != null) {
                 Entry.killList.add(cattleId.entry().id);
             }
         }
@@ -112,6 +111,8 @@ public class KillAnimalsAction<C extends Entry> implements Action {
             return;
         forkill.sort(NUtils.d_comp);
         Gob target = forkill.get(0);
+        new GotoArea(animalArea).run(gui);
+        target.addcustomol(new NCattleMarkRing(target));
         boolean res = false;
         while (!res) {
             new DynamicPf(target).run(gui);
@@ -123,11 +124,13 @@ public class KillAnimalsAction<C extends Entry> implements Action {
         new LiftObject(target).run(gui);
         new FindPlaceAndAction(target, NContext.findSpec("deadkritter"), true).run(gui);
         CattleId cattleId = (CattleId) target.getattr(CattleId.class);
-        Collection<Object> args = new ArrayList<>();
-        args.add(cattleId.entry().id);
-        // Remove from kill list highlight
-        Entry.killList.remove(cattleId.entry().id);
-        NUtils.getRosterWindow(cattleRoster).roster(cattleRoster).wdgmsg("rm", args.toArray(new Object[0]));
-        forkill.remove(target);
+        if (cattleId != null && cattleId.entry() != null) {
+            Collection<Object> args = new ArrayList<>();
+            args.add(cattleId.entry().id);
+            // Remove from kill list highlight
+            Entry.killList.remove(cattleId.entry().id);
+            NUtils.getRosterWindow(cattleRoster).roster(cattleRoster).wdgmsg("rm", args.toArray(new Object[0]));
+            forkill.remove(target);
+        }
     }
 }
