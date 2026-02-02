@@ -2,7 +2,6 @@ package nurgling.tasks;
 
 import haven.Gob;
 import haven.MCache;
-import haven.res.ui.croster.CattleId;
 import nurgling.NUtils;
 import nurgling.tools.NParser;
 
@@ -11,7 +10,7 @@ public class AnimalIsDead extends NTask {
 
     public AnimalIsDead(Gob animal) {
         this.animal = animal;
-        this.maxCounter = 400;
+        this.maxCounter = 500;
         this.infinite = false;
     }
 

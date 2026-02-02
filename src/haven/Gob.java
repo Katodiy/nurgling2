@@ -586,6 +586,17 @@ public class Gob implements RenderTree.Node, Sprite.Owner, Skeleton.ModOwner, Eq
 		return(null);
 	}
 
+	public int delol(Class<? extends Sprite> spr) {
+		int n = 0;
+		for (Overlay ol : new ArrayList<>(ols)) {
+			if (spr.isInstance(ol.spr)) {
+				ol.remove();
+				n++;
+			}
+		}
+		return n;
+	}
+
 	public void findoraddol(Overlay ol) {
 		if (findol(ol.spr.getClass()) == null)
 			addol(ol, true);
