@@ -146,7 +146,9 @@ public class ProcessCheeseFromBufferContainers implements Action {
             }
 
             Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name), null);
-            new PathFinder(containerGob).run(gui);
+            PathFinder pf = new PathFinder(containerGob);
+            pf.isHardMode = true;
+            pf.run(gui);
             new OpenTargetContainer(bufferContainer).run(gui);
 
             // Process this container completely before moving to next
@@ -182,7 +184,9 @@ public class ProcessCheeseFromBufferContainers implements Action {
                         break; // Skip this container and move to next
                     }
                     bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name), null);
-                    new PathFinder(containerGob).run(gui);
+                    PathFinder pf2 = new PathFinder(containerGob);
+                    pf2.isHardMode = true;
+                    pf2.run(gui);
                     new OpenTargetContainer(bufferContainer).run(gui);
                     continue; // Go back to start of while loop with fresh container references
                 }
@@ -212,7 +216,9 @@ public class ProcessCheeseFromBufferContainers implements Action {
                         break;
                     }
                     bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name), null);
-                    new PathFinder(containerGob).run(gui);
+                    PathFinder pf3 = new PathFinder(containerGob);
+                    pf3.isHardMode = true;
+                    pf3.run(gui);
                     new OpenTargetContainer(bufferContainer).run(gui);
                 }
 
@@ -329,7 +335,9 @@ public class ProcessCheeseFromBufferContainers implements Action {
                 continue;
             }
             Container bufferContainer = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name), null);
-            new PathFinder(containerGob).run(gui);
+            PathFinder pf = new PathFinder(containerGob);
+            pf.isHardMode = true;
+            pf.run(gui);
             new OpenTargetContainer(bufferContainer).run(gui);
 
             ArrayList<WItem> trays = CheeseInventoryOperations.getCheeseTraysFromContainer(gui, bufferContainer);
@@ -488,7 +496,9 @@ public class ProcessCheeseFromBufferContainers implements Action {
     private int takeCheeseFromSingleContainer(NGameUI gui, Gob containerGob, String cheeseType, int maxToTake, CheeseBranch.Place currentPlace) throws InterruptedException {
         // Navigate to container
         NUtils.getUI().core.addTask(new WaitForGobWithHash(containerGob.ngob.hash));
-        new PathFinder(containerGob).run(gui);
+        PathFinder pf = new PathFinder(containerGob);
+        pf.isHardMode = true;
+        pf.run(gui);
 
         // Open container
         Container container = new Container(containerGob, NContext.contcaps.get(containerGob.ngob.name), null);
