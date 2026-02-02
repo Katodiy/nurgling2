@@ -29,11 +29,12 @@ public class NCattleMarkRing extends Sprite implements RenderTree.Node
         }
 
         float radius = (float) len;
+        final float z = 0.1f;
         float[] data = {
-                radius, radius, 5f, 1, 1,
-                -radius, radius, 5f, 0, 1,
-                -radius, -radius, 5f, 0, 0,
-                radius, -radius, 5f, 1, 0,
+                radius, radius, z, 1, 1,
+                -radius, radius, z, 0, 1,
+                -radius, -radius, z, 0, 0,
+                radius, -radius, z, 1, 0,
         };
         
         VertexArray va = new VertexArray(pfmt,
