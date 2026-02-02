@@ -3,20 +3,22 @@ package nurgling.tasks;
 import haven.Gob;
 import haven.MCache;
 import nurgling.NUtils;
+import nurgling.tools.Finder;
 import nurgling.tools.NParser;
 
 public class AnimalIsDead extends NTask {
-    Gob animal;
+    long gobid;
 
-    public AnimalIsDead(Gob animal) {
-        this.animal = animal;
+    public AnimalIsDead(long gobid) {
+        this.gobid = gobid;
         this.maxCounter = 500;
         this.infinite = false;
     }
 
     @Override
     public boolean check() {
-        if (animal.pose() != null && NParser.checkName(animal.pose(), "knock")) {
+        Gob animal = Finder.findGob(gobid);
+        if (animal != null && animal.pose() != null && NParser.checkName(animal.pose(), "knock")) {
             done = true;
             return true;
         }
