@@ -115,9 +115,6 @@ public class KillAnimalsAction<C extends Entry> implements Action {
         forkill.sort(NUtils.d_comp);
         Gob target = forkill.get(0);
         target.addcustomol(new NCattleMarkRing(target));
-        try {
-            new GotoArea(animalArea).run(gui);
-            target.addcustomol(new NCattleMarkRing(target));
         boolean res = false;
         try {
             while (!res) {new DynamicPf(target).run(gui);
