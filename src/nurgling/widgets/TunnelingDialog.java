@@ -831,6 +831,13 @@ public class TunnelingDialog extends Window {
             }
 
             int center = GRID_SIZE / 2;
+
+            // Guard against null state during initialization
+            if (selectedSupportType == null || selectedDirection == null) {
+                g.chcolor();
+                return;
+            }
+
             int radius = selectedSupportType.getTileRadius();
 
             if (selectedDirection.isVertical()) {
