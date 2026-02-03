@@ -261,21 +261,21 @@ NMiniMap extends MiniMap {
         NGameUI gui = NUtils.getGameUI();
         if(gui == null || sessloc == null || dloc == null) return;
         
-        // Find the Forager window
-        nurgling.widgets.bots.Forager foragerWnd = null;
+        // Find a PathRecordable window (Forager or TrufflePigHunter)
+        nurgling.widgets.bots.PathRecordable pathWnd = null;
         for(Widget wdg = gui.lchild; wdg != null; wdg = wdg.prev) {
-            if(wdg instanceof nurgling.widgets.bots.Forager) {
-                foragerWnd = (nurgling.widgets.bots.Forager) wdg;
+            if(wdg instanceof nurgling.widgets.bots.PathRecordable) {
+                pathWnd = (nurgling.widgets.bots.PathRecordable) wdg;
                 break;
             }
         }
-        
-        if(foragerWnd == null) {
+
+        if(pathWnd == null) {
             return;
         }
-        
+
         // Get current path (either recording or loaded)
-        nurgling.routes.ForagerPath recordingPath = foragerWnd.getCurrentLoadedPath();
+        nurgling.routes.ForagerPath recordingPath = pathWnd.getCurrentLoadedPath();
         if(recordingPath == null || recordingPath.waypoints.isEmpty()) {
             return;
         }
@@ -1726,17 +1726,17 @@ NMiniMap extends MiniMap {
         if(ev.b == 1 && !ui.modmeta && !ui.modshift && !ui.modctrl && dloc != null && sessloc != null) {
             NGameUI gui = NUtils.getGameUI();
             if(gui != null) {
-                // Find the Forager window
-                nurgling.widgets.bots.Forager foragerWnd = null;
+                // Find a PathRecordable window (Forager or TrufflePigHunter)
+                nurgling.widgets.bots.PathRecordable pathWnd = null;
                 for(Widget wdg = gui.lchild; wdg != null; wdg = wdg.prev) {
-                    if(wdg instanceof nurgling.widgets.bots.Forager) {
-                        foragerWnd = (nurgling.widgets.bots.Forager) wdg;
+                    if(wdg instanceof nurgling.widgets.bots.PathRecordable) {
+                        pathWnd = (nurgling.widgets.bots.PathRecordable) wdg;
                         break;
                     }
                 }
-                
+
                 // If recording, consume the event to prevent player movement
-                if(foragerWnd != null && foragerWnd.isRecording()) {
+                if(pathWnd != null && pathWnd.isRecording()) {
                     return true; // Consume mousedown to prevent movement
                 }
             }
@@ -1760,24 +1760,24 @@ NMiniMap extends MiniMap {
         if(ev.b == 1 && !ui.modmeta && !ui.modshift && !ui.modctrl && dloc != null && sessloc != null) {
             NGameUI gui = NUtils.getGameUI();
             if(gui != null) {
-                // Find the Forager window
-                nurgling.widgets.bots.Forager foragerWnd = null;
+                // Find a PathRecordable window (Forager or TrufflePigHunter)
+                nurgling.widgets.bots.PathRecordable pathWnd = null;
                 for(Widget wdg = gui.lchild; wdg != null; wdg = wdg.prev) {
-                    if(wdg instanceof nurgling.widgets.bots.Forager) {
-                        foragerWnd = (nurgling.widgets.bots.Forager) wdg;
+                    if(wdg instanceof nurgling.widgets.bots.PathRecordable) {
+                        pathWnd = (nurgling.widgets.bots.PathRecordable) wdg;
                         break;
                     }
                 }
-                
-                if(foragerWnd != null && foragerWnd.isRecording()) {
+
+                if(pathWnd != null && pathWnd.isRecording()) {
                     try {
                         // Get the MiniMap.Location at clicked position
                         MiniMap.Location clickLoc = xlate(ev.c);
-                        
+
                         if(clickLoc != null && sessloc != null && clickLoc.seg.id == sessloc.seg.id) {
                             // Create ForagerWaypoint from MiniMap.Location
                             nurgling.routes.ForagerWaypoint wp = new nurgling.routes.ForagerWaypoint(clickLoc);
-                            foragerWnd.addWaypointToRecording(wp);
+                            pathWnd.addWaypointToRecording(wp);
                         }
                     } catch(Loading e) {
                         // Grid not loaded, ignore

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.nio.file.Path;
 
-public class Forager extends Window implements Checkable {
+public class Forager extends Window implements Checkable, PathRecordable {
 
     private Dropbox<String> presetDropbox = null;
     private Dropbox<String> pathDropbox = null;
@@ -787,20 +787,23 @@ public class Forager extends Window implements Checkable {
         currentRecordingPath = null;
     }
     
+    @Override
     public boolean isRecording() {
         return isRecording;
     }
-    
+
+    @Override
     public void addWaypointToRecording(nurgling.routes.ForagerWaypoint wp) {
         if (isRecording && currentRecordingPath != null) {
             currentRecordingPath.addWaypoint(wp);
         }
     }
-    
+
     public ForagerPath getCurrentRecordingPath() {
         return currentRecordingPath;
     }
-    
+
+    @Override
     public ForagerPath getCurrentLoadedPath() {
         if (isRecording && currentRecordingPath != null) {
             return currentRecordingPath;

@@ -153,6 +153,7 @@ public class NConfig
         alwaysObfuscate,
         boughbeeprop,
         foragerprop,
+        trufflepigprop,
         buttonStyle,
         showQuestGiverNames,
         showThingwallNames,
@@ -866,6 +867,9 @@ public class NConfig
                                 break;
                             case "NForagerProp":
                                 res.add(new NForagerProp(obj));
+                                break;
+                            case "NTrufflePigProp":
+                                res.add(new NTrufflePigProp(obj));
                                 break;
                             case "NBlueprintPlanterProp":
                                 res.add(new NBlueprintPlanterProp(obj));
