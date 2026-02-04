@@ -2,7 +2,9 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.NConfig;
+import nurgling.NUtils;
 import nurgling.i18n.L10n;
+import nurgling.widgets.ChunkNavVisualizerWindow;
 import nurgling.widgets.NColorWidget;
 import java.awt.Color;
 
@@ -128,7 +130,17 @@ public class Navigation extends Panel {
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
-        
+
+        // Tools section
+        prev = content.add(new Label("● Tools"), prev.pos("bl").adds(0, 15));
+
+        prev = content.add(new Button(UI.scale(150), "ChunkNav Visualizer") {
+            @Override
+            public void click() {
+                openChunkNavVisualizer();
+            }
+        }, prev.pos("bl").adds(0, 5));
+
         // Pack content and update scrollbar
         content.pack();
         scrollport.cont.update();
@@ -164,6 +176,18 @@ public class Navigation extends Panel {
         pathLineWidthSlider.val = tempSettings.pathLineWidth;
         pathLineWidthLabel.settext(L10n.get("nav.path_line_thickness") + " " + tempSettings.pathLineWidth);
         showSpeedometer.a = tempSettings.showSpeedometer;
+    }
+
+    private void openChunkNavVisualizer() {
+        try {
+            UI ui = NUtils.getUI();
+            if (ui != null && ui.gui != null) {
+                ChunkNavVisualizerWindow window = new ChunkNavVisualizerWindow();
+                ui.gui.add(window, new Coord(ui.gui.sz.x / 2 - window.sz.x / 2, ui.gui.sz.y / 2 - window.sz.y / 2));
+            }
+        } catch (Exception e) {
+            // Ignore errors
+        }
     }
 
     @Override
