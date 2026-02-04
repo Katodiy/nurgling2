@@ -210,6 +210,53 @@ public class ChunkNavPlanner {
     }
     
     /**
+     * Plan a path from player's current position to a specific grid + local coordinate.
+     * Works correctly across different layers because it uses gridId directly.
+     * @param gridId The target grid ID
+     * @param localCoord Local tile coordinate within the grid
+     */
+    public ChunkPath planToGridCoord(long gridId, Coord localCoord) {
+        if (localCoord == null) return null;
+
+        // Get player's current chunk and local position
+        PlayerLocation playerLoc = getPlayerLocation();
+        if (playerLoc == null) {
+            return null;
+        }
+
+        long startChunkId = playerLoc.gridId;
+        Coord playerLocal = playerLoc.localCoord;
+
+        // Check if target grid is in our graph
+        ChunkNavData chunk = graph.getChunk(gridId);
+        if (chunk == null) {
+            return null;
+        }
+
+        // Find walkable tile near the target coordinate
+        Coord walkable = findWalkableTileNear(chunk, localCoord);
+        if (walkable == null) {
+            walkable = localCoord; // fallback
+        }
+
+        // Use unified pathfinder
+        UnifiedTilePathfinder.UnifiedPath unifiedPath = unifiedPathfinder.findPath(
+            startChunkId, playerLocal,
+            gridId, walkable
+        );
+
+        if (unifiedPath == null || !unifiedPath.reachable) {
+            return null;
+        }
+
+        // Convert to ChunkPath with segments
+        ChunkPath path = new ChunkPath();
+        unifiedPath.populateChunkPath(path, graph);
+
+        return path;
+    }
+
+    /**
      * Find the target chunk and local coordinate for a specific world tile.
      */
     private TargetLocation findTargetLocationForTile(Coord targetTile) {

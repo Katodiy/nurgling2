@@ -127,28 +127,28 @@ public class FetchStorageItemBot implements Action {
     private int fetchFromContainer(NGameUI gui, String containerHash, int count) throws InterruptedException {
         // Count items before
         int beforeCount = countItemsInInventory(gui, itemName);
-        
+
         // First try to find the container Gob in visible area
         Gob containerGob = Finder.findGob(containerHash);
-        
+
         if (containerGob == null) {
             // Container not visible - try to find its position from database and navigate
             ContainerDao.ContainerData containerData = loadContainerData(gui, containerHash);
             if (containerData == null) {
                 return 0;
             }
-            
-            // Parse coordinates and navigate
-            Coord2d targetPos = parseCoordinates(containerData.getCoord());
-            if (targetPos == null) {
+
+            // Parse local coordinates and navigate using gridId
+            Coord localCoord = parseLocalCoordinates(containerData.getCoord());
+            if (localCoord == null) {
                 return 0;
             }
-            
-            // Navigate to container position using chunk navigation
-            if (!navigateToPosition(gui, targetPos)) {
+
+            // Navigate to container position using chunk navigation with gridId
+            if (!navigateToContainer(gui, containerData.getGridId(), localCoord)) {
                 return 0;
             }
-            
+
             // Try to find container again after navigation
             containerGob = Finder.findGob(containerHash);
             if (containerGob == null) {
@@ -253,50 +253,63 @@ public class FetchStorageItemBot implements Action {
     }
     
     /**
-     * Parse coordinates string "(x, y)" to Coord2d
+     * Parse local coordinates string "(x, y)" to Coord (integer tile coordinates)
      */
-    private Coord2d parseCoordinates(String coords) {
+    private Coord parseLocalCoordinates(String coords) {
         if (coords == null) return null;
         try {
             // Format: "(x, y)" or "(x,y)"
             String clean = coords.replace("(", "").replace(")", "").replace(" ", "");
             String[] parts = clean.split(",");
             if (parts.length == 2) {
-                double x = Double.parseDouble(parts[0]);
-                double y = Double.parseDouble(parts[1]);
-                return new Coord2d(x, y);
+                int x = (int) Double.parseDouble(parts[0]);
+                int y = (int) Double.parseDouble(parts[1]);
+                return new Coord(x, y);
             }
         } catch (Exception e) {
             // Parse error
         }
         return null;
     }
-    
+
     /**
-     * Navigate to a world position using chunk navigation
+     * Navigate to a container using gridId + local coordinates via chunk navigation.
+     * Uses planToGridCoord for cross-layer navigation.
      */
-    private boolean navigateToPosition(NGameUI gui, Coord2d targetPos) throws InterruptedException {
+    private boolean navigateToContainer(NGameUI gui, long gridId, Coord localCoord) throws InterruptedException {
         ChunkNavManager chunkNav = ((NMapView) gui.map).getChunkNavManager();
         if (chunkNav == null || !chunkNav.isInitialized()) {
-            // Fall back to local pathfinding
-            return new PathFinder(targetPos).run(gui).IsSuccess();
+            return false;
         }
-        
-        // Use chunk navigation to get to target area
-        Coord2d playerPos = gui.map.player().rc;
-        double distance = playerPos.dist(targetPos);
-        
-        if (distance < 100) { // Close enough for local pathfinding
-            return new PathFinder(targetPos).run(gui).IsSuccess();
+
+        // Check if the grid is currently loaded (container might be nearby)
+        try {
+            MCache mcache = gui.map.glob.map;
+            MCache.Grid grid = null;
+            synchronized (mcache.grids) {
+                for (MCache.Grid g : mcache.grids.values()) {
+                    if (g.id == gridId) {
+                        grid = g;
+                        break;
+                    }
+                }
+            }
+            if (grid != null) {
+                // Grid is loaded - container should be visible, use local pathfinding
+                Coord worldTile = grid.ul.add(localCoord);
+                Coord2d worldPos = worldTile.mul(MCache.tilesz).add(MCache.tilehsz);
+                return new PathFinder(worldPos).run(gui).IsSuccess();
+            }
+        } catch (Exception e) {
+            // Fall through to chunk navigation
         }
-        
-        // Far away - use global navigation
-        // Create a temporary target for navigation
-        nurgling.navigation.ChunkPath path = chunkNav.planToCoord(targetPos);
+
+        // Grid not loaded - use chunk navigation
+        nurgling.navigation.ChunkPath path = chunkNav.planToGridCoord(gridId, localCoord);
         if (path != null) {
             return chunkNav.navigateWithPath(path, null, gui).IsSuccess();
         }
-        
+
         return false;
     }
     

@@ -68,6 +68,17 @@ public class AutoDrink implements Action
                     }
                 }
             }
+            else
+            {
+                NUtils.addTask(new NTask(){
+                    int count = 0;
+                    @Override
+                    public boolean check()
+                    {
+                        return count++>60;
+                    }
+                });
+            }
         }
         NUtils.getUI().core.autoDrink = null;
         return Results.SUCCESS();

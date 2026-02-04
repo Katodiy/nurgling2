@@ -107,10 +107,10 @@ public class RabbitMaster implements Action {
 
         while (!doesToMove.isEmpty()
                 && !doesToReplace.isEmpty()
-                && doesToMove.getFirst().quality > doesToReplace.getFirst().quality) {
+                && doesToMove.get(0).quality > doesToReplace.get(0).quality) {
 
-            Rabbit bestInc = doesToMove.removeFirst();
-            Rabbit worstBrd = doesToReplace.removeFirst();
+            Rabbit bestInc = doesToMove.remove(0);
+            Rabbit worstBrd = doesToReplace.remove(0);
             Hutch incubator = bestInc.sourceHutch;
 
             replaceDoe(gui, worstBrd, bestInc, worstBrd.sourceHutch, incubator);
@@ -137,10 +137,10 @@ public class RabbitMaster implements Action {
 
         while (!bucksToMove.isEmpty()
                 && !bucksToReplace.isEmpty()
-                && bucksToMove.getFirst().quality > bucksToReplace.getFirst().quality) {
+                && bucksToMove.get(0).quality > bucksToReplace.get(0).quality) {
 
-            Rabbit bestInc = bucksToMove.removeFirst();
-            Rabbit worstBrd = bucksToReplace.removeFirst();
+            Rabbit bestInc = bucksToMove.remove(0);
+            Rabbit worstBrd = bucksToReplace.remove(0);
             Hutch incubator = bestInc.sourceHutch;
 
             replaceBuck(gui, worstBrd, bestInc, worstBrd.sourceHutch, incubator);

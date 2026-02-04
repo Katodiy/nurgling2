@@ -342,6 +342,22 @@ public class ChunkNavManager {
     }
 
     /**
+     * Plan a path to a specific grid + local coordinate.
+     * Works correctly across different layers because it uses gridId directly.
+     * @param gridId The target grid ID
+     * @param localCoord Local tile coordinate within the grid
+     */
+    public ChunkPath planToGridCoord(long gridId, haven.Coord localCoord) {
+        if (!enabled || !initialized) return null;
+
+        // Record all visible grids to ensure fresh data before planning
+        forceRecordVisibleGrids();
+
+        ChunkPath path = planner.planToGridCoord(gridId, localCoord);
+        return path;
+    }
+
+    /**
      * Export path visualization data to JSON file for the Python visualizer.
      */
     private void exportPathVisualization(ChunkPath path, NArea area) {

@@ -33,7 +33,7 @@ public final class L10n {
     // Supported languages for UI selection (only languages with translation files)
     public static final String[][] SUPPORTED_LANGUAGES = {
         {"en", "English"},
-        {"ru", "Р СѓСЃСЃРєРёР№"}
+        {"ru", "Русский"}
     };
     
     static {
