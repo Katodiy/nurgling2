@@ -82,6 +82,7 @@ public class ChunkNavVisualizerWindow extends Window {
     private final CheckBox pathCb;
     private final CheckBox gridCb;
     private final CheckBox cellLinesCb;
+    private final Button deleteChunkBtn;
 
     public ChunkNavVisualizerWindow() {
         super(new Coord(UI.scale(WINDOW_WIDTH), UI.scale(WINDOW_HEIGHT)), "ChunkNav Visualizer");
@@ -154,6 +155,16 @@ public class ChunkNavVisualizerWindow extends Window {
                 reloadData();
             }
         }, new Coord(UI.scale(10), y));
+        y += UI.scale(30);
+
+        deleteChunkBtn = add(new Button(UI.scale(SETTINGS_WIDTH - 20), "Delete Chunk") {
+            @Override
+            public void click() {
+                super.click();
+                deleteSelectedChunk();
+            }
+        }, new Coord(UI.scale(10), y));
+        deleteChunkBtn.disable(true);  // Disabled until a chunk is selected
         y += UI.scale(40);
 
         statusLabel = add(new Label("Ready"), new Coord(UI.scale(10), y));
@@ -826,8 +837,39 @@ public class ChunkNavVisualizerWindow extends Window {
             String layer = chunk.layer != null ? chunk.layer : "outside";
             selectedLabel.settext(String.format("%s\nID: %d\nPortals: %d\nObs: %d%%",
                     layer, chunk.gridId, portalCount, obsPct));
+            deleteChunkBtn.disable(false);  // Enable delete button
         } else {
             selectedLabel.settext("None");
+            deleteChunkBtn.disable(true);   // Disable delete button
+        }
+    }
+
+    /**
+     * Delete the currently selected chunk from memory and disk.
+     */
+    private void deleteSelectedChunk() {
+        if (selectedChunkIdx < 0 || selectedChunkIdx >= chunks.size()) {
+            return;
+        }
+
+        ChunkNavData chunk = chunks.get(selectedChunkIdx);
+        long gridId = chunk.gridId;
+
+        ChunkNavManager manager = getChunkNavManager();
+        if (manager == null) {
+            statusLabel.settext("Error: ChunkNav not available");
+            return;
+        }
+
+        // Perform deletion
+        boolean success = manager.deleteChunk(gridId);
+        if (success) {
+            statusLabel.settext("Deleted chunk " + gridId);
+            // Clear selection and reload data
+            selectedChunkIdx = -1;
+            reloadData();
+        } else {
+            statusLabel.settext("Failed to delete chunk");
         }
     }
 

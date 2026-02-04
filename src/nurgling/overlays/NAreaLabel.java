@@ -38,7 +38,7 @@ public class NAreaLabel extends Sprite implements RenderTree.Node, PView.Render2
         BufferedImage selimg = NStyle.selopenings.render(area.name).img;
         if(!area.spec.isEmpty()) {
             int iconSize = UI.scale(32);
-            BufferedImage first = Specialisation.findSpecialisation(area.spec.get(0).name).image;
+            BufferedImage first = Specialisation.findSpecialisation(area.spec.get(0).name) == null ? null : Specialisation.findSpecialisation(area.spec.get(0).name).image;
             BufferedImage ret = TexI.mkbuf(new Coord(iconSize, iconSize));
             Graphics g = ret.getGraphics();
             g.drawImage(first, 0, 0, iconSize, iconSize, null);
