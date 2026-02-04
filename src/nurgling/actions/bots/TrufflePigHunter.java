@@ -33,23 +33,6 @@ public class TrufflePigHunter implements Action {
 
     private String presetName = null;
 
-    /**
-     * Find a gob by ID without throwing InterruptedException.
-     * Used inside NTask.check() where exceptions cannot be thrown.
-     */
-    private static Gob findGobByIdNoThrow(long gobId) {
-        try {
-            NGameUI gui = NUtils.getGameUI();
-            if (gui == null || gui.ui == null || gui.ui.sess == null || gui.ui.sess.glob == null) {
-                return null;
-            }
-            return gui.ui.sess.glob.oc.getgob(gobId);
-        } catch (Exception e) {
-            // Silently ignore - we can't throw from NTask.check()
-        }
-        return null;
-    }
-
     public TrufflePigHunter() {
     }
 
@@ -222,7 +205,7 @@ public class TrufflePigHunter implements Action {
                                 { maxCounter = 50; }
                                 @Override
                                 public boolean check() {
-                                    Gob p = findGobByIdNoThrow(pigId);
+                                    Gob p = Finder.findGob(pigId);
                                     if (p != null) {
                                         return truffleRef.rc.dist(p.rc) > 20;
                                     }
@@ -380,7 +363,7 @@ public class TrufflePigHunter implements Action {
             }
             @Override
             public boolean check() {
-                Gob pig = findGobByIdNoThrow(pigId);
+                Gob pig = Finder.findGob(pigId);
                 if (pig != null) {
                     Coord2d playerPos = NUtils.player().rc;
                     double pigDist = playerPos.dist(pig.rc);
