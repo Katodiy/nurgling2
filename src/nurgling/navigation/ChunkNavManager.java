@@ -50,6 +50,9 @@ public class ChunkNavManager {
     private volatile boolean recordingInProgress = false;
     private volatile boolean saveInProgress = false;
 
+    // Last planned path (for visualization)
+    private ChunkPath lastPlannedPath;
+
     // Guard flag to prevent saves during initialization (prevents Bug #3 - empty graph race condition)
     private volatile boolean initializationInProgress = false;
 
@@ -295,6 +298,9 @@ public class ChunkNavManager {
         if (path == null) {
             return null;
         }
+
+        // Store for visualization
+        this.lastPlannedPath = path;
 
         // Export path visualization
         exportPathVisualization(path, area);
@@ -640,6 +646,10 @@ public class ChunkNavManager {
 
     public ChunkNavPlanner getPlanner() {
         return planner;
+    }
+
+    public ChunkPath getLastPlannedPath() {
+        return lastPlannedPath;
     }
 
     public boolean isEnabled() {

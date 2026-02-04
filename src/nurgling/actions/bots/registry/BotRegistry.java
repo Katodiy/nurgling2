@@ -17,6 +17,7 @@ import nurgling.actions.bots.farmers.WildFlowerFarmer;
 import nurgling.actions.test.*;
 import nurgling.actions.bots.pickling.PicklingBot;
 import nurgling.bots.ChunkNavNavigatorBot;
+import nurgling.bots.ChunkNavVisualizerBot;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -265,6 +266,7 @@ public class BotRegistry {
         bots.add(new BotDescriptor("test9", BotDescriptor.BotType.TOOLS, "Test 9", "Debug test 9.", false, true, TESTAvalaible.class, "test9", false));
         bots.add(new BotDescriptor("test12", BotDescriptor.BotType.TOOLS, "Test 12", "Debug test 12.", false, true, TestBot.class, "test12", false));
         bots.add(new BotDescriptor("chunknav_navigator", BotDescriptor.BotType.TOOLS, "ChunkNav Navigator", "Opens UI to navigate to areas using chunk-based navigation.", false, true, ChunkNavNavigatorBot.class, "test14", false));
+        bots.add(new BotDescriptor("chunknav_visualizer", BotDescriptor.BotType.TOOLS, "ChunkNav Visualizer", "Opens visual map of all recorded chunks, portals, and paths.", false, true, ChunkNavVisualizerBot.class, "test16", false));
         bots.add(new BotDescriptor("navstresstest", BotDescriptor.BotType.TOOLS, "Navigation Stress Test", "Continuously tests chunk navigation between random areas. Results saved to JSON file.", false, true, NavigationStressTest.class, "test15", true));
         //bots.add(new BotDescriptor("testzonepatroller", BotDescriptor.BotType.UTILS, "Test Zone Patroller", "Patrols 15 test zones (test1-test15) every 30 minutes, returning to test16 between cycles.", true, true, TestZonePatroller.class, "worldexplorer", false));
     }
