@@ -271,6 +271,23 @@ public class TransferToContainer implements Action
     }
 
 
+    /**
+     * Ждёт освобождения руки. Если таймаут — возвращает предмет в основной инвентарь.
+     * @return true если рука освободилась, false если таймаут (предмет возвращён)
+     */
+    private static boolean waitFreeHandOrReturn() throws InterruptedException
+    {
+        WaitFreeHand wfh = new WaitFreeHand();
+        NUtils.addTask(wfh);
+        if (wfh.criticalExit)
+        {
+            NUtils.dropToInv();
+            NUtils.addTask(new WaitFreeHand());
+            return false;
+        }
+        return true;
+    }
+
     public static int transfer(WItem item, NInventory targetInv, int transfer_size) throws InterruptedException
     {
         if (!NGItem.validateItem(item))
@@ -334,7 +351,8 @@ public class TransferToContainer implements Action
 
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(targetSingleItem);
-                    NUtils.addTask(new WaitFreeHand());
+                    if (!waitFreeHandOrReturn())
+                        return 0;
 
                     if (originalStackSize <= 2)
                     {
@@ -353,7 +371,8 @@ public class TransferToContainer implements Action
 
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(((NGItem) ((GItem.ContentsWindow) targetNotFullStack.parent).cont).wi);
-                    NUtils.addTask(new WaitFreeHand());
+                    if (!waitFreeHandOrReturn())
+                        return 0;
 
                     if (originalStackSize <= 2)
                     {
@@ -378,7 +397,8 @@ public class TransferToContainer implements Action
 
                             NUtils.takeItemToHand(item);
                             NUtils.dropToInv(targetInv);
-                            NUtils.addTask(new WaitFreeHand());
+                            if (!waitFreeHandOrReturn())
+                                return 0;
 
                             if (originalStackSize <= 2)
                             {
@@ -410,14 +430,16 @@ public class TransferToContainer implements Action
                     int targetStackSize = targetNotFullStack.wmap.size();
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(((NGItem) ((GItem.ContentsWindow) targetNotFullStack.parent).cont).wi);
-                    NUtils.addTask(new WaitFreeHand());
+                    if (!waitFreeHandOrReturn())
+                        return 0;
                     NUtils.addTask(new StackSizeChanged(targetNotFullStack, targetStackSize));
                     return 1;
                 } else if ((targetSingleItem = targetInv.findNotStack(itemName)) != null)
                 {
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(targetSingleItem);
-                    NUtils.addTask(new WaitFreeHand());
+                    if (!waitFreeHandOrReturn())
+                        return 0;
                     NUtils.addTask(new GetNotFullStack(targetInv, new NAlias(itemName)));
                     return 1;
                 }

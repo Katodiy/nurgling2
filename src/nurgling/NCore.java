@@ -316,7 +316,7 @@ public class NCore extends Widget
             {
                 try
                 {
-                    if(task.check())
+                    if(task.baseCheck())
                     {
                         synchronized (task)
                         {
