@@ -63,8 +63,12 @@ public class FreeInventory2 implements Action
             public int compare(WItem o1, WItem o2) {
                 Float q1 = ((NGItem)o1.item).quality;
                 Float q2 = ((NGItem)o2.item).quality;
-                if(q1 == null || q2 == null)
+                if(q1 == null && q2 == null)
                     return 0;
+                if(q1 == null)
+                    return 1;
+                if(q2 == null)
+                    return -1;
                 return Float.compare(q2,q1);
             }
         });

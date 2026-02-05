@@ -81,7 +81,7 @@ public class TransferToContainer implements Action
                             ArrayList<WItem> coorditems = new ArrayList<>();
                             for (WItem witem : witems)
                             {
-                                if (witem.item.spr.sz().div(UI.scale(32)).equals(coord.y, coord.x))
+                                if (witem.item.spr != null && witem.item.spr.sz().div(UI.scale(32)).equals(coord.y, coord.x))
                                 {
                                     coorditems.add(witem);
                                 }
@@ -95,7 +95,7 @@ public class TransferToContainer implements Action
                                 coorditems = new ArrayList<>();
                                 for (WItem witem : witems)
                                 {
-                                    if (witem.item.spr.sz().div(UI.scale(32)).equals(coord.y, coord.x))
+                                    if (witem.item.spr != null && witem.item.spr.sz().div(UI.scale(32)).equals(coord.y, coord.x))
                                     {
                                         coorditems.add(witem);
                                     }

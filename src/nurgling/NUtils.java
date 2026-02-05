@@ -799,13 +799,9 @@ public class NUtils
         if (area == null) return false;
 
         // Check if any corner of the area is reachable via local pathfinding
+        // If yes - we're already close enough, no need to use global navigation
         if (nurgling.navigation.AreaNavigationHelper.isAreaReachableByLocalPF(area)) {
-            // Area is locally reachable - walk to the nearest corner using PathFinder
-            Coord2d nearestCorner = nurgling.navigation.AreaNavigationHelper.findNearestReachableCorner(area);
-            if (nearestCorner != null) {
-                return new nurgling.actions.PathFinder(nearestCorner).run(NUtils.getGameUI()).IsSuccess();
-            }
-            return true; // Fallback if no corner found
+            return true;
         }
 
         // Area is not reachable by local PF, use chunk navigation
@@ -828,13 +824,9 @@ public class NUtils
         if (area == null) return false;
 
         // Check if any corner of the area is reachable via local pathfinding
+        // If yes - we're already close enough, no need to use global navigation
         if (nurgling.navigation.AreaNavigationHelper.isAreaReachableByLocalPF(area)) {
-            // Area is locally reachable - walk to the nearest corner using PathFinder
-            Coord2d nearestCorner = nurgling.navigation.AreaNavigationHelper.findNearestReachableCorner(area);
-            if (nearestCorner != null) {
-                return new nurgling.actions.PathFinder(nearestCorner).run(NUtils.getGameUI()).IsSuccess();
-            }
-            return true; // Fallback if no corner found
+            return true;
         }
 
         // Area is not reachable by local PF, use chunk navigation

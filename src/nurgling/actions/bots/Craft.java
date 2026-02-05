@@ -243,12 +243,11 @@ public class Craft implements Action {
             }
 
             String item = s.ing == null ? s.name : s.ing.name;
-            if (ncontext.isInBarrel(item)) {
+            if (ncontext.isInBarrel(item) && ncontext.getPlacedBarrelHash(item) == null) {
                 if(ncontext.workstation == null) {
                     new TransferBarrelInWorkArea(ncontext, item).run(gui);
                 }
-                else if(ncontext.workstation.targetPoint == null)
-                {
+                else {
                     new TransferBarrelToWorkstation(ncontext, item).run(gui);
                 }
             } else if (!prefilled) {
@@ -273,34 +272,7 @@ public class Craft implements Action {
             new PathFinder(center).run(gui);
         }
 
-        int count = 0;
-        ArrayList<Long> barrelIds = GetBarrelsIds(ncontext);
-        
-        for (Long barrelid : barrelIds) {
-            Gob barrel = Finder.findGob(barrelid);
-            if (barrel == null) {
-                continue;
-            }
-            
-            // Check distance to barrel - need to be close enough to interact
-            double distToBarrel = NUtils.player().rc.dist(barrel.rc);
-            
-            if (distToBarrel > 20) {
-                // Too far from barrel, need to move closer
-                new PathFinder(barrel).run(gui);
-            }
-            
-            gui.map.wdgmsg("click", Coord.z, barrel.rc.floor(posres), 3, 0, 0, (int) barrel.id,
-                    barrel.rc.floor(posres), 0, -1);
-            count++;
-            int finalCount = count;
-            NUtils.addTask(new NTask() {
-                @Override
-                public boolean check() {
-                    return NUtils.getGameUI().getWindowsNum("Barrel") == finalCount;
-                }
-            });
-        }
+        openBarrelWindows(ncontext, gui);
         ArrayList<Window> windows = NUtils.getGameUI().getWindows("Barrel");
         
         boolean hasEnoughResources = true;
@@ -400,6 +372,7 @@ public class Craft implements Action {
                 if (!new UseWorkStation(ncontext).run(gui).IsSuccess()) {
                     return Results.ERROR("Failed to use workstation");
                 }
+                openBarrelWindows(ncontext, gui);
                 craftProc(ncontext, gui, resfc, targetName);
             }
         }
@@ -579,6 +552,33 @@ public class Craft implements Action {
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    private void openBarrelWindows(NContext ncontext, NGameUI gui) throws InterruptedException {
+        ArrayList<Long> barrelIds = GetBarrelsIds(ncontext);
+        int count = 0;
+        for (Long barrelid : barrelIds) {
+            Gob barrel = Finder.findGob(barrelid);
+            if (barrel == null) {
+                continue;
+            }
+
+            double distToBarrel = NUtils.player().rc.dist(barrel.rc);
+            if (distToBarrel > 20) {
+                new PathFinder(barrel).run(gui);
+            }
+
+            gui.map.wdgmsg("click", Coord.z, barrel.rc.floor(posres), 3, 0, 0, (int) barrel.id,
+                    barrel.rc.floor(posres), 0, -1);
+            count++;
+            int finalCount = count;
+            NUtils.addTask(new NTask() {
+                @Override
+                public boolean check() {
+                    return NUtils.getGameUI().getWindowsNum("Barrel") >= finalCount;
+                }
+            });
         }
     }
 
