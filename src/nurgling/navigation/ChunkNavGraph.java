@@ -353,6 +353,83 @@ public class ChunkNavGraph {
     }
 
     /**
+     * Remove a chunk from the graph and clean up all references to it.
+     * Returns list of chunks that were modified and need to be saved.
+     */
+    public List<ChunkNavData> removeChunk(long gridId) {
+        List<ChunkNavData> modifiedChunks = new ArrayList<>();
+        ChunkNavData chunk = chunks.get(gridId);
+        if (chunk == null) {
+            return modifiedChunks;
+        }
+
+        // Remove portals from index
+        for (ChunkPortal portal : chunk.portals) {
+            portalIndex.remove(portal.gobHash);
+        }
+
+        // Clean up neighbor references
+        // If this chunk's neighborNorth is X, then X's neighborSouth should be cleared
+        if (chunk.neighborNorth != -1) {
+            ChunkNavData neighbor = chunks.get(chunk.neighborNorth);
+            if (neighbor != null && neighbor.neighborSouth == gridId) {
+                neighbor.neighborSouth = -1;
+                neighbor.connectedChunks.remove(gridId);
+                modifiedChunks.add(neighbor);
+            }
+        }
+        if (chunk.neighborSouth != -1) {
+            ChunkNavData neighbor = chunks.get(chunk.neighborSouth);
+            if (neighbor != null && neighbor.neighborNorth == gridId) {
+                neighbor.neighborNorth = -1;
+                neighbor.connectedChunks.remove(gridId);
+                modifiedChunks.add(neighbor);
+            }
+        }
+        if (chunk.neighborEast != -1) {
+            ChunkNavData neighbor = chunks.get(chunk.neighborEast);
+            if (neighbor != null && neighbor.neighborWest == gridId) {
+                neighbor.neighborWest = -1;
+                neighbor.connectedChunks.remove(gridId);
+                modifiedChunks.add(neighbor);
+            }
+        }
+        if (chunk.neighborWest != -1) {
+            ChunkNavData neighbor = chunks.get(chunk.neighborWest);
+            if (neighbor != null && neighbor.neighborEast == gridId) {
+                neighbor.neighborEast = -1;
+                neighbor.connectedChunks.remove(gridId);
+                modifiedChunks.add(neighbor);
+            }
+        }
+
+        // Clean up portal connections in all other chunks pointing to this chunk
+        for (ChunkNavData other : chunks.values()) {
+            if (other.gridId == gridId) continue;
+            boolean modified = false;
+            for (ChunkPortal portal : other.portals) {
+                if (portal.connectsToGridId == gridId) {
+                    portal.connectsToGridId = -1;
+                    portal.exitLocalCoord = null;
+                    modified = true;
+                }
+            }
+            // Also remove from connectedChunks
+            if (other.connectedChunks.remove(gridId)) {
+                modified = true;
+            }
+            if (modified && !modifiedChunks.contains(other)) {
+                modifiedChunks.add(other);
+            }
+        }
+
+        // Remove the chunk itself
+        chunks.remove(gridId);
+
+        return modifiedChunks;
+    }
+
+    /**
      * Get chunks that were updated within the specified time window.
      * Used to determine which chunks need to be saved.
      */

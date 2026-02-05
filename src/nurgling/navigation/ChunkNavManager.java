@@ -50,6 +50,9 @@ public class ChunkNavManager {
     private volatile boolean recordingInProgress = false;
     private volatile boolean saveInProgress = false;
 
+    // Last planned path (for visualization)
+    private ChunkPath lastPlannedPath;
+
     // Guard flag to prevent saves during initialization (prevents Bug #3 - empty graph race condition)
     private volatile boolean initializationInProgress = false;
 
@@ -295,6 +298,9 @@ public class ChunkNavManager {
         if (path == null) {
             return null;
         }
+
+        // Store for visualization
+        this.lastPlannedPath = path;
 
         // Export path visualization
         exportPathVisualization(path, area);
@@ -619,6 +625,36 @@ public class ChunkNavManager {
     }
 
     /**
+     * Delete a specific chunk from memory and disk.
+     * Also cleans up all references to it from neighboring chunks and portals.
+     * @param gridId The grid ID of the chunk to delete
+     * @return true if deletion was successful
+     */
+    public boolean deleteChunk(long gridId) {
+        if (!initialized || fileStore == null) {
+            return false;
+        }
+
+        // Remove from graph and get list of modified chunks
+        List<ChunkNavData> modifiedChunks = graph.removeChunk(gridId);
+
+        // Save all modified chunks (neighbors that had references cleared)
+        for (ChunkNavData modified : modifiedChunks) {
+            try {
+                fileStore.saveChunk(modified);
+            } catch (IOException e) {
+                System.err.println("ChunkNav: Failed to save modified chunk " + modified.gridId + ": " + e.getMessage());
+            }
+        }
+
+        // Delete the chunk file from disk
+        fileStore.deleteChunkFile(gridId);
+
+        System.out.println("ChunkNav: Deleted chunk " + gridId + " (modified " + modifiedChunks.size() + " neighbors)");
+        return true;
+    }
+
+    /**
      * Get statistics about the navigation system.
      */
     public String getStats() {
@@ -640,6 +676,10 @@ public class ChunkNavManager {
 
     public ChunkNavPlanner getPlanner() {
         return planner;
+    }
+
+    public ChunkPath getLastPlannedPath() {
+        return lastPlannedPath;
     }
 
     public boolean isEnabled() {
