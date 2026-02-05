@@ -11,7 +11,7 @@ import nurgling.actions.bots.GotoArea;
 import nurgling.actions.bots.ShearWool;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.tasks.AnimalRangLoad;
+import nurgling.tasks.WaitAllAnimalsRangLoaded;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -89,6 +89,9 @@ public abstract class AbstractHerdAction<T extends Rangable> implements Action {
 
         new MemorizeAnimalsAction(new NAlias(getAliasName()), getSpecialisationName(), getAnimalClass()).run(gui);
 
+        // wait for rang to be loaded for all animals (including the last memorized one) so KillAnimalsAction does not put them in forkill
+        NUtils.addTask(new WaitAllAnimalsRangLoaded(animalArea, getAnimalClass(), NUtils.getRosterWindow(getAnimalClass())));
+
         // if we have dead animals in area
         new MoveDeadAnimals().run(gui);
 
@@ -114,6 +117,7 @@ public abstract class AbstractHerdAction<T extends Rangable> implements Action {
         return Results.SUCCESS();
     }
 
+    @SuppressWarnings("unchecked")
     private T getAnimal(Gob gob) {
         return (T) NUtils.getAnimalEntity(gob, getAnimalClass());
     }
