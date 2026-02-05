@@ -87,13 +87,10 @@ public abstract class AbstractHerdAction<T extends Rangable> implements Action {
         Predicate<Gob> mlpred = createAdultMalePredicate();
         Predicate<Gob> wlpred = createAdultFemalePredicate();
 
-        // load animals rang before comparator
-        NUtils.addTask(new AnimalRangLoad(NContext.findSpec(getSpecialisationName()), new NAlias(getAliasName()), getAnimalClass()));
+        new MemorizeAnimalsAction(new NAlias(getAliasName()), getSpecialisationName(), getAnimalClass()).run(gui);
 
         // if we have dead animals in area
         new MoveDeadAnimals().run(gui);
-
-        new MemorizeAnimalsAction(new NAlias(getAliasName()), getSpecialisationName(), getAnimalClass()).run(gui);
 
         if (isMilkingEnabled()) {
             new MilkAnimalsAction(new NAlias(getAliasName())).run(gui);
@@ -126,6 +123,7 @@ public abstract class AbstractHerdAction<T extends Rangable> implements Action {
             if (o1.getattr(CattleId.class) != null && o2.getattr(CattleId.class) != null) {
                 T a1 = getAnimal(o1);
                 T a2 = getAnimal(o2);
+                if (a1 == null || a2 == null) return 0;
                 return Double.compare(getRang(a2), getRang(a1)); // по убыванию
             }
             return 0;
@@ -136,7 +134,7 @@ public abstract class AbstractHerdAction<T extends Rangable> implements Action {
         return gob -> {
             if (isDisableKilling()) return false;
             T a = getAnimal(gob);
-            return !isMale(a) && isNotDead(a) && (isNotChild(a) || !isIgnoreChildren());
+            return a != null && !isMale(a) && isNotDead(a) && (isNotChild(a) || !isIgnoreChildren());
         };
     }
 
@@ -144,21 +142,21 @@ public abstract class AbstractHerdAction<T extends Rangable> implements Action {
         return gob -> {
             if (isDisableKilling()) return false;
             T a = getAnimal(gob);
-            return isMale(a) && isNotDead(a) && (isNotChild(a) || !isIgnoreChildren());
+            return a != null && isMale(a) && isNotDead(a) && (isNotChild(a) || !isIgnoreChildren());
         };
     }
 
     protected Predicate<Gob> createAdultMalePredicate() {
         return gob -> {
             T a = getAnimal(gob);
-            return isMale(a) && isNotDead(a) && isNotChild(a);
+            return a != null && isMale(a) && isNotDead(a) && isNotChild(a);
         };
     }
 
     protected Predicate<Gob> createAdultFemalePredicate() {
         return gob -> {
             T a = getAnimal(gob);
-            return !isMale(a) && isNotDead(a) && isNotChild(a);
+            return a != null && !isMale(a) && isNotDead(a) && isNotChild(a);
         };
     }
 
@@ -177,7 +175,7 @@ public abstract class AbstractHerdAction<T extends Rangable> implements Action {
                 if (animal != null && gob.getattr(CattleId.class) != null && !isNotDead(animal)) {
                     targets.add(gob);
                 }
-                if (animal == null && gob.pose().contains("knock")) {
+                if (animal == null && gob.pose() != null && gob.pose().contains("knock")) {
                     targets.add(gob);
                 }
             }

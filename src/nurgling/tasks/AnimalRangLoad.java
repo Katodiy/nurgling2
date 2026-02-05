@@ -2,9 +2,9 @@ package nurgling.tasks;
 
 import haven.Gob;
 import haven.res.gfx.hud.rosters.Rangable;
+import haven.res.ui.croster.CattleId;
 import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
-import nurgling.NUtils;
 import nurgling.areas.NArea;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
@@ -13,11 +13,13 @@ public class AnimalRangLoad extends NTask {
     private final NArea area;
     private final NAlias animal;
     private final Class<? extends Entry> animalClass;
+    private final RosterWindow rosterWindow;
 
-    public AnimalRangLoad(NArea area, NAlias animal, Class<? extends Entry> animalClass) {
+    public AnimalRangLoad(NArea area, NAlias animal, Class<? extends Entry> animalClass, RosterWindow rosterWindow) {
         this.area = area;
         this.animal = animal;
         this.animalClass = animalClass;
+        this.rosterWindow = rosterWindow;
     }
 
     @Override
@@ -26,23 +28,27 @@ public class AnimalRangLoad extends NTask {
         try {
             gob = Finder.findGob(area, animal);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            return true;
         }
 
         if (gob == null) {
             return false;
         }
 
-        try {
-            RosterWindow rosterWindow = NUtils.getRosterWindow(animalClass);
-            rosterWindow.roster(animalClass).setFilterAreaId(area);
-            NUtils.addTask(new WaitWindow("Cattle Roster"));
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        if (rosterWindow.roster(animalClass) == null || rosterWindow.roster(animalClass).entries == null) {
+            return false;
+        }
+        CattleId cid = gob.getattr(CattleId.class);
+        if (cid == null) {
+            return false;
         }
 
-        Rangable animalEntity = (Rangable) NUtils.getAnimalEntity(gob, animalClass);
-
-        return animalEntity.rang() > 0;
+        rosterWindow.roster(animalClass).setFilterAreaId(area);
+        Entry entry = (Entry) rosterWindow.roster(animalClass).entries.get(cid.id);
+        if (!(entry instanceof Rangable)) {
+            return false;
+        }
+        return ((Rangable) entry).rang() > 0;
     }
 }

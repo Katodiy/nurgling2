@@ -1,16 +1,10 @@
 package nurgling.tasks;
 
 import haven.Gob;
-import haven.WItem;
-import haven.Widget;
 import haven.res.ui.croster.CattleId;
 import haven.res.ui.croster.Entry;
 import haven.res.ui.croster.RosterWindow;
-import nurgling.NGItem;
-import nurgling.NInventory;
 import nurgling.NUtils;
-import nurgling.tools.NAlias;
-import nurgling.tools.NParser;
 
 public class GetAnimalEntry extends NTask
 {
@@ -21,14 +15,17 @@ public class GetAnimalEntry extends NTask
     {
         this.gob = gob;
         this.cattleRoster = cattleRoster;
-        this.infinite = false;
         this.maxCounter = 10;
     }
 
     @Override
     public boolean check()
     {
-        if(((RosterWindow) NUtils.getGameUI().getWindow("Cattle Roster"))==null)
+        if (counter++ >= maxCounter) {
+            result = null;
+            return true;
+        }
+        if(NUtils.getGameUI().getWindow("Cattle Roster") ==null)
             return false;
         if(((RosterWindow) NUtils.getGameUI().getWindow("Cattle Roster")).roster(cattleRoster)==null)
             return false;
