@@ -399,6 +399,17 @@ public class ChunkNavExecutor implements Action {
     private Results traversePortalGob(NGameUI gui, Gob portalGob, long targetGridId) throws InterruptedException {
         String portalName = portalGob.ngob != null ? portalGob.ngob.name : "unknown";
 
+        System.out.println("[ChunkNavExecutor] traversePortalGob:");
+        System.out.println("  - Portal: " + portalName);
+        System.out.println("  - Portal position: " + portalGob.rc);
+        System.out.println("  - Target gridId: " + targetGridId);
+
+        // Get player position before portal
+        Gob playerBefore = gui.map.player();
+        if (playerBefore != null) {
+            System.out.println("  - Player position BEFORE portal: " + playerBefore.rc);
+        }
+
         // Portal recording is handled automatically by PortalTraversalTracker via getLastActions()
         // No need to explicitly set the clicked portal - the tracker will detect it
 
@@ -410,6 +421,8 @@ public class ChunkNavExecutor implements Action {
                                    portalName.contains("minehole") ||
                                    portalName.contains("-door");
 
+        System.out.println("  - Is loading portal: " + isLoadingPortal);
+
         if (isLoadingPortal) {
             // Cellar doors, stairs, ladders, mines - use simple right-click to enter
             NUtils.rclickGob(portalGob);
@@ -419,8 +432,30 @@ public class ChunkNavExecutor implements Action {
         }
 
         // Wait for the target grid to be fully loaded (mesh and fog ready)
+        System.out.println("[ChunkNavExecutor] Waiting for target grid " + targetGridId + " to load...");
         NUtils.getUI().core.addTask(new WaitForMapLoadByGridId(gui, targetGridId));
         NUtils.getUI().core.addTask(new WaitForGobStability());
+
+        // Log player position after portal traversal
+        Gob playerAfter = gui.map.player();
+        if (playerAfter != null) {
+            System.out.println("[ChunkNavExecutor] Player position AFTER portal: " + playerAfter.rc);
+        }
+
+        // Log loaded grids after portal
+        try {
+            MCache mcache = gui.map.glob.map;
+            synchronized (mcache.grids) {
+                System.out.println("[ChunkNavExecutor] Loaded grids after portal: " + mcache.grids.size());
+                for (MCache.Grid g : mcache.grids.values()) {
+                    if (g.id == targetGridId) {
+                        System.out.println("[ChunkNavExecutor] Target grid FOUND in MCache! ul=" + g.ul);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
 
         return Results.SUCCESS();
     }
@@ -541,38 +576,81 @@ public class ChunkNavExecutor implements Action {
     }
 
     private SegmentWalkResult followSegmentTiles(ChunkPath.PathSegment segment, NGameUI gui, long targetGridId) throws InterruptedException {
+        System.out.println("[ChunkNavExecutor] followSegmentTiles called:");
+        System.out.println("  - Segment gridId: " + segment.gridId);
+        System.out.println("  - Segment type: " + segment.type);
+        System.out.println("  - Segment steps count: " + (segment.steps != null ? segment.steps.size() : 0));
+        System.out.println("  - Segment worldTileOrigin: " + segment.worldTileOrigin);
+        System.out.println("  - Target gridId: " + targetGridId);
+
         if (segment.isEmpty()) {
+            System.out.println("[ChunkNavExecutor] Segment is empty, returning success");
             return SegmentWalkResult.success();
         }
 
         ChunkNavData segmentChunk = graph.getChunk(segment.gridId);
+        System.out.println("[ChunkNavExecutor] SegmentChunk from graph: " + (segmentChunk != null ? "found" : "NOT FOUND"));
+        if (segmentChunk != null) {
+            System.out.println("  - Layer: " + segmentChunk.layer);
+            System.out.println("  - Stored worldTileOrigin: " + segmentChunk.worldTileOrigin);
+        }
 
         // Get LIVE worldTileOrigin from MCache
         Coord liveWorldTileOrigin = null;
         try {
             MCache mcache = gui.map.glob.map;
             synchronized (mcache.grids) {
+                System.out.println("[ChunkNavExecutor] Searching MCache for gridId " + segment.gridId + " (loaded grids: " + mcache.grids.size() + ")");
                 for (MCache.Grid grid : mcache.grids.values()) {
                     if (grid.id == segment.gridId) {
                         liveWorldTileOrigin = grid.ul;
+                        System.out.println("[ChunkNavExecutor] FOUND in MCache! liveWorldTileOrigin = " + liveWorldTileOrigin);
                         break;
                     }
                 }
+                if (liveWorldTileOrigin == null) {
+                    System.out.println("[ChunkNavExecutor] NOT FOUND in MCache - grid not loaded");
+                }
             }
         } catch (Exception e) {
-            // Ignore MCache access errors
+            System.out.println("[ChunkNavExecutor] Exception accessing MCache: " + e.getMessage());
+        }
+
+        // Get player position for reference
+        Gob player = gui.map.player();
+        if (player != null) {
+            System.out.println("[ChunkNavExecutor] Player position: " + player.rc);
         }
 
         // Determine which worldTileOrigin to use
         Coord currentWorldTileOrigin = liveWorldTileOrigin;
+        String originSource = "LIVE";
         if (currentWorldTileOrigin == null && segmentChunk != null && segmentChunk.worldTileOrigin != null) {
             currentWorldTileOrigin = segmentChunk.worldTileOrigin;
+            originSource = "STORED_CHUNK";
         } else if (currentWorldTileOrigin == null && segment.worldTileOrigin != null) {
             currentWorldTileOrigin = segment.worldTileOrigin;
+            originSource = "SEGMENT";
         }
 
+        System.out.println("[ChunkNavExecutor] Using worldTileOrigin: " + currentWorldTileOrigin + " (source: " + originSource + ")");
+
         if (currentWorldTileOrigin == null) {
+            System.out.println("[ChunkNavExecutor] ERROR: No worldTileOrigin available!");
             return SegmentWalkResult.fail();
+        }
+
+        // Show first waypoint calculation
+        if (!segment.steps.isEmpty()) {
+            ChunkPath.TileStep firstStep = segment.steps.get(0);
+            Coord worldTile = currentWorldTileOrigin.add(firstStep.localCoord);
+            Coord2d waypoint = worldTile.mul(MCache.tilesz).add(MCache.tilehsz);
+            System.out.println("[ChunkNavExecutor] First step localCoord: " + firstStep.localCoord);
+            System.out.println("[ChunkNavExecutor] First step worldTile: " + worldTile);
+            System.out.println("[ChunkNavExecutor] First step waypoint: " + waypoint);
+            if (player != null) {
+                System.out.println("[ChunkNavExecutor] Distance to first waypoint: " + player.rc.dist(waypoint));
+            }
         }
 
         // For PORTAL segments, check if we should look for portal gob during walking
@@ -584,7 +662,7 @@ public class ChunkNavExecutor implements Action {
         int currentStepIndex = 0;
 
         while (currentStepIndex < segment.steps.size()) {
-            Gob player = gui.map.player();
+            player = gui.map.player();
             if (player == null) return SegmentWalkResult.fail();
 
             // For PORTAL segments, check if portal gob is now visible

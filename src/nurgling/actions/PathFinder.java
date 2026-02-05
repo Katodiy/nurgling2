@@ -449,6 +449,22 @@ public class PathFinder implements Action {
         return res != null || pf.dn;
     }
 
+    /**
+     * Get the cost (length) of path to the target coordinate.
+     * @param target target coordinate
+     * @return path cost, or -1 if unreachable
+     */
+    public static int getPathCost(Coord2d target) throws InterruptedException {
+        if(NUtils.player() == null)
+            return -1;
+        PathFinder pf = new PathFinder(target);
+        LinkedList<Graph.Vertex> res = pf.construct(true);
+        if (res != null) {
+            return res.size();
+        }
+        return pf.dn ? 0 : -1;
+    }
+
     public PathFinder(Gob dummy, boolean virtual) {
         this(dummy);
         this.dummy = dummy;

@@ -140,6 +140,7 @@ public class ChunkNavPlanner {
     /**
      * Plan a path to a specific corner of an area using gridId + local coordinates.
      * This works correctly across different layers/areas because it uses gridId directly.
+     * Returns the shortest path among all grids in the area.
      * @param area The target area
      * @param cornerIndex 0=top-left, 1=bottom-right, 2=bottom-left, 3=top-right
      */
@@ -157,42 +158,62 @@ public class ChunkNavPlanner {
         long startChunkId = playerLoc.gridId;
         Coord playerLocal = playerLoc.localCoord;
 
+        // Find the shortest path among all grids in the area
+        ChunkPath bestPath = null;
+        float bestCost = Float.MAX_VALUE;
+
         // Find target gridId and local corner coordinate from area's stored data
         for (java.util.Map.Entry<Long, nurgling.areas.NArea.VArea> entry : area.space.space.entrySet()) {
             long gridId = entry.getKey();
             nurgling.areas.NArea.VArea varea = entry.getValue();
-            
+
             if (varea == null || varea.area == null) continue;
-            
+
             // Check if this grid is in our graph
             ChunkNavData chunk = graph.getChunk(gridId);
             if (chunk == null) continue;
-            
+
             // Get corner local coordinates based on cornerIndex
+            // We want to find a walkable tile OUTSIDE the area, adjacent to the corner
             Coord cornerLocal;
+            int searchDirX, searchDirY; // Direction to search for walkable tile (away from area)
             switch (cornerIndex) {
-                case 0: // top-left
+                case 0: // top-left - search up-left from area
                     cornerLocal = varea.area.ul;
+                    searchDirX = -1;
+                    searchDirY = -1;
                     break;
-                case 1: // bottom-right  
+                case 1: // bottom-right - search down-right from area
                     cornerLocal = varea.area.br.sub(1, 1); // br is exclusive
+                    searchDirX = 1;
+                    searchDirY = 1;
                     break;
-                case 2: // bottom-left
+                case 2: // bottom-left - search down-left from area
                     cornerLocal = new Coord(varea.area.ul.x, varea.area.br.y - 1);
+                    searchDirX = -1;
+                    searchDirY = 1;
                     break;
-                case 3: // top-right
+                case 3: // top-right - search up-right from area
                     cornerLocal = new Coord(varea.area.br.x - 1, varea.area.ul.y);
+                    searchDirX = 1;
+                    searchDirY = -1;
                     break;
                 default:
                     cornerLocal = varea.area.ul;
+                    searchDirX = -1;
+                    searchDirY = -1;
             }
-            
-            // Find walkable tile near this corner
-            Coord walkable = findWalkableTileNear(chunk, cornerLocal);
+
+            // Find walkable tile OUTSIDE the area, adjacent to this corner
+            Coord walkable = findWalkableTileOutsideArea(chunk, cornerLocal, searchDirX, searchDirY, varea.area);
             if (walkable == null) {
-                walkable = cornerLocal; // fallback
+                // Fallback to any walkable near corner
+                walkable = findWalkableTileNear(chunk, cornerLocal);
             }
-            
+            if (walkable == null) {
+                walkable = cornerLocal; // last resort fallback
+            }
+
             // Use unified pathfinder
             UnifiedTilePathfinder.UnifiedPath unifiedPath = unifiedPathfinder.findPath(
                 startChunkId, playerLocal,
@@ -202,11 +223,16 @@ public class ChunkNavPlanner {
             if (unifiedPath != null && unifiedPath.reachable) {
                 ChunkPath path = new ChunkPath();
                 unifiedPath.populateChunkPath(path, graph);
-                return path;
+
+                // Keep the shortest path
+                if (path.totalCost < bestCost) {
+                    bestPath = path;
+                    bestCost = path.totalCost;
+                }
             }
         }
-        
-        return null;
+
+        return bestPath;
     }
     
     /**
@@ -216,7 +242,9 @@ public class ChunkNavPlanner {
      * @param localCoord Local tile coordinate within the grid
      */
     public ChunkPath planToGridCoord(long gridId, Coord localCoord) {
-        if (localCoord == null) return null;
+        if (localCoord == null) {
+            return null;
+        }
 
         // Get player's current chunk and local position
         PlayerLocation playerLoc = getPlayerLocation();
@@ -415,6 +443,77 @@ public class ChunkNavPlanner {
         return false;
     }
     
+    /**
+     * Find a walkable tile OUTSIDE the area bounds, searching in the given direction.
+     * Used for finding approach points to area corners from outside.
+     * @param chunk The chunk data
+     * @param corner The corner coordinate (inside area)
+     * @param dirX Search direction X (-1 for left, +1 for right)
+     * @param dirY Search direction Y (-1 for up, +1 for down)
+     * @param areaBounds The area bounds to stay outside of
+     * @return Walkable tile outside area, or null if not found
+     */
+    private Coord findWalkableTileOutsideArea(ChunkNavData chunk, Coord corner, int dirX, int dirY, haven.Area areaBounds) {
+        // Search in expanding distance from corner, prioritizing the diagonal direction
+        // Try distances 1, 2, 3 tiles away from corner
+        for (int dist = 1; dist <= 3; dist++) {
+            // Try diagonal first (preferred approach direction)
+            int tx = corner.x + dirX * dist;
+            int ty = corner.y + dirY * dist;
+            if (isOutsideArea(tx, ty, areaBounds) && isValidTile(tx, ty) && isTileWalkable(chunk, tx, ty)) {
+                return new Coord(tx, ty);
+            }
+
+            // Try along X axis
+            tx = corner.x + dirX * dist;
+            ty = corner.y;
+            if (isOutsideArea(tx, ty, areaBounds) && isValidTile(tx, ty) && isTileWalkable(chunk, tx, ty)) {
+                return new Coord(tx, ty);
+            }
+
+            // Try along Y axis
+            tx = corner.x;
+            ty = corner.y + dirY * dist;
+            if (isOutsideArea(tx, ty, areaBounds) && isValidTile(tx, ty) && isTileWalkable(chunk, tx, ty)) {
+                return new Coord(tx, ty);
+            }
+
+            // Try other diagonal combinations at this distance
+            for (int dx = -dist; dx <= dist; dx++) {
+                for (int dy = -dist; dy <= dist; dy++) {
+                    if (dx == 0 && dy == 0) continue;
+                    // Prefer tiles in the search direction
+                    if ((dirX > 0 && dx < 0) || (dirX < 0 && dx > 0)) continue;
+                    if ((dirY > 0 && dy < 0) || (dirY < 0 && dy > 0)) continue;
+
+                    tx = corner.x + dx;
+                    ty = corner.y + dy;
+                    if (isOutsideArea(tx, ty, areaBounds) && isValidTile(tx, ty) && isTileWalkable(chunk, tx, ty)) {
+                        return new Coord(tx, ty);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Check if tile coordinates are outside the area bounds.
+     */
+    private boolean isOutsideArea(int tileX, int tileY, haven.Area areaBounds) {
+        if (areaBounds == null) return true;
+        // Area bounds: ul is inclusive, br is exclusive
+        return tileX < areaBounds.ul.x || tileX >= areaBounds.br.x ||
+               tileY < areaBounds.ul.y || tileY >= areaBounds.br.y;
+    }
+
+    /**
+     * Check if tile coordinates are valid within chunk bounds.
+     */
+    private boolean isValidTile(int tileX, int tileY) {
+        return tileX >= 0 && tileX < CHUNK_SIZE && tileY >= 0 && tileY < CHUNK_SIZE;
+    }
+
     /**
      * Find a walkable tile near the given coordinate.
      * Searches in cell grid (half-tile resolution, ~5.5 world units per step)

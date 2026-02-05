@@ -37,11 +37,30 @@ public class Craft implements Action {
         this(mwnd, 1);
     }
 
+    /**
+     * Создает Craft в режиме prefilled - ингредиенты уже в инвентаре.
+     * TakeItems2 будет пропущен, крафт начнётся сразу.
+     * @param mwnd окно крафта
+     * @param size количество крафтов
+     * @param prefilled true если ингредиенты уже в инвентаре
+     */
+    public Craft(NMakewindow mwnd, int size, boolean prefilled) {
+        this.mwnd = mwnd;
+        this.count = size;
+        this.prefilled = prefilled;
+    }
+
     NMakewindow mwnd = null;
     String tools = null;
     int count = 0;
 
     boolean isGlobalMode = false;
+
+    /**
+     * Режим prefilled - ингредиенты уже загружены в инвентарь.
+     * Пропускает TakeItems2 при крафте.
+     */
+    boolean prefilled = false;
 
     private int getActualItemCount(WItem item) {
         if (item.item.info != null) {
@@ -217,12 +236,12 @@ public class Craft implements Action {
             if (s.categories && s.ing == null) {
                 selectIngredientFromCategory(s);
             }
-            
+
             // Skip ignored optional ingredients
             if (s.ing != null && s.ing.isIgnored) {
                 continue;
             }
-            
+
             String item = s.ing == null ? s.name : s.ing.name;
             if (ncontext.isInBarrel(item)) {
                 if(ncontext.workstation == null) {
@@ -232,7 +251,8 @@ public class Craft implements Action {
                 {
                     new TransferBarrelToWorkstation(ncontext, item).run(gui);
                 }
-            } else {
+            } else if (!prefilled) {
+                // В режиме prefilled ингредиенты уже в инвентаре, пропускаем TakeItems2
                 if (!new TakeItems2(ncontext, s.ing == null ? s.name : s.ing.name, s.count * for_craft).run(gui).IsSuccess()) {
                     return Results.ERROR("Failed to take items: " + item);
                 }

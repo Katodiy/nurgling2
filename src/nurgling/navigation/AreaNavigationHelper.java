@@ -146,7 +146,7 @@ public class AreaNavigationHelper {
         // Find the shortest path
         ChunkPath bestPath = null;
         float bestCost = Float.MAX_VALUE;
-        
+
         for (int i = 0; i < 4; i++) {
             ChunkPath path = paths[i];
             if (path != null && path.totalCost < bestCost) {
@@ -154,11 +154,11 @@ public class AreaNavigationHelper {
                 bestCost = path.totalCost;
             }
         }
-        
+
         if (bestPath == null) {
             return chunkNav.planToArea(area);
         }
-        
+
         return bestPath;
     }
     
@@ -218,7 +218,77 @@ public class AreaNavigationHelper {
         for (boolean r : reachable) {
             if (r) return true;
         }
-        
+
         return false;
+    }
+
+    /**
+     * Find the nearest reachable corner of an area using local pathfinding.
+     * Returns the corner coordinate that has the shortest actual path (not straight-line distance).
+     * @param area The area to find corner for
+     * @return The nearest reachable corner coordinate, or null if none found
+     */
+    public static Coord2d findNearestReachableCorner(NArea area) throws InterruptedException {
+        if (area == null || NUtils.player() == null) return null;
+
+        if (!area.isVisible()) {
+            return null;
+        }
+
+        Pair<Coord2d, Coord2d> rcArea = area.getRCArea();
+        if (rcArea == null) {
+            return null;
+        }
+
+        // Get 4 corners from live data
+        Coord2d[] corners = new Coord2d[] {
+            rcArea.a,                                        // top-left
+            rcArea.b,                                        // bottom-right
+            Coord2d.of(rcArea.a.x, rcArea.b.y),             // bottom-left
+            Coord2d.of(rcArea.b.x, rcArea.a.y)              // top-right
+        };
+
+        // Test all corners in parallel and get path costs
+        final double[] pathCosts = new double[4];
+        final boolean[] reachable = new boolean[4];
+        Thread[] threads = new Thread[4];
+
+        for (int i = 0; i < 4; i++) {
+            final int idx = i;
+            final Coord2d corner = corners[i];
+            pathCosts[idx] = Double.MAX_VALUE;
+            reachable[idx] = false;
+
+            threads[i] = new Thread(() -> {
+                try {
+                    int cost = PathFinder.getPathCost(corner);
+                    if (cost >= 0) {
+                        pathCosts[idx] = cost;
+                        reachable[idx] = true;
+                    }
+                } catch (InterruptedException e) {
+                    // Leave as unreachable
+                }
+            });
+            threads[i].start();
+        }
+
+        // Wait for all threads
+        for (Thread t : threads) {
+            t.join();
+        }
+
+        // Find the corner with shortest actual path
+        Coord2d nearestCorner = null;
+        double bestCost = Double.MAX_VALUE;
+
+        for (int i = 0; i < 4; i++) {
+            if (reachable[i] && pathCosts[i] < bestCost) {
+                bestCost = pathCosts[i];
+                nearestCorner = corners[i];
+            }
+        }
+
+        return nearestCorner;
     }
 }

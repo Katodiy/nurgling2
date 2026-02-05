@@ -120,8 +120,13 @@ public class UnifiedTilePathfinder {
      * @return UnifiedPath containing the complete tile-level path, or null if no path exists
      */
     public UnifiedPath findPath(long startChunkId, Coord startLocal, long targetChunkId, Coord targetLocal) {
+        // System.out.println("[UnifiedTilePathfinder] findPath called:");
+        // System.out.println("  - Start: chunk " + startChunkId + " local " + startLocal);
+        // System.out.println("  - Target: chunk " + targetChunkId + " local " + targetLocal);
+
         if (startChunkId == targetChunkId && startLocal.equals(targetLocal)) {
             // Already at target
+            // System.out.println("[UnifiedTilePathfinder] Already at target!");
             UnifiedPath path = new UnifiedPath();
             path.reachable = true;
             path.steps.add(new TileNode(startChunkId, startLocal));
@@ -131,9 +136,31 @@ public class UnifiedTilePathfinder {
         ChunkNavData startChunk = graph.getChunk(startChunkId);
         ChunkNavData targetChunk = graph.getChunk(targetChunkId);
 
-        if (startChunk == null || targetChunk == null) {
+        if (startChunk == null) {
+            // System.out.println("[UnifiedTilePathfinder] ERROR: Start chunk " + startChunkId + " not in graph!");
             return null;
         }
+        if (targetChunk == null) {
+            // System.out.println("[UnifiedTilePathfinder] ERROR: Target chunk " + targetChunkId + " not in graph!");
+            return null;
+        }
+
+        // System.out.println("[UnifiedTilePathfinder] Start chunk info:");
+        // System.out.println("  - Layer: " + startChunk.layer);
+        // System.out.println("  - Neighbors: N=" + startChunk.neighborNorth + " S=" + startChunk.neighborSouth +
+        //                   " E=" + startChunk.neighborEast + " W=" + startChunk.neighborWest);
+        // System.out.println("  - Portals: " + startChunk.portals.size());
+
+        // System.out.println("[UnifiedTilePathfinder] Target chunk info:");
+        // System.out.println("  - Layer: " + targetChunk.layer);
+        // System.out.println("  - Neighbors: N=" + targetChunk.neighborNorth + " S=" + targetChunk.neighborSouth +
+        //                   " E=" + targetChunk.neighborEast + " W=" + targetChunk.neighborWest);
+        // System.out.println("  - Portals: " + targetChunk.portals.size());
+
+        // Check if same layer
+        // if (!startChunk.layer.equals(targetChunk.layer)) {
+        //     System.out.println("[UnifiedTilePathfinder] DIFFERENT LAYERS: " + startChunk.layer + " -> " + targetChunk.layer);
+        // }
 
         // A* data structures
         PriorityQueue<AStarNode> openSet = new PriorityQueue<>(Comparator.comparingDouble(n -> n.f));
@@ -158,6 +185,9 @@ public class UnifiedTilePathfinder {
         // Track unique chunks explored for diagnostics
         Set<Long> chunksExplored = new HashSet<>();
 
+        // System.out.println("[UnifiedTilePathfinder] Starting A* search...");
+        // long searchStartTime = System.currentTimeMillis();
+
         while (!openSet.isEmpty() && iterations < maxIterations) {
             iterations++;
 
@@ -166,6 +196,7 @@ public class UnifiedTilePathfinder {
 
             if (current.tile.equals(targetTile)) {
                 // Found path - reconstruct it
+                // System.out.println("[UnifiedTilePathfinder] PATH FOUND! Iterations: " + iterations + ", chunks: " + chunksExplored.size());
                 return reconstructPath(current);
             }
 
@@ -202,6 +233,12 @@ public class UnifiedTilePathfinder {
                 }
             }
         }
+
+        // Path not found
+        // System.out.println("[UnifiedTilePathfinder] NO PATH FOUND! Iterations: " + iterations + ", chunks explored: " + chunksExplored.size());
+        // if (openSet.isEmpty()) {
+        //     System.out.println("[UnifiedTilePathfinder] Search exhausted - no connection to target");
+        // }
 
         return null;
     }
@@ -568,8 +605,8 @@ public class UnifiedTilePathfinder {
 
         if (fromChunk != null && toChunk != null) {
             if (!fromChunk.layer.equals(toChunk.layer)) {
-                // Portal traversal - fixed cost
-                return 10.0;
+                // Portal traversal - use config cost
+                return ChunkNavConfig.PORTAL_TRAVERSAL_COST;
             }
         }
 
