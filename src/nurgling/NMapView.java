@@ -16,6 +16,10 @@ import nurgling.conf.QuickActionPreset;
 import nurgling.widgets.options.QuickActions;
 import nurgling.overlays.*;
 import nurgling.overlays.map.*;
+import haven.res.ui.croster.CattleId;
+import haven.res.ui.croster.CattleRoster;
+import haven.res.ui.croster.RosterWindow;
+import nurgling.overlays.NCattleNotInRosterRing;
 import nurgling.navigation.ChunkNavData;
 import nurgling.navigation.ChunkNavManager;
 import nurgling.navigation.ChunkPortal;
@@ -779,6 +783,8 @@ public class NMapView extends MapView
 //            dummys.remove(id);
         super.tick(dt);
 
+	updateNotInRosterRings();
+
         if(NConfig.botmod != null && !botsInit) {
             System.out.println("[NMapView] botmod check: scenarioId=" + NConfig.botmod.scenarioId + ", gui=" + (NUtils.getGameUI() != null));
             Scenario scenario = NUtils.getUI().core.scenarioManager.getScenarios().getOrDefault(NConfig.botmod.scenarioId, null);
@@ -834,6 +840,31 @@ public class NMapView extends MapView
                 });
                 NUtils.getGameUI().biw.addObserve(t);
                 t.start();
+            }
+        }
+    }
+
+    /**
+     * Update "not in roster" rings for all animal gobs:
+     * show ring on animals matching selected tab type that are not in that roster.
+     */
+    private void updateNotInRosterRings() {
+        RosterWindow rw;
+        synchronized (RosterWindow.rosters) {
+            rw = RosterWindow.rosters.get(glob);
+        }
+        CattleRoster<?> visibleRoster = (rw != null && rw.visible) ? rw.getVisibleRoster() : null;
+        synchronized (glob.oc) {
+            for (Gob gob : glob.oc) {
+                boolean shouldShow = CattleId.shouldShowNotInRosterRing(gob, visibleRoster);
+                Gob.Overlay ol = gob.findol(NCattleNotInRosterRing.class);
+                if (shouldShow) {
+                    if (ol == null)
+                        gob.addcustomol(new NCattleNotInRosterRing(gob));
+                } else {
+                    if (ol != null)
+                        ol.remove();
+                }
             }
         }
     }

@@ -31,6 +31,17 @@ public class RosterWindow extends Window {
 	    ch.show(ch == rost);
     }
 
+	/**
+	 * Currently selected (visible) roster tab, or null if none.
+	 */
+	public CattleRoster getVisibleRoster() {
+		for (Widget ch : children()) {
+			if (ch instanceof CattleRoster && ch.visible)
+				return (CattleRoster) ch;
+		}
+		return null;
+	}
+
     public void addroster(CattleRoster rost) {
 	if(btny == 0)
 	    btny = rost.sz.y + UI.scale(10);

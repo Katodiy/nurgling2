@@ -2,15 +2,21 @@
 package haven.res.ui.croster;
 
 import haven.*;
-import haven.render.*;
-import java.util.*;
-import java.util.function.*;
-import haven.MenuGrid.Pagina;
-import java.awt.Color;
-import java.awt.image.BufferedImage;
-import nurgling.overlays.NCattleMarkRing;
+import haven.render.Homo3D;
+import haven.render.Pipe;
+import haven.render.RenderTree;
+import haven.res.gfx.hud.rosters.cow.Ochs;
+import haven.res.gfx.hud.rosters.goat.Goat;
+import haven.res.gfx.hud.rosters.horse.Horse;
+import haven.res.gfx.hud.rosters.pig.Pig;
+import haven.res.gfx.hud.rosters.sheep.Sheep;
+import haven.res.gfx.hud.rosters.teimdeer.Teimdeer;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.overlays.NCattleMarkRing;
+import nurgling.tools.NParser;
+
+import java.awt.*;
 
 @haven.FromResource(name = "ui/croster", version = 77)
 public class CattleId extends GAttrib implements RenderTree.Node, PView.Render2D {
@@ -59,6 +65,42 @@ public class CattleId extends GAttrib implements RenderTree.Node, PView.Render2D
 	    }
 	}
 	return(entry);
+    }
+
+    /**
+     * Resource name prefix (gfx/kritter/...) for each roster animal type. Used to match gob to selected tab.
+     */
+    public static String kritterPrefixFor(Class<? extends Entry> rosterType) {
+        if (rosterType == Pig.class) return "gfx/kritter/pig/";
+        if (rosterType == Ochs.class) return "gfx/kritter/cattle/";
+        if (rosterType == Horse.class) return "gfx/kritter/horse/";
+        if (rosterType == Sheep.class) return "gfx/kritter/sheep/";
+        if (rosterType == Goat.class) return "gfx/kritter/goat/";
+        if (rosterType == Teimdeer.class) return "gfx/kritter/reindeer/";
+        return null;
+    }
+
+    /**
+     * True if gob is an animal of the given roster type (by resource name). Works for any gob (with or without CattleId).
+     */
+    public static boolean gobMatchesRosterType(Gob gob, CattleRoster<?> roster) {
+        String prefix = kritterPrefixFor(roster.getGenType());
+        if (prefix == null) return false;
+        return (gob.ngob != null && gob.ngob.name != null && gob.ngob.name.startsWith(prefix));
+    }
+
+    /**
+     * True if this gob should show the "not in roster" ring: matches selected tab type and is not in that roster's entries.
+     */
+    public static boolean shouldShowNotInRosterRing(Gob gob, CattleRoster<?> visibleRoster) {
+        if (visibleRoster == null) return false;
+        if (!gobMatchesRosterType(gob, visibleRoster)) return false;
+        if (gob.pose() != null && NParser.checkName(gob.pose(), "knock"))
+            return false;
+        CattleId cid = gob.getattr(CattleId.class);
+		// no CattleId - not memorized
+        if (cid == null) return true;
+        return !visibleRoster.entries.containsKey(cid.id);
     }
 
     private String lnm;
