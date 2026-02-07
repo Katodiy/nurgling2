@@ -174,7 +174,7 @@ public class TransferToContainer implements Action
 
                         // Calculate remaining items we can transfer
                         int remainingToTransfer = transfer_size - transferred;
-                        int itemsTransferred = transfer(currentItem, gui.getInventory(container.cap), remainingToTransfer);
+                        int itemsTransferred = transfer(currentItem, gui.getInventory(container.cap), remainingToTransfer, th != -1);
 
                         if (itemsTransferred > 0)
                         {
@@ -310,6 +310,11 @@ public class TransferToContainer implements Action
 
     public static int transfer(WItem item, NInventory targetInv, int transfer_size) throws InterruptedException
     {
+        return transfer(item, targetInv, transfer_size, false);
+    }
+
+    public static int transfer(WItem item, NInventory targetInv, int transfer_size, boolean needsSorting) throws InterruptedException
+    {
         if (!NGItem.validateItem(item))
         {
             return 0;
@@ -411,7 +416,7 @@ public class TransferToContainer implements Action
                     int oldstacksize = sourceStack.wmap.size();
                     if (targetInv.getFreeSpace() > 0)
                     {
-                        if (oldstacksize > transfer_size)
+                        if (oldstacksize > transfer_size || needsSorting)
                         {
                             int originalStackSize = sourceStack.wmap.size();
 
