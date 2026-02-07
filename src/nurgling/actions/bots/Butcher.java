@@ -66,6 +66,10 @@ public class Butcher implements Action {
             while (!gobs.isEmpty()) {
                 gobs.sort(NUtils.d_comp);
                 Gob gob = gobs.get(0);
+                if (gob == null || Finder.findGob(gob.id) == null) {
+                    gobs.remove(0);
+                    continue;
+                }
                 NContext context = new NContext(gui);
                 while (Finder.findGob(gob.id) != null) {
                     NUtils.rclickGob(gob);
