@@ -18,8 +18,24 @@ public class UnifiedTilePathfinder {
 
     private final ChunkNavGraph graph;
 
+    // Chunks where portal traversal has failed - avoid using portals on these chunks
+    private Set<Long> excludedPortalChunks = Collections.emptySet();
+
     public UnifiedTilePathfinder(ChunkNavGraph graph) {
         this.graph = graph;
+    }
+
+    public void setExcludedPortalChunks(Set<Long> excluded) {
+        this.excludedPortalChunks = excluded != null ? excluded : Collections.emptySet();
+    }
+
+    /**
+     * Check if a tile coordinate is within 'margin' tiles of any chunk edge.
+     * Used to detect "phantom" building portals recorded from adjacent chunks.
+     */
+    private boolean isAtChunkEdge(Coord coord, int margin) {
+        return coord.x < margin || coord.x >= CHUNK_SIZE - margin ||
+               coord.y < margin || coord.y >= CHUNK_SIZE - margin;
     }
 
     /**
@@ -281,18 +297,27 @@ public class UnifiedTilePathfinder {
         }
 
         // Portal connections
+        boolean chunkExcluded = !excludedPortalChunks.isEmpty() && excludedPortalChunks.contains(tile.chunkId);
         for (ChunkPortal portal : chunk.portals) {
-            // Check if we're at or near the portal
             if (portal.localCoord != null && portal.connectsToGridId != -1) {
                 double dist = tile.localCoord.dist(portal.localCoord);
-                if (dist <= 2) {
+                // Building exteriors use larger proximity (6 tiles vs 2)
+                int portalProximity = ChunkPortal.isBuildingExterior(portal.gobName) ? 6 : 2;
+                if (dist <= portalProximity) {
+                    if (chunkExcluded) continue;
+
+                    // Skip "phantom" building exterior portals at chunk edges
+                    if (ChunkPortal.isBuildingExterior(portal.gobName) && isAtChunkEdge(portal.localCoord, 5)) {
+                        continue;
+                    }
                     ChunkNavData destChunk = graph.getChunk(portal.connectsToGridId);
                     if (destChunk != null) {
-                        // Find the exit portal in the destination chunk
-                        // Pass source chunk ID so we can verify the exit portal connects back to us
+                        // Validate portal type vs target layer
+                        if (!isPortalTargetLayerValid(portal.type, destChunk.layer)) {
+                            continue; // Stale connection - skip
+                        }
                         Coord exitCoord = findPortalExitCoord(destChunk, portal, tile.chunkId);
                         if (exitCoord != null) {
-                            // Mark as portal transition (viaPortal = true)
                             neighbors.add(new TileNode(portal.connectsToGridId, exitCoord, true));
                         }
                     }
@@ -353,6 +378,10 @@ public class UnifiedTilePathfinder {
 
         // Must be same layer
         if (!fromChunk.layer.equals(neighborChunk.layer)) return null;
+
+        // Must be same known instance (prevents cross-instance walking)
+        if (fromChunk.instanceId == 0 || neighborChunk.instanceId == 0) return null;
+        if (fromChunk.instanceId != neighborChunk.instanceId) return null;
 
         // Check if target tile is walkable (any of 2x2 cells)
         if (isTileWalkable(neighborChunk, newX, newY)) {
@@ -489,7 +518,16 @@ public class UnifiedTilePathfinder {
             return 100.0 + (depth - 1) * 400.0;
         }
 
+        // Check if different instances on same layer
+        if (fromChunk.instanceId != 0 && toChunk.instanceId != 0
+                && fromChunk.instanceId != toChunk.instanceId) {
+            int depth = getPortalPathDepth(fromChunk, toChunk, new HashSet<>());
+            if (depth == -1) return 999999.0;
+            return 100.0 + (depth - 1) * 400.0;
+        }
+
         // Try world coordinates if both chunks have been seen this session
+        // ONLY valid when chunks are in the same instance
         if (fromChunk.worldTileOrigin != null && toChunk.worldTileOrigin != null) {
             Coord fromWorld = fromChunk.worldTileOrigin.add(from.localCoord);
             Coord toWorld = toChunk.worldTileOrigin.add(to.localCoord);
@@ -568,13 +606,19 @@ public class UnifiedTilePathfinder {
         for (ChunkPortal portal : fromChunk.portals) {
             if (portal.connectsToGridId == -1) continue;
 
+            // Validate portal type vs target layer (skip stale connections)
+            ChunkNavData targetChunk = graph.getChunk(portal.connectsToGridId);
+            if (targetChunk != null && !isPortalTargetLayerValid(portal.type, targetChunk.layer)) {
+                continue;
+            }
+
             if (portal.connectsToGridId == toChunk.gridId) {
                 return 1; // Direct connection - best case
             }
 
             // Recursively check connected chunks (limit depth to avoid long searches)
             if (visited.size() < 10) {
-                ChunkNavData nextChunk = graph.getChunk(portal.connectsToGridId);
+                ChunkNavData nextChunk = targetChunk;
                 if (nextChunk != null) {
                     int subDepth = getPortalPathDepth(nextChunk, toChunk, new HashSet<>(visited));
                     if (subDepth != -1) {
@@ -765,6 +809,29 @@ public class UnifiedTilePathfinder {
             }
 
             chunkPath.totalCost = (float) cost;
+        }
+    }
+
+    /**
+     * Validate that a portal type is compatible with the target chunk's layer.
+     */
+    private boolean isPortalTargetLayerValid(ChunkPortal.PortalType type, String targetLayer) {
+        if (type == null || targetLayer == null) return true;
+        switch (type) {
+            case MINEHOLE:
+            case MINE_ENTRANCE:
+                return "outside".equals(targetLayer);
+            case CELLAR:
+                return "cellar".equals(targetLayer) || "inside".equals(targetLayer);
+            case LADDER:
+                return "outside".equals(targetLayer);
+            case STAIRS_UP:
+            case STAIRS_DOWN:
+                return "inside".equals(targetLayer);
+            case DOOR:
+                return "inside".equals(targetLayer) || "outside".equals(targetLayer);
+            default:
+                return true;
         }
     }
 }

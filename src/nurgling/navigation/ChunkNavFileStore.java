@@ -227,4 +227,24 @@ public class ChunkNavFileStore {
             // Ignore
         }
     }
+
+    /**
+     * Check if the instance migration (neighbor wipe) needs to run.
+     * This is a one-time migration when upgrading to V2 binary format with instanceId support.
+     */
+    public boolean needsInstanceMigration() {
+        return !Files.exists(chunkDirectory.resolve(".instance_migrated"));
+    }
+
+    /**
+     * Mark the instance migration as complete.
+     */
+    public void markInstanceMigrationDone() {
+        try {
+            Files.createDirectories(chunkDirectory);
+            Files.createFile(chunkDirectory.resolve(".instance_migrated"));
+        } catch (IOException e) {
+            // Ignore - migration will re-run next time
+        }
+    }
 }

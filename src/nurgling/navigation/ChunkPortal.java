@@ -89,7 +89,28 @@ public class ChunkPortal {
             return PortalType.DOOR;
         }
 
+        // Building exteriors (clicking these enters the building = same as door)
+        if (isBuildingExterior(gobName)) {
+            return PortalType.DOOR;
+        }
+
         return null;
+    }
+
+    /**
+     * Check if a gob name represents a building exterior (whole-building gob).
+     * These gobs represent the building structure from outside - you click them to enter.
+     * Their center position is inside the building footprint and not walkable.
+     */
+    public static boolean isBuildingExterior(String gobName) {
+        if (gobName == null) return false;
+        String lower = gobName.toLowerCase();
+        // Interior doors are NOT building exteriors
+        if (lower.contains("-door")) return false;
+        return lower.contains("stonemansion") || lower.contains("logcabin") ||
+               lower.contains("timberhouse") || lower.contains("stonestead") ||
+               lower.contains("greathall") || lower.contains("stonetower") ||
+               lower.contains("windmill") || lower.contains("primitivetent");
     }
 
     public JSONObject toJson() {

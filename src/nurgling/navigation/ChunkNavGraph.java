@@ -282,6 +282,12 @@ public class ChunkNavGraph {
             // Only connect chunks on the same layer
             if (!chunk.layer.equals(other.layer)) continue;
 
+            // Only connect chunks in the same known instance.
+            // If either chunk has unknown instanceId (0), skip - we can't trust
+            // the neighbor link may be a false cross-instance connection from legacy data.
+            if (chunk.instanceId == 0 || other.instanceId == 0) continue;
+            if (chunk.instanceId != other.instanceId) continue;
+
             // Check if they can connect (have walkable crossing)
             EdgeCrossing crossing = findBestCrossing(chunk, other);
             if (crossing != null) {
@@ -291,11 +297,15 @@ public class ChunkNavGraph {
         }
 
         // Fallback: also check session-based coordinates for chunks without neighbor data
-        if (chunk.worldTileOrigin != null) {
+        // STRICT: Only use worldTileOrigin when BOTH chunks have the SAME known instanceId.
+        // worldTileOrigin from different instances lives in independent coordinate spaces,
+        // so comparing them is meaningless and creates false cross-instance connections.
+        if (chunk.worldTileOrigin != null && chunk.instanceId != 0) {
             for (ChunkNavData other : chunks.values()) {
                 if (other.gridId == chunk.gridId) continue;
                 if (chunk.connectedChunks.contains(other.gridId)) continue; // Already connected
                 if (!chunk.layer.equals(other.layer)) continue;
+                if (other.instanceId != chunk.instanceId) continue; // Must be same known instance
                 if (other.worldTileOrigin == null) continue;
 
                 int dx = other.worldTileOrigin.x - chunk.worldTileOrigin.x;

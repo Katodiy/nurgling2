@@ -33,6 +33,14 @@ public class ChunkNavData {
     // "outside" = surface + mines (can walk between grids), "inside" = building interior, "cellar" = underground cellar
     public String layer = "outside";
 
+    // Instance context - distinguishes chunks from different world instances.
+    // Chunks reachable by walking (without portals) share the same instanceId.
+    // 0 = unknown/legacy (not yet assigned), other values = unique per world instance.
+    // Surface chunks share one instanceId (1), each mine level has its own, each building interior has its own, etc.
+    // This prevents false neighbor connections between chunks from different instances
+    // (e.g., mine level chunks falsely connected to surface chunks).
+    public long instanceId = 0;
+
     // Walkability grid (half-tile resolution, matching NPFMap)
     // Each cell represents 1/4 tile (200x200 grid = 2x2 cells per tile)
     // Values: 0 = walkable, 1 = partially blocked, 2 = fully blocked
@@ -321,6 +329,9 @@ public class ChunkNavData {
         // Layer
         obj.put("layer", layer);
 
+        // Instance context (persistent)
+        if (instanceId != 0) obj.put("instanceId", instanceId);
+
         // Walkability as flat array
         JSONArray walkArr = new JSONArray();
         for (int x = 0; x < CELLS_PER_EDGE; x++) {
@@ -403,6 +414,9 @@ public class ChunkNavData {
 
         // Layer
         data.layer = obj.optString("layer", "outside");
+
+        // Instance context (0 = unknown/legacy)
+        data.instanceId = obj.optLong("instanceId", 0);
 
         // Walkability
         JSONArray walkArr = obj.getJSONArray("walkability");

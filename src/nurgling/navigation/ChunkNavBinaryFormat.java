@@ -26,10 +26,12 @@ public class ChunkNavBinaryFormat {
     public static final int MAGIC = 0x434E4156; // "CNAV" in ASCII
 
     // Current binary format version
-    public static final short BINARY_VERSION = 1;
+    // V1: original format (64-byte header without instanceId)
+    // V2: added instanceId (8 bytes) after neighbors, header now 72 bytes
+    public static final short BINARY_VERSION = 2;
 
-    // Header size in bytes
-    public static final int HEADER_SIZE = 64;
+    // Header size in bytes (V2: 72 bytes with instanceId)
+    public static final int HEADER_SIZE = 72;
 
     // Grid sizes
     public static final int WALKABILITY_BYTES = CELLS_PER_EDGE * CELLS_PER_EDGE / 4; // 2 bits per cell
@@ -71,9 +73,12 @@ public class ChunkNavBinaryFormat {
         out.writeLong(chunk.neighborEast);
         out.writeLong(chunk.neighborWest);
 
-        // Padding to reach 64 bytes header
+        // V2: instanceId (8 bytes)
+        out.writeLong(chunk.instanceId);
+
+        // Padding to reach 72 bytes header
         // Magic(4) + version(2) + flags(2) + gridId(8) + lastUpdated(8) + confidence(4) +
-        // layer(1) + neighbors(4*8=32) = 61 bytes, need 3 bytes padding
+        // layer(1) + neighbors(4*8=32) + instanceId(8) = 69 bytes, need 3 bytes padding
         out.writeByte(0);
         out.writeByte(0);
         out.writeByte(0);
@@ -123,6 +128,12 @@ public class ChunkNavBinaryFormat {
         long neighborEast = in.readLong();
         long neighborWest = in.readLong();
 
+        // V2: read instanceId (V1 files don't have it)
+        long instanceId = 0;
+        if (version >= 2) {
+            instanceId = in.readLong();
+        }
+
         // Skip padding
         in.readByte();
         in.readByte();
@@ -138,6 +149,7 @@ public class ChunkNavBinaryFormat {
         chunk.neighborSouth = neighborSouth;
         chunk.neighborEast = neighborEast;
         chunk.neighborWest = neighborWest;
+        chunk.instanceId = instanceId;
 
         // Read walkability grid
         readWalkabilityGrid(in, chunk.walkability);
@@ -393,8 +405,15 @@ public class ChunkNavBinaryFormat {
                 portal.gobHash = new String(hashBytes, StandardCharsets.UTF_8);
             }
 
-            // portalType
-            portal.type = byteToPortalType(in.readByte());
+            // portalType - always re-classify from gobName to fix legacy data
+            // where type was null/unknown and incorrectly loaded as DOOR
+            byte storedType = in.readByte();
+            ChunkPortal.PortalType reclassified = ChunkPortal.classifyPortal(portal.gobName);
+            if (reclassified != null) {
+                portal.type = reclassified;
+            } else {
+                portal.type = byteToPortalType(storedType);
+            }
 
             // localCoord
             int localX = in.readShort();
@@ -500,7 +519,7 @@ public class ChunkNavBinaryFormat {
             case PORTAL_MINE_ENTRANCE: return ChunkPortal.PortalType.MINE_ENTRANCE;
             case PORTAL_MINEHOLE: return ChunkPortal.PortalType.MINEHOLE;
             case PORTAL_LADDER: return ChunkPortal.PortalType.LADDER;
-            default: return ChunkPortal.PortalType.DOOR;
+            default: return null; // Unknown type - don't default to DOOR
         }
     }
 }

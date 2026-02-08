@@ -17,6 +17,7 @@ import static nurgling.navigation.ChunkNavData.Direction;
  */
 public class ChunkNavRecorder {
     private final ChunkNavGraph graph;
+    private ChunkNavManager manager; // Set after construction to avoid circular dependency
 
     // Blocked tile patterns
     // NOTE: "nil" = void/nothing, must be blocked (areas outside playable space)
@@ -57,6 +58,13 @@ public class ChunkNavRecorder {
     }
 
     /**
+     * Set the manager reference (called after construction to break circular dependency).
+     */
+    public void setManager(ChunkNavManager manager) {
+        this.manager = manager;
+    }
+
+    /**
      * Record navigation data for a grid that just became visible.
      * Merges new observations with existing data - tiles observed as walkable update
      * tiles that were previously unknown (blocked due to not being visible).
@@ -83,6 +91,14 @@ public class ChunkNavRecorder {
                 // New chunk - create fresh data
                 chunk = new ChunkNavData(grid.id, gridCoord, grid.ul);
                 sampleWalkability(grid, chunk);
+            }
+
+            // Assign instanceId from current world context
+            if (manager != null) {
+                long currentInstance = manager.getCurrentInstanceId();
+                if (chunk.instanceId == 0 && currentInstance != 0) {
+                    chunk.instanceId = currentInstance;
+                }
             }
 
             // Portals are recorded only when traversed (via PortalTraversalTracker)
@@ -185,6 +201,18 @@ public class ChunkNavRecorder {
             synchronized (mcache.grids) {
                 for (MCache.Grid other : mcache.grids.values()) {
                     if (other.id == grid.id) continue;
+
+                    // CRITICAL: Prevent cross-instance false connections.
+                    // During portal transitions, MCache can hold grids from both
+                    // the old and new instance simultaneously.
+                    ChunkNavData otherChunk = graph.getChunk(other.id);
+                    if (chunk.instanceId != 0) {
+                        if (otherChunk == null || otherChunk.instanceId != chunk.instanceId) {
+                            continue; // Unknown or different instance - skip
+                        }
+                    } else if (otherChunk != null && otherChunk.instanceId != 0) {
+                        continue;
+                    }
 
                     Coord otherGc = other.gc;
                     int dx = otherGc.x - myGc.x;
@@ -505,17 +533,7 @@ public class ChunkNavRecorder {
      * Check if a gob name is a building exterior (visible from outside).
      */
     private boolean isBuildingExterior(String name) {
-        // Building exteriors - the full building gobs seen from outside
-        // These are the main building gobs, NOT the -door variants
-        if (name.contains("-door") || name.endsWith("door")) return false;
-
-        return name.contains("stonemansion") ||
-               name.contains("logcabin") ||
-               name.contains("timberhouse") ||
-               name.contains("stonestead") ||
-               name.contains("greathall") ||
-               name.contains("stonetower") ||
-               name.contains("windmill");
+        return ChunkPortal.isBuildingExterior(name);
     }
 
     /**

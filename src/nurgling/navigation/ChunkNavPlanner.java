@@ -26,6 +26,16 @@ public class ChunkNavPlanner {
     }
 
     /**
+     * Set chunks where portal traversal has failed.
+     * The pathfinder will avoid using portals on these chunks.
+     */
+    public void setExcludedPortalChunks(Set<Long> excludedChunks) {
+        if (excludedChunks != null && !excludedChunks.isEmpty()) {
+            this.unifiedPathfinder.setExcludedPortalChunks(excludedChunks);
+        }
+    }
+
+    /**
      * Check if a tile (in tile coordinates 0-99) is walkable.
      * With half-tile resolution, a tile is walkable if any of its 4 cells is walkable.
      */
