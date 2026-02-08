@@ -315,19 +315,7 @@ public class LightFire implements Action {
     }
 
     private void craftLightFire(NGameUI gui) throws InterruptedException {
-        NUtils.getGameUI().ui.rcvr.rcvmsg(NUtils.getUI().getMenuGridId(), "act", "lightfire");
-
-        // Wait for craft window to open
-        NUtils.addTask(new NTask()
-        {
-            @Override
-            public boolean check()
-            {
-                return NUtils.getGameUI().craftwnd != null && NUtils.getGameUI().craftwnd.makeWidget != null;
-            }
-        });
-
-        if(NUtils.getGameUI().craftwnd != null && NUtils.getGameUI().craftwnd.makeWidget!=null && !NUtils.getGameUI().craftwnd.makeWidget.rcpnm.equals("Light fire"))
+        if(NUtils.getGameUI().craftwnd == null || (NUtils.getGameUI().craftwnd.makeWidget!=null && !NUtils.getGameUI().craftwnd.makeWidget.rcpnm.equals("Light fire")))
         {
             for (MenuGrid.Pagina pb : NUtils.getGameUI().menu.paginae)
             {
