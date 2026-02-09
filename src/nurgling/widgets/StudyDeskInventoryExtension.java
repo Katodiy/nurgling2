@@ -43,10 +43,14 @@ public class StudyDeskInventoryExtension {
      */
     public static boolean isStudyDeskInventory(NInventory inventory) {
         String resName = getInventoryParentGobResName(inventory);
-        return isStudyDesk(resName) || isBigStudyDesk(resName);
+        return isStudyDesk(resName) || isStudyDeskFine(resName) || isStudyDeskGrand(resName);
     }
 
-    private static boolean isBigStudyDesk(String resName) {
+    private static boolean isStudyDeskGrand(String resName) {
+        return "gfx/terobjs/grandstudydesk".equals(resName);
+    }
+
+    private static boolean isStudyDeskFine(String resName) {
         return "gfx/terobjs/studydesk-big".equals(resName);
     }
 
@@ -108,10 +112,14 @@ public class StudyDeskInventoryExtension {
                 // check which version of study desk is being used
             }
 
-            boolean bigStudyDesk = isBigStudyDesk(getInventoryParentGobResName(inventory));
-
             if (gameUI.studyDeskPlanner == null) {
-                gameUI.studyDeskPlanner = new StudyDeskPlannerWidget(bigStudyDesk ? StudyDeskPlannerWidget.DESK_SIZE_BIG : StudyDeskPlannerWidget.DESK_SIZE);
+                if (isStudyDeskFine(getInventoryParentGobResName(inventory))) {
+                    gameUI.studyDeskPlanner = new StudyDeskPlannerWidget(StudyDeskPlannerWidget.DESK_SIZE_FINE);
+                } else if (isStudyDeskGrand(getInventoryParentGobResName(inventory))) {
+                    gameUI.studyDeskPlanner = new StudyDeskPlannerWidget(StudyDeskPlannerWidget.DESK_SIZE_GRAND);
+                } else {
+                    gameUI.studyDeskPlanner = new StudyDeskPlannerWidget(StudyDeskPlannerWidget.DESK_SIZE);
+                }
                 gameUI.add(gameUI.studyDeskPlanner, plannerPos);
                 if (gobHash != null) {
                     gameUI.studyDeskPlanner.setStudyDeskHash(gobHash);

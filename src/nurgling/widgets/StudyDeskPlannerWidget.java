@@ -18,7 +18,8 @@ import java.util.List;
 
 public class StudyDeskPlannerWidget extends haven.Window implements DTarget {
     public static final Coord DESK_SIZE = new Coord(7, 7);
-    public static final Coord DESK_SIZE_BIG = new Coord(9, 9);
+    public static final Coord DESK_SIZE_FINE = new Coord(9, 9);
+    public static final Coord DESK_SIZE_GRAND = new Coord(11, 11);
     public static final Coord sqsz = UI.scale(new Coord(32, 32)).add(1, 1);
     public static final Tex invsq;
 
