@@ -65,7 +65,6 @@ public class PigsHerd implements JConf {
             trufquan2 = ((Number) values.get("trufquan2")).doubleValue();
         if (values.get("trufquanth") != null)
             trufquanth = ((Number) values.get("trufquanth")).doubleValue();
-     
         if(current==null)
             current = name;
     }
@@ -172,6 +171,23 @@ public class PigsHerd implements JConf {
     public static PigsHerd getCurrent()
     {
         return get(current);
+    }
+
+    /**
+     * Get preset for area by its ID
+     * @param areaId Area ID
+     * @return Preset bound to area or null if not found
+     */
+    public static PigsHerd getForArea(int areaId)
+    {
+        if(areaId < 0)
+            return null;
+        String presetName = nurgling.NConfig.getAreaRankPreset(areaId, "pigs");
+        if(presetName != null && !presetName.isEmpty())
+        {
+            return get(presetName);
+        }
+        return null;
     }
 
     public static HashSet<String> getKeySet()

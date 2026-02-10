@@ -9,7 +9,6 @@ import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
 import nurgling.tasks.*;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -59,14 +58,19 @@ public class Butcher implements Action {
         req.add(kritter_corpse);
 
         ArrayList<NArea.Specialisation> opt = new ArrayList<>();
-        NContext context = new NContext(gui);
+
         if (new Validator(req, opt).run(gui).IsSuccess()) {
+            NUtils.navigateToArea(area);
             ArrayList<Gob> gobs = getGobs(area);
 
             while (!gobs.isEmpty()) {
                 gobs.sort(NUtils.d_comp);
                 Gob gob = gobs.get(0);
-
+                if (gob == null || Finder.findGob(gob.id) == null) {
+                    gobs.remove(0);
+                    continue;
+                }
+                NContext context = new NContext(gui);
                 while (Finder.findGob(gob.id) != null) {
                     NUtils.rclickGob(gob);
                     NFlowerMenu fm = NUtils.getFlowerMenu();
@@ -86,7 +90,7 @@ public class Butcher implements Action {
                             break;
                     }
                     boolean optFound = optForSelect != null;
-                    while (optFound) {
+                    while (optFound && gob!=null) {
 
                         if (NUtils.getGameUI().getInventory().getNumberFreeCoord(options.get(optForSelect).size) < options.get(optForSelect).num) {
                             new FreeInventory2(context).run(gui);
@@ -95,8 +99,9 @@ public class Butcher implements Action {
                             return Results.ERROR("No free coord found for: " + optForSelect + "|" + options.get(optForSelect).size.toString() + "| target size: " + options.get(optForSelect).num);
                         }
 
-                        if (useGlobalPf(area)) {
-                            gob = Finder.findGob(gob.id);
+                        if (NUtils.navigateToArea(area)) {
+                            if(gob!=null)
+                                gob = Finder.findGob(gob.id);
                         }
                         if (gob != null) {
                             new PathFinder(gob).run(gui);
@@ -128,7 +133,7 @@ public class Butcher implements Action {
                 context.getSpecArea(Specialisation.SpecName.deadkritter);
                 gobs = getGobs(area);
             }
-            new FreeInventory2(context).run(gui);
+            new FreeInventory2(new NContext(gui)).run(gui);
         }
 
         return Results.SUCCESS();
@@ -148,14 +153,4 @@ public class Butcher implements Action {
         return result;
     }
 
-    boolean useGlobalPf(NArea area) throws InterruptedException {
-        if (area.getRCArea() == null) {
-            List<RoutePoint> routePoints = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area));
-            if (routePoints != null && !routePoints.isEmpty()) {
-                new RoutePointNavigator(routePoints.get(routePoints.size()-1)).run(NUtils.getGameUI());
-                return true;
-            }
-        }
-        return false;
-    }
 }

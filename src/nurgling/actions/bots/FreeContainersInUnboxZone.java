@@ -5,7 +5,6 @@ import nurgling.*;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
 import nurgling.areas.NContext;
-import nurgling.routes.RoutePoint;
 import nurgling.tools.*;
 import nurgling.widgets.Specialisation;
 
@@ -17,7 +16,6 @@ public class FreeContainersInUnboxZone implements Action {
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-//        this.closestRoutePoint = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui);
 
         // Find the area with "unbox" specialization
         NContext context = new NContext(gui);
@@ -34,7 +32,7 @@ public class FreeContainersInUnboxZone implements Action {
         if(area!=null) {
             // Free containers in the area
             for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet())))) {
-                Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name));
+                Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name), unboxArea);
                 cand.initattr(Container.Space.class);
                 containers.add(cand);
             }
@@ -97,8 +95,9 @@ public class FreeContainersInUnboxZone implements Action {
                 }
             }
         }
+        gui.msg("FINAL TRANSFER!");
         new FreeInventory2(context).run(gui);
-
+        gui.msg("FINAL TRANSFER END!");
         return Results.SUCCESS();
     }
 }

@@ -46,8 +46,8 @@ public class GoTo implements Action
                     NUtils.getUI().core.addTask(new IsNotPose(NUtils.player(), new NAlias("gfx/borka/rowing")));
                 }
                 else if (NParser.isIt(gob, new NAlias("snekkja"))) {
-                    //NUtils.getUI().core.addTask(new IsVesselMoving(gob));
-                    NUtils.getUI().core.addTask(new IsVesselNotMoving(gob));
+                    NUtils.getUI().core.addTask(new IsMovingBySpeed(targetCoord, gob));
+                    NUtils.getUI().core.addTask(new MovingCompletedBySpeed(gob));
                 }
             }
         }

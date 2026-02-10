@@ -6,6 +6,7 @@ import haven.Inventory;
 import haven.WItem;
 import nurgling.*;
 import nurgling.actions.*;
+import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 import nurgling.tasks.WaitItems;
 import nurgling.tools.Container;
@@ -70,7 +71,7 @@ public class RabbitMaster implements Action {
     }
 
     private Hutch buildHutch(NGameUI gui, Gob gob) throws InterruptedException {
-        Container container = new Container(gob, HUTCH_NAME);
+        Container container = new Container(gob, HUTCH_NAME, null);
         container.initattr(Container.Space.class);
 
         moveTo(gui, gob);
@@ -99,24 +100,27 @@ public class RabbitMaster implements Action {
                 .sorted(Comparator.<Rabbit>comparingDouble(r -> r.quality).reversed())
                 .collect(Collectors.toList());
 
-        for (Hutch breeder : breeders) {
-            breeder.does.sort(Comparator.comparingDouble(r -> r.quality));
-            while (!doesToMove.isEmpty()
-                    && !breeder.does.isEmpty()
-                    && doesToMove.get(0).quality > breeder.does.get(0).quality) {
+        List<Rabbit> doesToReplace = breeders.stream()
+                .flatMap(h -> h.does.stream())
+                .sorted(Comparator.<Rabbit>comparingDouble(r -> r.quality))
+                .collect(Collectors.toList());
 
-                Rabbit bestInc = doesToMove.remove(0);
-                Rabbit worstBrd = breeder.does.remove(0);
+        while (!doesToMove.isEmpty()
+                && !doesToReplace.isEmpty()
+                && doesToMove.get(0).quality > doesToReplace.get(0).quality) {
 
-                replaceDoe(gui, worstBrd, bestInc, breeder, bestInc.sourceHutch);
+            Rabbit bestInc = doesToMove.remove(0);
+            Rabbit worstBrd = doesToReplace.remove(0);
+            Hutch incubator = bestInc.sourceHutch;
 
-                bestInc.sourceHutch.does.remove(bestInc);
-                bestInc.sourceHutch.does.add(worstBrd);
-                bestInc.sourceHutch = breeder;
-                breeder.does.add(bestInc);
+            replaceDoe(gui, worstBrd, bestInc, worstBrd.sourceHutch, incubator);
+            incubator.does.remove(bestInc);
+            incubator.does.add(worstBrd);
+            bestInc.sourceHutch = worstBrd.sourceHutch;
 
-                breeder.does.sort(Comparator.comparingDouble(r -> r.quality));
-            }
+            worstBrd.sourceHutch.does.remove(worstBrd);
+            worstBrd.sourceHutch.does.add(bestInc);
+            worstBrd.sourceHutch = incubator;
         }
     }
 
@@ -126,25 +130,27 @@ public class RabbitMaster implements Action {
                 .sorted(Comparator.<Rabbit>comparingDouble(r -> r.quality).reversed())
                 .collect(Collectors.toList());
 
-        for (Hutch breeder : breeders) {
-            breeder.bucks.sort(Comparator.comparingDouble(r -> r.quality));
+        List<Rabbit> bucksToReplace = breeders.stream()
+                .flatMap(h -> h.bucks.stream())
+                .sorted(Comparator.<Rabbit>comparingDouble(r -> r.quality))
+                .collect(Collectors.toList());
 
-            while (!bucksToMove.isEmpty()
-                    && !breeder.bucks.isEmpty()
-                    && bucksToMove.get(0).quality > breeder.bucks.get(0).quality) {
+        while (!bucksToMove.isEmpty()
+                && !bucksToReplace.isEmpty()
+                && bucksToMove.get(0).quality > bucksToReplace.get(0).quality) {
 
-                Rabbit bestInc = bucksToMove.remove(0);
-                Rabbit worstBrd = breeder.bucks.remove(0);
+            Rabbit bestInc = bucksToMove.remove(0);
+            Rabbit worstBrd = bucksToReplace.remove(0);
+            Hutch incubator = bestInc.sourceHutch;
 
-                replaceBuck(gui, worstBrd, bestInc, breeder, bestInc.sourceHutch);
+            replaceBuck(gui, worstBrd, bestInc, worstBrd.sourceHutch, incubator);
+            incubator.bucks.remove(bestInc);
+            incubator.bucks.add(worstBrd);
+            bestInc.sourceHutch = worstBrd.sourceHutch;
 
-                bestInc.sourceHutch.bucks.remove(bestInc);
-                bestInc.sourceHutch.bucks.add(worstBrd);
-                bestInc.sourceHutch = breeder;
-                breeder.bucks.add(bestInc);
-
-                breeder.bucks.sort(Comparator.comparingDouble(r -> r.quality));
-            }
+            worstBrd.sourceHutch.bucks.remove(worstBrd);
+            worstBrd.sourceHutch.bucks.add(bestInc);
+            worstBrd.sourceHutch = incubator;
         }
     }
 
@@ -182,7 +188,9 @@ public class RabbitMaster implements Action {
     }
 
     private void killRemainingRabbits(NGameUI gui, List<Hutch> incubators) throws InterruptedException {
-        FreeInventory2 freeInv = new FreeInventory2(new NContext(gui));
+        NContext context = new NContext(gui);
+        FreeInventory2 freeInv = new FreeInventory2(context);
+        context.getSpecArea(Specialisation.SpecName.rabbit);
 
         for (Hutch h : incubators) {
             if (h.does.isEmpty() && h.bucks.isEmpty()) {
@@ -208,6 +216,7 @@ public class RabbitMaster implements Action {
 
                 if (gui.getInventory().getFreeSpace() < 2) {
                     freeInv.run(gui);
+                    context.getSpecArea(Specialisation.SpecName.rabbit);
                     moveTo(gui, Finder.findGob(h.container.gobid));
                     openContainer(gui, h.container);
                     invHolder[0] = gui.getInventory(HUTCH_NAME);
@@ -228,6 +237,7 @@ public class RabbitMaster implements Action {
 
                 if (gui.getInventory().getFreeSpace() < 1) {
                     freeInv.run(gui);
+                    context.getSpecArea(Specialisation.SpecName.rabbit);
                     moveTo(gui, Finder.findGob(h.container.gobid));
                     openContainer(gui, h.container);
                     invHolder[0] = gui.getInventory(HUTCH_NAME);
@@ -248,6 +258,7 @@ public class RabbitMaster implements Action {
 
                 if (gui.getInventory().getFreeSpace() < 5) {
                     freeInv.run(gui);
+                    context.getSpecArea(Specialisation.SpecName.rabbit);
                     moveTo(gui, Finder.findGob(h.container.gobid));
                     openContainer(gui, h.container);
                     invHolder[0] = gui.getInventory(HUTCH_NAME);
@@ -272,24 +283,93 @@ public class RabbitMaster implements Action {
             closeContainer(gui, h.container);
         }
         freeInv.run(gui);
+        context.getSpecArea(Specialisation.SpecName.rabbit);
     }
 
     private void moveBunniesToIncubators(NGameUI gui, List<Hutch> breeders, List<Hutch> incubators) throws InterruptedException {
-        List<Rabbit> pool = breeders.stream()
-            .flatMap(h -> h.bunnies.stream())
-            .sorted(Comparator.comparingDouble((Rabbit r) -> r.quality).reversed())
-            .collect(Collectors.toList());
+        int breederIndex = 0;
 
-        for (Hutch inc : incubators) {
-            int need = 42 - inc.bunnies.size();
-            for (int i = 0; i < need && !pool.isEmpty(); i++) {
-                Rabbit bunny = pool.remove(0);
-                Hutch from = bunny.sourceHutch;
+        int totalBunnies = Stream.concat(breeders.stream(), incubators.stream())
+                .mapToInt(h -> h.bunnies.size())
+                .sum();
+        int calcNeed = (totalBunnies + incubators.size() - 1) / incubators.size();
 
-                transferIndividualBunny(gui, bunny, from, inc);
-                bunny.sourceHutch = inc;
+
+        for (Hutch incubator : incubators) {
+            int need = Math.min(42, calcNeed) - incubator.bunnies.size();
+            if (need <= 0)
+                continue;
+
+            while (need > 0 && breederIndex < breeders.size()) {
+                Hutch breeder = breeders.get(breederIndex);
+
+                if (breeder.bunnies.isEmpty()) {
+                    breederIndex++;
+                    continue;
+                }
+                int moveCount = Math.min(need, Math.min(breeder.bunnies.size(), gui.getInventory().getFreeSpace()));
+
+                transferBunniesBatch(gui, breeder, incubator, moveCount);
+
+                for (int i = 0; i < moveCount; i++) {
+                    Rabbit r = breeder.bunnies.remove(0);
+                    r.sourceHutch = incubator;
+                    incubator.bunnies.add(r);
+                }
+
+                need -= moveCount;
+
+                // If breeder is empty, advance to next one
+                if (breeder.bunnies.isEmpty()) {
+                    breederIndex++;
+                }
             }
         }
+    }
+
+
+    private void transferBunniesBatch(NGameUI gui, Hutch from, Hutch to, int count) throws InterruptedException {
+        if (count <= 0) return;
+
+        /* TAKE */
+        moveTo(gui, Finder.findGob(from.container.gobid));
+        openContainer(gui, from.container);
+
+        for (int i = 0; i < count; i++) {
+            takeAnyBunny(gui);
+        }
+
+        closeContainer(gui, from.container);
+
+        /* DROP */
+        moveTo(gui, Finder.findGob(to.container.gobid));
+        openContainer(gui, to.container);
+
+        for (int i = 0; i < count; i++) {
+            dropBunny(gui);
+        }
+
+        closeContainer(gui, to.container);
+    }
+
+    private void takeAnyBunny(NGameUI gui) throws InterruptedException {
+        WItem bunny = gui.getInventory(HUTCH_NAME).getItem(BUNNY_ALIAS);
+        if (bunny == null)
+            throw new InterruptedException("No bunny found");
+
+        int oldSize = gui.getInventory().getItems(BUNNY_ALIAS).size();
+        bunny.item.wdgmsg("transfer", Coord.z);
+        NUtils.addTask(new WaitItems(gui.getInventory(), BUNNY_ALIAS, oldSize + 1));
+    }
+
+    private void dropBunny(NGameUI gui) throws InterruptedException {
+        WItem bunny = gui.getInventory().getItem(BUNNY_ALIAS);
+        if (bunny == null)
+            throw new InterruptedException("No bunny found");
+
+        int oldSize = gui.getInventory(HUTCH_NAME).getItems(BUNNY_ALIAS).size();
+        bunny.item.wdgmsg("transfer", Coord.z);
+        NUtils.addTask(new WaitItems(gui.getInventory(HUTCH_NAME), BUNNY_ALIAS, oldSize + 1));
     }
 
     private void cullBunnies(NGameUI gui, List<Hutch> breeders) throws InterruptedException {

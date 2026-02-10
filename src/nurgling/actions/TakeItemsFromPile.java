@@ -31,7 +31,7 @@ public class TakeItemsFromPile implements Action
             gui.getStockpile().transfer(count);
             WaitItemFromPile wifp = new WaitItemFromPile(count);
             NUtils.getUI().core.addTask(wifp);
-            took += wifp.getResult().size();
+            took += wifp.getTotalItemCount();
             ((NUI)gui.ui).disableMonitor();
             items.addAll(wifp.getResult());
             if(target_size <=took)

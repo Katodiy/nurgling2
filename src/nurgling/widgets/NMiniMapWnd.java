@@ -6,6 +6,7 @@ import nurgling.NConfig;
 import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 import nurgling.tools.ExploredArea;
 
 import java.net.MalformedURLException;
@@ -119,25 +120,25 @@ public class NMiniMapWnd extends Widget{
         toggle_panel = new Widget();
         java.util.List<Widget> buttons = new java.util.ArrayList<>();
         
-        ACheckBox first = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/claim", GameUI.kb_claim, "Display personal claims");
+        ACheckBox first = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/claim", GameUI.kb_claim, L10n.get("minimap.personal_claims"));
         first.changed(a -> switchStatus("cplot", a));
         first.a = (Boolean) NConfig.get(NConfig.Key.claimol);
         switchStatus("cplot", first.a);
         buttons.add(first);
 
-        ACheckBox vilol = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vil", GameUI.kb_vil, "Display village claims");
+        ACheckBox vilol = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vil", GameUI.kb_vil, L10n.get("minimap.village_claims"));
         vilol.changed(a -> switchStatus("vlg", a));
         vilol.a = (Boolean) NConfig.get(NConfig.Key.vilol);
         switchStatus("vlg", vilol.a);
         buttons.add(vilol);
 
-        ACheckBox realmol = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/rlm", GameUI.kb_rlm, "Display realms");
+        ACheckBox realmol = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/rlm", GameUI.kb_rlm, L10n.get("minimap.realms"));
         realmol.changed(a -> switchStatus("realm", a));
         realmol.a = (Boolean) NConfig.get(NConfig.Key.realmol);
         switchStatus("realm", realmol.a);
         buttons.add(realmol);
 
-        ACheckBox ico = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/ico", GameUI.kb_ico, "Icon settings");
+        ACheckBox ico = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/ico", GameUI.kb_ico, L10n.get("minimap.icon_settings"));
         ico.state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.iconwnd));
         ico.click(() -> {
             if(NUtils.getGameUI() == null || NUtils.getGameUI().iconconf == null)
@@ -152,17 +153,17 @@ public class NMiniMapWnd extends Widget{
         });
         buttons.add(ico);
 
-        ACheckBox eye = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vis", kb_eye, "Display vision area");
+        ACheckBox eye = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/vis", kb_eye, L10n.get("minimap.vision_area"));
         eye.changed(a -> switchStatus("eye", a));
         eye.a = (Boolean)NConfig.get(NConfig.Key.showView);
         buttons.add(eye);
 
-        ACheckBox grid = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, "Display grid");
+        ACheckBox grid = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/grid", kb_grid, L10n.get("minimap.grid"));
         grid.changed(a -> switchStatus("grid", a));
         grid.a = (Boolean) NConfig.get(NConfig.Key.showGrid);
         buttons.add(grid);
 
-        minesup = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/minesup", kb_minesup, "Display mining overlay");
+        minesup = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/minesup", kb_minesup, L10n.get("minimap.mining_overlay"));
         minesup.changed(a -> switchStatus("miningol", a));
         minesup.a = (Boolean) NConfig.get(NConfig.Key.miningol);
         buttons.add(minesup);
@@ -175,17 +176,17 @@ public class NMiniMapWnd extends Widget{
         });
         buttons.add(geoloc);
 
-        natura = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/natura", kb_nature, "Show/hides natural objects");
+        natura = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/natura", kb_nature, L10n.get("minimap.natural_objects"));
         natura.changed(a -> switchStatus("natura", !a));
         natura.a = !(Boolean) NConfig.get(NConfig.Key.hideNature);
         buttons.add(natura);
 
-        nightvision = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/daynight", kb_night, "Night vision");
+        nightvision = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/daynight", kb_night, L10n.get("minimap.night_vision"));
         nightvision.changed(a -> switchStatus("night", a));
         nightvision.a = (Boolean) NConfig.get(NConfig.Key.nightVision);
         buttons.add(nightvision);
 
-        fog = new ExploredAreaCheckBox("nurgling/hud/buttons/toggle_panel/fog", kb_fog, "Explored area (RMB for session)");
+        fog = new ExploredAreaCheckBox("nurgling/hud/buttons/toggle_panel/fog", kb_fog, L10n.get("minimap.explored_area"));
         fog.changed(a -> {
             NConfig.set(NConfig.Key.exploredAreaEnable, a);
             NConfig.needUpdate();
@@ -193,7 +194,7 @@ public class NMiniMapWnd extends Widget{
         fog.a = (Boolean) NConfig.get(NConfig.Key.exploredAreaEnable);
         buttons.add(fog);
 
-        ACheckBox timer = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/timer", kb_resourcetimers, "Resource Timers");
+        ACheckBox timer = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/timer", kb_resourcetimers, L10n.get("minimap.resource_timers"));
         timer.state(() -> {
             NGameUI gui = NUtils.getGameUI();
             return gui != null && gui.localizedResourceTimersWindow != null && gui.localizedResourceTimersWindow.visible();
@@ -206,13 +207,22 @@ public class NMiniMapWnd extends Widget{
         });
         buttons.add(timer);
 
+        // ChunkNav exploration overlay toggle
+        ACheckBox chunkNav = new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/gridnav", kb_grid, L10n.get("minimap.chunknav"));
+        chunkNav.changed(a -> {
+            NConfig.set(NConfig.Key.chunkNavOverlay, a);
+            NConfig.needUpdate();
+        });
+        chunkNav.a = (Boolean) NConfig.get(NConfig.Key.chunkNavOverlay);
+        buttons.add(chunkNav);
+
         // Layout buttons with wrapping
         layoutButtons(buttons);
 
         toggle_panel.pack();
         add(toggle_panel);
         
-        map_box = add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/map", GameUI.kb_map, "Map"), miniMap.sz.x-(first.sz.x), 0).state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.mapfile)).click(() -> {
+        map_box = add(new NMenuCheckBox("nurgling/hud/buttons/toggle_panel/map", GameUI.kb_map, L10n.get("minimap.map")), miniMap.sz.x-(first.sz.x), 0).state(() -> NMiniMapWnd.this.ui.gui.wndstate(NMiniMapWnd.this.ui.gui.mapfile)).click(() -> {
             NUtils.getGameUI().togglewnd(NUtils.getGameUI().mapfile);
             if(NUtils.getGameUI().mapfile != null)
                 Utils.setprefb("wndvis-map", NUtils.getGameUI().mapfile.visible());
@@ -392,7 +402,7 @@ public class NMiniMapWnd extends Widget{
 
     private void layoutButtons(java.util.List<Widget> buttons) {
         if(buttons.isEmpty()) return;
-        
+
         int btnSpacing = UI.scale(3);
         int maxWidth = miniMap.sz.x;
         int currentX = 0;

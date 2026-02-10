@@ -5,9 +5,7 @@ import haven.Gob;
 import haven.Img;
 import haven.Widget;
 import haven.res.ui.invsq.InvSquare;
-import nurgling.NGameUI;
-import nurgling.NInventory;
-import nurgling.NUtils;
+import nurgling.*;
 import nurgling.tasks.*;
 import nurgling.tools.Container;
 
@@ -57,7 +55,7 @@ public class IsVehicleFull implements Action
                 for (Widget widget : NUtils.getGameUI().getWindow("Wagon").children()) {
                     if (widget.children().size() >= 20) {
                         for (Widget child : widget.children()) {
-                            if (!(child instanceof InvSquare)) {
+                            if (!(child instanceof InvSquare) && !(child instanceof NGItem) && !(child instanceof NWItem)) {
                                 obj++;
                             }
                         }

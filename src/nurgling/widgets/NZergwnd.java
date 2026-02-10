@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.i18n.L10n;
 
 public class NZergwnd extends GameUI.Hidewnd
 {
@@ -37,9 +38,9 @@ public class NZergwnd extends GameUI.Hidewnd
     }
 
     public NZergwnd() {
-        super(Coord.z, "Kith & Kin", true);
+        super(Coord.z, L10n.get("opt.keybind.kith_kin"), true);
         kin = add(new NZergwnd.TButton("kin", false));
-        kin.tooltip = Text.render("Kin");
+        kin.tooltip = Text.render(L10n.get("kin.window_title"));
         pol = add(new NZergwnd.TButton("pol", true));
         pol2 = add(new NZergwnd.TButton("rlm", true));
     }

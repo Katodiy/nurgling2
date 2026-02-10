@@ -5,6 +5,7 @@ import haven.Gob;
 import haven.WItem;
 import nurgling.NGameUI;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.cheese.CheeseBranch;
 import nurgling.actions.PathFinder;
 import nurgling.actions.OpenTargetContainer;
@@ -13,6 +14,7 @@ import nurgling.actions.TransferWItemsToContainer;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
+import nurgling.actions.bots.cheese.CheeseRackOverlayUtils;
 import nurgling.cheese.CheeseOrdersManager;
 import nurgling.cheese.CheeseOrder;
 
@@ -45,50 +47,70 @@ public class CheeseRackManager {
     }
     
     /**
-     * Move cheese trays to a specific area's racks with order saving
+     * Move cheese trays to racks in target place type's areas with order saving
+     * Supports multiple areas per place type - fills one area completely before moving to next
      */
     public int moveTraysToRacks(NGameUI gui, CheeseBranch.Place targetPlace, int quantity, String cheeseType, CheeseOrdersManager ordersManager, CheeseOrder specificOrder) throws InterruptedException {
         int moved = 0;
 
-            NArea targetArea = CheeseAreaManager.getCheeseArea(gui, targetPlace);
-            if (targetArea == null) {
-                return 0;
-            }
-            
+        // Get ALL areas for this place type
+        ArrayList<NArea> targetAreas = CheeseAreaManager.getAllCheeseAreas(targetPlace);
+        if (targetAreas.isEmpty()) {
+            return 0;
+        }
+
+        // Process each area until all trays are placed or no more space
+        for (NArea targetArea : targetAreas) {
+            if (moved >= quantity) break;
+
+            // Navigate to this area
+            NContext context = new NContext(gui);
+            context.getAreaById(targetArea.id);
+
             ArrayList<Gob> racks = Finder.findGobs(targetArea, new NAlias("gfx/terobjs/cheeserack"));
-            
+
             for (Gob rack : racks) {
                 if (moved >= quantity) break;
-                Container rackContainer = new Container(rack, "Rack");
+                
+                // Skip visually full racks before walking to them
+                if (CheeseRackOverlayUtils.isRackFull(rack)) {
+                    continue;
+                }
+                
+                Container rackContainer = new Container(rack, "Rack", targetArea);
                 rackContainer.initattr(Container.Space.class);
                 new PathFinder(rack).run(gui);
                 new OpenTargetContainer(rackContainer).run(gui);
-                
+
                 // Check how many trays we can fit in this rack
                 int availableSpace = gui.getInventory(rackContainer.cap).getNumberFreeCoord(TRAY_SIZE);
-                int toMove = Math.min(availableSpace, quantity - moved);
-
-                new CloseTargetContainer(rackContainer).run(gui);
-
-                if (toMove > 0) {
-                    // Get specific trays of the requested cheese type
-                    ArrayList<WItem> specificTrays = getTraysOfType(gui, cheeseType, toMove);
-                    if (!specificTrays.isEmpty()) {
-                        // Transfer only the specific cheese trays to this rack
-                        new TransferWItemsToContainer(rackContainer, specificTrays).run(gui);
-                        moved += specificTrays.size();
-                        
-                        // Update and save orders after placing trays on rack
-                        if (ordersManager != null && specificOrder != null) {
-                            updateOrdersAfterCurdPlacement(ordersManager, cheeseType, specificTrays.size(), specificOrder);
-                            ordersManager.writeOrders();
-                        }
-                    }
+                
+                if (availableSpace == 0) {
+                    // Rack is full, skip it
+                    new CloseTargetContainer(rackContainer).run(gui);
+                    continue;
                 }
                 
+                int toMove = Math.min(availableSpace, quantity - moved);
+
+                // Get specific trays of the requested cheese type
+                ArrayList<WItem> specificTrays = getTraysOfType(gui, cheeseType, toMove);
+                if (!specificTrays.isEmpty()) {
+                    // Transfer while container is still open
+                    new TransferWItemsToContainer(rackContainer, specificTrays).run(gui);
+                    moved += specificTrays.size();
+
+                    // Update and save orders after placing trays on rack
+                    if (ordersManager != null && specificOrder != null) {
+                        updateOrdersAfterCurdPlacement(ordersManager, cheeseType, specificTrays.size(), specificOrder);
+                        ordersManager.writeOrders();
+                    }
+                }
+
                 new CloseTargetContainer(rackContainer).run(gui);
             }
-        
+        }
+
         return moved;
     }
     

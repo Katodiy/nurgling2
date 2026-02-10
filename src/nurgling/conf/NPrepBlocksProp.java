@@ -2,6 +2,7 @@ package nurgling.conf;
 
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.NUtils;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -79,16 +80,19 @@ public class NPrepBlocksProp implements JConf
 
     public static NPrepBlocksProp get(NUI.NSessInfo sessInfo)
     {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         ArrayList<NPrepBlocksProp> chopProps = ((ArrayList<NPrepBlocksProp>) NConfig.get(NConfig.Key.prepblockprop));
         if (chopProps == null)
             chopProps = new ArrayList<>();
         for (NPrepBlocksProp prop : chopProps)
         {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid))
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid))
             {
                 return prop;
             }
         }
-        return new NPrepBlocksProp(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NPrepBlocksProp(sessInfo.username, chrid);
     }
 }

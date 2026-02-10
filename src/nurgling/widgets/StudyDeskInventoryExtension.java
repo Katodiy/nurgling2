@@ -5,7 +5,10 @@ import haven.Button;
 import haven.Label;
 import haven.Window;
 import haven.resutil.Curiosity;
-import nurgling.*;
+import nurgling.NGItem;
+import nurgling.NGameUI;
+import nurgling.NInventory;
+import nurgling.NUtils;
 import nurgling.iteminfo.NCuriosity;
 
 import java.awt.*;
@@ -16,6 +19,10 @@ import java.util.List;
  * Extension for adding Study Desk specific functionality to inventory windows
  */
 public class StudyDeskInventoryExtension {
+
+    private StudyDeskInventoryExtension() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 
     /**
      * Adds a Plan button and details panel to inventory windows that belong to Study Desk containers
@@ -30,18 +37,42 @@ public class StudyDeskInventoryExtension {
 
     /**
      * Checks if the given inventory belongs to a Study Desk container
+     *
      * @param inventory The inventory to check
      * @return true if this is a Study Desk inventory
      */
     public static boolean isStudyDeskInventory(NInventory inventory) {
-        if (inventory.parentGob == null) return false;
+        String resName = getInventoryParentGobResName(inventory);
+        return isStudyDesk(resName) || isStudyDeskFine(resName) || isStudyDeskGrand(resName);
+    }
+
+    private static boolean isStudyDeskGrand(String resName) {
+        return "gfx/terobjs/grandstudydesk".equals(resName);
+    }
+
+    private static boolean isStudyDeskFine(String resName) {
+        return "gfx/terobjs/studydesk-big".equals(resName);
+    }
+
+    private static boolean isStudyDesk(String resName) {
+        return "gfx/terobjs/studydesk".equals(resName);
+    }
+
+    /**
+     * Returns the inventory's parent gob res name.
+     *
+     * @param inventory holds the drawable attribute with parent gob res name
+     * @return inventory's parent gob res name
+     */
+    private static String getInventoryParentGobResName(NInventory inventory) {
+        String resName = null;
+        if (inventory.parentGob == null) return resName;
         // Get the drawable attribute from the gob
         Drawable drawable = inventory.parentGob.getattr(Drawable.class);
         if (drawable != null && drawable.getres() != null) {
-            String resName = drawable.getres().name;
-            return "gfx/terobjs/studydesk".equals(resName);
+            resName = drawable.getres().name;
         }
-        return false;
+        return resName;
     }
 
     /**
@@ -78,10 +109,17 @@ public class StudyDeskInventoryExtension {
             String gobHash = null;
             if (inventory.parentGob != null && inventory.parentGob.ngob != null) {
                 gobHash = inventory.parentGob.ngob.hash;
+                // check which version of study desk is being used
             }
 
             if (gameUI.studyDeskPlanner == null) {
-                gameUI.studyDeskPlanner = new StudyDeskPlannerWidget();
+                if (isStudyDeskFine(getInventoryParentGobResName(inventory))) {
+                    gameUI.studyDeskPlanner = new StudyDeskPlannerWidget(StudyDeskPlannerWidget.DESK_SIZE_FINE);
+                } else if (isStudyDeskGrand(getInventoryParentGobResName(inventory))) {
+                    gameUI.studyDeskPlanner = new StudyDeskPlannerWidget(StudyDeskPlannerWidget.DESK_SIZE_GRAND);
+                } else {
+                    gameUI.studyDeskPlanner = new StudyDeskPlannerWidget(StudyDeskPlannerWidget.DESK_SIZE);
+                }
                 gameUI.add(gameUI.studyDeskPlanner, plannerPos);
                 if (gobHash != null) {
                     gameUI.studyDeskPlanner.setStudyDeskHash(gobHash);
@@ -127,8 +165,8 @@ public class StudyDeskInventoryExtension {
         // Position the panel to the right of the inventory
         Coord panelPos = new Coord(inventory.sz.x + UI.scale(10), 0);
 
-        // Reserve space for Total LP at the bottom
-        int scrollHeight = inventory.sz.y - UI.scale(25);
+        // Reserve space for Mental Weight and Total LP at the bottom
+        int scrollHeight = inventory.sz.y - UI.scale(40);
         Coord scrollSize = new Coord(UI.scale(160), scrollHeight);
 
         // Create the content panel with scrolling support
@@ -139,11 +177,16 @@ public class StudyDeskInventoryExtension {
         scrollport.cont.add(detailsPanel, Coord.z);
         inventory.parent.add(scrollport, panelPos);
 
-        // Add Total LP label below the scrollport
+        // Add Mental Weight label below the scrollport
+        Label mentalWeightLabel = new Label("Mental Weight: 0");
+        inventory.parent.add(mentalWeightLabel, new Coord(panelPos.x, panelPos.y + scrollHeight + UI.scale(5)));
+
+        // Add Total LP label below mental weight
         Label totalLPLabel = new Label("Total LP: 0");
-        inventory.parent.add(totalLPLabel, new Coord(panelPos.x, panelPos.y + scrollHeight + UI.scale(5)));
+        inventory.parent.add(totalLPLabel, new Coord(panelPos.x, panelPos.y + scrollHeight + UI.scale(18)));
 
         // Store reference for updates
+        detailsPanel.mentalWeightLabel = mentalWeightLabel;
         detailsPanel.totalLPLabel = totalLPLabel;
         detailsPanel.scrollport = scrollport;
     }
@@ -157,6 +200,7 @@ public class StudyDeskInventoryExtension {
         private static final int LINE_HEIGHT = UI.scale(30);
         private Map<String, CurioInfo> cachedInfo = new HashMap<>();
         private int lastItemCount = -1;
+        Label mentalWeightLabel;
         Label totalLPLabel;
         Scrollport scrollport;
 
@@ -189,11 +233,14 @@ public class StudyDeskInventoryExtension {
             List<CurioInfo> sortedCurios = new ArrayList<>(cachedInfo.values());
             sortedCurios.sort(Comparator.comparing(a -> a.name, String.CASE_INSENSITIVE_ORDER));
 
-            // Calculate total LP
+            // Calculate total LP and total mental weight (mental weight is per unique item type)
             int totalLP = 0;
+            int totalMentalWeight = 0;
             for (CurioInfo info : cachedInfo.values()) {
                 totalLP += info.totalLP;
+                totalMentalWeight += info.mentalWeight; // Each unique item type contributes its mental weight once
             }
+            updateMentalWeight(totalMentalWeight);
             updateTotalLP(totalLP);
 
             int y = 0;
@@ -245,6 +292,14 @@ public class StudyDeskInventoryExtension {
             }
         }
 
+        private void updateMentalWeight(int mentalWeight) {
+            if (mentalWeightLabel != null) {
+                String text = String.format("Mental Weight: %d", mentalWeight);
+                mentalWeightLabel.settext(text);
+                mentalWeightLabel.setcolor(new Color(255, 192, 255)); // Light purple color (matches game's mental weight color)
+            }
+        }
+
         private void updateTotalLP(int totalLP) {
             if (totalLPLabel != null) {
                 String totalText = String.format("Total LP: %,d", totalLP);
@@ -293,7 +348,7 @@ public class StudyDeskInventoryExtension {
                     // Add or update curio info
                     CurioInfo info = curioInfo.get(key);
                     if (info == null) {
-                        info = new CurioInfo(displayName, resource, curiosity.time, curiosity.exp);
+                        info = new CurioInfo(displayName, resource, curiosity.time, curiosity.exp, curiosity.mw);
                         curioInfo.put(key, info);
                     } else {
                         info.count++;
@@ -343,15 +398,17 @@ public class StudyDeskInventoryExtension {
             Resource resource;
             int studyTime;
             int learningPoints;
+            int mentalWeight;
             int count = 1;
             int totalTime;
             int totalLP;
 
-            CurioInfo(String name, Resource resource, int studyTime, int learningPoints) {
+            CurioInfo(String name, Resource resource, int studyTime, int learningPoints, int mentalWeight) {
                 this.name = name;
                 this.resource = resource;
                 this.studyTime = studyTime;
                 this.learningPoints = learningPoints;
+                this.mentalWeight = mentalWeight;
                 this.totalTime = studyTime;
                 this.totalLP = learningPoints;
             }

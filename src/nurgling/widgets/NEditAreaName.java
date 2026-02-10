@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.i18n.L10n;
 import nurgling.overlays.NAreaLabel;
 import nurgling.overlays.NTexLabel;
 
@@ -11,9 +12,9 @@ public class NEditAreaName extends Window
     private final TextEntry te;
     public NEditAreaName()
     {
-        super(UI.scale(new Coord(260, 25)), "Edit name");
+        super(UI.scale(new Coord(260, 25)), L10n.get("edit.area_name"));
         prev = add(te = new TextEntry(UI.scale(200), ""));
-        add(new Button(UI.scale(60), "Save")
+        add(new Button(UI.scale(60), L10n.get("edit.save"))
         {
             @Override
             public void click()
@@ -24,6 +25,7 @@ public class NEditAreaName extends Window
                 {
                     ((NMapView) NUtils.getGameUI().map).changeAreaName(area.id, te.text());
                     item.text.settext(te.text());
+                    item.settip(te.text());
                     NConfig.needAreasUpdate();
                     Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(area.gid);
                     if(dummy != null) {

@@ -1,19 +1,19 @@
-# Trellis Builder with Rotation
+# @enc.trellis.title
 
-The **Trellis Builder** bot automates the construction of trellis structures with support for rotation. The bot always builds 3 trellis per cell.
+@enc.trellis.intro
 
-### Settings
+### @enc.common.settings
 
-- **Area:** Select the area where trellises will be built
-- **Rotation:** Choose trellis orientation. 6 rotation positions.
+- @enc.trellis.setting_area
+- @enc.trellis.setting_rotation
 
-## How to Use
+## @enc.trellis.howto_title
 
-1. Click the Trellis Builder bot
-2. Select the target area on your map
-3. Set desired rotation position
-4. Click **Confirm**
-5. Select areas for building material
+1. @enc.trellis.step1
+2. @enc.trellis.step2
+3. @enc.trellis.step3
+4. @enc.trellis.step4
+5. @enc.trellis.step5
 
 ![Trellis Default Rotation](../images/features/preview-build.PNG)
 

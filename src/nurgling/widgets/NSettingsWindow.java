@@ -4,6 +4,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 import nurgling.widgets.nsettings.*;
 import nurgling.widgets.options.*;
 
@@ -34,7 +35,7 @@ public class NSettingsWindow extends Widget {
         container = add(new Widget(Coord.z));
         list = add(new SettingsList(UI.scale(200, 580)), UI.scale(10, 10));
 
-        saveBtn = add(new Button(UI.scale(100), "Save") {
+        saveBtn = add(new Button(UI.scale(100), L10n.get("nsettings.btn.save")) {
             public void click() {
                 if(currentPanel != null) {
                     currentPanel.save();
@@ -42,7 +43,7 @@ public class NSettingsWindow extends Widget {
             }
         }, UI.scale(680, 560));
 
-        cancelBtn = add(new Button(UI.scale(100), "Cancel") {
+        cancelBtn = add(new Button(UI.scale(100), L10n.get("nsettings.btn.cancel")) {
             public void click() {
                 if(currentPanel != null) {
                     currentPanel.load();
@@ -52,7 +53,7 @@ public class NSettingsWindow extends Widget {
 
         // Add Back button only if back action is provided
         if(backAction != null) {
-            backBtn = add(new Button(UI.scale(100), "Back") {
+            backBtn = add(new Button(UI.scale(100), L10n.get("nsettings.btn.back")) {
                 public void click() {
                     backAction.run();
                 }
@@ -73,32 +74,37 @@ public class NSettingsWindow extends Widget {
 
 
     private void fillSettings() {
-        SettingsCategory general = new SettingsCategory("General", new Panel("General"), container);
-        general.addChild(new SettingsItem("Fonts", new Fonts(), container));
-        general.addChild(new SettingsItem("Navigation", navigation = new Navigation(), container));
-        general.addChild(new SettingsItem("Map Settings", new MapSettings(), container));
-        general.addChild(new SettingsItem("Quality of life", qol = new QoL(), container));
-        general.addChild(new SettingsItem("Database", new DatabaseSettings(), container));
-        general.addChild(new SettingsItem("Auto Mapper", new AutoMapper(), container));
-        general.addChild(new SettingsItem("Auto Selection", as = new AutoSelection(), container));
-        general.addChild(new SettingsItem("Quick Actions", qa = new QuickActions(), container));
-        general.addChild(new SettingsItem("Discord Notifications", new DiscordSettings(), container));
+        SettingsCategory general = new SettingsCategory(L10n.get("nsettings.cat.general"), new Panel(L10n.get("nsettings.cat.general")), container);
+        general.addChild(new SettingsItem(L10n.get("nsettings.item.fonts"), new Fonts(), container));
+        general.addChild(new SettingsItem(L10n.get("nsettings.item.item_overlays"), new ItemOverlaySettings(), container));
+        general.addChild(new SettingsItem(L10n.get("nsettings.item.navigation"), navigation = new Navigation(), container));
+        general.addChild(new SettingsItem(L10n.get("nsettings.item.map_settings"), new MapSettings(), container));
+        general.addChild(new SettingsItem(L10n.get("nsettings.item.qol"), qol = new QoL(), container));
+        general.addChild(new SettingsItem(L10n.get("nsettings.item.database"), new DatabaseSettings(), container));
+        general.addChild(new SettingsItem(L10n.get("nsettings.item.auto_mapper"), new AutoMapper(), container));
+        general.addChild(new SettingsItem(L10n.get("nsettings.item.auto_selection"), as = new AutoSelection(), container));
+        general.addChild(new SettingsItem(L10n.get("nsettings.item.quick_actions"), qa = new QuickActions(), container));
+        general.addChild(new SettingsItem(L10n.get("nsettings.item.discord"), new DiscordSettings(), container));
 
-        SettingsCategory gameenvironment = new SettingsCategory("Game environment", new Panel("Game environment"), container);
-        gameenvironment.addChild(new SettingsItem("World",world = new World(), container));
-        gameenvironment.addChild(new SettingsItem("Animal rings", new NRingSettings(), container));
+        SettingsCategory gameenvironment = new SettingsCategory(L10n.get("nsettings.cat.game_environment"), new Panel(L10n.get("nsettings.cat.game_environment")), container);
+        gameenvironment.addChild(new SettingsItem(L10n.get("nsettings.item.world"), world = new World(), container));
+        gameenvironment.addChild(new SettingsItem(L10n.get("nsettings.item.animal_rings"), new NRingSettings(), container));
 
-        SettingsCategory scenarios = new SettingsCategory("Autorunner", new Panel("Autorunner scenarios"), container);
-        scenarios.addChild(new SettingsItem("Scenarios", new ScenarioPanel(), container));
+        SettingsCategory scenarios = new SettingsCategory(L10n.get("nsettings.cat.autorunner"), new Panel(L10n.get("nsettings.cat.autorunner")), container);
+        scenarios.addChild(new SettingsItem(L10n.get("nsettings.item.scenarios"), new ScenarioPanel(), container));
+        scenarios.addChild(new SettingsItem(L10n.get("nsettings.item.craft_presets"), new CraftPresetsPanel(), container));
 
-        SettingsCategory bots = new SettingsCategory("Bots", new Panel("Bots"), container);
-        bots.addChild(new SettingsItem("Feed Clover", new FeedClover(), container));
-        bots.addChild(new SettingsItem("Auto Drop settings", new Dropper(), container));
-        bots.addChild(new SettingsItem("Eating bot", new Eater(), container));
-        bots.addChild(new SettingsItem("Farming Settings", new FarmingSettingsPanel(), container));
-        bots.addChild(new SettingsItem("Cheese orders", new CheeseOrdersPanel(), container));
-        bots.addChild(new SettingsItem("Pickling Settings", new PicklingSettings(), container));
-        bots.addChild(new SettingsItem("Parasite Bot", new ParasiteSettings(), container));
+        SettingsCategory bots = new SettingsCategory(L10n.get("nsettings.cat.bots"), new Panel(L10n.get("nsettings.cat.bots")), container);
+        bots.addChild(new SettingsItem(L10n.get("nsettings.item.feed_clover"), new FeedClover(), container));
+        bots.addChild(new SettingsItem(L10n.get("nsettings.item.auto_drop"), new Dropper(), container));
+        bots.addChild(new SettingsItem(L10n.get("nsettings.item.eating_bot"), new Eater(), container));
+        bots.addChild(new SettingsItem(L10n.get("nsettings.item.farming"), new FarmingSettingsPanel(), container));
+        bots.addChild(new SettingsItem(L10n.get("nsettings.item.cheese_orders"), new CheeseOrdersPanel(), container));
+        bots.addChild(new SettingsItem(L10n.get("nsettings.item.pickling"), new PicklingSettings(), container));
+        bots.addChild(new SettingsItem(L10n.get("nsettings.item.parasite"), new ParasiteSettings(), container));
+        bots.addChild(new SettingsItem(L10n.get("nsettings.item.equipment"), new EquipmentBotSettings(), container));
+        bots.addChild(new SettingsItem(L10n.get("nsettings.item.starvation"), new StarvationAlertSettings(), container));
+        bots.addChild(new SettingsItem("Icon Generator", new IconGeneratorPanel(), container));
 
         list.addCategory(general);
         list.addCategory(gameenvironment);

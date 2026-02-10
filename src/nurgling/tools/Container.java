@@ -6,6 +6,7 @@ import haven.Gob;
 import haven.WItem;
 import haven.res.ui.tt.wellmined.WellMined;
 import nurgling.*;
+import nurgling.areas.NArea;
 import nurgling.areas.NContext;
 
 import java.awt.*;
@@ -19,11 +20,13 @@ public class Container implements NContext.ObjectStorage {
     public long gobid;
     public String gobHash;
     public String cap;
+    public NArea parent;
 
-    public Container(Gob gob, String cap) {
+    public Container(Gob gob, String cap, NArea area) {
         this.gobid = gob.id;
         this.gobHash = gob.ngob.hash;
         this.cap = cap;
+        this.parent = area;
     }
 
     public Map<Class<? extends Updater>, Updater> updaters = new HashMap<Class<? extends Updater>, Updater>();
@@ -261,6 +264,57 @@ public class Container implements NContext.ObjectStorage {
             return (int) res.get(MAXWATERLVL) - (int) res.get(WATERLVL);
         }
     }
+    /**
+     * Updater for tracking count of specific items in container.
+     * Used when you need to maintain a specific quantity of items (e.g., 32 Mulberry Leaves per cupboard).
+     */
+    public class ItemCount extends Updater {
+        public static final String ITEM_ALIAS = "itemAlias";
+        public static final String CURRENT_COUNT = "currentCount";
+        public static final String TARGET_COUNT = "targetCount";
+        public static final String NEEDED = "needed";
+
+        private NAlias itemAlias;
+        private int targetCount;
+
+        public ItemCount(NAlias itemAlias, int targetCount) {
+            this.itemAlias = itemAlias;
+            this.targetCount = targetCount;
+            res.put(ITEM_ALIAS, itemAlias);
+            res.put(TARGET_COUNT, targetCount);
+            res.put(CURRENT_COUNT, 0);
+            res.put(NEEDED, targetCount);
+        }
+
+        @Override
+        public void update() throws InterruptedException {
+            int currentCount = NUtils.getGameUI().getInventory(cap).getItems(itemAlias).size();
+            res.put(CURRENT_COUNT, currentCount);
+            res.put(NEEDED, Math.max(0, targetCount - currentCount));
+        }
+
+        public int getCurrentCount() {
+            return (Integer) res.get(CURRENT_COUNT);
+        }
+
+        public int getTargetCount() {
+            return targetCount;
+        }
+
+        public int getNeeded() {
+            if (!res.containsKey(NEEDED)) return targetCount;
+            return (Integer) res.get(NEEDED);
+        }
+
+        public NAlias getItemAlias() {
+            return itemAlias;
+        }
+
+        public boolean isFull() {
+            return getNeeded() <= 0;
+        }
+    }
+
     @Deprecated
     public class TestAttr extends Updater{
         public static final String ATTR = "attr";
@@ -350,6 +404,18 @@ public class Container implements NContext.ObjectStorage {
             updaters.put(c,new WaterLvl());
         else if(c == Tetris.class)
             updaters.put(c,new Tetris());
+    }
+
+    /**
+     * Initialize ItemCount updater with specific item alias and target count.
+     * @param itemAlias The items to track
+     * @param targetCount Maximum items per container
+     * @return The created ItemCount updater
+     */
+    public ItemCount initItemCount(NAlias itemAlias, int targetCount) {
+        ItemCount itemCount = new ItemCount(itemAlias, targetCount);
+        updaters.put(ItemCount.class, itemCount);
+        return itemCount;
     }
 
 }

@@ -9,7 +9,7 @@ import nurgling.conf.PigsHerd;
 
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/pig", version = 64)
+@haven.FromResource(name = "gfx/hud/rosters/pig", version = 65)
 public class Pig extends Entry {
     public int meat, milk;
     public int meatq, milkq, hideq;
@@ -72,14 +72,15 @@ public class Pig extends Entry {
     }
 
 	public double rang() {
-		PigsHerd herd = PigsHerd.getCurrent();
-		if (herd != null) {
+		PigsHerd herd = PigsHerd.getForArea(areaId);
+		if (herd != null)
+		{
 			double ql = (!herd.ignoreBD || hog) ? (q > (seedq - herd.breedingGap)) ? (q + seedq - herd.breedingGap) / 2. : q + ((seedq - herd.breedingGap) - q) * herd.coverbreed : q;
-			double m = (herd.disable_q_percentage ? (herd.meatq * meatq) : (ql * herd.meatq * meatq / 100.));
+			double m = (herd.disable_q_percentage ? herd.meatq : herd.meatq * (meatq / 100.));
 			double qm = meat * herd.meatquan1 + ((meat > herd.meatquanth) ? ((meat - herd.meatquanth) * (herd.meatquan2 - herd.meatquan1)) : 0);
 			double qtruf = prc * herd.trufquan1 + ((prc > herd.trufquanth) ? ((prc - herd.trufquanth) * (herd.trufquan2 - herd.trufquan1)) : 0);
-			double hide = (herd.disable_q_percentage ? (herd.hideq * hideq) : (ql * herd.hideq * hideq / 100.));
-			double k_res = m + qm + qtruf + hide;
+			double hide = (herd.disable_q_percentage ? herd.hideq : herd.hideq * (hideq / 100.));
+			double k_res = qtruf + qm + (m + hide) * ql;
 			double result = k_res == 0 ? ql : Math.round(k_res * 10) / 10.;
 			return result;
 		}

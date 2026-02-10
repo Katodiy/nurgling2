@@ -31,6 +31,7 @@ import nurgling.*;
 import java.util.*;
 import haven.render.*;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
@@ -128,8 +129,18 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 
     public static class Amount extends ItemInfo implements NumberInfo {
 	private final int num;
-
 	boolean name_checked = false;
+	
+	// Cached settings
+	private static nurgling.conf.ItemQualityOverlaySettings cachedSettings = null;
+	private static long lastSettingsCheck = 0;
+	private static final long SETTINGS_CHECK_INTERVAL = 200;
+	private static long settingsVersion = 0;
+	private static boolean forceRefresh = false;
+	
+	private Tex cachedOverlay = null;
+	private long lastSettingsVersion = -1;
+	
 	public Amount(Owner owner, int num) {
 	    super(owner);
 	    this.num = num;
@@ -138,40 +149,170 @@ public abstract class GItem extends AWidget implements ItemInfo.SpriteOwner, GSp
 	public int itemnum() {
 	    return(num);
 	}
+	
+	public static void invalidateCache() {
+	    forceRefresh = true;
+	    settingsVersion++;
+	}
+	
+	private static nurgling.conf.ItemQualityOverlaySettings getSettings() {
+	    long now = System.currentTimeMillis();
+	    if (forceRefresh || cachedSettings == null || now - lastSettingsCheck > SETTINGS_CHECK_INTERVAL) {
+	        nurgling.conf.ItemQualityOverlaySettings newSettings = 
+	            (nurgling.conf.ItemQualityOverlaySettings) nurgling.NConfig.get(nurgling.NConfig.Key.amountOverlay);
+	        if (newSettings == null) {
+	            newSettings = new nurgling.conf.ItemQualityOverlaySettings();
+	            newSettings.corner = nurgling.conf.ItemQualityOverlaySettings.Corner.BOTTOM_RIGHT;
+	        }
+	        if (cachedSettings != newSettings || forceRefresh) {
+	            cachedSettings = newSettings;
+	            settingsVersion++;
+	            forceRefresh = false;
+	        }
+	        lastSettingsCheck = now;
+	    }
+	    return cachedSettings;
+	}
 
 	@Override
-	public boolean tick(double dt)
-	{
-		if (!name_checked)
-		{
-			if (owner instanceof NGItem)
-			{
-				if (((NGItem) owner).name() != null)
-				{
+	public boolean tick(double dt) {
+		if (!name_checked) {
+			if (owner instanceof NGItem) {
+				if (((NGItem) owner).name() != null) {
 					name_checked = true;
-					if (((NGItem) owner).name().contains("Truffle"))
-					{
+					if (((NGItem) owner).name().contains("Truffle")) {
 						return num < 5;
 					}
 				}
 			}
 		}
+		// Check if settings changed
+		if (lastSettingsVersion != settingsVersion) {
+			cachedOverlay = null;
+			return false;
+		}
 		return true;
 	}
-	public Tex overlay()
-	{
-		if (owner instanceof NGItem)
-		{
-			if (((NGItem) owner).name() != null)
-			{
+	
+	public Tex overlay() {
+		// Check cache
+		if (cachedOverlay != null && lastSettingsVersion == settingsVersion) {
+			return cachedOverlay;
+		}
+		
+		nurgling.conf.ItemQualityOverlaySettings settings = getSettings();
+		Color textColor = settings.defaultColor;
+		
+		// Special case for Truffles
+		if (owner instanceof NGItem) {
+			if (((NGItem) owner).name() != null) {
 				name_checked = true;
-				if (((NGItem) owner).name().contains("Truffle") && num >= 5)
-				{
-					return (new TexI(GItem.NumberInfo.numrender(itemnum(), Color.GREEN)));
+				if (((NGItem) owner).name().contains("Truffle") && num >= 5) {
+					textColor = Color.GREEN;
 				}
 			}
 		}
-		return NumberInfo.super.overlay();
+		
+		BufferedImage text = renderAmountText(num, textColor, settings);
+		
+		if (settings.showBackground) {
+			BufferedImage bi = new BufferedImage(text.getWidth(), text.getHeight(), BufferedImage.TYPE_INT_ARGB);
+			java.awt.Graphics2D graphics = bi.createGraphics();
+			graphics.setColor(settings.backgroundColor);
+			graphics.fillRect(0, 0, bi.getWidth(), bi.getHeight());
+			graphics.drawImage(text, 0, 0, null);
+			graphics.dispose();
+			cachedOverlay = new TexI(bi);
+		} else {
+			cachedOverlay = new TexI(text);
+		}
+		
+		lastSettingsVersion = settingsVersion;
+		return cachedOverlay;
+	}
+	
+	private BufferedImage renderAmountText(int amount, Color color, nurgling.conf.ItemQualityOverlaySettings settings) {
+		nurgling.conf.FontSettings fontSettings = (nurgling.conf.FontSettings) nurgling.NConfig.get(nurgling.NConfig.Key.fonts);
+		Font font;
+		if (fontSettings != null) {
+			font = fontSettings.getFont(settings.fontFamily);
+			if (font == null) {
+				font = new Font("SansSerif", Font.BOLD, UI.scale(settings.fontSize));
+			} else {
+				font = font.deriveFont(Font.BOLD, UI.scale((float) settings.fontSize));
+			}
+		} else {
+			font = new Font("SansSerif", Font.BOLD, UI.scale(settings.fontSize));
+		}
+		
+		String text = settings.showAmountPrefix ? ("×" + amount) : Integer.toString(amount);
+		Text.Foundry fnd = new Text.Foundry(font, color).aa(true);
+		BufferedImage textImg = fnd.render(text, color).img;
+		
+		if (settings.showOutline) {
+			return outlineWithWidth(textImg, settings.outlineColor, settings.outlineWidth);
+		} else {
+			return textImg;
+		}
+	}
+	
+	private BufferedImage outlineWithWidth(BufferedImage img, Color outlineColor, int width) {
+		if (width <= 0) return img;
+		
+		int w = img.getWidth();
+		int h = img.getHeight();
+		int padding = width;
+		
+		BufferedImage result = new BufferedImage(w + padding * 2, h + padding * 2, BufferedImage.TYPE_INT_ARGB);
+		java.awt.Graphics2D g = result.createGraphics();
+		g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+		
+		BufferedImage coloredImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+		java.awt.Graphics2D cg = coloredImg.createGraphics();
+		cg.drawImage(img, 0, 0, null);
+		cg.setComposite(java.awt.AlphaComposite.SrcIn);
+		cg.setColor(outlineColor);
+		cg.fillRect(0, 0, w, h);
+		cg.dispose();
+		
+		for (int dx = -width; dx <= width; dx++) {
+			for (int dy = -width; dy <= width; dy++) {
+				if (dx != 0 || dy != 0) {
+					g.drawImage(coloredImg, padding + dx, padding + dy, null);
+				}
+			}
+		}
+		
+		g.drawImage(img, padding, padding, null);
+		g.dispose();
+		
+		return result;
+	}
+	
+	public void drawoverlay(GOut g, Tex tex) {
+		nurgling.conf.ItemQualityOverlaySettings settings = getSettings();
+		int pad = settings.showOutline ? settings.outlineWidth : 0;
+		Coord pos;
+		
+		switch (settings.corner) {
+			case TOP_LEFT:
+				pos = new Coord(-pad, -pad);
+				g.aimage(tex, pos, 0, 0);
+				break;
+			case TOP_RIGHT:
+				pos = new Coord(g.sz().x + pad, -pad);
+				g.aimage(tex, pos, 1, 0);
+				break;
+			case BOTTOM_LEFT:
+				pos = new Coord(-pad, g.sz().y + pad);
+				g.aimage(tex, pos, 0, 1);
+				break;
+			case BOTTOM_RIGHT:
+			default:
+				pos = new Coord(g.sz().x + pad, g.sz().y + pad);
+				g.aimage(tex, pos, 1, 1);
+				break;
+		}
 	}
 	}
 

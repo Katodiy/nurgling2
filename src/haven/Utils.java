@@ -470,7 +470,7 @@ public class Utils {
 	    try {
 		got = String.valueOf(this.got);
 	    } catch(Throwable t) {
-		got = "!formatting error (" + t + ")";
+		got = "!formatting error (" + this.got.getClass() + ", " + t + ")";
 	    }
 	    return(String.format("expected %s, got %s", expected, got));
 	}
@@ -496,6 +496,14 @@ public class Utils {
 	if(arg instanceof List)
 	    return((List<?>)arg);
 	throw(new ArgumentFormatException("object-list", arg));
+    }
+
+    public static Object[] oav(Object arg) {
+	if(arg instanceof Object[])
+	    return((Object[])arg);
+	if(arg instanceof List)
+	    return(((List<?>)arg).toArray(new Object[0]));
+	throw(new ArgumentFormatException("object-array", arg));
     }
 
     public static int iv(Object arg) {
@@ -1455,6 +1463,79 @@ public class Utils {
 			 ((x.getGreen() * f2) + (y.getGreen() * f1)) / 255,
 			 ((x.getBlue()  * f2) + (y.getBlue()  * f1)) / 255,
 			 ((x.getAlpha() * f2) + (y.getAlpha() * f1)) / 255));
+    }
+
+    /**
+     * Brightens a color by boosting luminance while preserving saturation and hue.
+     * This produces more natural-looking night vision compared to linear blend toward white.
+     *
+     * @param c The input color to brighten
+     * @param amount Brightening amount from 0.0 (no change) to 1.0 (maximum brightness)
+     * @return The brightened color with preserved saturation
+     */
+    public static Color brightenPreserveSaturation(Color c, double amount) {
+        if (amount <= 0.0) return c;
+
+        int r = c.getRed();
+        int g = c.getGreen();
+        int b = c.getBlue();
+        int a = c.getAlpha();
+
+        // Convert RGB to HSL
+        double rd = r / 255.0;
+        double gd = g / 255.0;
+        double bd = b / 255.0;
+
+        double max = Math.max(Math.max(rd, gd), bd);
+        double min = Math.min(Math.min(rd, gd), bd);
+        double h = 0, s = 0, l = (max + min) / 2.0;
+
+        if (max != min) {
+            double d = max - min;
+            s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
+
+            if (max == rd) {
+                h = (gd - bd) / d + (gd < bd ? 6 : 0);
+            } else if (max == gd) {
+                h = (bd - rd) / d + 2;
+            } else {
+                h = (rd - gd) / d + 4;
+            }
+            h /= 6;
+        }
+
+        // Boost luminance - lift shadows more than highlights for natural look
+        // Use a curve that affects dark values more: newL = L + (1-L) * amount * (1-L)
+        double boost = amount * (1.0 - l) * (1.0 - l * 0.5);
+        double newL = Math.min(l + boost, 1.0);
+
+        // Convert HSL back to RGB
+        double newR, newG, newB;
+        if (s == 0) {
+            newR = newG = newB = newL;
+        } else {
+            double q = newL < 0.5 ? newL * (1 + s) : newL + s - newL * s;
+            double p = 2 * newL - q;
+            newR = hueToRgb(p, q, h + 1.0/3.0);
+            newG = hueToRgb(p, q, h);
+            newB = hueToRgb(p, q, h - 1.0/3.0);
+        }
+
+        return new Color(
+            (int)Math.round(newR * 255),
+            (int)Math.round(newG * 255),
+            (int)Math.round(newB * 255),
+            a
+        );
+    }
+
+    private static double hueToRgb(double p, double q, double t) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1.0/6.0) return p + (q - p) * 6 * t;
+        if (t < 1.0/2.0) return q;
+        if (t < 2.0/3.0) return p + (q - p) * (2.0/3.0 - t) * 6;
+        return p;
     }
 
     public static Color colmul(Color a, Color b) {

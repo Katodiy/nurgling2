@@ -1,3 +1,4 @@
 #TOOLTIP LAYER FOR RES src/nurgling/wnd/search.res//
 #String tooltip
-Collects items from containers/stockpiles in a selected area and drops them into to the closest "trough" in a "trough area".
+@bot.swillcollector.desc
+

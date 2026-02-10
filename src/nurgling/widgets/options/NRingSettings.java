@@ -4,6 +4,7 @@ import haven.Label;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.conf.NAreaRad;
+import nurgling.i18n.L10n;
 import nurgling.widgets.nsettings.Panel;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public class NRingSettings extends Panel {
     public NRingSettings() {
         final int margin = UI.scale(10);
 
-        prev = add(new Label("Animal rings settings:"), new Coord(margin, margin));
+        prev = add(new Label(L10n.get("rings.settings_title")), new Coord(margin, margin));
         ArrayList<NAreaRad> radProps = ((ArrayList<NAreaRad>) NConfig.get(NConfig.Key.animalrad));
         for (NAreaRad prop : radProps)
         {

@@ -7,6 +7,8 @@ import haven.Window;
 import haven.res.lib.itemtex.*;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.i18n.L10n;
+import nurgling.overlays.NAreaLabel;
 import org.json.*;
 
 import java.awt.*;
@@ -22,6 +24,11 @@ public class IngredientContainer extends BaseIngredientContainer {
     public static class RuleButton extends Button {
         NFlowerMenu menu;
         final IngredientContainer ic;
+        
+        // Localization keys for menu options
+        private static final String OPT_SET_THRESHOLDS = "ingredient.set_thresholds";
+        private static final String OPT_DELETE_THRESHOLDS = "ingredient.delete_thresholds";
+        private static final String OPT_CLEAR = "ingredient.clear";
 
         public RuleButton(IngredientContainer ing) {
             super(UI.scale(30), Resource.loadsimg("nurgling/hud/buttons/settings/u"));
@@ -35,9 +42,9 @@ public class IngredientContainer extends BaseIngredientContainer {
         }
 
         final ArrayList<String> opt = new ArrayList<String>(){{
-            add("Set Thresholds");
-            add("Delete Thresholds");
-            add("Clear");
+            add(L10n.get(OPT_SET_THRESHOLDS));
+            add(L10n.get(OPT_DELETE_THRESHOLDS));
+            add(L10n.get(OPT_CLEAR));
         }};
 
         public void draw(BufferedImage img) {
@@ -49,10 +56,10 @@ public class IngredientContainer extends BaseIngredientContainer {
 
         class SetThreshold extends Window {
             public SetThreshold(int val) {
-                super(UI.scale(140,25), "Threshold");
+                super(UI.scale(140,25), L10n.get("ingredient.threshold"));
                 TextEntry te;
                 prev = add(te = new TextEntry(UI.scale(80),String.valueOf(val)));
-                add(new Button(UI.scale(50),"Set"){
+                add(new Button(UI.scale(50), L10n.get("ingredient.btn_set")){
                     @Override
                     public void click() {
                         super.click();
@@ -98,17 +105,17 @@ public class IngredientContainer extends BaseIngredientContainer {
                     @Override
                     public void nchoose(NPetal option) {
                         if(option != null) {
-                            if (option.name.equals("Set Thresholds")) {
+                            if (option.name.equals(L10n.get(OPT_SET_THRESHOLDS))) {
                                 SetThreshold st = new SetThreshold(0);
                                 ui.root.add(st, c);
-                            } else if(option.name.equals("Delete Thresholds")) {
+                            } else if(option.name.equals(L10n.get(OPT_DELETE_THRESHOLDS))) {
                                 for (IconItem item : ic.icons) {
                                     item.isThreshold = false;
                                     item.val = 1;
                                     item.q = null;
                                     ic.delThreshold(item.name);
                                 }
-                            } else if(option.name.equals("Clear")) {
+                            } else if(option.name.equals(L10n.get(OPT_CLEAR))) {
                                 ic.deleteAll();
                             }
                         }
@@ -145,11 +152,12 @@ public class IngredientContainer extends BaseIngredientContainer {
     public void addItem(String name, JSONObject res) {
         if(res != null) {
             JSONArray data;
-            if(NUtils.getArea(id) == null) return;
+            NArea area = NUtils.getArea(id);
+            if(area == null) return;
             if(type.equals("in"))
-                data = NUtils.getArea(id).jin;
+                data = area.jin;
             else
-                data = NUtils.getArea(id).jout;
+                data = area.jout;
 
             boolean find = false;
             for(int i = 0; i < data.length(); i++) {
@@ -163,8 +171,36 @@ public class IngredientContainer extends BaseIngredientContainer {
                 res.put("type", NArea.Ingredient.Type.CONTAINER.toString());
                 addIcon(res);
                 data.put(res);
+                
+                // Auto-rename area if it starts with "New Area" and this is the first item
+                if(area.name.startsWith("New Area") && area.jin.length() + area.jout.length() == 1) {
+                    renameAreaToItem(area, name);
+                }
+                
                 NConfig.needAreasUpdate();
             }
+        }
+    }
+    
+    /**
+     * Renames area to the item name if area name starts with "New Area"
+     */
+    private void renameAreaToItem(NArea area, String itemName) {
+        ((NMapView) NUtils.getGameUI().map).changeAreaName(area.id, itemName);
+        
+        // Update area label on map
+        Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(area.gid);
+        if(dummy != null) {
+            Gob.Overlay ol = dummy.findol(NAreaLabel.class);
+            if(ol != null && ol.spr instanceof NAreaLabel) {
+                NAreaLabel tl = (NAreaLabel) ol.spr;
+                tl.update();
+            }
+        }
+        
+        // Update area list if visible
+        if(NUtils.getGameUI().areas != null) {
+            NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath);
         }
     }
 

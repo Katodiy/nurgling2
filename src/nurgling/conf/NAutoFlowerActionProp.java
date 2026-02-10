@@ -2,6 +2,7 @@ package nurgling.conf;
 
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.NUtils;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -88,14 +89,17 @@ public class NAutoFlowerActionProp implements JConf {
     }
 
     public static NAutoFlowerActionProp get(NUI.NSessInfo sessInfo) {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         ArrayList<NAutoFlowerActionProp> props = ((ArrayList<NAutoFlowerActionProp>) NConfig.get(NConfig.Key.autofloweractionprop));
         if (props == null)
             props = new ArrayList<>();
         for (NAutoFlowerActionProp prop : props) {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid)) {
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid)) {
                 return prop;
             }
         }
-        return new NAutoFlowerActionProp(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NAutoFlowerActionProp(sessInfo.username, chrid);
     }
 }

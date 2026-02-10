@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.res.lib.itemtex.ItemTex;
 import haven.res.ui.tt.ingred.Ingredient;
 import haven.resutil.FoodInfo;
 import mapv4.NMappingClient;
@@ -10,9 +11,12 @@ import monitoring.NGlobalSearchItems;
 import nurgling.actions.AutoDrink;
 import nurgling.actions.AutoSaveTableware;
 import nurgling.iteminfo.NFoodInfo;
+import nurgling.equipment.EquipmentPresetManager;
 import nurgling.scenarios.ScenarioManager;
 import nurgling.tasks.*;
 import nurgling.tools.NSearchItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -28,8 +32,9 @@ public class NCore extends Widget
     public AutoDrink autoDrink = null;
     public AutoSaveTableware autoSaveTableware = null;
     public ScenarioManager scenarioManager = new ScenarioManager();
+    public EquipmentPresetManager equipmentPresetManager = new EquipmentPresetManager();
 
-    public DBPoolManager poolManager = null;
+    public static volatile nurgling.db.DatabaseManager databaseManager = null;
     public boolean isInspectMode()
     {
         if(debug)
@@ -145,6 +150,45 @@ public class NCore extends Widget
 
     private final LinkedList<NTask> for_remove = new LinkedList<>();
     private final ConcurrentLinkedQueue<NTask> tasks = new ConcurrentLinkedQueue<>();
+    
+    /**
+     * Get list of active task names for debug display
+     */
+    public String[] getActiveTaskNames() {
+        synchronized (tasks) {
+            if (tasks.isEmpty()) {
+                return new String[0];
+            }
+            return tasks.stream()
+                .map(t -> {
+                    String name = t.getClass().getName();
+                    // Shorten package names
+                    name = name.replace("nurgling.actions.", "");
+                    name = name.replace("nurgling.tasks.", "");
+                    // For anonymous classes, show parent class
+                    if (name.contains("$")) {
+                        int dollarIdx = name.indexOf('$');
+                        String parent = name.substring(0, dollarIdx);
+                        String suffix = name.substring(dollarIdx);
+                        // Get just class name from parent
+                        int lastDot = parent.lastIndexOf('.');
+                        if (lastDot > 0) {
+                            parent = parent.substring(lastDot + 1);
+                        }
+                        name = parent + suffix;
+                    }
+                    return name;
+                })
+                .toArray(String[]::new);
+        }
+    }
+    
+    /**
+     * Get count of active tasks
+     */
+    public int getActiveTaskCount() {
+        return tasks.size();
+    }
 
     public BotmodSettings getBotMod()
     {
@@ -176,18 +220,31 @@ public class NCore extends Widget
         }
     }
 
+    private static final Object dbLock = new Object();
+
     @Override
     public void tick(double dt)
     {
-        if((Boolean) NConfig.get(NConfig.Key.ndbenable) && poolManager == null)
+        if((Boolean) NConfig.get(NConfig.Key.ndbenable) && databaseManager == null)
         {
-            poolManager = new DBPoolManager(1);
+            synchronized (dbLock) {
+                if (databaseManager == null) {  // Double-check inside lock
+                    databaseManager = new nurgling.db.DatabaseManager(1);
+                    // Start area and route sync after database is initialized
+                    startAreaSync();
+                }
+            }
         }
 
-        if(!(Boolean) NConfig.get(NConfig.Key.ndbenable) && poolManager != null)
+        if(!(Boolean) NConfig.get(NConfig.Key.ndbenable) && databaseManager != null)
         {
-            poolManager.shutdown();
-            poolManager = null;
+            synchronized (dbLock) {
+                if (databaseManager != null) {
+                    stopAreaSync();
+                    databaseManager.shutdown();
+                    databaseManager = null;
+                }
+            }
         }
 
         if(autoDrink == null && (Boolean)NConfig.get(NConfig.Key.autoDrink))
@@ -250,10 +307,6 @@ public class NCore extends Widget
         {
             config.writeExploredArea(null);
         }
-        if (config.isRoutesUpdated())
-        {
-            config.writeRoutes(null);
-        }
         if (config.isScenariosUpdated())
         {
             config.writeScenarios(null);
@@ -264,7 +317,7 @@ public class NCore extends Widget
             {
                 try
                 {
-                    if(task.check())
+                    if(task.baseCheck())
                     {
                         synchronized (task)
                         {
@@ -323,11 +376,8 @@ public class NCore extends Widget
     @Override
     public void dispose() {
         mappingClient.done.set(true);
-        if(poolManager!=null)
-        {
-            poolManager.shutdown();
-            poolManager = null;
-        }
+        // Don't shutdown databaseManager here - it's static and should persist across UI/session changes
+        // It will be shutdown only when the application exits or database is disabled
         super.dispose();
     }
 
@@ -343,171 +393,554 @@ public class NCore extends Widget
     }
 
 
+    // In-memory cache of recently sent recipe hashes to avoid duplicate DB writes
+    private static final Set<String> sentRecipeHashes = ConcurrentHashMap.newKeySet();
+    private static final int MAX_RECIPE_CACHE_SIZE = 5000;
+    
+    // Quick cache for early filtering (name + energy) - checked BEFORE creating task
+    private static final Set<String> recipeQuickCache = ConcurrentHashMap.newKeySet();
+    private static final int MAX_QUICK_CACHE_SIZE = 2000;
+    
+    // Pending recipe tasks counter for debug
+    private static final java.util.concurrent.atomic.AtomicInteger pendingRecipeTasks = new java.util.concurrent.atomic.AtomicInteger(0);
+    
+    /**
+     * Get current recipe cache size for debug display
+     */
+    public static int getRecipeCacheSize() {
+        return sentRecipeHashes.size();
+    }
+    
+    /**
+     * Get pending recipe tasks count for debug
+     */
+    public static int getPendingRecipeTasks() {
+        return pendingRecipeTasks.get();
+    }
+    
+    /**
+     * Check if recipe hash is already in cache (call from main thread before creating task)
+     */
+    public static boolean isRecipeInCache(String recipeHash) {
+        return sentRecipeHashes.contains(recipeHash);
+    }
+    
+    /**
+     * Add recipe hash to cache
+     */
+    public static void addRecipeToCache(String recipeHash) {
+        if (sentRecipeHashes.size() >= MAX_RECIPE_CACHE_SIZE) {
+            // Simple eviction: clear half of the cache when full
+            int toRemove = MAX_RECIPE_CACHE_SIZE / 2;
+            java.util.Iterator<String> it = sentRecipeHashes.iterator();
+            while (it.hasNext() && toRemove > 0) {
+                it.next();
+                it.remove();
+                toRemove--;
+            }
+        }
+        sentRecipeHashes.add(recipeHash);
+    }
+    
+    /**
+     * Check if recipe is in quick cache (early filtering before creating task)
+     */
+    public static boolean isRecipeQuickCached(String quickKey) {
+        return recipeQuickCache.contains(quickKey);
+    }
+    
+    /**
+     * Add to quick cache
+     */
+    public static void addRecipeQuickCache(String quickKey) {
+        if (recipeQuickCache.size() >= MAX_QUICK_CACHE_SIZE) {
+            // Simple eviction
+            int toRemove = MAX_QUICK_CACHE_SIZE / 2;
+            java.util.Iterator<String> it = recipeQuickCache.iterator();
+            while (it.hasNext() && toRemove > 0) {
+                it.next();
+                it.remove();
+                toRemove--;
+            }
+        }
+        recipeQuickCache.add(quickKey);
+    }
+    
+    /**
+     * Get quick cache size for debug
+     */
+    public static int getRecipeQuickCacheSize() {
+        return recipeQuickCache.size();
+    }
+    
     public static class NGItemWriter implements Runnable {
-        NGItem item;
-        java.sql.Connection connection;
+        private final NGItem item;
+        private final nurgling.db.DatabaseManager databaseManager;
 
-        public NGItemWriter(NGItem item) {
+        public NGItemWriter(NGItem item, nurgling.db.DatabaseManager databaseManager) {
             this.item = item;
-        }
-
-        // Заменяем константы на методы, генерирующие SQL в зависимости от СУБД
-        private String getInsertRecipeSQL() {
-            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?) ON CONFLICT(recipe_hash) DO NOTHING";
-            } else { // SQLite
-                return "INSERT OR IGNORE INTO recipes (recipe_hash, item_name, resource_name, hunger, energy) VALUES (?, ?, ?, ?, ?)";
-            }
-        }
-
-        private String getInsertIngredientSQL() {
-            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?) ON CONFLICT(recipe_hash, name) DO NOTHING";
-            } else { // SQLite
-                return "INSERT OR IGNORE INTO ingredients (recipe_hash, name, percentage) VALUES (?, ?, ?)";
-            }
-        }
-
-        private String getInsertFepsSQL() {
-            if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                return "INSERT INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?) ON CONFLICT(recipe_hash, name) DO NOTHING";
-            } else { // SQLite
-                return "INSERT OR IGNORE INTO feps (recipe_hash, name, value, weight) VALUES (?, ?, ?, ?)";
-            }
+            this.databaseManager = databaseManager;
         }
 
         @Override
         public void run() {
-            // Проверяем, активирована ли какая-либо СУБД
-            if (!(Boolean) NConfig.get(NConfig.Key.postgres) && !(Boolean) NConfig.get(NConfig.Key.sqlite)) {
-                return;
-            }
-
             try {
-                // Создаем prepared statements с правильными SQL-запросами
-                PreparedStatement recipeStatement = connection.prepareStatement(getInsertRecipeSQL());
-                PreparedStatement ingredientStatement = connection.prepareStatement(getInsertIngredientSQL());
-                PreparedStatement fepsStatement = connection.prepareStatement(getInsertFepsSQL());
-
+                // Extract food information
                 NFoodInfo fi = item.getInfo(NFoodInfo.class);
+                if (fi == null) {
+                    return; // Not a food item
+                }
+
+                // Calculate hunger value
                 String hunger = Utils.odformat2(2 * fi.glut / (1 + Math.sqrt(item.quality / 10)) * 1000, 2);
-                StringBuilder hashInput = new StringBuilder();
-                hashInput.append(item.name).append((int) (100 * fi.energy()));
 
-                for (ItemInfo info : item.info) {
-                    if (info instanceof Ingredient) {
-                        Ingredient ing = ((Ingredient) info);
-                        hashInput.append(ing.name).append(ing.val * 100);
+                // Get composite resource name from item sprite
+                String resourceName = getCompositeResourceName();
+
+                // Build recipe hash
+                String recipeHash = buildRecipeHash(fi, resourceName);
+                
+                // Check if we already sent this recipe (in-memory cache)
+                if (sentRecipeHashes.contains(recipeHash)) {
+                    nurgling.db.DatabaseManager.incrementSkippedRecipe();
+                    return; // Already sent, skip DB write
+                }
+
+                // Extract ingredients (including smoking wood)
+                java.util.Map<String, nurgling.cookbook.Recipe.IngredientInfo> ingredients = extractIngredients();
+
+                // Extract food effects (FEPs)
+                java.util.Map<String, nurgling.cookbook.Recipe.Fep> feps = extractFeps(fi);
+
+                // Create recipe object
+                nurgling.cookbook.Recipe recipe = new nurgling.cookbook.Recipe(
+                    recipeHash,
+                    item.name(),
+                    resourceName,
+                    Double.parseDouble(hunger),
+                    (int) (fi.energy() * 100),
+                    ingredients,
+                    feps
+                );
+
+                // Add to cache before saving (prevents duplicates during async save)
+                if (sentRecipeHashes.size() >= MAX_RECIPE_CACHE_SIZE) {
+                    // Simple eviction: clear half of the cache when full
+                    int toRemove = MAX_RECIPE_CACHE_SIZE / 2;
+                    Iterator<String> it = sentRecipeHashes.iterator();
+                    while (it.hasNext() && toRemove > 0) {
+                        it.next();
+                        it.remove();
+                        toRemove--;
                     }
                 }
+                sentRecipeHashes.add(recipeHash);
 
-                String recipeHash = NUtils.calculateSHA256(hashInput.toString());
+                // Save recipe using service (handles duplicates gracefully)
+                databaseManager.getRecipeService().saveRecipeAsync(recipe)
+                    .exceptionally(ex -> {
+                        System.err.println("Failed to save recipe: " + ex.getMessage());
+                        return null;
+                    });
 
-                // Устанавливаем параметры для запроса рецепта
-                recipeStatement.setString(1, recipeHash);
-                recipeStatement.setString(2, item.name());
-                recipeStatement.setString(3, item.getres().name);
-                recipeStatement.setDouble(4, Double.parseDouble(hunger));
-                recipeStatement.setInt(5, (int) (fi.energy() * 100));
+            } catch (Exception e) {
+                // Log error but don't crash - recipe import should be resilient
+                System.err.println("Failed to save recipe for item: " + item.name());
+                e.printStackTrace();
+            } finally {
+                // Always decrement pending counter
+                pendingRecipeTasks.decrementAndGet();
+            }
+        }
 
-                recipeStatement.execute();
-
-                // Вставляем ингредиенты
-                for (ItemInfo info : item.info) {
-                    if (info instanceof Ingredient) {
-                        ingredientStatement.setString(1, recipeHash);
-                        ingredientStatement.setString(2, ((Ingredient) info).name);
-                        ingredientStatement.setDouble(3, ((Ingredient) info).val * 100);
-                        ingredientStatement.executeUpdate();
+        private String getCompositeResourceName() {
+            String resourceName = item.getres().name;
+            try {
+                GSprite spr = item.spr;
+                if (spr != null) {
+                    JSONObject saved = ItemTex.save(spr);
+                    if (saved != null) {
+                        if (saved.has("layer")) {
+                            JSONArray layers = saved.getJSONArray("layer");
+                            StringBuilder sb = new StringBuilder();
+                            for (int i = 0; i < layers.length(); i++) {
+                                if (i > 0) sb.append("+");
+                                sb.append(layers.getString(i));
+                            }
+                            resourceName = sb.toString();
+                        } else if (saved.has("static")) {
+                            resourceName = saved.getString("static");
+                        }
                     }
                 }
+            } catch (Exception e) {
+                // Fallback to base resource name
+            }
+            return resourceName;
+        }
 
-                double multiplier = Math.sqrt(item.quality / 10.0);
-                // Вставляем эффекты (FEPS)
-                for (FoodInfo.Event ef : fi.evs) {
-                    fepsStatement.setString(1, recipeHash);
-                    fepsStatement.setString(2, ef.ev.nm);
-                    fepsStatement.setDouble(3, Double.parseDouble(Utils.odformat2(ef.a / multiplier, 2)));
-                    fepsStatement.setDouble(4, Double.parseDouble(Utils.odformat2(ef.a / fi.fepSum, 2)));
-                    fepsStatement.executeUpdate();
-                }
+        private String buildRecipeHash(NFoodInfo fi, String resourceName) {
+            StringBuilder hashInput = new StringBuilder();
+            hashInput.append(item.name).append((int) (100 * fi.energy()));
+            hashInput.append(resourceName);
 
-                // Фиксируем транзакцию
-                connection.commit();
-
-            } catch (SQLException e) {
-                try {
-                    // В случае ошибки откатываем транзакцию
-                    if (connection != null) {
-                        connection.rollback();
+            for (ItemInfo info : item.info) {
+                if (info instanceof Ingredient) {
+                    Ingredient ing = (Ingredient) info;
+                    // Use resName if available, otherwise fall back to name
+                    if (ing.resName != null) {
+                        hashInput.append(ing.resName);
+                    } else {
+                        hashInput.append(ing.name);
                     }
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-
-                // Для PostgreSQL проверяем код ошибки нарушения уникальности
-                if ((Boolean) NConfig.get(NConfig.Key.postgres)) {
-                    if (!e.getSQLState().equals("23505")) {
-                        e.printStackTrace();
-                    }
-                }
-                // Для SQLite просто игнорируем ошибки уникальности (благодаря INSERT OR IGNORE)
-                else if ((Boolean) NConfig.get(NConfig.Key.sqlite)) {
-                    if (!e.getMessage().contains("UNIQUE constraint")) {
-                        e.printStackTrace();
+                    if (ing.val != null) {
+                        hashInput.append(ing.val * 100);
                     }
                 }
             }
+
+            // Add smoking wood info to hash so different smoking materials create different recipes
+            // Format matches regular ingredients: resName/name + (val * 100), where val=1.0 for smoking (100%)
+            try {
+                for (ItemInfo info : item.info) {
+                    if (info.getClass().getName().contains("Smoke")) {
+                        try {
+                            // Try to get resource name first, then fall back to name
+                            String woodIdentifier = null;
+                            try {
+                                java.lang.reflect.Field resNameField = info.getClass().getDeclaredField("resName");
+                                resNameField.setAccessible(true);
+                                woodIdentifier = (String) resNameField.get(info);
+                            } catch (NoSuchFieldException e) {
+                                // resName field doesn't exist
+                            }
+                            if (woodIdentifier == null || woodIdentifier.isEmpty()) {
+                                java.lang.reflect.Field nameField = info.getClass().getDeclaredField("name");
+                                nameField.setAccessible(true);
+                                woodIdentifier = (String) nameField.get(info);
+                            }
+                            if (woodIdentifier != null && !woodIdentifier.isEmpty()) {
+                                hashInput.append(woodIdentifier);
+                                hashInput.append(1.0 * 100); // Smoking wood is always 100%
+                            }
+                        } catch (NoSuchFieldException | IllegalAccessException e) {
+                            // Could not extract smoking wood info
+                        }
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore errors in smoking wood extraction
+            }
+
+            return NUtils.calculateSHA256(hashInput.toString());
+        }
+
+        private java.util.Map<String, nurgling.cookbook.Recipe.IngredientInfo> extractIngredients() {
+            java.util.Map<String, nurgling.cookbook.Recipe.IngredientInfo> ingredients = new java.util.HashMap<>();
+
+            // Extract regular ingredients
+            for (ItemInfo info : item.info) {
+                if (info instanceof Ingredient) {
+                    Ingredient ing = (Ingredient) info;
+                    double percentage = ing.val != null ? ing.val * 100 : 0;
+                    // Use pretty name as key, store resName in IngredientInfo for resource lookup
+                    ingredients.put(ing.name, new nurgling.cookbook.Recipe.IngredientInfo(percentage, ing.resName));
+                }
+            }
+            
+            // Extract smoking wood information from Smoke ItemInfo
+            try {
+                for (ItemInfo info : item.info) {
+                    // Check if this is the Smoke info (dynamically loaded from resources)
+                    if (info.getClass().getName().contains("Smoke")) {
+                        // Try to get wood information via reflection
+                        try {
+                            java.lang.reflect.Field nameField = info.getClass().getDeclaredField("name");
+                            nameField.setAccessible(true);
+                            String woodName = (String) nameField.get(info);
+                            
+                            // Try to get resource name
+                            String woodResName = null;
+                            try {
+                                java.lang.reflect.Field resNameField = info.getClass().getDeclaredField("resName");
+                                resNameField.setAccessible(true);
+                                woodResName = (String) resNameField.get(info);
+                            } catch (NoSuchFieldException e) {
+                                // resName field doesn't exist, use name only
+                            }
+                            
+                            if (woodName != null && !woodName.isEmpty()) {
+                                // Add wood as ingredient with 100% (smoking wood is always 100%)
+                                ingredients.put(woodName, new nurgling.cookbook.Recipe.IngredientInfo(100.0, woodResName));
+                            }
+                        } catch (NoSuchFieldException | IllegalAccessException e) {
+                            System.err.println("Could not extract smoking wood info: " + e.getMessage());
+                        }
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore errors in smoking wood extraction - item might not be smoked
+            }
+
+            return ingredients;
+        }
+
+        private java.util.Map<String, nurgling.cookbook.Recipe.Fep> extractFeps(NFoodInfo fi) {
+            java.util.Map<String, nurgling.cookbook.Recipe.Fep> feps = new java.util.HashMap<>();
+            double multiplier = Math.sqrt(item.quality / 10.0);
+
+            for (FoodInfo.Event ef : fi.evs) {
+                double value = Double.parseDouble(Utils.odformat2(ef.a / multiplier, 2));
+                double weight = Double.parseDouble(Utils.odformat2(ef.a / fi.fepSum, 2));
+                feps.put(ef.ev.nm, new nurgling.cookbook.Recipe.Fep(value, weight));
+            }
+
+            return feps;
         }
     }
 
     public void writeNGItem(NGItem item) {
-        NGItemWriter ngItemWriter = new NGItemWriter(item);
-        try {
-            ngItemWriter.connection = poolManager.getConnection();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if (databaseManager == null) {
+            return;
         }
-        poolManager.submitTask(ngItemWriter);
+        
+        pendingRecipeTasks.incrementAndGet();
+        NGItemWriter ngItemWriter = new NGItemWriter(item, databaseManager);
+        databaseManager.submitTask(ngItemWriter);
     }
 
-    public void writeContainerInfo(Gob gob)
-    {
-        if(gob!=null) {
-            ContainerWatcher cw = new ContainerWatcher(gob);
+    public void writeContainerInfo(Gob gob) {
+        if (gob != null && databaseManager != null && databaseManager.isReady()) {
+            ContainerWatcher cw = new ContainerWatcher(gob, databaseManager);
+            databaseManager.submitTask(cw);
+        }
+    }
+
+    /**
+     * Clear all items for a container when it's opened (to refresh data)
+     * Note: Don't notify search here - data is being cleared, search will update when container closes
+     */
+    public void clearContainerItems(Gob gob) {
+        if (gob == null || databaseManager == null || !databaseManager.isReady()) {
+            return;
+        }
+        databaseManager.submitTask(() -> {
             try {
-                cw.connection = poolManager.getConnection();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                return;
+                // Wait for hash to be available
+                int waitCount = 0;
+                while (gob.ngob.hash == null && waitCount < 100) {
+                    Thread.sleep(10);
+                    waitCount++;
+                }
+                if (gob.ngob.hash != null) {
+                    databaseManager.getStorageItemService().deleteStorageItemsByContainer(gob.ngob.hash);
+                    // Don't notify search here - container is being browsed, data will be saved when closed
+                }
+            } catch (Exception e) {
+                // Silently ignore errors during container item clearing
             }
-            poolManager.submitTask(cw);
-        }
+        });
     }
 
-    public void writeItemInfoForContainer(ArrayList<ItemWatcher.ItemInfo> iis) {
-
-        ItemWatcher itemWatcher = new ItemWatcher(iis);
-        try {
-            itemWatcher.connection = poolManager.getConnection();
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public void writeItemInfoForContainer(ArrayList<ItemWatcher.ItemInfo> iis, String containerHash) {
+        if (databaseManager == null || !databaseManager.isReady()) {
+            return;
         }
-        poolManager.submitTask(itemWatcher);
-
+        ItemWatcher itemWatcher = new ItemWatcher(iis, databaseManager, containerHash);
+        databaseManager.submitTask(itemWatcher);
     }
 
     final ArrayList<String> targetGobs = new ArrayList<>();
 
     public void searchContainer(NSearchItem item) {
-
-        NGlobalSearchItems gsi = new NGlobalSearchItems(item);
-        try {
-            gsi.connection = poolManager.getConnection();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if (databaseManager == null || !databaseManager.isReady()) {
+            return;
         }
-        poolManager.submitTask(gsi);
-
+        NGlobalSearchItems gsi = new NGlobalSearchItems(item, databaseManager);
+        databaseManager.submitTask(gsi);
     }
+
+    private static volatile boolean areaSyncStarted = false;
+    private static volatile boolean routeSyncStarted = false;
+
+    /**
+     * Start periodic area sync from database
+     */
+    private void startAreaSync() {
+        if (areaSyncStarted || databaseManager == null || !databaseManager.isReady()) {
+            return;
+        }
+
+        // Get current profile
+        String profile = "global";
+        try {
+            if (NUtils.getGameUI() != null) {
+                String genus = NUtils.getGameUI().getGenus();
+                if (genus != null && !genus.isEmpty()) {
+                    profile = genus;
+                }
+            }
+        } catch (Exception e) {
+            // Use default profile
+        }
+
+        final String syncProfile = profile;
+
+        // Start sync with 4 second interval
+        databaseManager.getAreaService().startSync(syncProfile, 4,
+            new nurgling.db.service.AreaService.AreaSyncCallback() {
+                @Override
+                public void onAreasUpdated(java.util.List<nurgling.areas.NArea> updatedAreas) {
+                    // Update areas in map cache
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null &&
+                        NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
+                        long now = System.currentTimeMillis();
+                        int skipped = 0;
+                        int updated = 0;
+                        boolean needsWidgetRefresh = false;
+                        for (nurgling.areas.NArea newArea : updatedAreas) {
+                            // Check if this area was deleted locally - don't restore it
+                            boolean isLocallyDeleted = ((NMapView)NUtils.getGameUI().map).isLocallyDeleted(newArea.id);
+                            if (isLocallyDeleted) {
+                                System.out.println("Area sync: Skipping locally deleted area " + newArea.id + " (" + newArea.name + ")");
+                                skipped++;
+                                continue;
+                            }
+
+                            // Check if this area was modified locally recently
+                            // Window = debounce(3s) + save time(2s) + buffer(5s) = 10s
+                            nurgling.areas.NArea localArea = NUtils.getGameUI().map.glob.map.areas.get(newArea.id);
+                            if (localArea != null && (now - localArea.lastLocalChange) < 10000) {
+                                // Skip - local changes are still pending save
+                                skipped++;
+                                continue;
+                            }
+
+                            // Also skip if local version >= DB version (we just saved it)
+                            if (localArea != null && localArea.version >= newArea.version) {
+                                skipped++;
+                                continue;
+                            }
+
+                            if (localArea != null) {
+                                // Update existing area object (preserves references in labels/lists)
+                                localArea.updateFrom(newArea);
+                            } else {
+                                // New area - add it
+                                NUtils.getGameUI().map.glob.map.areas.put(newArea.id, newArea);
+                            }
+                            needsWidgetRefresh = true;
+                            
+                            // Force overlay to redraw
+                            try {
+                                nurgling.overlays.map.NOverlay overlay = NUtils.getGameUI().map.nols.get(newArea.id);
+                                if (overlay != null) {
+                                    overlay.requpdate2 = true;
+                                }
+                            } catch (Exception e) {
+                                // Ignore overlay refresh errors
+                            }
+                            updated++;
+                        }
+                        
+                        // Refresh area labels and widget
+                        if (needsWidgetRefresh) {
+                            refreshAreaLabelsAndWidget();
+                        }
+                        
+                        if (updated > 0) {
+                            System.out.println("Updated " + updated + " areas from database" + (skipped > 0 ? " (skipped " + skipped + " with pending local changes)" : ""));
+                        }
+                    }
+                }
+
+                @Override
+                public void onAreaDeleted(int areaId) {
+                    // Remove area from map cache
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null &&
+                        NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
+                        NUtils.getGameUI().map.glob.map.areas.remove(areaId);
+                        refreshAreaLabelsAndWidget();
+                        System.out.println("Deleted area " + areaId + " from database sync");
+                    }
+                }
+
+                @Override
+                public void onFullSync(java.util.Map<Integer, nurgling.areas.NArea> allAreas) {
+                    // Replace all areas in map cache, but filter out locally deleted areas
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null &&
+                        NUtils.getGameUI().map.glob != null && NUtils.getGameUI().map.glob.map != null) {
+                        NUtils.getGameUI().map.glob.map.areas.clear();
+                        for (java.util.Map.Entry<Integer, nurgling.areas.NArea> entry : allAreas.entrySet()) {
+                            // Skip areas that were deleted locally
+                            boolean isLocallyDeleted = ((NMapView)NUtils.getGameUI().map).isLocallyDeleted(entry.getKey());
+                            if (isLocallyDeleted) {
+                                System.out.println("Full sync: Skipping locally deleted area " + entry.getKey() + " (" + entry.getValue().name + ")");
+                                continue;
+                            }
+                            NUtils.getGameUI().map.glob.map.areas.put(entry.getKey(), entry.getValue());
+                        }
+                        refreshAreaLabelsAndWidget();
+                        System.out.println("Full sync: loaded " + allAreas.size() + " areas from database");
+                    }
+                }
+            });
+
+        areaSyncStarted = true;
+        System.out.println("Area sync started for profile: " + syncProfile);
+    }
+
+    /**
+     * Refresh area labels on map and NAreasWidget after sync update
+     */
+    private static void refreshAreaLabelsAndWidget() {
+        try {
+            if (NUtils.getGameUI() == null || NUtils.getGameUI().map == null) return;
+            
+            nurgling.NMapView map = (nurgling.NMapView) NUtils.getGameUI().map;
+            
+            // Refresh area overlays on map
+            if (map.nols != null) {
+                for (nurgling.overlays.map.NOverlay overlay : map.nols.values()) {
+                    if (overlay != null) {
+                        overlay.requpdate2 = true;
+                    }
+                }
+            }
+            
+            // Update area labels (NAreaLabel sprites on dummy gobs)
+            if (map.dummys != null) {
+                for (haven.Gob dummy : map.dummys.values()) {
+                    if (dummy != null) {
+                        for (haven.Gob.Overlay ol : dummy.ols) {
+                            if (ol != null && ol.spr instanceof nurgling.overlays.NAreaLabel) {
+                                ((nurgling.overlays.NAreaLabel) ol.spr).update();
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Refresh NAreasWidget if open
+            if (NUtils.getGameUI().areas != null && NUtils.getGameUI().areas.al != null) {
+                // Trigger list refresh by re-showing current path
+                NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath);
+            }
+        } catch (Exception e) {
+            // Ignore refresh errors
+        }
+    }
+
+    /**
+     * Stop periodic area sync
+     */
+    private void stopAreaSync() {
+        if (databaseManager != null && databaseManager.getAreaService() != null) {
+            databaseManager.getAreaService().stopSync();
+        }
+        areaSyncStarted = false;
+    }
+
 }

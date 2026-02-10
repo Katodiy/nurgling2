@@ -27,16 +27,74 @@
 package haven;
 
 import java.awt.image.BufferedImage;
+import nurgling.NUI;
 
 public class Img extends Widget {
     protected Tex img;
     private BufferedImage rimg;
     public boolean hit = false, opaque = false;
+    
+    // Marker for character selection screen icons
+    public enum CharselType { NONE, BACKGROUND, VERIFY, SUB }
+    public CharselType charselType = CharselType.NONE;
 	
+    // Character selection screen replacement textures
+    private static final String CHARSEL_BG_RES = "gfx/ccscr";
+    private static final String CHARSEL_VERIFY_RES = "gfx/ccver";
+    private static final String CHARSEL_SUB_RES = "gfx/ccsub";
+    private static Tex charselBgWorld16 = null;
+    private static Tex charselBgWorld161 = null;
+    private static Tex verifyTex = null;
+    private static Tex subTex = null;
+    
+    private static Tex getCharselBgWorld16() {
+	if(charselBgWorld16 == null)
+	    charselBgWorld16 = Resource.loadtex("nurgling/hud/world16");
+	return charselBgWorld16;
+    }
+    
+    private static Tex getCharselBgWorld161() {
+	if(charselBgWorld161 == null)
+	    charselBgWorld161 = Resource.loadtex("nurgling/hud/world161");
+	return charselBgWorld161;
+    }
+    
+    /** Get background texture based on selected world */
+    public static Tex getCharselBg() {
+	// Check selected world from NConfig
+	String selectedWorld = (String) nurgling.NConfig.get(nurgling.NConfig.Key.selectedWorld);
+	// Use world161 background only for "World 16.1" (contains "16.1")
+	if(selectedWorld != null && selectedWorld.contains("16.1")) {
+	    return getCharselBgWorld161();
+	}
+	// Use world16 for everything else (All, null, World 16, etc.)
+	return getCharselBgWorld16();
+    }
+    
+    /** Update background image based on current world selection */
+    public void updateCharselBackground() {
+	if(charselType == CharselType.BACKGROUND) {
+	    setimg(getCharselBg());
+	}
+    }
+    
+    private static Tex getVerifyTex() {
+	if(verifyTex == null)
+	    verifyTex = Resource.loadtex("nurgling/hud/verify");
+	return verifyTex;
+    }
+    
+    private static Tex getSubTex() {
+	if(subTex == null)
+	    subTex = Resource.loadtex("nurgling/hud/sub");
+	return subTex;
+    }
+
     @RName("img")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
 	    Indir<Resource> res;
+	    String resName = null;
 	    int a = 0;
 	    if(args[a] instanceof String) {
 		String nm = (String)args[a++];
@@ -45,7 +103,24 @@ public class Img extends Widget {
 	    } else {
 		res = ui.sess.getresv(args[a++]);
 	    }
-	    Img ret = new Img(res.get().flayer(Resource.imgc).tex());
+	    resName = res.get().name;
+	    Tex tex;
+	    CharselType charselType = CharselType.NONE;
+	    // Replace character selection screen resources
+	    if(resName != null && resName.contains(CHARSEL_BG_RES)) {
+		tex = getCharselBg();
+		charselType = CharselType.BACKGROUND;
+	    } else if(resName != null && resName.contains(CHARSEL_VERIFY_RES)) {
+		tex = getVerifyTex();
+		charselType = CharselType.VERIFY;
+	    } else if(resName != null && resName.contains(CHARSEL_SUB_RES)) {
+		tex = getSubTex();
+		charselType = CharselType.SUB;
+	    } else {
+		tex = res.get().flayer(Resource.imgc).tex();
+	    }
+	    Img ret = new Img(tex);
+	    ret.charselType = charselType;
 	    if(args.length > a) {
 		int fl = Utils.iv(args[a++]);
 		ret.hit = (fl & 1) != 0;
@@ -86,6 +161,10 @@ public class Img extends Widget {
 	    setimg(res.get().flayer(Resource.imgc).tex());
 	} else if(name == "cl") {
 	    hit = Utils.bv(args[0]);
+	} else if(name == "tip") {
+	    // Handle tip message and check for verification/subscription
+	    super.uimsg(name, args);
+	    checkVerificationStatus();
 	} else {
 	    super.uimsg(name, args);
 	}
@@ -105,5 +184,32 @@ public class Img extends Widget {
 	    return(true);
 	}
 	return(super.mousedown(ev));
+    }
+
+    /**
+     * Check if this Img's tooltip indicates verification or subscription status
+     * and update NUI.sessInfo accordingly.
+     */
+    private void checkVerificationStatus() {
+	if(ui == null || !(ui instanceof NUI)) return;
+	NUI nui = (NUI) ui;
+	
+	// Initialize sessInfo if not yet created but session is available
+	if(nui.sessInfo == null) {
+	    nui.initSessInfo();
+	}
+	if(nui.sessInfo == null) return;
+	
+	if(tooltip instanceof Widget.KeyboundTip) {
+	    String tooltipText = ((Widget.KeyboundTip) tooltip).base;
+	    if(tooltipText != null) {
+		if(!nui.sessInfo.isVerified && tooltipText.contains("Verif")) {
+		    nui.sessInfo.setVerified(true);
+		}
+		if(!nui.sessInfo.isSubscribed && tooltipText.contains("Subsc")) {
+		    nui.sessInfo.setSubscribed(true);
+		}
+	    }
+	}
     }
 }

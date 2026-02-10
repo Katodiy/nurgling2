@@ -5,8 +5,6 @@ import nurgling.NUtils;
 import nurgling.tools.NAlias;
 import nurgling.tools.NParser;
 
-import static haven.OptWnd.PointBind.msg;
-
 public class WaitPoseOrMsg extends NTask
 {
     public WaitPoseOrMsg(Gob gob, String pose, NAlias msg)

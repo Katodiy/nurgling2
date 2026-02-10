@@ -2,12 +2,14 @@ package nurgling.areas;
 
 import haven.*;
 import nurgling.*;
-import nurgling.actions.bots.RoutePointNavigator;
 import nurgling.actions.bots.SelectArea;
-import nurgling.routes.RoutePoint;
+import nurgling.navigation.AreaNavigationHelper;
+import nurgling.navigation.ChunkNavManager;
+import nurgling.navigation.ChunkPath;
 import nurgling.tools.*;
 import nurgling.tools.Container;
 import nurgling.widgets.Specialisation;
+import nurgling.conf.ConstructionMaterialsRegistry;
 import org.json.*;
 
 import java.awt.image.BufferedImage;
@@ -24,8 +26,11 @@ public class NContext {
     private HashMap<String, BarrelStorage> barrelstorage = new HashMap<>();
     private HashMap<NArea.Specialisation, String> specArea = new HashMap<>();
     private HashMap<String, NArea> areas = new HashMap<>();
-    private HashMap<String, RoutePoint> rps = new HashMap<>();
     private HashMap<String, ObjectStorage> containers = new HashMap<>();
+    
+    // Barrel tracking for BarrelWorkArea (when no workstation is used)
+    private HashMap<String, String> bwaPlacedBarrelHashes = new HashMap<>();
+    private HashMap<String, NGlobalCoord> bwaOriginalBarrelCoords = new HashMap<>();
 
     public boolean bwaused = false;
     int counter = 0;
@@ -51,14 +56,17 @@ public class NContext {
         contcaps.put("gfx/terobjs/stonecasket", "Stone Casket");
         contcaps.put("gfx/terobjs/birchbasket", "Birch Basket");
         contcaps.put("gfx/terobjs/wbasket", "Basket");
+        contcaps.put("gfx/terobjs/thatchbasket", "Basket");
+        contcaps.put("gfx/terobjs/map/stonekist", "Stonekist");
         contcaps.put("gfx/terobjs/exquisitechest", "Exquisite Chest");
         contcaps.put("gfx/terobjs/furn/table-stone", "Table");
         contcaps.put("gfx/terobjs/furn/table-rustic", "Table");
         contcaps.put("gfx/terobjs/furn/table-elegant", "Table");
-        contcaps.put("gfx/terobjs/furn/table-cottage", "Table");
+        contcaps.put("gfx/terobjs/furn/cottagetable", "Table");
         contcaps.put("gfx/terobjs/map/jotunclam", "Jotun Clam");
         contcaps.put("gfx/terobjs/studydesk", "Study Desk");
         contcaps.put("gfx/terobjs/htable", "Herbalist Table");
+        contcaps.put("gfx/terobjs/dng/ratchest", "Chest");
     }
 
     public static HashMap<String, String> customTool = new HashMap<>();
@@ -183,29 +191,29 @@ public class NContext {
         return outAreas.get(item);
     }
 
-    public RoutePoint getRoutePoint(String areaId) {
-        return rps.get(areaId);
-    }
-
     public NArea getSpecArea(NContext.Workstation workstation) throws InterruptedException {
-        if(!areas.containsKey(workstation_spec_map.get(workstation.station).toString())) {
-            NArea area = findSpec(workstation_spec_map.get(workstation.station).toString());
+        String specName = workstation_spec_map.get(workstation.station).toString();
+        NUtils.getGameUI().msg("getSpecArea: Looking for spec '" + specName + "' for station '" + workstation.station + "'");
+        
+        if(!areas.containsKey(specName)) {
+            NUtils.getGameUI().msg("getSpecArea: Area not in cache, searching...");
+            NArea area = findSpec(specName);
+            NUtils.getGameUI().msg("getSpecArea: findSpec returned " + (area != null ? "area" : "null"));
             if (area == null) {
-                area = findSpecGlobal(workstation_spec_map.get(workstation.station).toString());
+                area = findSpecGlobal(specName);
+                NUtils.getGameUI().msg("getSpecArea: findSpecGlobal returned " + (area != null ? "area" : "null"));
             }
             if (area != null) {
-                areas.put(String.valueOf(workstation_spec_map.get(workstation.station).toString()), area);
-                List<RoutePoint> pointList = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area));
-                if(pointList!=null && !pointList.isEmpty())
-                    rps.put(workstation_spec_map.get(workstation.station).toString(),pointList.get(pointList.size()-1));
+                areas.put(specName, area);
             }
             else
             {
+                NUtils.getGameUI().msg("getSpecArea: No area found, returning null");
                 return null;
             }
         }
-        navigateToAreaIfNeeded(workstation_spec_map.get(workstation.station).toString());
-        return areas.get(workstation_spec_map.get(workstation.station).toString());
+        navigateToAreaIfNeeded(specName);
+        return areas.get(specName);
     }
 
     public static class BarrelStorage
@@ -232,9 +240,6 @@ public class NContext {
             }
             if (area != null) {
                 areas.put(String.valueOf(area.id), area);
-                List<RoutePoint> pointList = (((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
-                if(pointList!=null && !pointList.isEmpty())
-                    rps.put(String.valueOf(area.id),pointList.get(pointList.size()-1));
                 barrels.put(item, String.valueOf(area.id));
             }
             if(area == null)
@@ -256,6 +261,110 @@ public class NContext {
 
 
     public Gob getBarrelInWorkArea(String item) throws InterruptedException {
+        String storedHash = getPlacedBarrelHash(item);
+        
+        // First try to find barrel by stored hash (most reliable after placement)
+        if (storedHash != null) {
+            ArrayList<Gob> allBarrels = nurgling.tools.Finder.findGobs(new nurgling.tools.NAlias("barrel"));
+            for (Gob gob : allBarrels) {
+                if (storedHash.equals(gob.ngob.hash)) {
+                    return gob;
+                }
+            }
+            
+            // Hash stored but barrel not found in cache
+            // Check if we're already near workstation - if so, just search by proximity without navigation
+            boolean alreadyNearWorkstation = false;
+            if (workstation != null && workstation.selected != -1) {
+                Gob ws = nurgling.tools.Finder.findGob(workstation.selected);
+                if (ws != null) {
+                    double distToWs = NUtils.player().rc.dist(ws.rc);
+                    if (distToWs < 30) {
+                        alreadyNearWorkstation = true;
+                        NUtils.getGameUI().msg("getBarrelInWorkArea: Already near workstation (dist=" + 
+                                String.format("%.2f", distToWs) + "), searching nearby barrels...");
+                        
+                        // Search by proximity without navigation - verify content
+                        String expectedContent = barrelstorage.containsKey(item) ? barrelstorage.get(item).olname : null;
+                        for (Gob gob : allBarrels) {
+                            if (gob.rc.dist(ws.rc) < 30) {
+                                // Check if barrel has correct content or is empty
+                                boolean isEmpty = !NUtils.barrelHasContent(gob);
+                                String barrelContent = NUtils.getContentsOfBarrel(gob);
+                                boolean contentMatches = expectedContent != null && 
+                                        barrelContent != null && 
+                                        barrelContent.equalsIgnoreCase(expectedContent);
+                                
+                                if (isEmpty || contentMatches) {
+                                    NUtils.getGameUI().msg("getBarrelInWorkArea: Found barrel near workstation (dist=" + 
+                                            String.format("%.2f", gob.rc.dist(ws.rc)) + ", empty=" + isEmpty + 
+                                            ", content=" + barrelContent + "), updating hash");
+                                    storeBarrelInfo(item, gob.ngob.hash, getOriginalBarrelCoord(item));
+                                    return gob;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Not near workstation - navigate to reload objects from cache
+            if (!alreadyNearWorkstation) {
+                NUtils.getGameUI().msg("getBarrelInWorkArea: Barrel with hash not in cache, navigating to reload...");
+                
+                NArea area;
+                if(workstation==null)
+                    area = getSpecArea(Specialisation.SpecName.barrelworkarea);
+                else
+                    area = getSpecArea(workstation);
+                
+                if (area != null) {
+                    haven.Pair<haven.Coord2d, haven.Coord2d> rcArea = area.getRCArea();
+                    if (rcArea != null) {
+                        haven.Coord2d center = rcArea.b.sub(rcArea.a).div(2).add(rcArea.a);
+                        new nurgling.actions.PathFinder(center).run(NUtils.getGameUI());
+                        
+                        Thread.sleep(500);
+                        
+                        allBarrels = nurgling.tools.Finder.findGobs(new nurgling.tools.NAlias("barrel"));
+                        for (Gob gob : allBarrels) {
+                            if (storedHash.equals(gob.ngob.hash)) {
+                                NUtils.getGameUI().msg("getBarrelInWorkArea: Found barrel after navigation, hash=" + storedHash.substring(0, 16) + "...");
+                                return gob;
+                            }
+                        }
+                        
+                        // Search by proximity after navigation - verify content
+                        if (workstation != null && workstation.selected != -1) {
+                            Gob ws = nurgling.tools.Finder.findGob(workstation.selected);
+                            if (ws != null) {
+                                String expectedContent = barrelstorage.containsKey(item) ? barrelstorage.get(item).olname : null;
+                                for (Gob gob : allBarrels) {
+                                    if (gob.rc.dist(ws.rc) < 30) {
+                                        // Check if barrel has correct content or is empty
+                                        boolean isEmpty = !NUtils.barrelHasContent(gob);
+                                        String barrelContent = NUtils.getContentsOfBarrel(gob);
+                                        boolean contentMatches = expectedContent != null && 
+                                                barrelContent != null && 
+                                                barrelContent.equalsIgnoreCase(expectedContent);
+                                        
+                                        if (isEmpty || contentMatches) {
+                                            NUtils.getGameUI().msg("getBarrelInWorkArea: Found barrel near workstation (dist=" + 
+                                                    String.format("%.2f", gob.rc.dist(ws.rc)) + ", empty=" + isEmpty + 
+                                                    ", content=" + barrelContent + "), updating hash");
+                                            storeBarrelInfo(item, gob.ngob.hash, getOriginalBarrelCoord(item));
+                                            return gob;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Fallback: search in area by content
         NArea area;
         if(workstation==null)
             area = getSpecArea(Specialisation.SpecName.barrelworkarea);
@@ -265,7 +374,7 @@ public class NContext {
             return null;
         if(barrelstorage.containsKey(item))
         {
-            for (Gob gob : Finder.findGobs(area, new NAlias("barrel")))
+            for (Gob gob : nurgling.tools.Finder.findGobs(area, new nurgling.tools.NAlias("barrel")))
             {
                 String content = NUtils.getContentsOfBarrel(gob);
                 if (content != null && (content.equalsIgnoreCase(barrelstorage.get(item).olname)))
@@ -277,10 +386,79 @@ public class NContext {
         return null;
 
     }
+    
+    /**
+     * Get placed barrel hash for an item (checks both workstation and BWA storage)
+     */
+    public String getPlacedBarrelHash(String item) {
+        if (workstation != null) {
+            return workstation.getPlacedBarrelHash(item);
+        } else {
+            return bwaPlacedBarrelHashes.get(item);
+        }
+    }
+    
+    /**
+     * Get original barrel coord for an item (checks both workstation and BWA storage)
+     */
+    public NGlobalCoord getOriginalBarrelCoord(String item) {
+        if (workstation != null) {
+            return workstation.getOriginalBarrelCoord(item);
+        } else {
+            return bwaOriginalBarrelCoords.get(item);
+        }
+    }
+    
+    /**
+     * Store barrel tracking info for an item
+     */
+    public void storeBarrelInfo(String item, String hash, NGlobalCoord originalCoord) {
+        if (workstation != null) {
+            workstation.storeBarrelInfo(item, hash, originalCoord);
+        } else {
+            bwaPlacedBarrelHashes.put(item, hash);
+            bwaOriginalBarrelCoords.put(item, originalCoord);
+        }
+    }
+    
+    /**
+     * Clear barrel tracking info for a specific item
+     */
+    public void clearBarrelInfo(String item) {
+        if (workstation != null) {
+            workstation.clearBarrelInfo(item);
+        } else {
+            bwaPlacedBarrelHashes.remove(item);
+            bwaOriginalBarrelCoords.remove(item);
+        }
+    }
+    
+    /**
+     * Clear all barrel tracking info
+     */
+    public void clearAllBarrelInfo() {
+        if (workstation != null) {
+            workstation.clearAllBarrelInfo();
+        }
+        bwaPlacedBarrelHashes.clear();
+        bwaOriginalBarrelCoords.clear();
+    }
 
     public void navigateToBarrelArea(String item) throws InterruptedException {
         String areaid = barrels.get(item);
         navigateToAreaIfNeeded(areaid);
+    }
+    
+    /**
+     * Get the barrel storage area for a specific item.
+     * Returns null if no barrel area is registered for this item.
+     */
+    public NArea getBarrelAreaForItem(String item) {
+        String areaid = barrels.get(item);
+        if (areaid != null) {
+            return areas.get(areaid);
+        }
+        return null;
     }
 
     public NArea getSpecArea(Specialisation.SpecName name) throws InterruptedException {
@@ -291,9 +469,6 @@ public class NContext {
             }
             if (area != null) {
                 areas.put(String.valueOf(name.toString()), area);
-                List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
-                if(pointList!=null && !pointList.isEmpty())
-                    rps.put(String.valueOf(name.toString()),pointList.get(pointList.size()-1));
             }
             else
             {
@@ -305,24 +480,91 @@ public class NContext {
     }
 
     public NArea getSpecArea(Specialisation.SpecName name, String sub) throws InterruptedException {
-        if(!areas.containsKey(name.toString())) {
+        String key = name.toString() + (sub != null ? "_" + sub : "");
+        if(!areas.containsKey(key)) {
             NArea area = findSpec(name.toString(),sub);
             if (area == null) {
                 area = findSpecGlobal(name.toString(),sub);
             }
             if (area != null) {
-                areas.put(String.valueOf(name.toString()), area);
-                List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
-                if(pointList!=null && !pointList.isEmpty())
-                    rps.put(String.valueOf(name.toString()),pointList.get(pointList.size()-1));
+                areas.put(key, area);
             }
             else
             {
                 return null;
             }
         }
-        navigateToAreaIfNeeded(name.toString());
-        return areas.get(name.toString());
+        navigateToAreaIfNeeded(key);
+        return areas.get(key);
+    }
+
+    /**
+     * Find construction materials zone for a specific material type WITHOUT navigating.
+     * Only finds and caches the area, navigation happens later when needed.
+     * @param materialType The type of material (BLOCK, BOARD, STONE, etc.)
+     * @return The area containing the material, or null if not found
+     */
+    public NArea getBuildMaterialArea(ConstructionMaterialsRegistry.MaterialType materialType) throws InterruptedException {
+        return findSpecAreaNoNavigate(Specialisation.SpecName.buildMaterials, materialType.getSubtype());
+    }
+
+    /**
+     * Find construction materials zone for a specific item alias WITHOUT navigating.
+     * Only finds and caches the area, navigation happens later when needed.
+     * @param itemAlias The alias of the item (e.g., "Block", "Board", "Flax Fibres")
+     * @return The area containing the material, or null if not found
+     */
+    public NArea getBuildMaterialArea(NAlias itemAlias) throws InterruptedException {
+        ConstructionMaterialsRegistry.MaterialType materialType = 
+            ConstructionMaterialsRegistry.getMaterialType(itemAlias);
+        if (materialType != null) {
+            return getBuildMaterialArea(materialType);
+        }
+        return null;
+    }
+    
+    /**
+     * Find a specialization area WITHOUT navigating to it.
+     * Use this when you just need to check if a zone exists or get a reference.
+     * @param name Specialization name
+     * @param sub Subtype (can be null)
+     * @return The area or null if not found
+     */
+    public NArea findSpecAreaNoNavigate(Specialisation.SpecName name, String sub) throws InterruptedException {
+        String key = name.toString() + (sub != null ? "_" + sub : "");
+        if (!areas.containsKey(key)) {
+            NArea area = findSpec(name.toString(), sub);
+            if (area == null) {
+                area = findSpecGlobal(name.toString(), sub);
+            }
+            if (area != null) {
+                areas.put(key, area);
+            } else {
+                return null;
+            }
+        }
+        // NO navigation - just return the cached area
+        return areas.get(key);
+    }
+
+    /**
+     * Check if a construction materials zone exists for the given material type.
+     * Does not navigate to the zone.
+     * @param materialType The type of material
+     * @return true if a zone exists, false otherwise
+     */
+    public boolean hasBuildMaterialArea(ConstructionMaterialsRegistry.MaterialType materialType) {
+        return ConstructionMaterialsRegistry.hasMaterialZone(materialType);
+    }
+
+    /**
+     * Check if a construction materials zone exists for the given item alias.
+     * Does not navigate to the zone.
+     * @param itemAlias The alias of the item
+     * @return true if a zone exists, false otherwise
+     */
+    public boolean hasBuildMaterialArea(NAlias itemAlias) {
+        return ConstructionMaterialsRegistry.hasMaterialZone(itemAlias);
     }
 
     /**
@@ -335,13 +577,19 @@ public class NContext {
             NArea area = NUtils.getGameUI().map.glob.map.areas.get(areaId);
             if (area != null) {
                 areas.put(key, area);
-                List<RoutePoint> pointList = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(
-                    ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()),
-                    ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)
-                );
-                if (pointList != null && !pointList.isEmpty()) {
-                    rps.put(key, pointList.get(pointList.size() - 1));
-                }
+            } else {
+                return null;
+            }
+        }
+        navigateToAreaIfNeeded(key);
+        return areas.get(key);
+    }
+
+    public NArea getAreaById(String key) throws InterruptedException {
+        if (!areas.containsKey(key)) {
+            NArea area = NUtils.getGameUI().map.glob.map.areas.get(key);
+            if (area != null) {
+                areas.put(key, area);
             } else {
                 return null;
             }
@@ -377,7 +625,7 @@ public class NContext {
                 inputs.add(containers.get(hash));
             }
             else {
-                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                Container ic = new Container(gob, contcaps.get(gob.ngob.name),area);
                 ic.initattr(Container.Space.class);
                 containers.put(gob.ngob.hash, ic);
                 inputs.add(ic);
@@ -428,7 +676,7 @@ public class NContext {
                                 inputs.add(containers.get(hash));
                             }
                             else {
-                                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                                Container ic = new Container(gob, contcaps.get(gob.ngob.name),area);
                                 containers.put(gob.ngob.hash, ic);
                                 inputs.add(ic);
                             }
@@ -491,7 +739,7 @@ public class NContext {
                                 outputs.add(containers.get(hash));
                             }
                             else {
-                                Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                                Container ic = new Container(gob, contcaps.get(gob.ngob.name),area);
                                 ic.initattr(Container.Space.class);
                                 containers.put(gob.ngob.hash, ic);
                                 outputs.add(ic);
@@ -521,7 +769,7 @@ public class NContext {
                         outputs.add(containers.get(hash));
                     }
                     else {
-                        Container ic = new Container(gob, contcaps.get(gob.ngob.name));
+                        Container ic = new Container(gob, contcaps.get(gob.ngob.name),area);
                         ic.initattr(Container.Space.class);
                         containers.put(gob.ngob.hash, ic);
                         outputs.add(ic);
@@ -545,11 +793,55 @@ public class NContext {
         public long selected = -1;
 
         public NGlobalCoord targetPoint = null;
+        
+        // Map of placed barrels: item name -> barrel hash (supports multiple barrels)
+        public HashMap<String, String> placedBarrelHashes = new HashMap<>();
+        // Map of original barrel coordinates: item name -> original position
+        public HashMap<String, NGlobalCoord> originalBarrelCoords = new HashMap<>();
 
         public Workstation(String station, String pose)
         {
             this.station = station;
             this.pose = pose;
+        }
+        
+        /**
+         * Store barrel tracking info for a specific item
+         */
+        public void storeBarrelInfo(String item, String hash, NGlobalCoord originalCoord) {
+            placedBarrelHashes.put(item, hash);
+            originalBarrelCoords.put(item, originalCoord);
+        }
+        
+        /**
+         * Get placed barrel hash for a specific item
+         */
+        public String getPlacedBarrelHash(String item) {
+            return placedBarrelHashes.get(item);
+        }
+        
+        /**
+         * Get original barrel coord for a specific item
+         */
+        public NGlobalCoord getOriginalBarrelCoord(String item) {
+            return originalBarrelCoords.get(item);
+        }
+        
+        /**
+         * Clear barrel tracking info for a specific item
+         */
+        public void clearBarrelInfo(String item) {
+            placedBarrelHashes.remove(item);
+            originalBarrelCoords.remove(item);
+        }
+        
+        /**
+         * Reset all barrel tracking info
+         */
+        public void clearAllBarrelInfo() {
+            placedBarrelHashes.clear();
+            originalBarrelCoords.clear();
+            this.targetPoint = null;
         }
     }
 
@@ -600,12 +892,9 @@ public class NContext {
     public void navigateToAreaIfNeeded(String areaId) throws InterruptedException {
         NArea area = areas.get(areaId);
         if(area == null) {
-            gui.msg(areaId + " Not found!");
             return;
         }
-        if((!area.isVisible() || area.getCenter2d() == null || area.getCenter2d().dist(NUtils.player().rc)>450) && rps.containsKey(areaId)) {
-            new RoutePointNavigator(rps.get(areaId), area.id).run(gui);
-        }
+        NUtils.navigateToArea(area);
     }
 
     public String createArea(String msg, BufferedImage bauble) throws InterruptedException {
@@ -622,21 +911,36 @@ public class NContext {
         String id = "temp"+counter++;
         NArea tempArea = new NArea(id);
         tempArea.space = insa.result;
+        tempArea.lastLocalChange = System.currentTimeMillis();
         tempArea.grids_id.clear();
         tempArea.grids_id.addAll(tempArea.space.space.keySet());
         areas.put(id, tempArea);
-        int size = 10000;
-        RoutePoint target = null;
-        for(RoutePoint point : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestRoutePoints(tempArea)) {
-            List<RoutePoint> path = ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(NUtils.findNearestPoint(), point);
-            if(path!=null) {
-                if (size > path.size()) {
-                    target = point;
-                    size = path.size();
-                }
-            }
-        }
-        rps.put(id,target);
+        return id;
+    }
+
+    public String createAreaWithGhost(nurgling.tasks.SelectAreaWithLiveGhosts sa) throws InterruptedException {
+        if(sa == null)
+            return null;
+        String id = "temp"+counter++;
+        NArea tempArea = new NArea(id);
+        tempArea.space = sa.getResult();
+        tempArea.lastLocalChange = System.currentTimeMillis();
+        tempArea.grids_id.clear();
+        tempArea.grids_id.addAll(tempArea.space.space.keySet());
+        areas.put(id, tempArea);
+        return id;
+    }
+
+    public String createPlayerLastPos()
+    {
+        String id = "temp"+counter++;
+        NArea tempArea = new NArea(id);
+        Coord2d plc = NUtils.player().rc;
+        tempArea.space = new NArea.Space(plc.sub(MCache.tilehsz).floor(MCache.tilesz),plc.add(MCache.tilehsz).floor(MCache.tilesz));
+        tempArea.lastLocalChange = System.currentTimeMillis();
+        tempArea.grids_id.clear();
+        tempArea.grids_id.addAll(tempArea.space.space.keySet());
+        areas.put(id, tempArea);
         return id;
     }
 
@@ -660,9 +964,6 @@ public class NContext {
         if(area!=null)
         {
             areas.put(String.valueOf(area.id),area);
-            List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
-            if(pointList!=null && !pointList.isEmpty())
-                rps.put(String.valueOf(area.id),pointList.get(pointList.size()-1));
             inAreas.put(name, String.valueOf(area.id));
         }
         if (loadsimg!=null && area == null) {
@@ -679,20 +980,15 @@ public class NContext {
         {
             for(Double key :outAreas.get(name).descendingKeySet())
             {
-                if(th>key)
+                if(th>key) {
                     return true;
+                }
             }
         }
-        NArea area = findOut(name,th);
-        if (area == null) {
-            area = findOutGlobal(name, th, gui);
-        }
+        NArea area = findOutGlobal(name, th, gui);
         if(area!=null)
         {
             areas.put(String.valueOf(area.id),area);
-            List<RoutePoint> pointList = (((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)));
-            if(pointList!=null && !pointList.isEmpty())
-                rps.put(String.valueOf(area.id),pointList.get(pointList.size()-1));
             outAreas.get(name).put(Math.abs((double)area.getOutput(name).th), String.valueOf(area.id));
         }
         if (loadsimg!=null && area == null) {
@@ -905,25 +1201,64 @@ public class NContext {
         return res;
     }
 
+    /**
+     * Calculate distance to an area using ChunkNav if available, falling back to RouteGraph.
+     * Returns Double.MAX_VALUE if area is unreachable.
+     */
+    private static double getDistanceToArea(NArea area, NGameUI gui) {
+        if (gui == null || gui.map == null) {
+            return Double.MAX_VALUE;
+        }
+
+        // Try ChunkNav first - plan paths to all 4 corners and pick shortest
+        if (gui.map instanceof NMapView) {
+            ChunkNavManager chunkNav = ((NMapView) gui.map).getChunkNavManager();
+            if (chunkNav != null && chunkNav.isInitialized()) {
+                try {
+                    // Use AreaNavigationHelper to find shortest path to any of the 4 corners
+                    ChunkPath path = AreaNavigationHelper.findShortestPathToAreaCorners(area, chunkNav);
+                    if (path != null) {
+                        // ChunkNav has a path - use its cost
+                        return path.totalCost;
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return Double.MAX_VALUE;
+                }
+            }
+        }
+
+        return Double.MAX_VALUE;
+    }
+
+    /**
+     * Calculate distance to an area by areaId using ChunkNav.
+     * Returns Double.MAX_VALUE if area is unreachable.
+     */
+    public double getDistanceToAreaById(String areaId, NGameUI gui) {
+        NArea area = areas.get(areaId);
+        if (area == null) return Double.MAX_VALUE;
+        return getDistanceToArea(area, gui);
+    }
+
     public static NArea findInGlobal(String name) {
         return findInGlobal(new NAlias(name));
     }
 
     public static NArea findInGlobal(NAlias name) {
-        double dist = 10000;
+        double dist = Double.MAX_VALUE;
         NArea res = null;
-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null) {
-            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
-            for(Integer id : nids) {
-                if(id>0) {
-                    if (NUtils.getGameUI().map.glob.map.areas.get(id).containIn(name)) {
-                        NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
-                        List<RoutePoint> routePoints = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(cand));
-                        if(routePoints!=null) {
-                            if(routePoints.size() <dist) {
-                                res = cand;
-                                dist = routePoints.size();
-                            }
+        NGameUI gui = NUtils.getGameUI();
+        if (gui != null && gui.map != null) {
+            Set<Integer> nids = gui.map.nols.keySet();
+            for (Integer id : nids) {
+                if (id > 0) {
+                    NArea cand = gui.map.glob.map.areas.get(id);
+                    if (cand != null && cand.containIn(name)) {
+                        double candDist = getDistanceToArea(cand, gui);
+                        if (candDist < dist) {
+                            res = cand;
+                            dist = candDist;
                         }
                     }
                 }
@@ -933,22 +1268,23 @@ public class NContext {
     }
 
     public static NArea findSpecGlobal(String name, String sub) {
-        int dist = 10000;
+        double dist = Double.MAX_VALUE;
         NArea target = null;
-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null) {
-            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
-            for(Integer id : nids) {
+        NGameUI gui = NUtils.getGameUI();
+        if (gui != null && gui.map != null) {
+            Set<Integer> nids = gui.map.nols.keySet();
+            for (Integer id : nids) {
                 if (id > 0) {
-                    for (NArea.Specialisation s : NUtils.getGameUI().map.glob.map.areas.get(id).spec) {
-                        if (s.name.equals(name)  && ((sub == null || sub.isEmpty()) || s.subtype != null && s.subtype.toLowerCase().equals(sub.toLowerCase()))) {
-                            NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
-                            List<RoutePoint> routePoints = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(cand));
-                            if(routePoints!=null) {
-                                if(routePoints.size() <dist) {
-                                    target = cand;
-                                    dist = routePoints.size();
-                                }
+                    NArea area = gui.map.glob.map.areas.get(id);
+                    if (area == null) continue;
+                    for (NArea.Specialisation s : area.spec) {
+                        if (s.name.equals(name) && ((sub == null || sub.isEmpty()) || (s.subtype != null && s.subtype.equalsIgnoreCase(sub)))) {
+                            double candDist = getDistanceToArea(area, gui);
+                            if (candDist < dist) {
+                                target = area;
+                                dist = candDist;
                             }
+                            break; // Found matching spec, no need to check other specs for same area
                         }
                     }
                 }
@@ -968,13 +1304,17 @@ public class NContext {
     public static NArea findOutGlobal(String name, double th, NGameUI gui) {
         NArea res = null;
         ArrayList<TestedArea> areas = new ArrayList<>();
-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null) {
-            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
-            for(Integer id : nids) {
+        if (gui != null && gui.map != null) {
+            Set<Integer> nids = gui.map.nols.keySet();
+            for (Integer id : nids) {
                 if (id > 0) {
-                    NArea cand = NUtils.getGameUI().map.glob.map.areas.get(id);
-                    if (cand.containOut(name) && ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(gui), ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(cand)) != null) {
-                        areas.add(new TestedArea(cand, cand.getOutput(name).th));
+                    NArea cand = gui.map.glob.map.areas.get(id);
+                    if (cand != null && cand.containOut(name)) {
+                        // Check reachability using ChunkNav or RouteGraph
+                        double dist = getDistanceToArea(cand, gui);
+                        if (dist < Double.MAX_VALUE) {
+                            areas.add(new TestedArea(cand, cand.getOutput(name).th));
+                        }
                     }
                 }
             }
@@ -984,21 +1324,28 @@ public class NContext {
 
         double tth = 1;
         for (TestedArea area : areas) {
-            if(area.th<=th) {
+            if (area.th <= th) {
                 res = area.area;
                 tth = area.th;
             }
         }
 
+        // If multiple areas have the same threshold, pick the closest one
         ArrayList<NArea> targets = new ArrayList<>();
-        for(TestedArea area :areas) {
-            if(area.th == tth)
+        for (TestedArea area : areas) {
+            if (area.th == tth) {
                 targets.add(area.area);
+            }
         }
 
-        if(targets.size()>1) {
-            for (NArea test: targets) {
-                res = test;
+        if (targets.size() > 1) {
+            double bestDist = Double.MAX_VALUE;
+            for (NArea test : targets) {
+                double dist = getDistanceToArea(test, gui);
+                if (dist < bestDist) {
+                    res = test;
+                    bestDist = dist;
+                }
             }
         }
         return res;
@@ -1121,31 +1468,29 @@ public class NContext {
 
     /**
      * Find all areas with a specific specialization and optional subtype.
-     * Uses global search with route graph distance, similar to findSpecGlobal.
-     * Returns list of areas sorted by route distance from player.
+     * Uses ChunkNav distance when available, falling back to route graph.
+     * Returns list of areas sorted by distance from player.
      */
     public static ArrayList<NArea> findAllSpec(String name, String subtype) {
-        // Map to store areas with their route distances
-        Map<NArea, Integer> areaDistances = new HashMap<>();
+        // Map to store areas with their distances
+        Map<NArea, Double> areaDistances = new HashMap<>();
+        NGameUI gui = NUtils.getGameUI();
 
-        if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null) {
-            Set<Integer> nids = NUtils.getGameUI().map.nols.keySet();
+        if (gui != null && gui.map != null) {
+            Set<Integer> nids = gui.map.nols.keySet();
             for (Integer id : nids) {
                 if (id > 0) {
-                    NArea area = NUtils.getGameUI().map.glob.map.areas.get(id);
+                    NArea area = gui.map.glob.map.areas.get(id);
                     if (area != null) {
                         for (NArea.Specialisation s : area.spec) {
                             boolean nameMatch = s.name.equals(name);
                             boolean subtypeMatch = (subtype == null || subtype.isEmpty()) ||
                                 (s.subtype != null && s.subtype.equalsIgnoreCase(subtype));
                             if (nameMatch && subtypeMatch) {
-                                // Check if area is reachable via route graph
-                                List<RoutePoint> routePoints = ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findPath(
-                                    ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findNearestPointToPlayer(NUtils.getGameUI()),
-                                    ((NMapView)NUtils.getGameUI().map).routeGraphManager.getGraph().findAreaRoutePoint(area)
-                                );
-                                if (routePoints != null) {
-                                    areaDistances.put(area, routePoints.size());
+                                // Check if area is reachable using ChunkNav or RouteGraph
+                                double dist = getDistanceToArea(area, gui);
+                                if (dist < Double.MAX_VALUE) {
+                                    areaDistances.put(area, dist);
                                 }
                                 break; // Don't check other specs for same area
                             }
@@ -1155,9 +1500,9 @@ public class NContext {
             }
         }
 
-        // Sort by route distance
+        // Sort by distance
         ArrayList<NArea> results = new ArrayList<>(areaDistances.keySet());
-        results.sort((a, b) -> Integer.compare(areaDistances.get(a), areaDistances.get(b)));
+        results.sort((a, b) -> Double.compare(areaDistances.get(a), areaDistances.get(b)));
         return results;
     }
 

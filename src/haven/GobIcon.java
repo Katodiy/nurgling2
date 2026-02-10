@@ -28,6 +28,7 @@ package haven;
 
 import nurgling.NStyle;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 import nurgling.tools.NParser;
 
 import java.util.*;
@@ -140,7 +141,7 @@ public class GobIcon extends GAttrib {
 
 	public String name() {
 	    Resource.Tooltip name = res.layer(Resource.tooltip);
-	    return(name == null ? "???" : name.t);
+	    return(name == null ? "???" : name.text());
 	}
 
 	public BufferedImage image() {
@@ -767,14 +768,14 @@ public class GobIcon extends GAttrib {
 		public IconLine(Coord sz, ListIcon icon) {
 		    super(IconList.this, sz, icon);
 		    Widget prev;
-		    prev = adda(new CheckBox("").state(() -> icon.conf.notify).set(andsave(val -> icon.conf.notify = val)).settip("Notify"),
+		    prev = adda(new CheckBox("").state(() -> icon.conf.notify).set(andsave(val -> icon.conf.notify = val)).settip(L10n.get("icon.notify")),
 				sz.x - UI.scale(2) - (sz.y / 2), sz.y / 2, 0.5, 0.5);
 		    prev = adda(new CheckBox("").state(() -> icon.conf.ring).set(andsave(val -> {
 				icon.conf.ring = val;
 				SettingsWindow.this.updateRingsForIcon(icon.conf);
-			})).settip("Ring"),
+			})).settip(L10n.get("icon.ring")),
 				prev.c.x - UI.scale(2) - (sz.y / 2), sz.y / 2, 0.5, 0.5);
-		    prev = adda(new CheckBox("").state(() -> icon.conf.show).set(andsave(val -> icon.conf.show = val)).settip("Display"),
+		    prev = adda(new CheckBox("").state(() -> icon.conf.show).set(andsave(val -> icon.conf.show = val)).settip(L10n.get("icon.display")),
 				prev.c.x - UI.scale(2) - (sz.y / 2), sz.y / 2, 0.5, 0.5);
 			if(item.conf.icon != null) {
 			    add(SListWidget.IconText.of(Coord.of(prev.c.x - UI.scale(2), sz.y), item.conf.icon::image, item.conf.icon::name), Coord.z);
@@ -876,20 +877,20 @@ public class GobIcon extends GAttrib {
 	    public IconSettings(int w, Setting conf) {
 		super(Coord.z);
 		this.conf = conf;
-		Widget prev = add(new CheckBox("Display").state(() -> conf.show).set(andsave(val -> conf.show = val)),
+		Widget prev = add(new CheckBox(L10n.get("icon.display")).state(() -> conf.show).set(andsave(val -> conf.show = val)),
 				  0, 0);
-		add(new CheckBox("Notify").state(() -> conf.notify).set(andsave(val -> conf.notify = val)),
+		add(new CheckBox(L10n.get("icon.notify")).state(() -> conf.notify).set(andsave(val -> conf.notify = val)),
 		    w / 2, 0);
-		Button pb = new Button(UI.scale(50), "Play") {
+		Button pb = new Button(UI.scale(50), L10n.get("icon.play")) {
 			protected void depress() {}
 			protected void unpress() {}
 			public void click() {play();}
 		    };
-		prev = add(new Label("Sound to play on notification:"), prev.pos("bl").adds(0, 5));
+		prev = add(new Label(L10n.get("icon.sound_label")), prev.pos("bl").adds(0, 5));
 		nb = new NotifBox(w - pb.sz.x - UI.scale(15));
 		addhl(prev.pos("bl").adds(0, 2), w, prev = Frame.with(nb, false), pb);
 		if(conf.getmarkablep() || conf.res.name.equals("mm/up") || conf.res.name.equals("mm/down")) {
-		    add(new CheckBox("Place permanent marker")
+		    add(new CheckBox(L10n.get("icon.place_marker"))
 			.state(() -> conf.markset ? conf.mark : conf.getmarkp())
 			.set(andsave(val -> {conf.markset = true; conf.mark = val;})),
 			prev.pos("bl").adds(0, 5));
@@ -1017,13 +1018,13 @@ public class GobIcon extends GAttrib {
 	}
 
 	public SettingsWindow(Settings conf) {
-	    super(Coord.z, "Icon settings");
+	    super(Coord.z, L10n.get("icon.window_title"));
 	    this.conf = conf;
 		Widget prev = add(groupBy = new GroupBy(UI.scale(250)));
 	    add(this.cont = new PackCont.LinPack.VPack(), prev.pos("bl").adds(0,UI.scale(10))).margin(UI.scale(5)).packpar(true);
 	    list = cont.last(new IconList(UI.scale(250, 500)), 0);
 	    cont.last(new HRuler(list.sz.x), 0);
-	    cont.last(new CheckBox("Notification on newly seen icons") {
+	    cont.last(new CheckBox(L10n.get("icon.notify_new")) {
 		    {this.a = conf.notify;}
 
 		    public void changed(boolean val) {

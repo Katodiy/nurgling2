@@ -315,9 +315,7 @@ public class LightFire implements Action {
     }
 
     private void craftLightFire(NGameUI gui) throws InterruptedException {
-        NUtils.getGameUI().ui.rcvr.rcvmsg(NUtils.getUI().getMenuGridId(), "act", "lightfire");
-
-        if(NUtils.getGameUI().craftwnd.makeWidget!=null && !NUtils.getGameUI().craftwnd.makeWidget.rcpnm.equals("Light fire"))
+        if(NUtils.getGameUI().craftwnd == null || (NUtils.getGameUI().craftwnd.makeWidget!=null && !NUtils.getGameUI().craftwnd.makeWidget.rcpnm.equals("Light fire")))
         {
             for (MenuGrid.Pagina pb : NUtils.getGameUI().menu.paginae)
             {
@@ -336,7 +334,11 @@ public class LightFire implements Action {
                 }
             });
         }
-        NUtils.getGameUI().craftwnd.makeWidget.wdgmsg("make", 1);
+
+        // Additional safety check before sending make message
+        if (NUtils.getGameUI().craftwnd != null && NUtils.getGameUI().craftwnd.makeWidget != null) {
+            NUtils.getGameUI().craftwnd.makeWidget.wdgmsg("make", 1);
+        }
 
         NUtils.addTask(new NTask() {
             @Override

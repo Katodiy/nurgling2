@@ -56,27 +56,37 @@ public class NAreaSelector implements Runnable
                 }
                 if(mode!=Mode.SELECT)
                 {
+                    int selectedAreaId = -1;
                     if(result!=null)
                     {
                         if(mode == Mode.CREATE)
                         {
                             ((NMapView) NUtils.getGameUI().map).addArea(result);
+                            // Find the newly created area (highest id)
+                            for(NArea a : ((NMapView) NUtils.getGameUI().map).glob.map.areas.values()) {
+                                if(a.id > selectedAreaId) {
+                                    selectedAreaId = a.id;
+                                }
+                            }
                         }
                         else if(mode == Mode.CHANGE)
                         {
                             area.space = result;
+                            area.lastLocalChange = System.currentTimeMillis();
                             area.grids_id.clear();
                             area.grids_id.addAll(area.space.space.keySet());
                             for(NArea.VArea space: area.space.space.values())
                                 space.isVis = false;
                             ((NMapView) NUtils.getGameUI().map).createAreaLabel(area.id);
                             area.inWork = false;
+                            selectedAreaId = area.id;
                         }
                         NConfig.needAreasUpdate();
-                        ((NMapView) NUtils.getGameUI().map).routeGraphManager.getGraph().connectAreaToRoutePoints(area);
-                        NConfig.needRoutesUpdate();
                     }
                     NUtils.getGameUI().areas.show();
+                    if(selectedAreaId >= 0) {
+                        NUtils.getGameUI().areas.selectAreaById(selectedAreaId);
+                    }
                 }
             }
             catch (InterruptedException e)

@@ -2,6 +2,7 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.NConfig;
+import nurgling.i18n.L10n;
 
 public class PicklingSettings extends Panel {
     private CheckBox beetrootsCheckbox;
@@ -14,66 +15,66 @@ public class PicklingSettings extends Panel {
     private CheckBox yellowOnionCheckbox;
 
     public PicklingSettings() {
-        super("Pickling Settings");
+        super(L10n.get("pickling.title"));
 
         int margin = UI.scale(10);
         int y = UI.scale(36);
 
         // Add descriptive text
-        add(new Label("Select which items you want to be processed when pickling bot runs:"), new Coord(margin, y));
+        add(new Label(L10n.get("pickling.description")), new Coord(margin, y));
         y += UI.scale(32);
 
         // Add checkboxes for each pickling item
-        beetrootsCheckbox = add(new CheckBox("Beetroots") {
+        beetrootsCheckbox = add(new CheckBox(L10n.get("pickling.beetroots")) {
             public void set(boolean val) {
                 a = val;
             }
         }, new Coord(margin, y));
         y += UI.scale(28);
 
-        carrotsCheckbox = add(new CheckBox("Carrots") {
+        carrotsCheckbox = add(new CheckBox(L10n.get("pickling.carrots")) {
             public void set(boolean val) {
                 a = val;
             }
         }, new Coord(margin, y));
         y += UI.scale(28);
 
-        eggsCheckbox = add(new CheckBox("Eggs") {
+        eggsCheckbox = add(new CheckBox(L10n.get("pickling.eggs")) {
             public void set(boolean val) {
                 a = val;
             }
         }, new Coord(margin, y));
         y += UI.scale(28);
 
-        herringCheckbox = add(new CheckBox("Herring") {
+        herringCheckbox = add(new CheckBox(L10n.get("pickling.herring")) {
             public void set(boolean val) {
                 a = val;
             }
         }, new Coord(margin, y));
         y += UI.scale(28);
 
-        olivesCheckbox = add(new CheckBox("Olives") {
+        olivesCheckbox = add(new CheckBox(L10n.get("pickling.olives")) {
             public void set(boolean val) {
                 a = val;
             }
         }, new Coord(margin, y));
         y += UI.scale(28);
 
-        cucumbersCheckbox = add(new CheckBox("Cucumbers") {
+        cucumbersCheckbox = add(new CheckBox(L10n.get("pickling.cucumbers")) {
             public void set(boolean val) {
                 a = val;
             }
         }, new Coord(margin, y));
         y += UI.scale(28);
 
-        redOnionCheckbox = add(new CheckBox("Red Onion") {
+        redOnionCheckbox = add(new CheckBox(L10n.get("pickling.red_onion")) {
             public void set(boolean val) {
                 a = val;
             }
         }, new Coord(margin, y));
         y += UI.scale(28);
 
-        yellowOnionCheckbox = add(new CheckBox("Yellow Onion") {
+        yellowOnionCheckbox = add(new CheckBox(L10n.get("pickling.yellow_onion")) {
             public void set(boolean val) {
                 a = val;
             }

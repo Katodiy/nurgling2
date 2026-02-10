@@ -26,6 +26,7 @@
 
 package haven;
 
+import nurgling.i18n.L10n;
 import nurgling.widgets.*;
 
 import java.util.*;
@@ -56,7 +57,7 @@ public class LoginScreen extends Widget {
 	this.hostname = hostname;
 	setfocustab(true);
 	bgimg = add(new Img(bg), Coord.z);
-	optbtn = add(new Button(UI.scale(100), "Options"), UI.scale(10), sz.y - UI.scale(10) - UI.scale(30));
+	optbtn = add(new Button(UI.scale(100), L10n.get("login.options")), UI.scale(10), sz.y - UI.scale(10) - UI.scale(30));
 	optbtn.setgkey(GameUI.kb_opt);
 //	if(HttpStatus.mond.get() != null)
 //	    adda(new StatusLabel(HttpStatus.mond.get(), 1.0), sz.x - UI.scale(10), UI.scale(10), 1.0, 0.0);
@@ -67,7 +68,7 @@ public class LoginScreen extends Widget {
 	
 	// Add Steam login button if Steam is available
 	if("steam".equals(authmech.get())) {
-	    Button steambtn = adda(new Button(UI.scale(150), "Login with Steam"), bgc.adds(0, -50), 0.5, 0.0);
+	    Button steambtn = adda(new Button(UI.scale(150), L10n.get("login.steam")), bgc.adds(0, -50), 0.5, 0.0);
 	    steambtn.action(() -> {
 		try {
 		    wdgmsg("login", new SteamCreds(), false);
@@ -139,25 +140,22 @@ public class LoginScreen extends Widget {
 	private Credbox() {
 	    super(UI.scale(200, 150));
 	    setfocustab(true);
-	    Widget prev = add(new LabelWithBg("User name", textf), 0, 0);
+	    Widget prev = add(new LabelWithBg(L10n.get("login.username"), textf), 0, 0);
 	    add(user = new UserEntry(this.sz.x), prev.pos("bl").adds(0, 1));
 	    setfocus(user);
 
 	    add(pwbox = new Widget(Coord.z), user.pos("bl").adds(0, 10));
-	    pwbox.add(prev = new LabelWithBg("Password", textf), Coord.z);
+	    pwbox.add(prev = new LabelWithBg(L10n.get("login.password"), textf), Coord.z);
 	    pwbox.add(pass = new TextEntry(this.sz.x, ""), prev.pos("bl").adds(0, 1)).pw = true;
-	    pwbox.add(savetoken = new CheckBoxWithBg("Remember me", true), pass.pos("bl").adds(0, 10));
+	    pwbox.add(savetoken = new CheckBoxWithBg(L10n.get("login.remember_me"), true), pass.pos("bl").adds(0, 10));
 	    savetoken.setgkey(kb_savtoken);
-	    savetoken.settip("Saving your login does not save your password, but rather " +
-			     "a randomly generated token that will be used to log in. " +
-			     "You can manage your saved tokens in your Account Settings.",
-			     true);
+	    savetoken.settip(L10n.get("login.remember_tip"), true);
 	    pwbox.pack();
 	    pwbox.hide();
 
 	    add(tkbox = new Widget(new Coord(this.sz.x, 0)), user.pos("bl").adds(0, 10));
-	    tkbox.add(prev = new LabelWithBg("Login saved", textfs), UI.scale(0, 25));
-	    tkbox.adda(fbtn = new Button(UI.scale(100), "Forget me"), prev.pos("mid").x(this.sz.x), 1.0, 0.5).action(this::forget);
+	    tkbox.add(prev = new LabelWithBg(L10n.get("login.saved"), textfs), UI.scale(0, 25));
+	    tkbox.adda(fbtn = new Button(UI.scale(100), L10n.get("login.forget_me")), prev.pos("mid").x(this.sz.x), 1.0, 0.5).action(this::forget);
 	    fbtn.setgkey(kb_deltoken);
 	    tkbox.pack();
 	    tkbox.hide();
@@ -259,7 +257,7 @@ public class LoginScreen extends Widget {
 
 	private Steambox() {
 	    super(UI.scale(200, 150));
-	    Widget prev = adda(new Label("Logging in with Steam", textf), sz.x / 2, 0, 0.5, 0);
+	    Widget prev = adda(new Label(L10n.get("login.steam_logging"), textf), sz.x / 2, 0, 0.5, 0);
 	    adda(new IButton("gfx/hud/buttons/login", "u", "d", "o") {
 		    protected void depress() {ui.sfx(Button.clbtdown.stream());}
 		    protected void unpress() {ui.sfx(Button.clbtup.stream());}
@@ -346,14 +344,14 @@ public class LoginScreen extends Widget {
 	    synchronized(stat) {
 		if(!stat.syn || (stat.status == "")) {
 		} else if(stat.status == "up") {
-		    buf[0] = "Server status: Up";
-		    buf[1] = String.format("Hearthlings playing: %,d", stat.users);
+		    buf[0] = L10n.get("login.server_up");
+		    buf[1] = L10n.get("login.players_online", stat.users);
 		} else if(stat.status == "shutdown") {
-		    buf[0] = "Server status: Down";
+		    buf[0] = L10n.get("login.server_down");
 		} else if(stat.status == "terminating") {
-		    buf[0] = "Server status: Shutting down";
+		    buf[0] = L10n.get("login.server_shutdown");
 		} else if(stat.status == "crashed") {
-		    buf[0] = "Server status: Crashed";
+		    buf[0] = L10n.get("login.server_crashed");
 		}
 	    }
 	    for(int i = 0, y = 0; i < 2; i++) {

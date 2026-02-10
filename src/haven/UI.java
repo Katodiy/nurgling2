@@ -51,6 +51,9 @@ public class UI {
 	public static NUI getInstance(){
 		return ui;
 	}
+	public static void setInstance(NUI instance) {
+		ui = instance;
+	}
     public static int MOD_SHIFT = KeyMatch.S, MOD_CTRL = KeyMatch.C, MOD_META = KeyMatch.M, MOD_SUPER = KeyMatch.SUPER;
     public RootWidget root;
     public final List<Grab> grabs = new CopyOnWriteArrayList<Grab>();

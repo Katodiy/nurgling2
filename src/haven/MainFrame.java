@@ -27,6 +27,9 @@
 package haven;
 
 import nurgling.NConfig;
+import nurgling.headless.Headless;
+import nurgling.headless.HeadlessConfig;
+import nurgling.headless.HeadlessMain;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -105,7 +108,14 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 	    dev.setFullScreenWindow(this);
 	    if(fsmode != null) {
 		prefs = dev.getDisplayMode();
-		dev.setDisplayMode(fsmode);
+		try {
+		    dev.setDisplayMode(fsmode);
+		    // Give DWM time to process the display mode change
+		    Thread.sleep(100);
+		} catch(Exception e) {
+		    System.err.println("[MainFrame] Failed to set display mode: " + e.getMessage());
+		    // Don't fail completely - continue without mode change
+		}
 	    }
 	    pack();
 	} catch(Exception e) {
@@ -118,8 +128,16 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 	if(!fullscreen)
 	    return;
 	try {
-	    if(prefs != null)
-		dev.setDisplayMode(prefs);
+	    if(prefs != null) {
+		try {
+		    dev.setDisplayMode(prefs);
+		    // Give DWM time to process the display mode change
+		    Thread.sleep(100);
+		} catch(Exception e) {
+		    System.err.println("[MainFrame] Failed to restore display mode: " + e.getMessage());
+		    // Don't fail completely - continue without mode change
+		}
+	    }
 	    dev.setFullScreenWindow(null);
 	    setVisible(false);
 	    dispose();
@@ -482,8 +500,29 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
     }
     
     public static void main(final String[] args) {
+	// Check for headless mode FIRST, before any other initialization
+	if (Headless.hasHeadlessFlag(args)) {
+	    // Set headless mode before any AWT classes load
+	    Headless.setHeadless(true);
+
+	    // Check if -bots config file is also provided
+	    String botsConfigPath = extractBotsPath(args);
+	    if (botsConfigPath != null) {
+		// Headless mode with bot config file (from electron-hh-autorunner)
+		HeadlessConfig config = HeadlessConfig.parseFromFile(botsConfigPath);
+		HeadlessMain.runWithConfig(config);
+	    } else {
+		// Headless mode with CLI args
+		HeadlessMain.main(args);
+	    }
+	    return;
+	}
+
 	config = new NConfig();
 	config.read();
+	
+	// Apply saved language after config is loaded
+	nurgling.i18n.L10n.applySavedLanguage();
 	
 	// Initialize FileLogger and redirect System.err as early as possible
 	haven.error.FileLogger.redirectSystemErr();
@@ -519,7 +558,20 @@ public class MainFrame extends java.awt.Frame implements Console.Directory {
 	Thread main = new HackThread(g, () -> main2(args), "Haven main thread");
 	main.start();
     }
-	
+
+    /**
+     * Extract the -bots config file path from command line arguments.
+     * Returns null if -bots flag is not present.
+     */
+    private static String extractBotsPath(String[] args) {
+	for (int i = 0; i < args.length; i++) {
+	    if (args[i].equals("-bots") && i + 1 < args.length) {
+		return args[i + 1];
+	    }
+	}
+	return null;
+    }
+
     private static void dumplist(Collection<Resource> list, Path fn) {
 	try {
 	    if(fn != null) {

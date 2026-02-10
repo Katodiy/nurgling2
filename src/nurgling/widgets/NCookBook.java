@@ -1,21 +1,17 @@
 package nurgling.widgets;
 
 import haven.*;
-import haven.Button;
 import haven.Label;
 import haven.Window;
-import haven.res.lib.itemtex.ItemTex;
 import nurgling.NConfig;
 import nurgling.NFlowerMenu;
 import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.actions.ReadJsonAction;
-import nurgling.actions.bots.AutoChooser;
-import nurgling.actions.bots.Craft;
 import nurgling.cookbook.FavoriteRecipeManager;
 import nurgling.cookbook.Recipe;
 import nurgling.cookbook.connection.RecipeHashFetcher;
-import nurgling.cookbook.connection.RecipeLoader;
+import nurgling.i18n.L10n;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -24,9 +20,10 @@ import java.awt.image.BufferedImage;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static haven.CharWnd.ifnd;
+
+// Utility imports for layered image creation
 
 public class NCookBook extends Window {
 
@@ -74,7 +71,7 @@ public class NCookBook extends Window {
     static int col6 = UI.scale(1095);  // Energy (расширен)
 
     public NCookBook() {
-        super(UI.scale(new Coord(1300, 550)), "Cook Book");
+        super(UI.scale(new Coord(1300, 550)), L10n.get("cookbook.window_title"));
         statButtons = new ICheckBox[9];
 
         searchF = add(new TextEntry(UI.scale(1290), "") {
@@ -83,15 +80,12 @@ public class NCookBook extends Window {
                 boolean res = super.keydown(e);
                 if(e.code==10)
                 {
-                    try {
-                        rhf = new RecipeHashFetcher(ui.core.poolManager.getConnection(),
-                                searchF.text());
-                        ui.core.poolManager.submitTask(rhf);
-                        disable();
-                    }catch (SQLException err)
-                    {
-                        err.printStackTrace();
+                    if (ui.core.databaseManager == null || !ui.core.databaseManager.isReady()) {
+                        return res; // Database not ready
                     }
+                    rhf = new RecipeHashFetcher(ui.core.databaseManager, searchF.text());
+                    ui.core.databaseManager.submitTask(rhf);
+                    disable();
                 }
                 return res;
             }
@@ -101,12 +95,12 @@ public class NCookBook extends Window {
 
 
         Coord headerPos = new Coord(0, searchF.pos("br").y + UI.scale(35));
-        add(new Label("Name"), new Coord(col1, headerY));
-        add(new Label("Ingredients"), new Coord(col2, headerY));
-        add(new Label("FEP/Hunger"), new Coord(col3, headerY));
-        add(new Label("Total FEP"), new Coord(col4, headerY));
-        add(new Label("Hunger"), new Coord(col5, headerY));
-        add(new Label("Energy"), new Coord(col6, headerY));
+        add(new Label(L10n.get("cookbook.col_name")), new Coord(col1, headerY));
+        add(new Label(L10n.get("cookbook.col_ingredients")), new Coord(col2, headerY));
+        add(new Label(L10n.get("cookbook.col_fep_hunger")), new Coord(col3, headerY));
+        add(new Label(L10n.get("cookbook.col_total_fep")), new Coord(col4, headerY));
+        add(new Label(L10n.get("cookbook.col_hunger")), new Coord(col5, headerY));
+        add(new Label(L10n.get("cookbook.col_energy")), new Coord(col6, headerY));
 
 
         // Кнопки сортировки
@@ -355,7 +349,7 @@ public class NCookBook extends Window {
                 });
             }
         }, new Coord(rl.pos("ur").x - UI.scale(32), searchF.pos("br").y+UI.scale(10)));
-        imp.settip("Import");
+        imp.settip(L10n.get("cookbook.btn_import"));
 
         // Кнопки пагинации
         prev = add(new IButton(Resource.loadsimg("nurgling/hud/buttons/cookbook/left/u"),
@@ -428,20 +422,14 @@ public class NCookBook extends Window {
 
     @Override
     public boolean show(boolean show) {
-        if (show && (Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.poolManager!=null) {
-            try {
-                if (favoriteManager == null) {
-                    favoriteManager = new FavoriteRecipeManager(ui.core.poolManager.getConnection());
-                }
-                rhf = new RecipeHashFetcher(ui.core.poolManager.getConnection(),
-                        RecipeHashFetcher.genFep(currentSortType, currentSortDesc));
-                ui.core.poolManager.submitTask(rhf);
-                disable();
-            }catch (SQLException e)
-            {
-                e.printStackTrace();
+        if (show && (Boolean) NConfig.get(NConfig.Key.ndbenable) && ui.core.databaseManager!=null && ui.core.databaseManager.isReady()) {
+            if (favoriteManager == null) {
+                favoriteManager = new FavoriteRecipeManager(ui.core.databaseManager);
             }
-
+            rhf = new RecipeHashFetcher(ui.core.databaseManager,
+                    RecipeHashFetcher.genFep(currentSortType, currentSortDesc));
+            ui.core.databaseManager.submitTask(rhf);
+            disable();
         }
         return super.show(show);
     }
@@ -499,11 +487,65 @@ public class NCookBook extends Window {
         private static int y_pos = 20;
         private String recName;
 
+        /**
+         * Create recipe icon, handling layered sprites (meat, fish, etc.)
+         * Resource names with '+' separator indicate layered sprites.
+         */
+        private static TexI createRecipeIcon(Recipe recipe) {
+            String resourceName = recipe.getResourceName();
+            try {
+                if (resourceName != null && resourceName.contains("+")) {
+                    // Layered sprite - combine multiple images
+                    String[] layers = resourceName.split("\\+");
+                    BufferedImage combined = null;
+                    Graphics2D g = null;
+                    
+                    for (String layer : layers) {
+                        try {
+                            Resource res = Resource.remote().loadwait(layer.trim());
+                            Resource.Image imgLayer = res.layer(Resource.imgc);
+                            if (imgLayer != null) {
+                                BufferedImage layerImg = imgLayer.scaled();
+                                if (combined == null) {
+                                    // Initialize with first layer size
+                                    combined = new BufferedImage(
+                                        layerImg.getWidth(), 
+                                        layerImg.getHeight(), 
+                                        BufferedImage.TYPE_INT_ARGB
+                                    );
+                                    g = combined.createGraphics();
+                                }
+                                // Draw layer with offset
+                                g.drawImage(layerImg, imgLayer.o.x, imgLayer.o.y, null);
+                            }
+                        } catch (Exception e) {
+                            // Skip failed layer
+                        }
+                    }
+                    
+                    if (g != null) {
+                        g.dispose();
+                    }
+                    
+                    if (combined != null) {
+                        return new TexI(combined);
+                    }
+                }
+                
+                // Standard single-layer sprite
+                return new TexI(Resource.remote().loadwait(resourceName).layer(Resource.imgc).img);
+                
+            } catch (Exception e) {
+                // Fallback: return empty/default icon
+                return new TexI(new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB));
+            }
+        }
+
         public RecieptItem(Recipe recipe) {
             this.recipe = recipe;
             recName = recipe.getName();
             this.text = add(new Label(recName),UI.scale(45,y_pos));
-            icon = new TexI(Resource.remote().loadwait(recipe.getResourceName()).layer(Resource.imgc).img);
+            icon = createRecipeIcon(recipe);
             BufferedImage bi = new BufferedImage(x_shift, UI.scale(60), BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = bi.createGraphics();
             int len = UI.scale(120);
@@ -548,8 +590,9 @@ public class NCookBook extends Window {
             }
             weightscale = new TexI(wi);
             StringBuilder str = new StringBuilder();
-            for(String ing: recipe.getIngredients().keySet()) {
-                str.append(ing).append(": ").append(Utils.odformat2(recipe.getIngredients().get(ing),2)).append("%").append("\040");
+            for(String ingName: recipe.getIngredients().keySet()) {
+                Recipe.IngredientInfo ingInfo = recipe.getIngredients().get(ingName);
+                str.append(ingName).append(": ").append(Utils.odformat2(ingInfo.percentage,2)).append("%").append("\040");
             }
             ing = new TexI(ingfnd.render(str.toString(), UI.scale(250)).img);
 
@@ -613,7 +656,7 @@ public class NCookBook extends Window {
                 
                 final NCookBook finalCookbook = cookbook;
                 String[] opts = new String[] { 
-                    recipe.isFavorite() ? "Remove from Favorites" : "Add to Favorites" 
+                    recipe.isFavorite() ? L10n.get("cookbook.remove_from_favorites") : L10n.get("cookbook.add_to_favorites")
                 };
                 
                 menu = new NFlowerMenu(opts) {

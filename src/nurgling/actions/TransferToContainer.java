@@ -7,6 +7,8 @@ import nurgling.tasks.*;
 import nurgling.tools.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class TransferToContainer implements Action
 {
@@ -16,6 +18,9 @@ public class TransferToContainer implements Action
     Container container;
 
     Integer th = -1;
+
+    // When set, use exact name matching instead of NAlias substring matching
+    String exactName = null;
 
     public TransferToContainer(Container container, NAlias items)
     {
@@ -30,12 +35,20 @@ public class TransferToContainer implements Action
         this.th = th;
     }
 
+    public TransferToContainer(Container container, String exactName, Integer th)
+    {
+        this.container = container;
+        this.exactName = exactName;
+        this.items = new NAlias(exactName);
+        this.th = th;
+    }
+
 
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
         ArrayList<WItem> witems;
-        if (!(witems = gui.getInventory().getItems(items)).isEmpty() && container.getattr(Container.Space.class) != null && (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.Space.class).getFreeSpace() != 0))
+        if (!(witems = getMatchingItems(gui)).isEmpty() && container.getattr(Container.Space.class) != null && (!container.getattr(Container.Space.class).isReady() || container.getattr(Container.Space.class).getFreeSpace() != 0))
         {
             Gob gcont = Finder.findGob(container.gobid);
             if (gcont == null)
@@ -43,12 +56,8 @@ public class TransferToContainer implements Action
             PathFinder pf = new PathFinder(gcont);
             pf.isHardMode = true;
             pf.run(gui);
-            if (th == -1)
-                witems = gui.getInventory().getItems(items);
-            else
-                witems = gui.getInventory().getItems(items, th);
+            witems = getMatchingItems(gui);
 
-            // Проверяем готовность данных и логируем перед началом
             for (WItem witem : witems)
             {
                 if (NGItem.validateItem(witem))
@@ -74,7 +83,7 @@ public class TransferToContainer implements Action
                             ArrayList<WItem> coorditems = new ArrayList<>();
                             for (WItem witem : witems)
                             {
-                                if (witem.item.spr.sz().div(UI.scale(32)).equals(coord.y, coord.x))
+                                if (witem.item.spr != null && witem.item.spr.sz().div(UI.scale(32)).equals(coord.y, coord.x))
                                 {
                                     coorditems.add(witem);
                                 }
@@ -84,14 +93,11 @@ public class TransferToContainer implements Action
                             {
                                 WItem cand = coorditems.get(0);
                                 transfer(cand, gui.getInventory(container.cap), target_size);
-                                if (th == -1)
-                                    witems = gui.getInventory().getItems(items);
-                                else
-                                    witems = gui.getInventory().getItems(items, th);
+                                witems = getMatchingItems(gui);
                                 coorditems = new ArrayList<>();
                                 for (WItem witem : witems)
                                 {
-                                    if (witem.item.spr.sz().div(UI.scale(32)).equals(coord.y, coord.x))
+                                    if (witem.item.spr != null && witem.item.spr.sz().div(UI.scale(32)).equals(coord.y, coord.x))
                                     {
                                         coorditems.add(witem);
                                     }
@@ -105,7 +111,6 @@ public class TransferToContainer implements Action
             {
                 if (!witems.isEmpty())
                 {
-                    // Получаем начальный список доступных предметов
                     ArrayList<WItem> availableItems = new ArrayList<>();
                     for (WItem witem : witems)
                     {
@@ -120,24 +125,34 @@ public class TransferToContainer implements Action
                         return Results.SUCCESS();
                     }
 
-                    // Определяем этап работы и сортируем предметы по соответствующему приоритету
                     String itemName = ((NGItem) availableItems.get(0).item).name();
 
-                    // Проверяем, есть ли в целевом инвентаре цели для заполнения
                     boolean hasTargetsToFill = (gui.getInventory(container.cap).findNotStack(itemName) != null || gui.getInventory(container.cap).findNotFullStack(itemName) != null);
 
                     if (hasTargetsToFill)
                     {
-                        availableItems = sortItemsByPriority(availableItems, itemName, false); // Этап заполнения
+                        availableItems = sortItemsByPriority(availableItems, itemName, false); // Р­С‚Р°Рї Р·Р°РїРѕР»РЅРµРЅРёСЏ
                     } else
                     {
-                        availableItems = sortItemsByPriority(availableItems, itemName, true); // Этап переноса
+                        availableItems = sortItemsByPriority(availableItems, itemName, true); // Р­С‚Р°Рї РїРµСЂРµРЅРѕСЃР°
                     }
 
-                    // Для заполнения стаков продолжаем пока есть доступные предметы и цели для заполнения
-                    transfer_size = availableItems.size(); // Переносим все доступные предметы
+                    transfer_size = availableItems.size();
 
-                    if (container.getattr(Container.TargetItems.class) != null && container.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM))
+                    // Check ItemCount updater first (new system)
+                    if (container.getattr(Container.ItemCount.class) != null)
+                    {
+                        Container.ItemCount itemCount = container.getattr(Container.ItemCount.class);
+                        // Update ItemCount to get current state (container is now open)
+                        itemCount.update();
+                        int currentInContainer = itemCount.getCurrentCount();
+                        int need = itemCount.getNeeded();
+                        gui.msg("TransferToContainer: ItemCount current=" + currentInContainer + ", needed=" + need + ", available=" + transfer_size);
+                        transfer_size = Math.min(transfer_size, need);
+                        gui.msg("TransferToContainer: Will transfer max " + transfer_size + " items");
+                    }
+                    // Fall back to deprecated TargetItems if ItemCount not present
+                    else if (container.getattr(Container.TargetItems.class) != null && container.getattr(Container.TargetItems.class).getRes().containsKey(Container.TargetItems.MAXNUM))
                     {
                         int need = (Integer) container.getattr(Container.TargetItems.class).getRes().get(Container.TargetItems.MAXNUM) - (Integer) container.getattr(Container.TargetItems.class).getTargets(items);
                         transfer_size = Math.min(transfer_size, need);
@@ -147,25 +162,24 @@ public class TransferToContainer implements Action
                     int oldSpace = gui.getInventory(container.cap).getItems(items).size();
                     int transferred = 0;
 
-                    while (!availableItems.isEmpty())
+                    while (!availableItems.isEmpty() && transferred < transfer_size)
                     {
                         WItem currentItem = availableItems.get(0);
 
-                        // Проверяем что предмет всё ещё валиден
                         if (!NGItem.validateItem(currentItem))
                         {
                             availableItems.remove(0);
                             continue;
                         }
 
-
-                        int itemsTransferred = transfer(currentItem, gui.getInventory(container.cap), transfer_size);
+                        // Calculate remaining items we can transfer
+                        int remainingToTransfer = transfer_size - transferred;
+                        int itemsTransferred = transfer(currentItem, gui.getInventory(container.cap), remainingToTransfer, th != -1);
 
                         if (itemsTransferred > 0)
                         {
                             transferred += itemsTransferred;
 
-                            // Удаляем использованный предмет из списка
                             availableItems.remove(currentItem);
                         }
                         else
@@ -173,13 +187,8 @@ public class TransferToContainer implements Action
                             break;
                         }
 
-                        // Обновляем общий список предметов после каждого переноса
-                        if (th == -1)
-                            witems = gui.getInventory().getItems(items);
-                        else
-                            witems = gui.getInventory().getItems(items, th);
+                        witems = getMatchingItems(gui);
 
-                        // Полностью обновляем availableItems вместо фильтрации, так как новые предметы могут появиться
                         availableItems.clear();
                         for (WItem witem : witems)
                         {
@@ -189,10 +198,8 @@ public class TransferToContainer implements Action
                             }
                         }
 
-                        // Пересортируем по приоритету с учетом текущего этапа
                         if (!availableItems.isEmpty())
                         {
-                            // Проверяем этап еще раз после обновления
                             boolean hasTargetsToFillRefresh = (gui.getInventory(container.cap).findNotStack(itemName) != null || gui.getInventory(container.cap).findNotFullStack(itemName) != null);
 
                             if (hasTargetsToFillRefresh)
@@ -221,13 +228,20 @@ public class TransferToContainer implements Action
         return transfer_size;
     }
 
-    /**
-     * Сортируем предметы по приоритету в зависимости от этапа
-     *
-     * @param items         список предметов
-     * @param itemName      имя предмета
-     * @param transferStage true - этап переноса (приоритет полным стакам), false - этап заполнения
-     */
+    private static final Comparator<WItem> QUALITY_DESC = new Comparator<WItem>()
+    {
+        @Override
+        public int compare(WItem a, WItem b)
+        {
+            Float qa = ((NGItem) a.item).quality;
+            Float qb = ((NGItem) b.item).quality;
+            if (qa == null && qb == null) return 0;
+            if (qa == null) return 1;
+            if (qb == null) return -1;
+            return Float.compare(qb, qa);
+        }
+    };
+
     private static ArrayList<WItem> sortItemsByPriority(ArrayList<WItem> items, String itemName, boolean transferStage)
     {
         ArrayList<WItem> notFullStacks = new ArrayList<>();
@@ -255,29 +269,52 @@ public class TransferToContainer implements Action
             }
         }
 
+        Collections.sort(notFullStacks, QUALITY_DESC);
+        Collections.sort(singleItems, QUALITY_DESC);
+        Collections.sort(fullStacks, QUALITY_DESC);
+
         ArrayList<WItem> result = new ArrayList<>();
 
         if (transferStage)
         {
-            // ЭТАП 2: Перенос в новые слоты - приоритет полным стакам
-            result.addAll(fullStacks);     // 1. Полные стаки
-            result.addAll(notFullStacks);  // 2. Неполные стаки
-            result.addAll(singleItems);    // 3. Отдельные предметы
+            result.addAll(fullStacks);
+            result.addAll(notFullStacks);
+            result.addAll(singleItems);
         } else
         {
-            // ЭТАП 1: Заполнение целевых стаков - приоритет неполным стакам
-            result.addAll(notFullStacks);  // 1. Неполные стаки
-            result.addAll(singleItems);    // 2. Отдельные предметы
-            result.addAll(fullStacks);     // 3. Полные стаки
+            result.addAll(notFullStacks);
+            result.addAll(singleItems);
+            result.addAll(fullStacks);
         }
 
         return result;
     }
 
 
+    /**
+     * Ждёт освобождения руки. Если таймаут — возвращает предмет в основной инвентарь.
+     * @return true если рука освободилась, false если таймаут (предмет возвращён)
+     */
+    private static boolean waitFreeHandOrReturn() throws InterruptedException
+    {
+        WaitFreeHand wfh = new WaitFreeHand();
+        NUtils.addTask(wfh);
+        if (wfh.criticalExit)
+        {
+            NUtils.dropToInv();
+            NUtils.addTask(new WaitFreeHand());
+            return false;
+        }
+        return true;
+    }
+
     public static int transfer(WItem item, NInventory targetInv, int transfer_size) throws InterruptedException
     {
-        // Проверяем валидность предмета перед транспортировкой
+        return transfer(item, targetInv, transfer_size, false);
+    }
+
+    public static int transfer(WItem item, NInventory targetInv, int transfer_size, boolean needsSorting) throws InterruptedException
+    {
         if (!NGItem.validateItem(item))
         {
             return 0;
@@ -285,7 +322,9 @@ public class TransferToContainer implements Action
 
         String itemName = ((NGItem) item.item).name();
 
-        if (!StackSupporter.isStackable(targetInv, itemName))
+        // Check if stacking is disabled (bundle.a == false) OR item is not stackable
+        boolean stackingDisabled = !((NInventory) NUtils.getGameUI().maininv).bundle.a;
+        if (stackingDisabled || !StackSupporter.isStackable(targetInv, itemName))
         {
             if(targetInv.getFreeSpace() == 0)
             {
@@ -304,37 +343,42 @@ public class TransferToContainer implements Action
                 {
                     NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
                 }
-                return 1; // Переносим 1 предмет из стака
+                return 1;
             } else
             {
-                item.item.wdgmsg("transfer", Coord.z);
                 int id = item.item.wdgid();
-                NUtils.addTask(new ISRemoved(id));
-                return 1; // Переносим 1 одиночный предмет
+                item.item.wdgmsg("transfer", Coord.z);
+                NUtils.addTask(new NTask()
+                {
+                    int count = 0;
+                    @Override
+                    public boolean check()
+                    {
+                        return NUtils.getUI().getwidget(id)==null || (targetInv.calcFreeSpace() == 0 && count++>200);
+                    }
+                });
+                return 1;
             }
-        } else
+        }
+        else
         {
-            // Обрабатываем стакуемые предметы с приоритетом на заполнение не полных стаков
-            // Проверяем, является ли предмет изначально частью ItemStack
             if (item.parent instanceof ItemStack)
             {
                 ItemStack sourceStack = (ItemStack) item.parent;
                 int sourceStackSize = sourceStack.wmap.size();
 
-                // Приоритет целей: одиночные предметы, затем заполняемые стаки, затем новые слоты
                 WItem targetSingleItem = targetInv.findNotStack(itemName);
                 ItemStack targetNotFullStack = targetInv.findNotFullStack(itemName);
 
                 if (targetSingleItem != null)
                 {
-                    // Сохраняем исходный размер стека ДО взятия предмета
                     int originalStackSize = sourceStack.wmap.size();
 
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(targetSingleItem);
-                    NUtils.addTask(new WaitFreeHand());
+                    if (!waitFreeHandOrReturn())
+                        return 0;
 
-                    // Для стака размером 2 используем ISRemovedLoftar
                     if (originalStackSize <= 2)
                     {
                         if(((GItem.ContentsWindow) sourceStack.parent!=null))
@@ -343,19 +387,18 @@ public class TransferToContainer implements Action
                     {
                         NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
                     }
-                    return 1; // Переносим 1 предмет из стака к одиночному предмету
-                } else if (targetNotFullStack != null)
+                    return 1;
+                }
+                else if (targetNotFullStack != null)
                 {
-                    // Если нет одиночных предметов, заполняем неполные стаки
                     int targetStackSize = targetNotFullStack.wmap.size();
-                    // Сохраняем исходный размер стека ДО взятия предмета
                     int originalStackSize = sourceStack.wmap.size();
 
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(((NGItem) ((GItem.ContentsWindow) targetNotFullStack.parent).cont).wi);
-                    NUtils.addTask(new WaitFreeHand());
+                    if (!waitFreeHandOrReturn())
+                        return 0;
 
-                    // Для стака размером 2 используем ISRemovedLoftar
                     if (originalStackSize <= 2)
                     {
                         if(sourceStack.parent!=null)
@@ -364,25 +407,24 @@ public class TransferToContainer implements Action
                     {
                         NUtils.addTask(new StackSizeChanged(sourceStack, originalStackSize));
                     }
-                    return 1; // Переносим 1 предмет из стака к стаку
+                    NUtils.addTask(new StackSizeChanged(targetNotFullStack, targetStackSize));
+
+                    return 1;
                 }
                 else
                 {
                     int oldstacksize = sourceStack.wmap.size();
-                    // Если НЕТ неполных стаков в целевом инвентаре и есть свободное место
                     if (targetInv.getFreeSpace() > 0)
                     {
-                        // Проверяем, не превышает ли размер стака лимит переноса
-                        if (oldstacksize > transfer_size)
+                        if (oldstacksize > transfer_size || needsSorting)
                         {
-                            // Сохраняем исходный размер стека ДО взятия предмета
                             int originalStackSize = sourceStack.wmap.size();
 
                             NUtils.takeItemToHand(item);
                             NUtils.dropToInv(targetInv);
-                            NUtils.addTask(new WaitFreeHand());
+                            if (!waitFreeHandOrReturn())
+                                return 0;
 
-                            // Для стака размером 2 используем ISRemovedLoftar
                             if (originalStackSize <= 2)
                             {
                                 if(((GItem.ContentsWindow) sourceStack.parent!=null))
@@ -405,7 +447,6 @@ public class TransferToContainer implements Action
                 }
             } else
             {
-                // Обрабатываем отдельные предметы: приоритет заполнения не полных стаков в целевом инвентаре
                 ItemStack targetNotFullStack = targetInv.findNotFullStack(itemName);
                 WItem targetSingleItem = null;
 
@@ -414,14 +455,16 @@ public class TransferToContainer implements Action
                     int targetStackSize = targetNotFullStack.wmap.size();
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(((NGItem) ((GItem.ContentsWindow) targetNotFullStack.parent).cont).wi);
-                    NUtils.addTask(new WaitFreeHand());
+                    if (!waitFreeHandOrReturn())
+                        return 0;
                     NUtils.addTask(new StackSizeChanged(targetNotFullStack, targetStackSize));
                     return 1;
                 } else if ((targetSingleItem = targetInv.findNotStack(itemName)) != null)
                 {
                     NUtils.takeItemToHand(item);
                     NUtils.itemact(targetSingleItem);
-                    NUtils.addTask(new WaitFreeHand());
+                    if (!waitFreeHandOrReturn())
+                        return 0;
                     NUtils.addTask(new GetNotFullStack(targetInv, new NAlias(itemName)));
                     return 1;
                 }
@@ -442,5 +485,28 @@ public class TransferToContainer implements Action
                 }
             }
         }
+    }
+
+    /**
+     * Gets items from inventory, using exact name match if exactName is set,
+     * otherwise uses NAlias substring matching.
+     */
+    private ArrayList<WItem> getMatchingItems(NGameUI gui) throws InterruptedException {
+        ArrayList<WItem> allItems;
+        if (th == -1) {
+            allItems = gui.getInventory().getItems(items);
+        } else {
+            allItems = gui.getInventory().getItems(items, th);
+        }
+        if (exactName == null) {
+            return allItems;
+        }
+        ArrayList<WItem> exactMatches = new ArrayList<>();
+        for (WItem witem : allItems) {
+            if (((NGItem) witem.item).name().equals(exactName)) {
+                exactMatches.add(witem);
+            }
+        }
+        return exactMatches;
     }
 }

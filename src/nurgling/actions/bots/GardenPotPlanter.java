@@ -54,7 +54,7 @@ public class GardenPotPlanter implements Action {
 
             // Check if we have items to plant (in inventory or hand)
             ArrayList<WItem> existingItems = gui.getInventory().getItems(plantItem);
-            boolean itemInHand = isItemInHand(gui, plantItem);
+            boolean itemInHand = isItemInHand(gui);
 
             if (existingItems.isEmpty() && !itemInHand) {
                 // Fetch more items from seed area
@@ -109,7 +109,7 @@ public class GardenPotPlanter implements Action {
     private Results plantInPot(NGameUI gui, Gob pot, NAlias plantItem) throws InterruptedException {
         // Check if we have items (in inventory or already in hand)
         ArrayList<WItem> items = gui.getInventory().getItems(plantItem);
-        boolean itemInHand = isItemInHand(gui, plantItem);
+        boolean itemInHand = isItemInHand(gui);
 
         if (items.isEmpty() && !itemInHand) {
             return Results.FAIL();  // No items left
@@ -139,12 +139,11 @@ public class GardenPotPlanter implements Action {
     /**
      * Check if the specified item type is currently in hand.
      */
-    private boolean isItemInHand(NGameUI gui, NAlias itemAlias) {
+    private boolean isItemInHand(NGameUI gui) {
         if (gui.vhand == null || gui.vhand.item == null) {
             return false;
         }
-        String handItemName = ((NGItem) gui.vhand.item).name();
-        return handItemName != null && NParser.checkName(handItemName, itemAlias);
+        return true;
     }
 
     // Task to wait until hand has an item

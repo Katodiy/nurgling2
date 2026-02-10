@@ -341,7 +341,7 @@ public class Fightsess extends Widget {
 		Tex img = act.get().flayer(Resource.imgc).tex();
 		ca = ca.sub(img.sz().div(2));
 		if(c.isect(ca, img.sz())) {
-		    String tip = act.get().flayer(Resource.tooltip).t;
+		    String tip = act.get().flayer(Resource.tooltip).text();
 		    if(kb_acts[i].key() != KeyMatch.nil)
 			tip += " ($b{$col[255,128,0]{" + kb_acts[i].key().name() + "}})";
 		    if((acttip == null) || !acttip.text.equals(tip))
@@ -357,7 +357,7 @@ public class Fightsess extends Widget {
 		Coord lac = pcc.add(usec1);
 		if(c.isect(lac.sub(usesz.div(2)), usesz)) {
 		    if(lastacttip1 == null)
-			lastacttip1 = Text.render(lastact.get().flayer(Resource.tooltip).t);
+			lastacttip1 = Text.render(lastact.get().flayer(Resource.tooltip).text());
 		    return(lastacttip1);
 		}
 	    }
@@ -369,7 +369,7 @@ public class Fightsess extends Widget {
 		Coord lac = pcc.add(usec2);
 		if(c.isect(lac.sub(usesz.div(2)), usesz)) {
 		    if(lastacttip2 == null)
-			lastacttip2 = Text.render(lastact.get().flayer(Resource.tooltip).t);
+			lastacttip2 = Text.render(lastact.get().flayer(Resource.tooltip).text());
 		    return(lastacttip2);
 		}
 	    }

@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.actions.AutoDrink;
 import nurgling.actions.bots.*;
 import nurgling.areas.NContext;
+import nurgling.i18n.L10n;
 import nurgling.widgets.NProspecting;
 
 import java.util.*;
@@ -18,6 +19,10 @@ public class NFlowerMenu extends FlowerMenu
     public static final Tex bhm = Resource.loadtex("nurgling/hud/flower/hmid");
     public static final Tex bhr = Resource.loadtex("nurgling/hud/flower/hright");
 
+    // Localization keys for custom options
+    public static final String KEY_SAVE_TREE = "flower.save_tree";
+    public static final String KEY_SAVE_BUSH = "flower.save_bush";
+    
     public NPetal[] nopts;
 
     int len = 0;
@@ -59,17 +64,18 @@ public class NFlowerMenu extends FlowerMenu
             if(lastActions != null && lastActions.gob != null) {
                 Gob gob = lastActions.gob;
                 if(gob.ngob != null && gob.ngob.name != null) {
-                    String saveOption = null;
-                                   if(gob.ngob.name.startsWith("gfx/terobjs/trees/") && !gob.ngob.name.contains("log") && !gob.ngob.name.contains("trunk")) {
-                        saveOption = "Save Tree Location";
+                    String saveOptionKey = null;
+                    if(gob.ngob.name.startsWith("gfx/terobjs/trees/") && !gob.ngob.name.contains("log") && !gob.ngob.name.contains("trunk")) {
+                        saveOptionKey = KEY_SAVE_TREE;
                     } else if(gob.ngob.name.startsWith("gfx/terobjs/bushes/")) {
-                        saveOption = "Save Bush Location";
+                        saveOptionKey = KEY_SAVE_BUSH;
                     }
 
-                    if(saveOption != null) {
+                    if(saveOptionKey != null) {
                         String[] newOpts = new String[opts.length + 1];
                         System.arraycopy(opts, 0, newOpts, 0, opts.length);
-                        newOpts[opts.length] = saveOption;
+                        // Store localized text for display, but use key marker for identification
+                        newOpts[opts.length] = L10n.get(saveOptionKey);
                         return newOpts;
                     }
                 }
@@ -113,7 +119,10 @@ public class NFlowerMenu extends FlowerMenu
         else
         {
             // Handle custom "Save Tree Location" or "Save Bush Location" options
-            if(option.name.equals("Save Tree Location") || option.name.equals("Save Bush Location")) {
+            // Compare against localized strings
+            String saveTreeText = L10n.get(KEY_SAVE_TREE);
+            String saveBushText = L10n.get(KEY_SAVE_BUSH);
+            if(option.name.equals(saveTreeText) || option.name.equals(saveBushText)) {
                 NCore.LastActions actions = NUtils.getUI().core.getLastActions();
                 if(actions != null && actions.gob != null) {
                     NGameUI gui = (NGameUI) NUtils.getGameUI();

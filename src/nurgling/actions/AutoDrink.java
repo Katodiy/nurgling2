@@ -49,7 +49,11 @@ public class AutoDrink implements Action
 
             if(checkWater()) {
                 NUtils.getUI().dropLastError();
-                for (MenuGrid.Pagina pag : NUtils.getGameUI().menu.paginae) {
+                NGameUI gameUI = NUtils.getGameUI();
+                if (gameUI == null || gameUI.menu == null) {
+                    continue;
+                }
+                for (MenuGrid.Pagina pag : gameUI.menu.paginae) {
                     if (pag.button() != null && pag.button().name().equals("Drink")) {
 
                         pag.button().use(new MenuGrid.Interaction(1, 0));
@@ -64,6 +68,17 @@ public class AutoDrink implements Action
                     }
                 }
             }
+            else
+            {
+                NUtils.addTask(new NTask(){
+                    int count = 0;
+                    @Override
+                    public boolean check()
+                    {
+                        return count++>60;
+                    }
+                });
+            }
         }
         NUtils.getUI().core.autoDrink = null;
         return Results.SUCCESS();
@@ -71,7 +86,12 @@ public class AutoDrink implements Action
 
     boolean checkWater() throws InterruptedException
     {
-        WItem wbelt = NUtils.getEquipment().findItem (NEquipory.Slots.BELT.idx);
+        NEquipory equipment = NUtils.getEquipment();
+        if (equipment == null) {
+            return false;
+        }
+        // Check waterskins in belt
+        WItem wbelt = equipment.findItem (NEquipory.Slots.BELT.idx);
         if(wbelt!=null && wbelt.item.contents!=null) {
             ArrayList<WItem> witems = ((NInventory) wbelt.item.contents).getItems(new NAlias("Waterskin"));
             if (!witems.isEmpty()) {
@@ -82,6 +102,16 @@ public class AutoDrink implements Action
                             return true;
                         }
                     }
+                }
+            }
+        }
+        // Check bucket in hands
+        WItem bucket = equipment.findBucket("Water");
+        if (bucket != null) {
+            NGItem ngItem = ((NGItem) bucket.item);
+            if (!ngItem.content().isEmpty()) {
+                if (ngItem.content().get(0).name().contains("Water")) {
+                    return true;
                 }
             }
         }

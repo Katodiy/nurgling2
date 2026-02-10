@@ -5,6 +5,7 @@ import haven.Label;
 import haven.Window;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.overlays.NAreaLabel;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -65,6 +66,7 @@ public class Specialisation extends Window
         eat,
         safe,
         sorting,
+        carrierout,
         fforge,
         anvil,
         rabbit,
@@ -92,7 +94,10 @@ public class Specialisation extends Window
         waterForTrees,
         soilForTrees,
         plantingGardenPots,
-        gardenPotSeeds;
+        gardenPotSeeds,
+        rawfish,
+        candelabrum,
+        buildMaterials;
     }
 
     private static ArrayList<SpecialisationItem> specialisation = new ArrayList<>();
@@ -142,6 +147,8 @@ public class Specialisation extends Window
         specialisation.add(new SpecialisationItem(SpecName.rabbitIncubator.toString(),"Rabbit Incubator",Resource.loadsimg("nurgling/categories/bunny")));
         specialisation.add(new SpecialisationItem(SpecName.safe.toString(),"Safe area",Resource.loadsimg("nurgling/categories/safety")));
         specialisation.add(new SpecialisationItem(SpecName.sorting.toString(),"Sorting area",Resource.loadsimg("nurgling/categories/sorting")));
+        specialisation.add(new SpecialisationItem(SpecName.carrierout.toString(),"Carrier Output",Resource.loadsimg("nurgling/categories/sorting")));
+        specialisation.add(new SpecialisationItem(SpecName.candelabrum.toString(),"Candelabrum",Resource.loadsimg("mm/candelabrum")));
         specialisation.add(new SpecialisationItem(SpecName.fforge.toString(),"Finery Forge",Resource.loadsimg("nurgling/categories/fineryforge")));
         specialisation.add(new SpecialisationItem(SpecName.anvil.toString(),"Anvil",Resource.loadsimg("nurgling/categories/anvil")));
         specialisation.add(new SpecialisationItem(SpecName.dreamcatcher.toString(),"Dream Catcher",Resource.loadsimg("nurgling/categories/dream-catcher")));
@@ -180,6 +187,12 @@ public class Specialisation extends Window
         // Garden pot filling
         specialisation.add(new SpecialisationItem(SpecName.plantingGardenPots.toString(),"Planting Garden Pots",Resource.loadsimg("nurgling/categories/gardenpotplanted")));
         specialisation.add(new SpecialisationItem(SpecName.gardenPotSeeds.toString(),"Garden Pot Seeds",Resource.loadsimg("nurgling/categories/gardenpot")));
+        
+        // Raw fish piles
+        specialisation.add(new SpecialisationItem(SpecName.rawfish.toString(),"Piles of raw fish",Resource.loadsimg("nurgling/categories/fishpile")));
+
+        // Construction materials (with subtypes: Block, Board, Stone, String, Nugget, etc.)
+        specialisation.add(new SpecialisationItem(SpecName.buildMaterials.toString(),"Construction Materials",Resource.loadsimg("nurgling/categories/consmaterials")));
 
         specialisation.sort(new Comparator<SpecialisationItem>() {
             @Override
@@ -234,6 +247,11 @@ public class Specialisation extends Window
                     }
                     if(!isFound)
                     {
+                        // Auto-rename area if it starts with "New Area" and this is the first specialisation
+                        if(area.name.startsWith("New Area") && area.spec.isEmpty()) {
+                            renameAreaToSpecialisation(area, item.prettyName);
+                        }
+                        
                         area.spec.add(new NArea.Specialisation(value));
                         NConfig.needAreasUpdate();
                         NUtils.getGameUI().areas.loadSpec(area.id);
@@ -317,6 +335,28 @@ public class Specialisation extends Window
                 (NUtils.getGameUI().areas.sz.x - NUtils.getGameUI().spec.sz.x) / 2,
                 (NUtils.getGameUI().areas.sz.y - NUtils.getGameUI().spec.sz.y) / 2
             );
+        }
+    }
+    
+    /**
+     * Renames area to the specialisation name if area name starts with "New Area"
+     */
+    private static void renameAreaToSpecialisation(NArea area, String specName) {
+        ((NMapView) NUtils.getGameUI().map).changeAreaName(area.id, specName);
+        
+        // Update area label on map
+        Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(area.gid);
+        if(dummy != null) {
+            Gob.Overlay ol = dummy.findol(NAreaLabel.class);
+            if(ol != null && ol.spr instanceof NAreaLabel) {
+                NAreaLabel tl = (NAreaLabel) ol.spr;
+                tl.update();
+            }
+        }
+        
+        // Update area list if visible, retaining selection on current area
+        if(NUtils.getGameUI().areas != null) {
+            NUtils.getGameUI().areas.showPath(NUtils.getGameUI().areas.currentPath, area.id);
         }
     }
 }

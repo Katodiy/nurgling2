@@ -1,20 +1,20 @@
-# Claim Display on Map
+# @enc.claims.title
 
-The **Claim Display** feature shows land claims directly on the map.
+@enc.claims.intro
 
-## Enabling Claim Display
+## @enc.claims.enable_title
 
-Access claim display settings from the QoL options:
+@enc.claims.enable_text
 
 ![Claim Display Toggle](../images/features/claim_display_toggle.PNG)
 
-## Visual Representation
+## @enc.claims.visual_title
 
-### Claim Colors
+### @enc.claims.colors_title
 
-- **Green:** personal claims
-- **Blue:** Village claims
+- @enc.claims.color_green
+- @enc.claims.color_blue
 
-Claims are rendered on the map with colored overlays:
+@enc.claims.render_text
 
 ![Claims on Map](../images/features/claims_on_map.PNG)

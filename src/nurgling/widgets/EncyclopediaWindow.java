@@ -1,6 +1,7 @@
 package nurgling.widgets;
 
 import haven.*;
+import nurgling.i18n.L10n;
 import nurgling.tools.EncyclopediaManager;
 import nurgling.tools.MarkdownToImageRenderer;
 
@@ -15,7 +16,7 @@ public class EncyclopediaWindow extends Window {
     private Widget scrollableContent;
     
     public EncyclopediaWindow() {
-        super(UI.scale(new Coord(800, 600)), "Encyclopedia");
+        super(UI.scale(new Coord(800, 600)), L10n.get("encyclopedia.title"));
         manager = new EncyclopediaManager();
         
         setupUI();

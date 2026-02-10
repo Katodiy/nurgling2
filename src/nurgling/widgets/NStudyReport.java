@@ -4,6 +4,7 @@ import haven.*;
 import haven.Label;
 import haven.resutil.Curiosity;
 import nurgling.*;
+import nurgling.i18n.L10n;
 
 import java.awt.*;
 import java.util.function.Predicate;
@@ -16,7 +17,7 @@ public class NStudyReport extends Widget {
     public int totalLph = 0;
     
     private static final int PADDING = UI.scale(20);
-    private static final int INFO_HEIGHT = UI.scale(80);
+    private static final int INFO_HEIGHT = UI.scale(100);
     private Widget fixedContainer;
     private ICheckBox btnLock;
     public boolean locked = false;
@@ -146,10 +147,10 @@ public class NStudyReport extends Widget {
         int infoY = studySz.y + PADDING + UI.scale(5);
         int labelX = PADDING;
         int valueX = containerSz.x - PADDING;
-        int lineHeight = UI.scale(18);
+        int lineHeight = UI.scale(20);
         
         Widget plbl, pval;
-        plbl = fixedContainer.add(new Label("Attention:"), new Coord(labelX, infoY));
+        plbl = fixedContainer.add(new Label(L10n.get("study.attention")), new Coord(labelX, infoY));
         pval = fixedContainer.adda(new CharWnd.RLabel<Pair<Integer, Integer>>(
             () -> new Pair<>(totalAttention, (ui == null) ? 0 : ui.sess.glob.getcattr("int").comp),
             n -> String.format("%,d/%,d", n.a, n.b),
@@ -157,7 +158,7 @@ public class NStudyReport extends Widget {
             new Coord(valueX, infoY), 1.0, 0.0);
         
         infoY += lineHeight;
-        plbl = fixedContainer.add(new Label("Exp cost:"), new Coord(labelX, infoY));
+        plbl = fixedContainer.add(new Label(L10n.get("study.exp_cost")), new Coord(labelX, infoY));
         pval = fixedContainer.adda(new CharWnd.RLabel<Integer>(
             () -> totalExpCost,
             Utils::thformat,
@@ -165,7 +166,7 @@ public class NStudyReport extends Widget {
             new Coord(valueX, infoY), 1.0, 0.0);
         
         infoY += lineHeight;
-        plbl = fixedContainer.add(new Label("LP:"), new Coord(labelX, infoY));
+        plbl = fixedContainer.add(new Label(L10n.get("study.lp")), new Coord(labelX, infoY));
         pval = fixedContainer.adda(new CharWnd.RLabel<Integer>(
             () -> totalExp,
             Utils::thformat,
@@ -173,7 +174,7 @@ public class NStudyReport extends Widget {
             new Coord(valueX, infoY), 1.0, 0.0);
         
         infoY += lineHeight;
-        plbl = fixedContainer.add(new Label("LP/H:"), new Coord(labelX, infoY));
+        plbl = fixedContainer.add(new Label(L10n.get("study.lph")), new Coord(labelX, infoY));
         pval = fixedContainer.adda(new CharWnd.RLabel<Integer>(
             () -> totalLph,
             Utils::thformat,

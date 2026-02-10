@@ -99,7 +99,7 @@ public class NParser
             return false;
         for (String arg : args) {
             NAlias alias = getCachedAlias(arg);
-            if (alias.matches(name)) {
+            if (alias != null && alias.matches(name)) {
                 return true;
             }
         }
@@ -113,6 +113,9 @@ public class NParser
      * @return cached or new NAlias object.
      */
     private static NAlias getCachedAlias(String key) {
+        if (key == null) {
+            return null;
+        }
         NAlias cached = ALIAS_CACHE.get(key);
         if (cached == null) {
             cached = new NAlias(key);
@@ -176,7 +179,7 @@ public class NParser
      */
     public static boolean isIt(Gob.Overlay ol, NAlias name)
     {
-        return (ol.spr instanceof StaticSprite && ((StaticSprite)ol.spr).res!=null && NParser.checkName(((StaticSprite)ol.spr).res.name,name));
+        return (ol.spr != null && ol.spr.res != null && NParser.checkName(ol.spr.res.name, name));
     }
 
     /**

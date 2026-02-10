@@ -2,6 +2,7 @@ package nurgling.conf;
 
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.NUtils;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -76,16 +77,19 @@ public class NWorldExplorerProp implements JConf
 
     public static NWorldExplorerProp get(NUI.NSessInfo sessInfo)
     {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         ArrayList<NWorldExplorerProp> worldexpProps = ((ArrayList<NWorldExplorerProp>) NConfig.get(NConfig.Key.worldexplorerprop));
         if (worldexpProps == null)
             worldexpProps = new ArrayList<>();
         for (NWorldExplorerProp prop : worldexpProps)
         {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid))
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid))
             {
                 return prop;
             }
         }
-        return new NWorldExplorerProp(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NWorldExplorerProp(sessInfo.username, chrid);
     }
 }

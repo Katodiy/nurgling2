@@ -449,6 +449,22 @@ public class PathFinder implements Action {
         return res != null || pf.dn;
     }
 
+    /**
+     * Get the cost (length) of path to the target coordinate.
+     * @param target target coordinate
+     * @return path cost, or -1 if unreachable
+     */
+    public static int getPathCost(Coord2d target) throws InterruptedException {
+        if(NUtils.player() == null)
+            return -1;
+        PathFinder pf = new PathFinder(target);
+        LinkedList<Graph.Vertex> res = pf.construct(true);
+        if (res != null) {
+            return res.size();
+        }
+        return pf.dn ? 0 : -1;
+    }
+
     public PathFinder(Gob dummy, boolean virtual) {
         this(dummy);
         this.dummy = dummy;
@@ -538,6 +554,124 @@ public class PathFinder implements Action {
 
     boolean getDNStatus() {
         return dn;
+    }
+
+    /**
+     * Finds common approach points for two objects (e.g., workstation and barrel).
+     * Returns approach points that are adjacent to BOTH objects.
+     * 
+     * @param gob1 First object (e.g., workstation)
+     * @param gob2 Second object (e.g., barrel)
+     * @return ArrayList of common approach points, or empty list if none found
+     */
+    public static ArrayList<Coord2d> findCommonApproachPoints(Gob gob1, Gob gob2) throws InterruptedException {
+        ArrayList<Coord2d> result = new ArrayList<>();
+        
+        if (gob1 == null || gob2 == null) {
+            NUtils.getGameUI().msg("findCommonApproachPoints: gob1 or gob2 is null");
+            return result;
+        }
+        
+        // Get approach points for both objects
+        ArrayList<Coord2d> points1 = getNearestHardPoints(gob1);
+        ArrayList<Coord2d> points2 = getNearestHardPoints(gob2);
+        
+        NUtils.getGameUI().msg("findCommonApproachPoints: gob1 has " + 
+                (points1 != null ? points1.size() : 0) + " approach points, gob2 has " + 
+                (points2 != null ? points2.size() : 0) + " approach points");
+        
+        if (points1 == null || points1.isEmpty() || points2 == null || points2.isEmpty()) {
+            NUtils.getGameUI().msg("findCommonApproachPoints: One of the objects has no approach points");
+            return result;
+        }
+        
+        // Find common points (within tolerance)
+        // Tolerance of 14 units to cover typical diagonal placement distances (~12-13 units)
+        double tolerance = 14.0;
+        for (Coord2d p1 : points1) {
+            for (Coord2d p2 : points2) {
+                double dist = p1.dist(p2);
+                if (dist < tolerance) {
+                    // Use the midpoint as the common point
+                    Coord2d midpoint = new Coord2d((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+                    result.add(midpoint);
+                    NUtils.getGameUI().msg("findCommonApproachPoints: Found common point at " + midpoint + 
+                            " (p1=" + p1 + ", p2=" + p2 + ", dist=" + String.format("%.2f", dist) + ")");
+                }
+            }
+        }
+        
+        if (result.isEmpty()) {
+            NUtils.getGameUI().msg("findCommonApproachPoints: No common points found within tolerance " + tolerance);
+            // Log some distances for debugging
+            if (!points1.isEmpty() && !points2.isEmpty()) {
+                double minDist = Double.MAX_VALUE;
+                for (Coord2d p1 : points1) {
+                    for (Coord2d p2 : points2) {
+                        minDist = Math.min(minDist, p1.dist(p2));
+                    }
+                }
+                NUtils.getGameUI().msg("findCommonApproachPoints: Minimum distance between approach points: " + 
+                        String.format("%.2f", minDist));
+            }
+        }
+        
+        // Sort by distance to player
+        Coord2d playerPos = NUtils.player().rc;
+        result.sort((a, b) -> Double.compare(a.dist(playerPos), b.dist(playerPos)));
+        
+        return result;
+    }
+    
+    /**
+     * Finds the nearest common approach point for two objects.
+     * This is useful when character needs to interact with both objects (e.g., crafting with barrel at workstation).
+     * Applies hardMode alignment rule: aligns one coordinate (X or Y) with the workstation.
+     * 
+     * @param gob1 First object (workstation)
+     * @param gob2 Second object (barrel)
+     * @return Nearest common approach point with hardMode alignment applied, or null if none found
+     */
+    public static Coord2d findNearestCommonApproachPoint(Gob gob1, Gob gob2) throws InterruptedException {
+        ArrayList<Coord2d> commonPoints = findCommonApproachPoints(gob1, gob2);
+        if (commonPoints.isEmpty()) {
+            return null;
+        }
+        
+        // Use gob1 (workstation) as the reference for hardMode alignment
+        Coord2d wsCoord = gob1.rc;
+        
+        for (Coord2d point : commonPoints) {
+            // Apply hardMode rule: align one coordinate with workstation
+            Coord2d alignedPoint = applyHardModeAlignment(point, wsCoord);
+            
+            NUtils.getGameUI().msg("findNearestCommonApproachPoint: Point " + point + 
+                    " aligned to " + alignedPoint + " (hardMode rule applied)");
+            
+            return alignedPoint;
+        }
+        
+        NUtils.getGameUI().msg("findNearestCommonApproachPoint: No common points found");
+        return null;
+    }
+    
+    /**
+     * Apply hardMode alignment rule: replace one coordinate (X or Y) with the target's coordinate.
+     * Replaces whichever coordinate is closer to the target.
+     */
+    private static Coord2d applyHardModeAlignment(Coord2d point, Coord2d targetCoord) {
+        Coord2d result = new Coord2d(point.x, point.y);
+        
+        // Check which coordinate is closer to target - replace that one
+        if (Math.abs(result.x - targetCoord.x) < Math.abs(result.y - targetCoord.y)) {
+            // X is closer - replace X with target's X
+            result.x = targetCoord.x;
+        } else {
+            // Y is closer - replace Y with target's Y
+            result.y = targetCoord.y;
+        }
+        
+        return result;
     }
 
 //    boolean gridIsBiggerThanVisibleArea(NPFMap map) {

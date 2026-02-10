@@ -8,6 +8,7 @@ public class ISRemoved extends NTask {
     public ISRemoved(int id) {
         super();
         this.id = id;
+        this.infinite = false;
     }
 
     @Override

@@ -234,7 +234,7 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 		Resource.Tooltip tt = res.layer(Resource.tooltip);
 		if(tt == null)
 		    throw(new RuntimeException("Item resource " + res + " is missing default tooltip"));
-		return(tt.t);
+		return(tt.text());
 	    }
 
 	    public ItemInfo build(Owner owner, Raw raw, Object... args) {

@@ -654,7 +654,7 @@ public class NQuestInfo extends Widget
                         bufname = "horse/horse";
                     else if (info.contains("raid a")) {
                         if (bufname.contains("bird"))
-                            bufname = "nest";
+                            bufname = "birdsnest";
                         else
                             bufname = "anthill";
                     }

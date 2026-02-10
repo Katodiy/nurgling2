@@ -1,3 +1,3 @@
 #TOOLTIP LAYER FOR RES src/nurgling/wnd/search.res//
 #String tooltip
-This bot lets you to replant pumpkin field. Choose an area with 'crop(Pumpkin)' specialization for planting. Choose an area with seed barrels for seed collecting with 'seed(Pumpkin)' specialization. Optionally, choose and area with 'trough' specialization for troughs in order to collect left over swill.
+@bot.pumpkin.desc

@@ -38,6 +38,7 @@ import java.nio.file.*;
 import java.security.*;
 import javax.imageio.*;
 import java.awt.image.BufferedImage;
+import nurgling.headless.Headless;
 
 public class Resource implements Serializable {
     public static final Config.Variable<URI> resurl = Config.Variable.propu("haven.resurl", "");
@@ -186,14 +187,14 @@ public class Resource implements Serializable {
 		@SuppressWarnings("unchecked") Indir<Resource> ret = (Indir<Resource>)desc;
 		return(ret);
 	    }
-	    throw(new Utils.ArgumentFormatException("res-desc: ", desc));
+	    throw(new Utils.ArgumentFormatException("res-desc", desc));
 	}
 
 	public class ResourceMap implements Resource.Resolver {
 	    public final Resource.Resolver bk;
-	    public final Map<Integer, Integer> map;
+	    public final Map<Integer, ? extends Object> map;
 
-	    public ResourceMap(Resource.Resolver bk, Map<Integer, Integer> map) {
+	    public ResourceMap(Resource.Resolver bk, Map<Integer, ? extends Object> map) {
 		this.bk = bk;
 		this.map = map;
 	    }
@@ -216,17 +217,17 @@ public class Resource implements Serializable {
 		return(ret);
 	    }
 
-	    public static Map<Integer, Integer> decode(Object[] args) {
+	    public static Map<Integer, ? extends Object> decode(Object[] args) {
 		if(args.length == 0)
 		    return(Collections.emptyMap());
-		Map<Integer, Integer> ret = new HashMap<>();
+		Map<Integer, Object> ret = new HashMap<>();
 		for(int a = 0; a < args.length; a += 2)
-		    ret.put(Utils.iv(args[a]), Utils.iv(args[a + 1]));
+		    ret.put(Utils.iv(args[a]), args[a + 1]);
 		return(ret);
 	    }
 
 	    public Indir<Resource> getres(int id) {
-		return(bk.getres(map.get(id)));
+		return(bk.getresv(map.get(id)));
 	    }
 
 	    public Indir<Resource> dynres(UID uid) {
@@ -1220,6 +1221,15 @@ public class Resource implements Serializable {
 	public Tooltip(Message buf) {
 	    t = new String(buf.bytes(), Utils.utf8);
 	}
+	
+	/**
+	 * Get localized tooltip text.
+	 * If t starts with "@", it's treated as a localization key.
+	 * Otherwise returns t as-is (for server strings).
+	 */
+	public String text() {
+	    return nurgling.i18n.L10n.tr(t);
+	}
                 
 	public void init() {}
     }
@@ -2060,11 +2070,25 @@ public class Resource implements Serializable {
 	return(loadrimg(name).img);
     }
 
+    // Dummy image for headless mode - 16x16 with correct color model for convolution operations
+    private static BufferedImage dummyImg = null;
+    private static BufferedImage getDummyImage() {
+	if (dummyImg == null) {
+	    // Use cm_rgba format compatible with PUtils.convolve
+	    java.awt.image.WritableRaster buf = java.awt.image.Raster.createInterleavedRaster(
+		java.awt.image.DataBuffer.TYPE_BYTE, 16, 16, 4, null);
+	    dummyImg = new BufferedImage(PUtils.cm_rgba, buf, false, null);
+	}
+	return dummyImg;
+    }
+
     public static BufferedImage loadsimg(String name) {
+	if (Headless.isHeadless()) return getDummyImage();
 	return(loadrimg(name).scaled());
     }
 
     public static Tex loadtex(String name) {
+	if (Headless.isHeadless()) return new TexI(getDummyImage());
 	return(loadrimg(name).tex());
     }
 

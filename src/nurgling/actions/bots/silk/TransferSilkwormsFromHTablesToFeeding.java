@@ -140,7 +140,7 @@ public class TransferSilkwormsFromHTablesToFeeding implements Action {
         ArrayList<Container> containers = new ArrayList<>();
         ArrayList<Gob> gobs = Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet())));
         for (Gob gob : gobs) {
-            Container cand = new Container(gob, contcaps.get(gob.ngob.name));
+            Container cand = new Container(gob, contcaps.get(gob.ngob.name), area);
             cand.initattr(Container.Space.class);
             containers.add(cand);
         }

@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.NGameUI;
 import nurgling.NMapView;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 import nurgling.tools.DirectionalVector;
 
 /**
@@ -14,9 +15,9 @@ public class TrackingVectorWindow extends Window {
     private static TrackingVectorWindow instance = null;
 
     public TrackingVectorWindow() {
-        super(UI.scale(180, 50), "Tracking Vectors");
+        super(UI.scale(180, 50), L10n.get("tracking.title"));
 
-        Button clearBtn = add(new Button(UI.scale(100), "Clear Vectors", false), UI.scale(10, 10));
+        Button clearBtn = add(new Button(UI.scale(100), L10n.get("tracking.clear_vectors"), false), UI.scale(10, 10));
         clearBtn.action(this::onClearClicked);
 
         pack();

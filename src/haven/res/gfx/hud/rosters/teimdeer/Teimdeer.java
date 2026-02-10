@@ -9,7 +9,7 @@ import nurgling.conf.TeimDeerHerd;
 
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/teimdeer", version = 3)
+@haven.FromResource(name = "gfx/hud/rosters/teimdeer", version = 4)
 public class Teimdeer extends Entry {
     public int meat, milk;
     public int meatq, milkq, hideq;
@@ -70,7 +70,7 @@ public class Teimdeer extends Entry {
     }
 
 	public double rang() {
-		TeimDeerHerd herd = TeimDeerHerd.getCurrent();
+		TeimDeerHerd herd = TeimDeerHerd.getForArea(areaId);
 		if(herd != null) {
 			double ql = (!herd.ignoreBD || buck) ? (q > (seedq - herd.breedingGap)) ? (q + seedq - herd.breedingGap) / 2. : q + ((seedq - herd.breedingGap) - q) * herd.coverbreed : q;
 			double m = (herd.disable_q_percentage ? (herd.meatq * meatq) : (ql * herd.meatq * meatq / 100.));

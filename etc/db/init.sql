@@ -10,7 +10,8 @@ CREATE TABLE ingredients (
                              id SERIAL PRIMARY KEY,
                              recipe_hash VARCHAR(64) REFERENCES recipes (recipe_hash) ON DELETE CASCADE,  -- Внешний ключ
                              name VARCHAR(255) NOT NULL,
-                             percentage FLOAT NOT NULL
+                             percentage FLOAT NOT NULL,
+                             resource_name VARCHAR(512)
 );
 
 CREATE TABLE feps (

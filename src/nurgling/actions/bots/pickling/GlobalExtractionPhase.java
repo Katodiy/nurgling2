@@ -40,11 +40,15 @@ public class GlobalExtractionPhase implements Action {
             }
 
             if (isInventoryFull(gui)) {
+                NUtils.stackSwitch(true);
                 new FreeInventory2(new NContext(gui)).run(gui);
+                NUtils.stackSwitch(false);
             }
         }
 
+        NUtils.stackSwitch(true);
         new FreeInventory2(new NContext(gui)).run(gui);
+        NUtils.stackSwitch(false);
         return workDone ? Results.SUCCESS() : Results.FAIL();
     }
 
@@ -68,7 +72,9 @@ public class GlobalExtractionPhase implements Action {
                     }
                     if (isInventoryFull(gui)) {
                         new CloseTargetContainer(container).run(gui);
+                        NUtils.stackSwitch(true);
                         new FreeInventory2(new NContext(gui)).run(gui);
+                        NUtils.stackSwitch(false);
                         // Navigate back to jar area after dropping off items
                         NContext context = new NContext(gui);
                         context.getSpecArea(Specialisation.SpecName.picklingJars);
@@ -146,7 +152,7 @@ public class GlobalExtractionPhase implements Action {
         for (String resource : NContext.contcaps.keySet()) {
             String type = NContext.contcaps.get(resource);
             for (haven.Gob gob : Finder.findGobs(jarArea, new NAlias(resource))) {
-                containers.add(new Container(gob, type));
+                containers.add(new Container(gob, type, jarArea));
             }
         }
         return containers;

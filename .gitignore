@@ -15,3 +15,4 @@ CLAUDE.md
 .agent-os
 __pycache__/
 *.pyc
+/max-nurgling2.iml

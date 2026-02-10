@@ -27,6 +27,7 @@
 package haven;
 
 import static java.lang.Math.PI;
+import nurgling.i18n.L10n;
 import nurgling.widgets.*;
 
 import java.awt.Graphics;
@@ -137,9 +138,9 @@ public class Cal extends Widget {
 	public Object tooltip(Coord c, Widget prev) {
         Astronomy a = ui.sess.glob.ast;
         int mp = (int)Math.round(a.mp * (double)moon.f.length) % moon.f.length;
-        String season = String.format("Season: %s, day %d of %d", a.season(), a.scday + 1, a.season().length);
+        String season = String.format(L10n.get("calendar.season_format"), a.season(), a.scday + 1, a.season().length);
         int day = (int) Math.floor(a.md) + 1, month = (int) Math.floor(a.ym) + 1, year = (int) Math.floor(a.years) + 1;
-        String tt = String.format("%02d-%02d-%02d, %02d:%02d\n%s\nMoon: %s", day, month, year, a.hh, a.mm, season, Astronomy.phase[mp]);
+        String tt = String.format("%02d-%02d-%02d, %02d:%02d\n%s\n" + L10n.get("calendar.moon") + ": %s", day, month, year, a.hh, a.mm, season, Astronomy.phase[mp]);
         if(!tt.equals(tip)) {
             tip = tt;
             tooltip = RichText.render(tt, UI.scale(250));

@@ -76,7 +76,7 @@ public class TakeFromBarrel implements Action{
 
     private boolean isFound() {
         for (Gob.Overlay ol : barrel.ols) {
-            if(ol.spr instanceof StaticSprite) {
+            if(ol.spr != null && ol.spr.res != null) {
                 return true;
             }
         }

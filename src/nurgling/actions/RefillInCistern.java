@@ -12,7 +12,6 @@ import nurgling.tasks.WaitSound;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
-import nurgling.tools.NParser;
 import nurgling.widgets.Specialisation;
 
 import java.util.ArrayList;
@@ -35,17 +34,18 @@ public class RefillInCistern implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         Gob player = NUtils.player();
-        if(player == null || !NParser.checkName(player.pose(), "gfx/borka/banzai"))
-        {
-            return Results.ERROR("Barrel not found.");
+        if (player == null) {
+            return Results.ERROR("Player not found.");
         }
 
         // Find the barrel that's currently lifted by the player
+        // The Following attribute validates the player is carrying the barrel
         Gob barrel = findLiftedbyPlayer();
 
-        Following fl ;
-        if(barrel == null || (fl = barrel.getattr(Following.class))==null || fl.tgt!=player.id)
+        Following fl;
+        if (barrel == null || (fl = barrel.getattr(Following.class)) == null || fl.tgt != player.id) {
             return Results.ERROR("Barrel not found.");
+        }
 
         Gob waterSource = Finder.findGob(area, new NAlias("cistern", "well"));
         if(waterSource == null)

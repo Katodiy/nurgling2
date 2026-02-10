@@ -2,6 +2,7 @@ package nurgling.conf;
 
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.NUtils;
 import nurgling.routes.ForagerAction;
 import nurgling.routes.ForagerPath;
 import org.json.JSONArray;
@@ -29,7 +30,8 @@ public class NForagerProp implements JConf {
         public String afterFinishAction = "nothing";
         public String onFullInventoryAction = "nothing";
         public boolean ignoreBats = true;
-        
+        public boolean waterMode = false;
+
         public PresetData() {}
         
         public PresetData(String pathFile) {
@@ -77,7 +79,9 @@ public class NForagerProp implements JConf {
                     pd.onFullInventoryAction = (String) entry.getValue().get("onFullInventoryAction");
                 if (entry.getValue().get("ignoreBats") != null)
                     pd.ignoreBats = (Boolean) entry.getValue().get("ignoreBats");
-                
+                if (entry.getValue().get("waterMode") != null)
+                    pd.waterMode = (Boolean) entry.getValue().get("waterMode");
+
                 presets.put(entry.getKey(), pd);
             }
         }
@@ -134,7 +138,8 @@ public class NForagerProp implements JConf {
             presetJson.put("afterFinishAction", entry.getValue().afterFinishAction);
             presetJson.put("onFullInventoryAction", entry.getValue().onFullInventoryAction);
             presetJson.put("ignoreBats", entry.getValue().ignoreBats);
-            
+            presetJson.put("waterMode", entry.getValue().waterMode);
+
             presetsJson.put(entry.getKey(), presetJson);
         }
         jforager.put("presets", presetsJson);
@@ -143,15 +148,18 @@ public class NForagerProp implements JConf {
     }
     
     public static NForagerProp get(NUI.NSessInfo sessInfo) {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         @SuppressWarnings("unchecked")
         ArrayList<NForagerProp> foragerProps = ((ArrayList<NForagerProp>) NConfig.get(NConfig.Key.foragerprop));
         if (foragerProps == null)
             foragerProps = new ArrayList<>();
         for (NForagerProp prop : foragerProps) {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid)) {
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid)) {
                 return prop;
             }
         }
-        return new NForagerProp(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NForagerProp(sessInfo.username, chrid);
     }
 }

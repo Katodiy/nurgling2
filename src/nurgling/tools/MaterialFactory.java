@@ -33,6 +33,42 @@ public class MaterialFactory {
     }
 
     /**
+     * Get cached chest materials to prevent shader explosion.
+     * By caching the Material objects, all chests of the same status share the same shader.
+     */
+    private static Map<Integer, Material> getCachedChestMaterials(String name, Status status) {
+        getMaterialsCache.computeIfAbsent(name, k -> new ConcurrentHashMap<>());
+        Map<Status, Map<Integer, Material>> statusMap = getMaterialsCache.get(name);
+
+        return statusMap.computeIfAbsent(status, s -> {
+            Map<Integer, Material> result = new HashMap<>();
+            TexR rt1 = Resource.remote().loadwait("gfx/terobjs/subst/wroughtiron").layer(TexR.class, 0);
+
+            switch (status) {
+                case FREE: {
+                    TexR rt0 = getTexR("nurgling/tex/pinefree-tex", 0);
+                    result.put(0, constructMaterial(rt0, null));
+                    result.put(1, constructMaterial(rt1, null));
+                    break;
+                }
+                case FULL: {
+                    TexR rt0 = getTexR("nurgling/tex/pinefull-tex", 0);
+                    result.put(0, constructMaterial(rt0, null));
+                    result.put(1, constructMaterial(rt1, null));
+                    break;
+                }
+                case NOTFREE: {
+                    TexR rt0 = getTexR("nurgling/tex/pinenf-tex", 0);
+                    result.put(0, constructMaterial(rt0, null));
+                    result.put(1, constructMaterial(rt1, null));
+                    break;
+                }
+            }
+            return result;
+        });
+    }
+
+    /**
      * Helper method to create standard material mapping for containers
      */
     private static Map<Integer, Material> createContainerMaterials(String tex0Path, int layer0, String tex1Path, int layer1, Material baseMat) {
@@ -60,34 +96,8 @@ public class MaterialFactory {
                 }
                 break;
             case "gfx/terobjs/chest":
-                    switch (status)
-                    {
-                        case FREE: {
-                            TexR rt0 = Resource.local().loadwait("nurgling/tex/pinefree-tex").layer(TexR.class, 0);
-                            TexR rt1 = Resource.remote().loadwait("gfx/terobjs/subst/wroughtiron").layer(TexR.class, 0);
-                            Map<Integer, Material> result = new HashMap<>();
-                            result.put(0, constructMaterial(rt0,mat));
-                            result.put(1, constructMaterial(rt1,mat));
-                            return result;
-                        }
-                        case FULL: {
-                            TexR rt0 = Resource.local().loadwait("nurgling/tex/pinefull-tex").layer(TexR.class, 0);
-                            TexR rt1 = Resource.remote().loadwait("gfx/terobjs/subst/wroughtiron").layer(TexR.class, 0);
-                            Map<Integer, Material> result = new HashMap<>();
-                            result.put(0, constructMaterial(rt0,mat));
-                            result.put(1, constructMaterial(rt1,mat));
-                            return result;
-                        }
-                        case NOTFREE: {
-                            TexR rt0 = Resource.local().loadwait("nurgling/tex/pinenf-tex").layer(TexR.class, 0);
-                            TexR rt1 = Resource.remote().loadwait("gfx/terobjs/subst/wroughtiron").layer(TexR.class, 0);
-                            Map<Integer, Material> result = new HashMap<>();
-                            result.put(0, constructMaterial(rt0,mat));
-                            result.put(1, constructMaterial(rt1,mat));
-                            return result;
-                        }
-                    }
-                    break;
+                    return getCachedChestMaterials(name, status);
+
             case "gfx/terobjs/barrel":
                 switch (status) {
                     case FREE: {
@@ -162,6 +172,8 @@ public class MaterialFactory {
     }
     public static final Map<String,Map<Status, Map<Integer,TexR>>> materialCashe = new ConcurrentHashMap<>();
     public static final Map<String,Map<Status, Materials>> materialsCashe = new ConcurrentHashMap<>();
+
+    private static final Map<String, Map<Status, Map<Integer, Material>>> getMaterialsCache = new ConcurrentHashMap<>();
     
     public static void clearCache(String name) {
         // Clear inner maps instead of removing the entire entry

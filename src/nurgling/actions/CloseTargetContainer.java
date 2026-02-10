@@ -26,12 +26,11 @@ public class CloseTargetContainer implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException
     {
-        if(cnt!=null) {
-            cnt.update();
-        }
-
         Window wnd = NUtils.getGameUI().getWindow(cap);
         if(wnd!=null) {
+            if(cnt!=null) {
+                cnt.update();
+            }
             wnd.wdgmsg("close");
             gui.ui.core.addTask(new WindowIsClosed(wnd));
         }

@@ -7,6 +7,7 @@ import haven.Window;
 import haven.res.lib.itemtex.*;
 import nurgling.*;
 import nurgling.areas.*;
+import nurgling.i18n.L10n;
 import org.json.*;
 
 import java.awt.*;
@@ -15,8 +16,13 @@ import java.util.*;
 
 public class BaseIngredientContainer extends Widget implements DTarget, Scrollable {
     static Color bg = new Color(30,40,40,160);
-    private static TexI freeLabel = new TexI(Text.render("Drag and drop an item here").img);
-    private static TexI freeLabel2 = new TexI(Text.render("or select it from the categories").img);
+    private static TexI freeLabel;
+    private static TexI freeLabel2;
+    
+    static {
+        freeLabel = new TexI(Text.render(L10n.get("ingredient.drag_drop")).img);
+        freeLabel2 = new TexI(Text.render(L10n.get("ingredient.select_category")).img);
+    }
 
     public Scrollbar sb;
     protected int maxy = 0;

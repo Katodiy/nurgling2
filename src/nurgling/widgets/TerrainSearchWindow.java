@@ -2,6 +2,7 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 
 import java.awt.Color;
 import java.util.*;
@@ -16,13 +17,13 @@ public class TerrainSearchWindow extends Window {
     private TerrainCategory selectedCategory = null;
     
     public TerrainSearchWindow() {
-        super(new Coord(WINDOW_WIDTH, WINDOW_HEIGHT), "Tile Highlight");
+        super(new Coord(WINDOW_WIDTH, WINDOW_HEIGHT), L10n.get("terrain.title"));
         
         int y = 0;
         int margin = UI.scale(5);
         
         // Terrain search label and field
-        add(new Label("Terrain search:"), margin, y);
+        add(new Label(L10n.get("terrain.search")), margin, y);
         y += UI.scale(20);
         terrainSearchField = add(new TextEntry(WINDOW_WIDTH - margin * 2, "") {
             @Override
@@ -43,7 +44,7 @@ public class TerrainSearchWindow extends Window {
         y += terrainSearchField.sz.y + UI.scale(10);
         
         // Categories label
-        add(new Label("Categories:"), margin, y);
+        add(new Label(L10n.get("terrain.categories")), margin, y);
         y += UI.scale(20);
         
         // Create split view: categories on left, presets on right
@@ -58,7 +59,7 @@ public class TerrainSearchWindow extends Window {
         y += listHeight + UI.scale(10);
         
         // Select All button for current category
-        add(new Button(UI.scale(90), "Select All") {
+        add(new Button(UI.scale(90), L10n.get("terrain.select_all")) {
             @Override
             public void click() {
                 selectAllInCategory();
@@ -66,7 +67,7 @@ public class TerrainSearchWindow extends Window {
         }, margin, y);
         
         // Clear search button
-        add(new Button(UI.scale(80), "Clear") {
+        add(new Button(UI.scale(80), L10n.get("terrain.clear")) {
             @Override
             public void click() {
                 clearSearch();

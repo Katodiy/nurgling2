@@ -19,5 +19,5 @@ public abstract class NTask
     public boolean criticalExit = false;
     protected int counter = 0;
     protected int maxCounter = 200;
-    protected boolean infinite = false;
+    protected boolean infinite = true;
 }

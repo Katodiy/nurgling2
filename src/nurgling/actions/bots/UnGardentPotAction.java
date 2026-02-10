@@ -35,7 +35,7 @@ public class UnGardentPotAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
             for (Gob sm : Finder.findGobs(kilns, new NAlias("gfx/terobjs/kiln"))) {
-                Container cand = new Container(sm, "Kiln");
+                Container cand = new Container(sm, "Kiln", kilns);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.FuelLvl.class);

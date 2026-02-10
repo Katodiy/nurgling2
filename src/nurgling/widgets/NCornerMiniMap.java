@@ -98,7 +98,7 @@ public class NCornerMiniMap extends NMiniMap implements Console.Directory {
                     return null;
                 Resource.Tooltip tt = res.layer(Resource.tooltip);
                 if (tt != null) {
-                    String name = tt.t;
+                    String name = tt.text();
                     return Text.render(name).tex();
                 }
             }

@@ -8,6 +8,7 @@ public class WaitFreeHand extends NTask
 
     public WaitFreeHand()
     {
+        infinite = false;
     }
 
     @Override

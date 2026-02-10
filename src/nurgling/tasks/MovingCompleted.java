@@ -10,6 +10,7 @@ public class MovingCompleted extends NTask
 {
     Coord2d target;
 
+    int count = 0;
     public MovingCompleted(Coord2d target)
     {
         this.target = target;
@@ -18,11 +19,12 @@ public class MovingCompleted extends NTask
     @Override
     public boolean check()
     {
-        Coord2d plc;
         if (NUtils.getGameUI() != null && NUtils.getGameUI().map != null && NUtils.getGameUI().map.player() != null)
         {
             Drawable drawable = (Drawable) NUtils.getGameUI().map.player().getattr(Drawable.class);
-            plc = NUtils.getGameUI().map.player().rc;
+            count++;
+            if(count>=1000)
+                return true;
             if (drawable != null)
             {
                 String pose;

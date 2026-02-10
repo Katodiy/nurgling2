@@ -7,7 +7,7 @@ import haven.*;
 import haven.res.ui.croster.*;
 import java.util.*;
 
-@haven.FromResource(name = "gfx/hud/rosters/horse", version = 64)
+@haven.FromResource(name = "gfx/hud/rosters/horse", version = 65)
 public class HorseRoster extends CattleRoster<Horse> {
     public static List<Column<? super Horse>> cols = initcols(
 	new Column<Entry>("Name", Comparator.comparing((Entry e) -> e.name), 200),

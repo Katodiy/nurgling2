@@ -10,6 +10,7 @@ import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.tasks.GetItems;
 import nurgling.tasks.WaitItems;
+import nurgling.tasks.WaitNoItems;
 import nurgling.tools.Container;
 import nurgling.tools.Context;
 import nurgling.tools.Finder;
@@ -38,13 +39,15 @@ public class DropTargets implements Action {
             Container.TargetItems targetItems = container.getattr(Container.TargetItems.class);
             if(targetItems.getTargets(target)!=0)
             {
-                new PathFinder(Finder.findGob(container.gobid)).run(gui);
+                PathFinder pf = new PathFinder(Finder.findGob(container.gobid));
+                pf.isHardMode = true;
+                pf.run(gui);
                 new OpenTargetContainer(container).run(gui);
                 for(WItem item : NUtils.getGameUI().getInventory(container.cap).getItems(target))
                 {
                     NUtils.drop(item);
                 }
-                NUtils.getUI().core.addTask(new WaitItems(gui.getInventory(container.cap),target,0));
+                NUtils.getUI().core.addTask(new WaitNoItems(gui.getInventory(container.cap),target));
                 new CloseTargetContainer(container).run(gui);
             }
         }

@@ -2,6 +2,7 @@ package nurgling.widgets.nsettings;
 
 import haven.*;
 import nurgling.NConfig;
+import nurgling.i18n.L10n;
 
 public class FarmingSettingsPanel extends Panel {
     private TextEntry xEntry, yEntry;
@@ -13,11 +14,11 @@ public class FarmingSettingsPanel extends Panel {
     private CheckBox validateAllCropsBeforeHarvestCheck;
 
     public FarmingSettingsPanel() {
-        super("Farming Settings");
+        super(L10n.get("farming.title"));
         int y = UI.scale(36);
         int margin = UI.scale(10);
 
-        harvestRefillCheck = new CheckBox("Refill water from water containers for farmers") {
+        harvestRefillCheck = new CheckBox(L10n.get("farming.refill_water")) {
             public void set(boolean val) {
                 a = val;
             }
@@ -25,8 +26,7 @@ public class FarmingSettingsPanel extends Panel {
         add(harvestRefillCheck, new Coord(margin, y));
         y += UI.scale(28);
 
-        cleanupQContainersCheck = new CheckBox(
-                "Keep quality grind containers at most half full") {
+        cleanupQContainersCheck = new CheckBox(L10n.get("farming.quality_containers")) {
             public void set(boolean val) {
                 a = val;
             }
@@ -34,12 +34,11 @@ public class FarmingSettingsPanel extends Panel {
         add(cleanupQContainersCheck, new Coord(margin, y));
         y += UI.scale(18);
 
-        add(new Label("Excess lowest quality seeds will be moved to the trough if defined"),
+        add(new Label(L10n.get("farming.quality_containers_desc")),
                 new Coord(UI.scale(30), y));
         y += UI.scale(28);
 
-        fillCompostWithSwill = new CheckBox(
-                "Fill compost bins with swill") {
+        fillCompostWithSwill = new CheckBox(L10n.get("farming.compost_swill")) {
             public void set(boolean val) {
                 a = val;
             }
@@ -48,8 +47,7 @@ public class FarmingSettingsPanel extends Panel {
         add(fillCompostWithSwill, new Coord(margin, y));
         y += UI.scale(28);
 
-        ignoreStrawInFarmers = new CheckBox(
-                "Do NOT pick up straw in farmers.") {
+        ignoreStrawInFarmers = new CheckBox(L10n.get("farming.ignore_straw")) {
             public void set(boolean val) {
                 a = val;
             }
@@ -58,8 +56,7 @@ public class FarmingSettingsPanel extends Panel {
         add(ignoreStrawInFarmers, new Coord(margin, y));
         y += UI.scale(28);
 
-        autoEquipTravellersSacksCheck = new CheckBox(
-                "Auto equip traveller's sacks after harvesting") {
+        autoEquipTravellersSacksCheck = new CheckBox(L10n.get("farming.auto_equip_sacks")) {
             public void set(boolean val) {
                 a = val;
             }
@@ -68,8 +65,7 @@ public class FarmingSettingsPanel extends Panel {
         add(autoEquipTravellersSacksCheck, new Coord(margin, y));
         y += UI.scale(28);
 
-        validateAllCropsBeforeHarvestCheck = new CheckBox(
-                "Validate all crops are ready before harvesting") {
+        validateAllCropsBeforeHarvestCheck = new CheckBox(L10n.get("farming.validate_crops")) {
             public void set(boolean val) {
                 a = val;
             }
@@ -78,7 +74,7 @@ public class FarmingSettingsPanel extends Panel {
         add(validateAllCropsBeforeHarvestCheck, new Coord(margin, y));
         y += UI.scale(28);
 
-        add(new Label("Seeding Pattern X (columns):"), new Coord(margin, y));
+        add(new Label(L10n.get("farming.pattern_x")), new Coord(margin, y));
         y += UI.scale(24);
 
         xEntry = new TextEntry.NumberValue(50, "") {
@@ -90,7 +86,7 @@ public class FarmingSettingsPanel extends Panel {
         add(xEntry, new Coord(margin, y));
         y += UI.scale(32);
 
-        add(new Label("Seeding Pattern Y (rows):"), new Coord(margin, y));
+        add(new Label(L10n.get("farming.pattern_y")), new Coord(margin, y));
         y += UI.scale(24);
 
         yEntry = new TextEntry.NumberValue(50, "") {

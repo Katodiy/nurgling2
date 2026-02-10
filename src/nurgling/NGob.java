@@ -1,6 +1,7 @@
 package nurgling;
 
 import haven.*;
+import haven.Composite;
 import haven.render.Location;
 import haven.render.Pipe;
 import haven.render.Transform;
@@ -65,8 +66,10 @@ public class NGob
     private static final NAlias WALL_TRELLIS_ALIAS = new NAlias("wall", "trellis");
     private static final NAlias BORKA_ALIAS = new NAlias("borka");
     private static final NAlias PLANTS_ALIAS = new NAlias("plants");
+    private static final NAlias GARDEN_POT_ALIAS = new NAlias("gardenpot");
     private static final NAlias MINEBEAM_ALIAS = new NAlias(new ArrayList<>(Arrays.asList("minebeam", "column", "towercap", "ladder", "minesupport")), new ArrayList<>(Arrays.asList("stump", "wrack", "log")));
     private static final NAlias MOUNDBED_ALIAS = new NAlias("gfx/terobjs/moundbed");
+    private static final NAlias IGNORED_ARCH = new NAlias("-door", "arch/hwall");
     private static final NAlias KRITTER_ALIAS = new NAlias("kritter");
     private static final NAlias BORKA_ALIAS_SETDYNAMIC = new NAlias("borka");
     private static final NAlias VEHICLE_ALIAS = new NAlias("vehicle");
@@ -83,6 +86,8 @@ public class NGob
     
     // Flag to track if crop marker was already added
     private boolean cropMarkerAdded = false;
+    // Flag to track if garden pot marker was already added
+    private boolean gardenPotMarkerAdded = false;
 
     public void changedPose(String currentPose)
     {
@@ -92,7 +97,7 @@ public class NGob
             {
                 if (ANIMAL_NAMES.contains(name))
                 {
-                    if (nurgling.NUtils.getGameUI() != null)
+                    if (nurgling.NUtils.getGameUI() != null && NUtils.getGameUI().fv!=null)
                     {
                         for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel)
                         {
@@ -104,11 +109,14 @@ public class NGob
                     }
                     parent.addcustomol(new NTexMarker(parent, new TexI(Resource.loadsimg("nurgling/hud/taiming")), () ->
                     {
-                        for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel)
+                        if(NUtils.getGameUI().fv!=null)
                         {
-                            if (rel.gobid == parent.id)
+                            for (Fightview.Relation rel : NUtils.getGameUI().fv.lsrel)
                             {
-                                return true;
+                                if (rel.gobid == parent.id)
+                                {
+                                    return true;
+                                }
                             }
                         }
                         return false;
@@ -609,7 +617,7 @@ public class NGob
                 {
                     if (NStyle.iconMap.containsKey(name))
                     {
-                        //TODO трюфель
+                        //TODO С‚СЂСЋС„РµР»СЊ
                         parent.setattr(new GobIcon(parent, NStyle.iconMap.get(name), new byte[0]));
                     }
 
@@ -617,8 +625,14 @@ public class NGob
                     if (NParser.checkName(name, BORKA_ALIAS))
                     {
                         // Add delayed check to ensure this is not a mannequin and not the player
+                        // Also check that Composite is fully loaded (like Hurricane does)
                         delayedOverlayTasks.add(new DelayedOverlayTask(
-                                gob -> gob.pose() != null,
+                                gob -> {
+                                    if (gob.pose() == null) return false;
+                                    // Check that Composite attribute exists and is fully loaded
+                                    Composite c = gob.getattr(Composite.class);
+                                    return c != null && c.comp != null && !c.comp.cmod.isEmpty();
+                                },
                                 gob ->
                                 {
                                     String posename = gob.pose();
@@ -635,9 +649,15 @@ public class NGob
                     {
                         parent.addcustomol(new NCropMarker(parent));
                         cropMarkerAdded = true;
-                    } else
+                    }
+
+                    if (NParser.checkName(name, GARDEN_POT_ALIAS) && cachedShowCropStage && !gardenPotMarkerAdded)
                     {
-                        if (NParser.checkName(name, MINEBEAM_ALIAS))
+                        parent.addcustomol(new NGardenPotMarker(parent));
+                        gardenPotMarkerAdded = true;
+                    }
+
+                    if (NParser.checkName(name, MINEBEAM_ALIAS))
                         {
                             switch (name)
                             {
@@ -691,11 +711,9 @@ public class NGob
                             hitBox = custom;
                         }
                     }
-
-                }
                 if (hitBox != null)
                 {
-                    if (NParser.checkName(name, MOUNDBED_ALIAS))
+                    if (NParser.checkName(name, MOUNDBED_ALIAS) || NParser.checkName(name, IGNORED_ARCH))
                     {
                         hitBox = null;
                     } else
@@ -749,6 +767,10 @@ public class NGob
                 {
                     parent.addcustomol(new nurgling.overlays.NTroughRadius(parent));
                 }
+                else if (name.contains("moundbed"))
+                {
+                    parent.addcustomol(new nurgling.overlays.NMoundBedRadius(parent));
+                }
             }
         }
     }
@@ -765,6 +787,30 @@ public class NGob
     public long getModelAttribute()
     {
         return modelAttribute;
+    }
+
+    /**
+     * Check if container is visually empty using model attribute.
+     * Works for: chest, cupboard, barrel, dframe, cheeserack, jotunclam
+     * @return true if container is visually empty (FREE status)
+     */
+    public boolean isContainerEmpty()
+    {
+        if (name == null) return false;
+        MaterialFactory.Status status = MaterialFactory.getStatus(name, (int) modelAttribute);
+        return status == MaterialFactory.Status.FREE;
+    }
+
+    /**
+     * Check if container is visually full using model attribute.
+     * Works for: chest, cupboard, barrel, dframe, cheeserack, jotunclam
+     * @return true if container is visually full (FULL status)
+     */
+    public boolean isContainerFull()
+    {
+        if (name == null) return false;
+        MaterialFactory.Status status = MaterialFactory.getStatus(name, (int) modelAttribute);
+        return status == MaterialFactory.Status.FULL;
     }
 
     public CellsArray getCA()
@@ -897,11 +943,14 @@ public class NGob
             {
                 if (name != null && name.startsWith("gfx/terobjs"))
                 {
-                    if (VSpec.object.containsKey(name))
-                        if (VSpec.object.get(name).size() != NUtils.getGameUI().getCharInfo().LpExplorerGetSize(name))
-                        {
-                            parent.addcustomol(new NLPassistant(parent));
-                        }
+                    if (NUtils.getGameUI() != null && NUtils.getGameUI().getCharInfo() != null)
+                    {
+                        if (VSpec.object.containsKey(name))
+                            if (VSpec.object.get(name).size() != NUtils.getGameUI().getCharInfo().LpExplorerGetSize(name))
+                            {
+                                parent.addcustomol(new NLPassistant(parent));
+                            }
+                    }
                 }
             }
         }
@@ -969,7 +1018,7 @@ public class NGob
         if (name != null)
             if (name.equals("gfx/terobjs/dframe") || name.equals("gfx/terobjs/barrel"))
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr != null && ol.spr.res != null)
                 {
                     // Calculate and cache the mask value immediately
                     cachedMask = calculateMask();
@@ -1041,19 +1090,19 @@ public class NGob
         if (name != null)
             if (name.equals("gfx/terobjs/dframe") || name.equals("gfx/terobjs/barrel"))
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr != null && ol.spr.res != null)
                 {
-                    // Check if there are other StaticSprite overlays remaining
-                    boolean hasOtherStaticSprites = false;
+                    // Check if there are other sprite overlays remaining
+                    boolean hasOtherSpriteOverlays = false;
                     for (Gob.Overlay other : parent.ols) {
-                        if (other != ol && other.spr instanceof StaticSprite) {
-                            hasOtherStaticSprites = true;
+                        if (other != ol && other.spr != null && other.spr.res != null) {
+                            hasOtherSpriteOverlays = true;
                             break;
                         }
                     }
                     
                     // Update cache based on remaining overlays
-                    if (!hasOtherStaticSprites) {
+                    if (!hasOtherSpriteOverlays) {
                         cachedMask = 0; // Set to FREE
                     }
                     
@@ -1087,7 +1136,7 @@ public class NGob
         {
             for (Gob.Overlay ol : parent.ols)
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr != null && ol.spr.res != null)
                 {
                     // Check if item is blood/fishraw/windweed (but not dry windweed)
                     if (NParser.isIt(ol, new NAlias("-blood", "-fishraw", "-windweed")) && !NParser.isIt(ol, new NAlias("-windweed-dry")))
@@ -1104,7 +1153,7 @@ public class NGob
         {
             for (Gob.Overlay ol : parent.ols)
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr != null && ol.spr.res != null)
                 {
                     return 4;
                 }
@@ -1143,7 +1192,7 @@ public class NGob
         {
             for (Gob.Overlay ol : parent.ols)
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr != null && ol.spr.res != null)
                 {
                     // Check if item is blood/fishraw/windweed (but not dry windweed)
                     if (NParser.isIt(ol, new NAlias("-blood", "-fishraw", "-windweed")) && !NParser.isIt(ol, new NAlias("-windweed-dry")))
@@ -1160,7 +1209,7 @@ public class NGob
         {
             for (Gob.Overlay ol : parent.ols)
             {
-                if (ol.spr instanceof StaticSprite)
+                if (ol.spr != null && ol.spr.res != null)
                 {
                     return 4;
                 }

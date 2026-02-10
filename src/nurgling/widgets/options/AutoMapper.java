@@ -3,6 +3,7 @@ package nurgling.widgets.options;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 import nurgling.widgets.nsettings.Panel;
 
 public class AutoMapper extends Panel {
@@ -17,13 +18,13 @@ public class AutoMapper extends Panel {
 
         final int margin = UI.scale(10);
 
-        Widget prev = add(new Label("ONLINE Auto-Mapper settings:"), new Coord(margin, margin));
+        Widget prev = add(new Label(L10n.get("automapper.settings_title")), new Coord(margin, margin));
 
-        prev = enableAutoMapper = add(new CheckBox("Enable Auto Mapper"), prev.pos("bl").adds(0, 5));
+        prev = enableAutoMapper = add(new CheckBox(L10n.get("automapper.enable")), prev.pos("bl").adds(0, 5));
 
-        Label urlLabel = add(new Label("Server URL:"), prev.pos("bl").adds(0, 5));
+        Label urlLabel = add(new Label(L10n.get("automapper.server_url")), prev.pos("bl").adds(0, 5));
         te = add(new TextEntry(UI.scale(300), ""), urlLabel.pos("ur").adds(UI.scale(10), 0));
-        Button setBtn = add(new Button(UI.scale(80), "Set") {
+        Button setBtn = add(new Button(UI.scale(80), L10n.get("automapper.set")) {
             @Override
             public void click() {
                 te.settext(te.text());
@@ -31,11 +32,11 @@ public class AutoMapper extends Panel {
             }
         }, te.pos("ur").adds(UI.scale(10), 0));
 
-        prev = add(navTrack = new CheckBox("Enable navigation tracking"), urlLabel.pos("bl").adds(0, 5));
+        prev = add(navTrack = new CheckBox(L10n.get("automapper.nav_track")), urlLabel.pos("bl").adds(0, 5));
 
-        prev = uploadGreen = add(new CheckBox("Upload custom green marks"), prev.pos("bl").adds(0, 5));
+        prev = uploadGreen = add(new CheckBox(L10n.get("automapper.upload_green")), prev.pos("bl").adds(0, 5));
 
-        prev = sendOverlays = add(new CheckBox("Send claim/realm overlays"), prev.pos("bl").adds(0, 5));
+        prev = sendOverlays = add(new CheckBox(L10n.get("automapper.send_overlays")), prev.pos("bl").adds(0, 5));
 
         load();
         pack();

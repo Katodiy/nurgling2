@@ -3,12 +3,14 @@ package nurgling.widgets.nsettings;
 import haven.*;
 import nurgling.NConfig;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 
 public class MapSettings extends Panel {
     // Temporary settings structure
     private static class MapSettingsData {
         boolean showQuestGiverNames;
         boolean showThingwallNames;
+        boolean showPartyMemberNames;
         boolean trackingVectors;
     }
 
@@ -17,6 +19,7 @@ public class MapSettings extends Panel {
     // Marker name checkboxes
     private CheckBox showQuestGiverNames;
     private CheckBox showThingwallNames;
+    private CheckBox showPartyMemberNames;
     private CheckBox trackingVectors;
     
     private Scrollport scrollport;
@@ -43,27 +46,34 @@ public class MapSettings extends Panel {
         int contentMargin = UI.scale(5);
         
         // Marker names section
-        Widget prev = content.add(new Label("● Marker Name Display"), new Coord(contentMargin, contentMargin));
-        prev = content.add(new Label("Control which marker names are displayed on the map"), prev.pos("bl").adds(0, 3));
+        Widget prev = content.add(new Label("● " + L10n.get("map.section.markers")), new Coord(contentMargin, contentMargin));
+        prev = content.add(new Label(L10n.get("map.markers_desc")), prev.pos("bl").adds(0, 3));
         
-        prev = showQuestGiverNames = content.add(new CheckBox("Show quest giver names (Bushes, Bumlings, Giant Toads)") {
+        prev = showQuestGiverNames = content.add(new CheckBox(L10n.get("map.quest_giver_names")) {
             public void set(boolean val) {
                 tempSettings.showQuestGiverNames = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 10));
         
-        prev = showThingwallNames = content.add(new CheckBox("Show thingwall names") {
+        prev = showThingwallNames = content.add(new CheckBox(L10n.get("map.thingwall_names")) {
             public void set(boolean val) {
                 tempSettings.showThingwallNames = val;
                 a = val;
             }
         }, prev.pos("bl").adds(0, 5));
         
-        // Tracking vectors section
-        prev = content.add(new Label("● Tracking Vectors"), prev.pos("bl").adds(0, 15));
+        prev = showPartyMemberNames = content.add(new CheckBox(L10n.get("map.party_member_names")) {
+            public void set(boolean val) {
+                tempSettings.showPartyMemberNames = val;
+                a = val;
+            }
+        }, prev.pos("bl").adds(0, 5));
         
-        prev = trackingVectors = content.add(new CheckBox("Show tracking/dowsing vectors on map") {
+        // Tracking vectors section
+        prev = content.add(new Label("● " + L10n.get("map.section.tracking")), prev.pos("bl").adds(0, 15));
+        
+        prev = trackingVectors = content.add(new CheckBox(L10n.get("map.tracking_vectors")) {
             public void set(boolean val) {
                 tempSettings.trackingVectors = val;
                 a = val;
@@ -82,11 +92,13 @@ public class MapSettings extends Panel {
         // Load marker name settings
         tempSettings.showQuestGiverNames = getBool(NConfig.Key.showQuestGiverNames);
         tempSettings.showThingwallNames = getBool(NConfig.Key.showThingwallNames);
+        tempSettings.showPartyMemberNames = getBool(NConfig.Key.showPartyMemberNames);
         tempSettings.trackingVectors = getBool(NConfig.Key.trackingVectors);
 
         // Update UI components
         showQuestGiverNames.a = tempSettings.showQuestGiverNames;
         showThingwallNames.a = tempSettings.showThingwallNames;
+        showPartyMemberNames.a = tempSettings.showPartyMemberNames;
         trackingVectors.a = tempSettings.trackingVectors;
     }
 
@@ -95,6 +107,7 @@ public class MapSettings extends Panel {
         // Save marker name settings
         NConfig.set(NConfig.Key.showQuestGiverNames, tempSettings.showQuestGiverNames);
         NConfig.set(NConfig.Key.showThingwallNames, tempSettings.showThingwallNames);
+        NConfig.set(NConfig.Key.showPartyMemberNames, tempSettings.showPartyMemberNames);
         NConfig.set(NConfig.Key.trackingVectors, tempSettings.trackingVectors);
         NConfig.needUpdate();
     }

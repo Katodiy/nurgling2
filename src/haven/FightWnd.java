@@ -33,6 +33,7 @@ import java.awt.image.BufferedImage;
 import static haven.CharWnd.*;
 import static haven.Window.wbox;
 import static haven.Inventory.invsq;
+import nurgling.i18n.L10n;
 
 public class FightWnd extends Widget {
     public final int nsave;
@@ -64,7 +65,7 @@ public class FightWnd extends Widget {
 	    StringBuilder buf = new StringBuilder();
 	    Resource res = this.res.get();
 	    buf.append("$img[" + res.name + "]\n\n");
-	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).t + "}}\n\n");
+	    buf.append("$b{$font[serif,16]{" + res.flayer(Resource.tooltip).text() + "}}\n\n");
 	    Resource.Pagina pag = res.layer(Resource.pagina);
 	    if(pag != null)
 		buf.append(pag.text);
@@ -91,7 +92,7 @@ public class FightWnd extends Widget {
 		if(rawinfo != null)
 		    info = ItemInfo.buildinfo(this, rawinfo);
 		else
-		    info = Arrays.asList(new ItemInfo.Name(this, res.get().flayer(Resource.tooltip).t));
+		    info = Arrays.asList(new ItemInfo.Name(this, res.get().flayer(Resource.tooltip).text()));
 	    }
 	    return(info);
 	}
@@ -132,7 +133,7 @@ public class FightWnd extends Widget {
 	int u = 0;
 	for(Action act : acts)
 	    u += act.u;
-	count.settext(String.format("Used: %d/%d", u, maxact));
+	count.settext(String.format(L10n.get("char.fight.used"), u, maxact));
 	count.setcolor((u > maxact)?Color.RED:Color.WHITE);
     }
 
@@ -165,7 +166,7 @@ public class FightWnd extends Widget {
 		prev = adda(new IButton("gfx/hud/buttons/add", "u", "d", "h").action(() -> setu(item.u + 1)), sz.x - UI.scale(2), sz.y / 2, 1.0, 0.5);
 		prev = adda(new IButton("gfx/hud/buttons/sub", "u", "d", "h").action(() -> setu(item.u - 1)), prev.c.x - UI.scale(2), sz.y / 2, 1.0, 0.5);
 		prev = use = adda(new Label("0/0", attrf), prev.c.x - UI.scale(5), sz.y / 2, 1.0, 0.5);
-		add(IconText.of(Coord.of(prev.c.x - UI.scale(2), sz.y), act::rendericon, () -> act.res.get().flayer(Resource.tooltip).t), Coord.z);
+		add(IconText.of(Coord.of(prev.c.x - UI.scale(2), sz.y), act::rendericon, () -> act.res.get().flayer(Resource.tooltip).text()), Coord.z);
 	    }
 
 	    public void tick(double dt) {
@@ -259,7 +260,7 @@ public class FightWnd extends Widget {
 		loading = false;
 		for(Action act : acts) {
 		    try {
-			act.name = act.res.get().flayer(Resource.tooltip).t;
+			act.name = act.res.get().flayer(Resource.tooltip).text();
 		    } catch(Loading l) {
 			act.name = "...";
 			loading = true;
@@ -599,7 +600,7 @@ public class FightWnd extends Widget {
 	wdgmsg("use", n);
     }
 
-    private Text unused = new Text.Foundry(attrf.font.deriveFont(java.awt.Font.ITALIC)).aa(true).render("Unused save");
+    private Text unused = new Text.Foundry(attrf.font.deriveFont(java.awt.Font.ITALIC)).aa(true).render(L10n.get("char.fight.unused_save"));
     public FightWnd(int nsave, int nact, int max) {
 	super(Coord.z);
 	this.nsave = nsave;
@@ -613,7 +614,7 @@ public class FightWnd extends Widget {
 	info = add(new ImageInfoBox(UI.scale(new Coord(223, 160))), UI.scale(new Coord(5, 35)).add(wbox.btloff()));
 	Frame.around(this, Collections.singletonList(info));
 
-	add(CharWnd.settip(new Img(CharWnd.catf.render("Martial Arts & Combat Schools").tex()), "gfx/hud/chr/tips/combat"), 0, 0);
+	add(CharWnd.settip(new Img(CharWnd.catf.render(L10n.get("char.fight.title")).tex()), "gfx/hud/chr/tips/combat"), 0, 0);
 	actlist = add(new Actions(UI.scale(250, 160)), UI.scale(new Coord(245, 35)).add(wbox.btloff()));
 	Frame.around(this, Collections.singletonList(actlist));
 
@@ -622,13 +623,13 @@ public class FightWnd extends Widget {
 
 	savelist = add(new Savelist(UI.scale(370, 60)), p.pos("bl").adds(0, 2).add(wbox.btloff()));
 	p = Frame.around(this, Collections.singletonList(savelist));
-	p = add(new Button(UI.scale(110), "Load", false).action(() -> {
+	p = add(new Button(UI.scale(110), L10n.get("char.fight.load"), false).action(() -> {
 		    load(savelist.sel);
 		    use(savelist.sel);
 	}), p.pos("ur").adds(10, 0));
-	p = add(new Button(UI.scale(110), "Save", false).action(() -> {
+	p = add(new Button(UI.scale(110), L10n.get("char.fight.save"), false).action(() -> {
 		    if(savelist.sel < 0) {
-			getparent(GameUI.class).error("No save entry selected.");
+			getparent(GameUI.class).error(L10n.get("char.fight.no_save_selected"));
 		    } else {
 			save(savelist.sel);
 			use(savelist.sel);
@@ -688,7 +689,7 @@ public class FightWnd extends Widget {
 		    if(args[i + 1] instanceof String)
 			saves[i] = attrf.render((String)args[i + 1]);
 		    else
-			saves[i] = attrf.render(String.format("Saved school %d", i + 1));
+			saves[i] = attrf.render(String.format(L10n.get("char.fight.saved_school"), i + 1));
 		} else {
 		    saves[i] = unused;
 		}

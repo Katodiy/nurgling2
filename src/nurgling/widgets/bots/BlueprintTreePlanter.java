@@ -2,6 +2,7 @@ package nurgling.widgets.bots;
 
 import haven.*;
 import nurgling.NUtils;
+import nurgling.i18n.L10n;
 import org.json.*;
 
 import java.io.*;
@@ -25,13 +26,13 @@ public class BlueprintTreePlanter extends Window implements Checkable {
     private String selectedBlueprint = null;
 
     public BlueprintTreePlanter() {
-        super(new Coord(250, 200), "Blueprint Tree Planter");
+        super(new Coord(250, 200), L10n.get("blueprint.wnd_title"));
         
         loadBlueprintNames();
         
-        Widget prev = add(new Label("Blueprint Tree Planting:"), new Coord(UI.scale(10), UI.scale(10)));
+        Widget prev = add(new Label(L10n.get("blueprint.heading")), new Coord(UI.scale(10), UI.scale(10)));
         
-        prev = add(new Label("Select Blueprint:"), prev.pos("bl").add(UI.scale(0, 10)));
+        prev = add(new Label(L10n.get("blueprint.select")), prev.pos("bl").add(UI.scale(0, 10)));
         
         prev = add(blueprintDropbox = new Dropbox<String>(UI.scale(220), Math.min(10, blueprintNames.size()), UI.scale(16)) {
             @Override
@@ -49,7 +50,7 @@ public class BlueprintTreePlanter extends Window implements Checkable {
                 if (item != null && !item.isEmpty()) {
                     g.text(item, Coord.z);
                 } else {
-                    g.text("<no blueprints>", Coord.z);
+                    g.text(L10n.get("blueprint.no_blueprints"), Coord.z);
                 }
             }
             
@@ -69,12 +70,12 @@ public class BlueprintTreePlanter extends Window implements Checkable {
             }
         }
         
-        prev = add(new Button(UI.scale(220), "Place Blueprint") {
+        prev = add(new Button(UI.scale(220), L10n.get("blueprint.place")) {
             @Override
             public void click() {
                 super.click();
                 if (selectedBlueprint == null || selectedBlueprint.isEmpty()) {
-                    NUtils.getUI().msg("Please select a blueprint first.");
+                    NUtils.getUI().msg(L10n.get("blueprint.select_first"));
                     return;
                 }
                 currentState = State.PLACE_BLUEPRINT;
@@ -82,7 +83,7 @@ public class BlueprintTreePlanter extends Window implements Checkable {
             }
         }, prev.pos("bl").add(UI.scale(0, 15)));
         
-        prev = add(new Button(UI.scale(220), "Start Planting") {
+        prev = add(new Button(UI.scale(220), L10n.get("blueprint.start")) {
             @Override
             public void click() {
                 super.click();
@@ -91,7 +92,7 @@ public class BlueprintTreePlanter extends Window implements Checkable {
             }
         }, prev.pos("bl").add(UI.scale(0, 5)));
         
-        prev = add(new Button(UI.scale(220), "Clear Blueprint") {
+        prev = add(new Button(UI.scale(220), L10n.get("blueprint.clear")) {
             @Override
             public void click() {
                 super.click();
@@ -123,7 +124,7 @@ public class BlueprintTreePlanter extends Window implements Checkable {
         }
         
         if (blueprintNames.isEmpty()) {
-            blueprintNames.add("No blueprints available");
+            blueprintNames.add(L10n.get("blueprint.no_blueprints"));
         }
     }
     

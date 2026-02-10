@@ -7,6 +7,7 @@ import haven.Widget.MouseDownEvent;
 import haven.res.lib.itemtex.ItemTex;
 import nurgling.NUtils;
 import nurgling.areas.NArea;
+import nurgling.i18n.L10n;
 import nurgling.tools.VSpec;
 import nurgling.widgets.NMakewindow;
 import org.json.JSONObject;
@@ -69,7 +70,7 @@ public class UsingTools extends Widget {
     public static final TexI frame = new TexI(Resource.loadimg("nurgling/hud/iconframe"));
     public UsingTools(ArrayList<Tool> tools, boolean showLabel) {
         this.tools = tools;
-        prev = add(l = new Label("Tool:"));
+        prev = add(l = new Label(L10n.get("tools.label")));
         if(!showLabel)
             l.hide();
         sz = prev.sz.add(0,showLabel?Inventory.sqsz.y:25).add(UI.scale(0,5));
@@ -120,14 +121,14 @@ public class UsingTools extends Widget {
 
         public Tool(String path, String name)
         {
-            this.img = new TexI(Resource.remote().loadwait(path).layer(Resource.imgc).scaled());
+            this.img = new TexI(Resource.remote().loadwait(path).layer(Resource.imgc).img);
             this.path = path;
             this.name = name;
         }
 
         public Tool(String path, String name, String apath)
         {
-            this.img = new TexI(Resource.remote().loadwait(apath).layer(Resource.imgc).scaled());
+            this.img = new TexI(Resource.remote().loadwait(apath).layer(Resource.imgc).img);
             this.name = name;
             this.path = path;
         }
@@ -160,7 +161,7 @@ public class UsingTools extends Widget {
             for(Tool ing: data)
             {
                 GOut sg = g.reclip(pos, invsq.sz());
-                sg.image(ing.img, Coord.z, UI.scale(Inventory.sqsz));
+                sg.image(ing.img, Coord.z, Inventory.sqsz);
                 if(shift.x<5)
                 {
                     pos = pos.add(Inventory.sqsz.x + UI.scale(1), 0);

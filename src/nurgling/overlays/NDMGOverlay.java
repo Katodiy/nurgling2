@@ -3,11 +3,30 @@ package nurgling.overlays;
 import haven.*;
 import haven.render.Homo3D;
 import haven.render.Pipe;
+import nurgling.NUtils;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class NDMGOverlay extends Sprite implements PView.Render2D {
+
+    /**
+     * Clears all NDMGOverlay overlays from all Gobs
+     */
+    public static void clearAll() {
+        if (NUtils.getGameUI() == null || NUtils.getGameUI().ui == null || 
+            NUtils.getGameUI().ui.sess == null || NUtils.getGameUI().ui.sess.glob == null) {
+            return;
+        }
+        synchronized (NUtils.getGameUI().ui.sess.glob.oc) {
+            for (Gob gob : NUtils.getGameUI().ui.sess.glob.oc) {
+                Gob.Overlay ol = gob.findol(NDMGOverlay.class);
+                if (ol != null) {
+                    ol.remove();
+                }
+            }
+        }
+    }
     public static final Text.Foundry fnd = new Text.Foundry(Text.sans, 12);
     Color[] colt = new Color[]{Color.RED, Color.YELLOW, Color.GREEN};
     TexI[] dmgt = new TexI[3];

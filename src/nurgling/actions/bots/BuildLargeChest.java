@@ -12,6 +12,7 @@ import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Build;
 import nurgling.actions.Results;
+import nurgling.areas.NContext;
 import nurgling.overlays.BuildGhostPreview;
 import nurgling.overlays.NCustomBauble;
 import nurgling.tools.NAlias;
@@ -20,55 +21,69 @@ public class BuildLargeChest implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         try {
-        Build.Command command = new Build.Command();
-        command.name = "Large Chest";
+            Build.Command command = new Build.Command();
+            command.name = "Large Chest";
+            NContext context = new NContext(gui);
 
-        NUtils.getGameUI().msg("Please, select build area");
-    SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Large Chest");
-        buildarea.run(NUtils.getGameUI());
+            NUtils.getGameUI().msg("Please, select build area");
+            SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(context, Resource.loadsimg("baubles/buildArea"), "Large Chest");
+            buildarea.run(NUtils.getGameUI());
 
-        // Boards (5)
-        NUtils.getGameUI().msg("Please, select area for boards");
-        SelectArea boardarea = new SelectArea(Resource.loadsimg("baubles/boardIng"));
-        boardarea.run(NUtils.getGameUI());
-        command.ingredients.add(new Build.Ingredient(new Coord(4,1), boardarea.getRCArea(), new NAlias("Board"), 5));
+            // Use BuildMaterialHelper for auto-zone lookup
+            BuildMaterialHelper helper = new BuildMaterialHelper(context, gui);
+            
+            // Boards (5)
+            command.ingredients.add(helper.getBoards(5));
 
-        // Metal Bars (2)
-        NUtils.getGameUI().msg("Please, select area for metal bars");
-        SelectArea bararea = new SelectArea(Resource.loadsimg("baubles/mbars"));
-        bararea.run(NUtils.getGameUI());
-        command.ingredients.add(new Build.Ingredient(new Coord(1,1), bararea.getRCArea(), new NAlias("Bar of Bronze", "Bar of Cast Iron", "Bar of Wrought Iron"), 2));
+            // Metal Bars (2)
+            command.ingredients.add(helper.getIngredient(
+                new Coord(1, 1),
+                new NAlias("Bar of Bronze", "Bar of Cast Iron", "Bar of Wrought Iron"),
+                2,
+                "baubles/mbars",
+                "Please, select area for metal bars"
+            ));
 
-        // Leather (4)
-        NUtils.getGameUI().msg("Please, select area for leather");
-        SelectArea leatherarea = new SelectArea(Resource.loadsimg("baubles/leather"));
-        leatherarea.run(NUtils.getGameUI());
-        command.ingredients.add(new Build.Ingredient(new Coord(1,1), leatherarea.getRCArea(), new NAlias("Leather"), 4));
+            // Leather (4)
+            command.ingredients.add(helper.getIngredient(
+                new Coord(1, 1),
+                new NAlias("Leather"),
+                4,
+                "baubles/leather",
+                "Please, select area for leather"
+            ));
 
-        // Rope (2)
-        NUtils.getGameUI().msg("Please, select area for rope");
-        SelectArea ropearea = new SelectArea(Resource.loadsimg("baubles/rope"));
-        ropearea.run(NUtils.getGameUI());
-        command.ingredients.add(new Build.Ingredient(new Coord(1,2), ropearea.getRCArea(), new NAlias("Rope"), 2));
+            // Rope (2)
+            command.ingredients.add(helper.getIngredient(
+                new Coord(1, 2),
+                new NAlias("Rope"),
+                2,
+                "baubles/rope",
+                "Please, select area for rope"
+            ));
 
-        NUtils.getGameUI().msg("Please, select area for bone glue");
-        SelectArea gluearea = new SelectArea(Resource.loadsimg("baubles/glue"));
-        gluearea.run(NUtils.getGameUI());
-        command.ingredients.add(new Build.Ingredient(new Coord(1,1), gluearea.getRCArea(), new NAlias("Bone Glue"), 3));
+            // Bone Glue (3)
+            command.ingredients.add(helper.getIngredient(
+                new Coord(1, 1),
+                new NAlias("Bone Glue"),
+                3,
+                "baubles/glue",
+                "Please, select area for bone glue"
+            ));
 
-        // Get ghost positions from BuildGhostPreview if available
-        ArrayList<Coord2d> ghostPositions = null;
-        BuildGhostPreview ghostPreview = null;
-        Gob player = NUtils.player();
-        if (player != null) {
-            ghostPreview = player.getattr(BuildGhostPreview.class);
-            if (ghostPreview != null) {
-                ghostPositions = new ArrayList<>(ghostPreview.getGhostPositions());
+            // Get ghost positions from BuildGhostPreview if available
+            ArrayList<Coord2d> ghostPositions = null;
+            BuildGhostPreview ghostPreview = null;
+            Gob player = NUtils.player();
+            if (player != null) {
+                ghostPreview = player.getattr(BuildGhostPreview.class);
+                if (ghostPreview != null) {
+                    ghostPositions = new ArrayList<>(ghostPreview.getGhostPositions());
+                }
             }
-        }
 
-        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
-        return Results.SUCCESS();
+            new Build(context, command, buildarea.ghostArea, buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
+            return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted
             Gob player = NUtils.player();

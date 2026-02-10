@@ -9,7 +9,7 @@ import haven.MenuGrid.Pagina;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-@haven.FromResource(name = "ui/croster", version = 76)
+@haven.FromResource(name = "ui/croster", version = 77)
 public class Column <E extends Entry> {
     public final Tex head;
     public final String tip;
@@ -28,7 +28,7 @@ public class Column <E extends Entry> {
 	Resource hres = Loading.waitfor(() -> head.get());
 	Resource.Tooltip tip = hres.layer(Resource.tooltip);
 	this.head = hres.layer(Resource.imgc).tex();
-	this.tip = (tip == null) ? null : tip.t;
+	this.tip = (tip == null) ? null : tip.text();
 	this.order = order;
 	this.w = UI.scale(w);
     }

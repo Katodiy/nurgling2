@@ -388,7 +388,7 @@ public class Finder
     {
         if(gobid == -1)
         {
-            if(NUtils.getGameUI().map.placing!=null)
+            if(NUtils.getGameUI().map.placing!=null && NUtils.getGameUI().map.placing.ready())
                 return NUtils.getGameUI().map.placing.get();
             return null;
         }

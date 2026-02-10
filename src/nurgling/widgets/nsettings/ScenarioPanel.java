@@ -5,13 +5,17 @@ import nurgling.NStyle;
 import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.ActionWithFinal;
-import nurgling.actions.bots.ScenarioRunner;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
 import nurgling.scenarios.*;
+import nurgling.widgets.CustomIcon;
+import nurgling.widgets.CustomIconManager;
 import nurgling.widgets.NScenarioButton;
+import nurgling.widgets.SavedIconsWindow;
 import nurgling.widgets.ScenarioBotSelectionDialog;
 import nurgling.widgets.StepSettingsPanel;
+
+import nurgling.i18n.L10n;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -31,6 +35,9 @@ public class ScenarioPanel extends Panel {
     private SListBox<BotStep, Widget> stepList;
 
     private StepSettingsPanel stepSettingsPanel;
+    private IButton iconPreview;
+    private Button iconSelectBtn;
+    private Button iconClearBtn;
 
     private BotStep selectedStep = null;
     private Scenario editingScenario = null;
@@ -51,7 +58,7 @@ public class ScenarioPanel extends Panel {
         int editorListHeight = UI.scale(380);
 
         listPanel = add(new Widget(new Coord(contentWidth, contentHeight)), new Coord(margin, margin));
-        listPanel.add(new Label("Scenarios:"), new Coord(0, 0));
+        listPanel.add(new Label(L10n.get("scenarios.title")), new Coord(0, 0));
 
         int slistWidth = contentWidth - margin * 2;
         SListBox<Scenario, Widget> scenarioListBox = new SListBox<Scenario, Widget>(new Coord(slistWidth, slistHeight), UI.scale(40)) {
@@ -110,7 +117,7 @@ public class ScenarioPanel extends Panel {
         int bottomY = contentHeight - margin - btnHeight;
 
         listPanel.add(
-                new Button(btnWidth, "Add Scenario", this::addScenario),
+                new Button(btnWidth, L10n.get("scenarios.add"), this::addScenario),
                 new Coord((contentWidth - btnWidth) / 2, bottomY - btnHeight - UI.scale(8))
         );
 
@@ -118,10 +125,39 @@ public class ScenarioPanel extends Panel {
         editorPanel.hide();
 
         int y = margin;
-        editorPanel.add(new Label("Edit Scenario:"), new Coord(0, 0));
+        editorPanel.add(new Label(L10n.get("scenarios.edit")), new Coord(0, 0));
         y += UI.scale(22);
 
         scenarioNameEntry = editorPanel.add(new TextEntry(contentWidth - margin * 2 - 10, ""), new Coord(margin, y));
+        y += UI.scale(36);
+
+        // Custom icon selection
+        editorPanel.add(new Label("Icon:"), new Coord(margin, y));
+        y += UI.scale(18);
+
+        // Icon preview (32x32)
+        BufferedImage defaultIcon = createDefaultIconImage();
+        iconPreview = editorPanel.add(new IButton(defaultIcon, defaultIcon, defaultIcon), new Coord(margin, y));
+
+        // Select icon button
+        iconSelectBtn = editorPanel.add(new Button(UI.scale(80), "Select") {
+            @Override
+            public void click() {
+                openIconSelectWindow();
+            }
+        }, new Coord(margin + UI.scale(40), y));
+
+        // Clear icon button
+        iconClearBtn = editorPanel.add(new Button(UI.scale(60), "Clear") {
+            @Override
+            public void click() {
+                if (editingScenario != null) {
+                    editingScenario.setCustomIconId(null);
+                    updateIconPreview();
+                }
+            }
+        }, new Coord(margin + UI.scale(128), y));
+
         y += UI.scale(36);
 
         int colSpacing = UI.scale(12);
@@ -147,7 +183,7 @@ public class ScenarioPanel extends Panel {
                             BotDescriptor desc = BotRegistry.byId(botId);
                             Tex iconTex = null;
                             if (desc != null) {
-                                botId = desc.displayName;
+                                botId = desc.getDisplayName();
                                 try {
                                     BufferedImage iconImg = Resource.loadsimg(desc.getUpIconPath());
                                     if (iconImg != null)
@@ -249,7 +285,7 @@ public class ScenarioPanel extends Panel {
         y += UI.scale(270) + UI.scale(10);
 
         editorPanel.add(
-                new Button(btnWidth, "Add Step", this::showBotSelectDialog),
+                new Button(btnWidth, L10n.get("scenarios.add_step"), this::showBotSelectDialog),
                 new Coord((contentWidth - btnWidth) / 2, bottomY - btnHeight - UI.scale(8))
         );
 
@@ -298,6 +334,7 @@ public class ScenarioPanel extends Panel {
         listPanel.hide();
         editorPanel.show();
         scenarioNameEntry.settext(editingScenario != null ? editingScenario.getName() : "");
+        updateIconPreview();
         stepList.update();
         List<BotStep> steps = editingScenario != null ? editingScenario.getSteps() : Collections.emptyList();
         if (!steps.isEmpty()) {
@@ -455,8 +492,8 @@ public class ScenarioPanel extends Panel {
 
             add(label, new Coord(labelX, (sz.y - label.sz.y) / 2));
             int itemBtnHeight = UI.scale(28);
-            add(new Button(btnW, "Edit", () -> editScenario(scenario)), new Coord(editBtnX, (sz.y - itemBtnHeight) / 2));
-            add(new Button(btnW, "Delete", () -> deleteScenario(scenario)), new Coord(deleteBtnX, (sz.y - itemBtnHeight) / 2));
+            add(new Button(btnW, L10n.get("scenarios.btn_edit"), () -> editScenario(scenario)), new Coord(editBtnX, (sz.y - itemBtnHeight) / 2));
+            add(new Button(btnW, L10n.get("scenarios.btn_delete"), () -> deleteScenario(scenario)), new Coord(deleteBtnX, (sz.y - itemBtnHeight) / 2));
         }
         
         @Override
@@ -509,5 +546,53 @@ public class ScenarioPanel extends Panel {
         }
     }
 
+    private void openIconSelectWindow() {
+        SavedIconsWindow window = new SavedIconsWindow(icon -> {
+            if (editingScenario != null && icon != null) {
+                editingScenario.setCustomIconId(icon.getId());
+                updateIconPreview();
+            }
+        });
+        ui.root.add(window, ui.root.sz.div(2).sub(window.sz.div(2)));
+    }
 
+    private void updateIconPreview() {
+        String iconId = editingScenario != null ? editingScenario.getCustomIconId() : null;
+        BufferedImage img;
+
+        if (iconId != null) {
+            CustomIcon customIcon = CustomIconManager.getInstance().getIcon(iconId);
+            if (customIcon != null) {
+                img = customIcon.getImage(0);
+            } else {
+                img = createDefaultIconImage();
+            }
+        } else {
+            img = createDefaultIconImage();
+        }
+
+        if (iconPreview != null) {
+            // IButton fields are final, so we need to recreate it
+            Coord pos = iconPreview.c;
+            iconPreview.reqdestroy();
+            iconPreview = editorPanel.add(new IButton(img, img, img), pos);
+        }
+    }
+
+    private BufferedImage createDefaultIconImage() {
+        int size = UI.scale(32);
+        BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g = img.createGraphics();
+        g.setColor(new java.awt.Color(60, 60, 80));
+        g.fillRoundRect(0, 0, size, size, 4, 4);
+        g.setColor(new java.awt.Color(100, 100, 120));
+        g.drawRoundRect(0, 0, size - 1, size - 1, 4, 4);
+        g.setColor(java.awt.Color.WHITE);
+        g.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, UI.scale(10)));
+        String text = "None";
+        int textWidth = g.getFontMetrics().stringWidth(text);
+        g.drawString(text, (size - textWidth) / 2, size / 2 + UI.scale(4));
+        g.dispose();
+        return img;
+    }
 }

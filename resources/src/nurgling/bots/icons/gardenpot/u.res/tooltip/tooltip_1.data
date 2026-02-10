@@ -1,3 +1,3 @@
 #TOOLTIP LAYER FOR RES src/nurgling/wnd/search.res//
 #String tooltip
-This bot automates the complete garden pot farming cycle: harvesting ready plants, filling pots with mulch/soil and water, and planting seeds. You need an area with 'Planting Garden Pots' specialization containing your garden pots - add a subspecialization for the plant type (e.g., Blueberry, Chives, Sage). You need a TAKE area with 'Mulch'/'Soil' for soil. You need a 'Source of water' area with a barrel for watering pots. You need a 'Garden Pot Seeds' specialization area with subspecialization matching your plant type for seeds. You need a PUT are with the plant type for harvest drop off (can be the same area as 'Garden Pot Seeds') The bot will cycle through all 'Planting Garden Pots' areas and process each one. Note: placing garden pots very close to each other can result in bot getting stuck.
+@bot.gardenpot.desc

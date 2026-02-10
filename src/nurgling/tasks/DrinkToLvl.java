@@ -2,6 +2,7 @@ package nurgling.tasks;
 
 import haven.*;
 import nurgling.*;
+import nurgling.widgets.DrinkMeter;
 
 public class DrinkToLvl extends NTask
 {
@@ -18,8 +19,18 @@ public class DrinkToLvl extends NTask
     public boolean check()
     {
         String lastError = NUtils.getUI().getLastError();
-        if (lastError!=null && lastError.equals("You have nothing on your hotbelt to drink."))
+        if (lastError != null && lastError.equals("You have nothing on your hotbelt to drink."))
         {
+            // Check if there's still water in the DrinkMeter
+            NGameUI gui = NUtils.getGameUI();
+            if (gui != null && gui.drinkMeter != null) {
+                float available = gui.drinkMeter.getTotalDrinkable();
+                if (available > 0) {
+                    // Still have water, clear error and retry
+                    NUtils.getUI().dropLastError();
+                    return false;
+                }
+            }
             no_water = true;
             return true;
         }

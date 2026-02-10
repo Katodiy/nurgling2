@@ -1,7 +1,9 @@
 package nurgling.widgets;
 
 import haven.*;
+import haven.res.ui.obj.buddy.Buddy;
 import nurgling.*;
+import nurgling.overlays.map.MinimapChunkNavRenderer;
 import nurgling.overlays.map.MinimapClaimRenderer;
 import nurgling.overlays.map.MinimapExploredAreaRenderer;
 import nurgling.tools.ExploredArea;
@@ -193,6 +195,9 @@ NMiniMap extends MiniMap {
         // Render claim overlays (personal, village, realm)
         MinimapClaimRenderer.renderClaims(this, g);
 
+        // Render ChunkNav exploration overlay (checks config internally)
+        MinimapChunkNavRenderer.renderChunkNav(this, g);
+
         boolean playerSegment = (sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id));
         // Show grid when zoomed in enough (scale >= 0.25, i.e. not too far out)
         if(currentScale >= 0.25f && (Boolean) NConfig.get(NConfig.Key.showGrid)) {drawgrid(g);}
@@ -205,8 +210,8 @@ NMiniMap extends MiniMap {
             drawicons(g);
         drawparty(g);
 
-
         drawtempmarks(g);
+        drawLabeledMarks(g);
         drawterrainname(g);
         drawResourceTimers(g);
         drawFishLocations(g);
@@ -214,6 +219,41 @@ NMiniMap extends MiniMap {
         drawQueuedWaypoints(g);  // Draw waypoint visualization
         drawForagerRecordingPath(g);  // Draw forager path being recorded
         drawMarkerLine(g);       // Draw line to selected marker
+    }
+
+    @Override
+    public void drawparty(GOut g) {
+        for(Party.Member m : ui.sess.glob.party.memb.values()) {
+            try {
+                Coord2d ppc = m.getc();
+                if(ppc == null)
+                    continue;
+                Coord p2cppc = p2c(ppc);
+                g.chcolor(m.col.getRed(), m.col.getGreen(), m.col.getBlue(), 255);
+                g.rotimage(plp, p2cppc, plp.sz().div(2), -m.geta() - (Math.PI / 2));
+                g.chcolor();
+                
+                // Draw party member names on minimap
+                if((Boolean)NConfig.get(NConfig.Key.showPartyMemberNames)) {
+                    String name = null;
+                    if(NGameUI.gobIdToKinName.containsKey(m.gobid)) {
+                        name = NGameUI.gobIdToKinName.get(m.gobid);
+                    } else if(m.getgob() != null) {
+                        Buddy buddyInfo = m.getgob().getattr(Buddy.class);
+                        if(buddyInfo != null) {
+                            name = buddyInfo.rnm;
+                            if(name != null && !NGameUI.gobIdToKinName.containsKey(m.gobid)) {
+                                NGameUI.gobIdToKinName.put(m.gobid, name);
+                            }
+                        }
+                    }
+                    if(name != null && !name.isEmpty()) {
+                        Text nameText = NStyle.meter.render(name);
+                        g.aimage(nameText.tex(), p2cppc.add(0, -UI.scale(15)), 0.5, 0.5);
+                    }
+                }
+            } catch(Loading l) {}
+        }
     }
 
     // Draw forager path being recorded or loaded
@@ -550,7 +590,9 @@ NMiniMap extends MiniMap {
             }
         }
 
-        if((Boolean) NConfig.get(NConfig.Key.exploredAreaEnable)) {
+        // Only update explored area from the main corner minimap (gui.mmap)
+        // This prevents multiple minimap instances from conflicting
+        if((Boolean) NConfig.get(NConfig.Key.exploredAreaEnable) && gui != null && gui.mmap == this) {
             if ((sessloc != null) && ((curloc == null) || (sessloc.seg.id == curloc.seg.id))) {
                 exploredArea.tick(dt);
                 Gob player = ui.gui.map.player();
@@ -902,6 +944,48 @@ NMiniMap extends MiniMap {
         }
     }
 
+    /**
+     * Draw labeled marks on the minimap (from Checker bots like CheckWater, CheckClay).
+     * Shows an icon with a quality label underneath (e.g., "q20").
+     * Data is loaded from LabeledMarkService for persistence between sessions.
+     */
+    private void drawLabeledMarks(GOut g) {
+        if(sessloc == null || dloc == null) return;
+        
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.labeledMarkService == null) return;
+        
+        java.util.List<LabeledMinimapMark> marks = gui.labeledMarkService.getMarksForSegment(dloc.seg.id);
+        
+        Coord hsz = sz.div(2);
+        
+        for(LabeledMinimapMark mark : marks) {
+            // Calculate screen position
+            Coord screenPos = mark.tileCoords.sub(dloc.tc).div(scalef()).add(hsz);
+            
+            // Only draw if on screen
+            if(screenPos.x >= 0 && screenPos.x <= sz.x &&
+               screenPos.y >= 0 && screenPos.y <= sz.y) {
+                
+                // Draw icon if available
+                TexI iconTex = mark.getIconTex();
+                if(iconTex != null) {
+                    int dsz = Math.max(iconTex.sz().y, iconTex.sz().x);
+                    int targetSize = UI.scale(18);
+                    g.aimage(iconTex, screenPos, 0.5, 0.5, 
+                        UI.scale(targetSize * iconTex.sz().x / dsz, targetSize * iconTex.sz().y / dsz));
+                }
+                
+                // Draw label under the icon (like quest giver names)
+                Text labelText = mark.getLabelText();
+                if(labelText != null) {
+                    Coord textPos = screenPos.add(0, UI.scale(10));
+                    g.aimage(labelText.tex(), textPos, 0.5, 0);
+                }
+            }
+        }
+    }
+
     private void drawterrainname(GOut g) {
         if((Boolean)NConfig.get(NConfig.Key.showTerrainName) && currentTerrainName != null && !currentTerrainName.isEmpty()) {
             Text.Foundry fnd = new Text.Foundry(Text.dfont, 10);
@@ -1059,20 +1143,39 @@ NMiniMap extends MiniMap {
             }
         } catch(Loading l) {
         }
+        // Call overlay hook with size for correct scaling
+        drawgridOverlays(g, ul, disp, size);
+    }
+    
+    /**
+     * Hook method for subclasses to add overlay rendering.
+     * Called after base grid image is drawn.
+     * @param g Graphics context
+     * @param ul Upper-left screen coordinate
+     * @param disp Display grid data
+     * @param size Calculated size for rendering (matches grid scaling)
+     */
+    protected void drawgridOverlays(GOut g, Coord ul, DisplayGrid disp, Coord size) {
+        // Default: no overlays. Subclasses (like MapWnd.View) can override.
     }
     
     // Compatibility method for old code paths
     public void drawgrid(GOut g, Coord ul, DisplayGrid disp) {
+        float scaleFactor = getScaleFactor();
+        Coord imgsz = null;
         try {
             Tex img = disp.img();
             if(img != null) {
-                float scaleFactor = getScaleFactor();
                 // Use double precision and round to avoid gaps between tiles
                 Coord2d imgsizDouble = new Coord2d(UI.scale(img.sz())).mul(scaleFactor);
-                Coord imgsz = new Coord((int)Math.round(imgsizDouble.x), (int)Math.round(imgsizDouble.y));
+                imgsz = new Coord((int)Math.round(imgsizDouble.x), (int)Math.round(imgsizDouble.y));
                 g.image(img, ul, imgsz);
             }
         } catch(Loading l) {
+        }
+        // Call overlay hook with calculated size
+        if(imgsz != null) {
+            drawgridOverlays(g, ul, disp, imgsz);
         }
     }
 
@@ -1560,6 +1663,33 @@ NMiniMap extends MiniMap {
         }
         return null;
     }
+    
+    /**
+     * Find a labeled minimap mark at the given screen coordinate.
+     * Used for right-click deletion of water/soil quality marks.
+     */
+    private LabeledMinimapMark labeledMarkAt(Coord screenCoord) {
+        if(dloc == null || sessloc == null) return null;
+        
+        NGameUI gui = NUtils.getGameUI();
+        if(gui == null || gui.labeledMarkService == null) return null;
+        
+        java.util.List<LabeledMinimapMark> marks = gui.labeledMarkService.getMarksForSegment(dloc.seg.id);
+        
+        Coord hsz = sz.div(2);
+        int threshold = UI.scale(12); // Click radius
+        
+        for(LabeledMinimapMark mark : marks) {
+            // Calculate screen position for this mark
+            Coord markScreenPos = mark.tileCoords.sub(dloc.tc).div(scalef()).add(hsz);
+            
+            // Check if click is within threshold
+            if(screenCoord.dist(markScreenPos) < threshold) {
+                return mark;
+            }
+        }
+        return null;
+    }
 
     @Override
     public boolean filter(DisplayMarker mark) {
@@ -1697,6 +1827,18 @@ NMiniMap extends MiniMap {
             }
         }
 
+        // Handle right-click release on labeled mark (water/soil quality) - delete it
+        if(ev.b == 3 && dloc != null && sessloc != null) {
+            LabeledMinimapMark labeledMark = labeledMarkAt(ev.c);
+            if(labeledMark != null) {
+                NGameUI gui = NUtils.getGameUI();
+                if(gui != null && gui.labeledMarkService != null) {
+                    gui.labeledMarkService.removeMark(labeledMark);
+                }
+                return true;
+            }
+        }
+        
         // Handle right-click release on tree location - open details window
         if(ev.b == 3 && dloc != null && sessloc != null && showTreeIcons) { // Button 3 is right-clicked
             NGameUI gui = NUtils.getGameUI();

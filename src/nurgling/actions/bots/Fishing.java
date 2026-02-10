@@ -5,6 +5,7 @@ import nurgling.NGameUI;
 import nurgling.NUtils;
 import nurgling.actions.*;
 import nurgling.areas.NArea;
+import nurgling.areas.NContext;
 import nurgling.conf.NFishingSettings;
 import nurgling.tasks.*;
 import nurgling.tools.Context;
@@ -35,27 +36,20 @@ public class Fishing implements Action {
         SelectArea insa;
         NUtils.getGameUI().msg("Please select area for fishing");
         (insa = new SelectArea(Resource.loadsimg("baubles/fishingPlace"))).run(gui);
-        Context context = new Context();
-        Pair<Coord2d,Coord2d> repArea = null;
-        Pair<Coord2d,Coord2d> baitArea = null;
-        
+        NContext context = new NContext(gui);
+        NArea repArea = null;
+        NArea baitArea= null;
         if(prop.useInventoryTools) {
             // Using tools from inventory - no zone selection needed
             NUtils.getGameUI().msg("Using tools from inventory/equipment");
         } else {
-            SelectArea repsa;
-            NUtils.getGameUI().msg("Please select area with repair instruments");
-            (repsa = new SelectArea(Resource.loadsimg("baubles/fishingRep"))).run(gui);
-            repArea = repsa.getRCArea();
 
-            context.addInput(prop.hook, Context.GetInput(prop.hook, repsa.getRCArea()));
-            context.addInput(prop.fishline, Context.GetInput(prop.fishline, repsa.getRCArea()));
+            String repAreaId = context.createArea("Please select area with repair instruments", Resource.loadsimg("baubles/fishingRep"));
+            repArea = context.getAreaById(repAreaId);
 
-            SelectArea baitsa;
-            NUtils.getGameUI().msg("Please select area with baits or lures");
-            (baitsa = new SelectArea(Resource.loadsimg("baubles/fishingBaits"))).run(gui);
-            baitArea = baitsa.getRCArea();
-            context.addInput(prop.bait, Context.GetInput(prop.bait, baitsa.getRCArea()));
+            String baitAreaId = context.createArea("Please select area with baits or lures", Resource.loadsimg("baubles/fishingBaits"));
+            baitArea = context.getAreaById(baitAreaId);
+
         }
 
         Pair<Coord2d,Coord2d> outArea = null;
@@ -76,7 +70,7 @@ public class Fishing implements Action {
             if(!new RepairFishingRotFromInventory(prop).run(gui).IsSuccess())
                 return Results.FAIL();
         } else {
-            if(!new RepairFishingRot(context, prop, repArea, baitArea).run(gui).IsSuccess())
+            if(!new RepairFishingRot(context, prop, repArea.getRCArea(), baitArea.getRCArea()).run(gui).IsSuccess())
                 return Results.FAIL();
         }
         new PathFinder(currentPos).run(gui);
@@ -91,8 +85,7 @@ public class Fishing implements Action {
         NUtils.addTask(new WaitPose(NUtils.player(),"fish"));
         currentPos = NUtils.player().rc;
         
-        final Pair<Coord2d,Coord2d> finalRepArea = repArea;
-        final Pair<Coord2d,Coord2d> finalBaitArea = baitArea;
+
         final Pair<Coord2d,Coord2d> finalOutArea = outArea;
         
         while (true)
@@ -144,7 +137,7 @@ public class Fishing implements Action {
                         if(!new RepairFishingRotFromInventory(prop).run(gui).IsSuccess())
                             return Results.FAIL();
                     } else {
-                        if(!new RepairFishingRot(context, prop, finalRepArea, finalBaitArea).run(gui).IsSuccess())
+                        if(!new RepairFishingRot(context, prop, repArea.getRCArea(), baitArea.getRCArea()).run(gui).IsSuccess())
                             return Results.FAIL();
                     }
                     startFishing(gui, currentPos, fishPlace);

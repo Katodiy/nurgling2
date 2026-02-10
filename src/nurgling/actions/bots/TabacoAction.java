@@ -36,7 +36,7 @@ public class TabacoAction implements Action {
 
             for (Gob htable : Finder.findGobs(NContext.findSpec(rtables.name),
                     new NAlias("gfx/terobjs/htable"))) {
-                Container cand = new Container(htable, "Herbalist Table");
+                Container cand = new Container(htable, "Herbalist Table", null);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.Tetris.class);

@@ -10,6 +10,7 @@ import nurgling.NUtils;
 import nurgling.actions.Action;
 import nurgling.actions.Build;
 import nurgling.actions.Results;
+import nurgling.areas.NContext;
 import nurgling.overlays.BuildGhostPreview;
 import nurgling.overlays.NCustomBauble;
 import nurgling.tools.NAlias;
@@ -22,28 +23,27 @@ public class BuildBarrel implements Action {
         try {
             Build.Command command = new Build.Command();
             command.name = "Barrel";
-
+            NContext context = new NContext(gui);
             NUtils.getGameUI().msg("Please, select build area");
-        SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(Resource.loadsimg("baubles/buildArea"), "Barrel");
+            SelectAreaWithLiveGhosts buildarea = new SelectAreaWithLiveGhosts(context, Resource.loadsimg("baubles/buildArea"), "Barrel");
             buildarea.run(NUtils.getGameUI());
 
-            NUtils.getGameUI().msg("Please, select area for board");
-            SelectArea brancharea = new SelectArea(Resource.loadsimg("baubles/boardIng"));
-            brancharea.run(NUtils.getGameUI());
-            command.ingredients.add(new Build.Ingredient(new Coord(4,1),brancharea.getRCArea(),new NAlias("Board"),5));
+            // Use BuildMaterialHelper for auto-zone lookup
+            BuildMaterialHelper helper = new BuildMaterialHelper(context, gui);
+            command.ingredients.add(helper.getBoards(5));
 
             // Get ghost positions from BuildGhostPreview if available
             ArrayList<Coord2d> ghostPositions = null;
             BuildGhostPreview ghostPreview = null;
             Gob player = NUtils.player();
             if (player != null) {
-            ghostPreview = player.getattr(BuildGhostPreview.class);
+                ghostPreview = player.getattr(BuildGhostPreview.class);
                 if (ghostPreview != null) {
                     ghostPositions = new ArrayList<>(ghostPreview.getGhostPositions());
                 }
             }
 
-        new Build(command, buildarea.getRCArea(), buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
+            new Build(context, command, buildarea.ghostArea, buildarea.getRotationCount(), ghostPositions, ghostPreview).run(gui);
             return Results.SUCCESS();
         } finally {
             // Always clean up ghost preview when bot finishes or is interrupted

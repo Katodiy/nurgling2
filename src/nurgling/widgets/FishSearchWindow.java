@@ -4,6 +4,7 @@ import haven.*;
 import haven.Locked;
 import nurgling.FishLocation;
 import nurgling.FishLocationService;
+import nurgling.i18n.L10n;
 import nurgling.NGameUI;
 
 import java.util.*;
@@ -16,8 +17,8 @@ public class FishSearchWindow extends Window {
     private final NGameUI gui;
     private final FishLocationService fishService;
 
-    private Dropbox<String> fishNameDropdown;
-    private Dropbox<String> moonPhaseDropdown;
+    private NDropbox<String> fishNameDropdown;
+    private NDropbox<String> moonPhaseDropdown;
     private TextEntry percentageEntry;
     private FishResultsList resultsList;
 
@@ -25,7 +26,7 @@ public class FishSearchWindow extends Window {
     private static final int WINDOW_HEIGHT = UI.scale(500);
 
     public FishSearchWindow(NGameUI gui) {
-        super(new Coord(WINDOW_WIDTH, WINDOW_HEIGHT), "Fish Location Search", true);
+        super(new Coord(WINDOW_WIDTH, WINDOW_HEIGHT), L10n.get("fish.search_title"), true);
         this.gui = gui;
         this.fishService = gui.fishLocationService;
 
@@ -35,10 +36,10 @@ public class FishSearchWindow extends Window {
         int lineHeight = UI.scale(30);
 
         // Fish name filter
-        add(new Label("Fish Name:"), labelX, y + UI.scale(5));
+        add(new Label(L10n.get("fish.name")), labelX, y + UI.scale(5));
         List<String> fishNames = getDistinctFishNames();
         fishNames.add(0, "Any"); // Add "Any" option at the beginning
-        fishNameDropdown = add(new Dropbox<String>(UI.scale(250), Math.min(fishNames.size(), 10), UI.scale(20)) {
+        fishNameDropdown = add(new NDropbox<String>(UI.scale(250), Math.min(fishNames.size(), 10), UI.scale(20)) {
             @Override
             protected String listitem(int i) {
                 return fishNames.get(i);
@@ -58,10 +59,10 @@ public class FishSearchWindow extends Window {
         y += lineHeight;
 
         // Moon phase filter
-        add(new Label("Moon Phase:"), labelX, y + UI.scale(5));
+        add(new Label(L10n.get("fish.moon_phase")), labelX, y + UI.scale(5));
         List<String> moonPhases = getDistinctMoonPhases();
         moonPhases.add(0, "Any"); // Add "Any" option at the beginning
-        moonPhaseDropdown = add(new Dropbox<String>(UI.scale(250), Math.min(moonPhases.size(), 10), UI.scale(20)) {
+        moonPhaseDropdown = add(new NDropbox<String>(UI.scale(250), Math.min(moonPhases.size(), 10), UI.scale(20)) {
             @Override
             protected String listitem(int i) {
                 return moonPhases.get(i);
@@ -81,12 +82,12 @@ public class FishSearchWindow extends Window {
         y += lineHeight;
 
         // Percentage filter (minimum)
-        add(new Label("Min Percentage:"), labelX, y + UI.scale(5));
+        add(new Label(L10n.get("fish.min_percent")), labelX, y + UI.scale(5));
         percentageEntry = add(new TextEntry(UI.scale(100), "0"), controlX, y);
         y += lineHeight;
 
         // Search button
-        Button searchBtn = add(new Button(UI.scale(150), "Search") {
+        Button searchBtn = add(new Button(UI.scale(150), L10n.get("common.search")) {
             @Override
             public void click() {
                 performSearch();
@@ -95,7 +96,7 @@ public class FishSearchWindow extends Window {
         y += lineHeight + UI.scale(10);
 
         // Results list
-        add(new Label("Results:"), labelX, y);
+        add(new Label(L10n.get("common.results")), labelX, y);
         y += UI.scale(25);
 
         Coord resultsSize = new Coord(WINDOW_WIDTH - UI.scale(20), WINDOW_HEIGHT - y - UI.scale(10));

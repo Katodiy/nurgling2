@@ -6,6 +6,8 @@ import nurgling.NUtils;
 import nurgling.NWItem;
 import nurgling.areas.NArea;
 import nurgling.tasks.*;
+import nurgling.tools.Container;
+import nurgling.tools.Context;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 
@@ -21,6 +23,7 @@ public class LettuceAndPumpkinCollector implements Action {
     NArea troughArea;
     NAlias items;
     String secondaryItemAlias;
+    boolean isQualityGrid = false;
 
     public LettuceAndPumpkinCollector(NArea input, NArea seedOutput, NArea itemOutput, NAlias items, NArea troughArea) {
         this.input = input;
@@ -29,6 +32,11 @@ public class LettuceAndPumpkinCollector implements Action {
         this.items = items;
         this.troughArea = troughArea;
         this.secondaryItemAlias = items.keys.contains("Head of Lettuce") ? "Lettuce Leaf" : "Pumpkin Flesh";
+    }
+
+    public LettuceAndPumpkinCollector(NArea input, NArea seedOutput, NArea itemOutput, NAlias items, NArea troughArea, boolean isQualityGrid) {
+        this(input, seedOutput, itemOutput, items, troughArea);
+        this.isQualityGrid = isQualityGrid;
     }
 
     @Override
@@ -49,34 +57,12 @@ public class LettuceAndPumpkinCollector implements Action {
                         || (this.items.keys.contains("Pumpkin") && gui.getInventory().getNumberFreeCoord(testItems.get(0)) == 0)) {
                     splitItems(gui);
 
-                    ArrayList<Gob> barrels = Finder.findGobs(seedOutput, new NAlias("barrel"));
-                    HashMap<Gob, AtomicBoolean> barrelInfo = new HashMap();
-
                     if (!(testItems = gui.getInventory().getItems(new NAlias("Seed"))).isEmpty()) {
-
-                        if (!barrels.isEmpty()) {
-                            for (Gob barrel : barrels) {
-                                TransferToBarrel tb;
-                                (tb = new TransferToBarrel(barrel, new NAlias("Seed"))).run(gui);
-                                barrelInfo.put(barrel, new AtomicBoolean(tb.isFull()));
-                                if (!tb.isFull()) break;
-                            }
-
-                            Gob trough = Finder.findGob(troughArea, new NAlias("gfx/terobjs/trough"));
-
-                            if (!gui.getInventory().getItems(new NAlias("Seed")).isEmpty()) {
-                                new TransferToTrough(trough, new NAlias("Seed")).run(gui);
-                            }
-                        }
-
-                        if (gui.getInventory().getNumberFreeCoord(testItems.get(0)) == 0) {
-                            new TransferToPiles(seedOutput.getRCArea(), new NAlias("Seed")).run(gui);
-                        }
+                        transferSeeds(gui);
                     }
 
                     if (!(testItems = gui.getInventory().getItems(new NAlias(this.secondaryItemAlias))).isEmpty()) {
                         new TransferToPiles(itemOutput.getRCArea(), new NAlias(this.secondaryItemAlias)).run(gui);
-
                     }
 
                     currentQuantity = 0;
@@ -96,28 +82,8 @@ public class LettuceAndPumpkinCollector implements Action {
 
         splitItems(gui);
 
-        ArrayList<Gob> barrels = Finder.findGobs(seedOutput, new NAlias("barrel"));
-        HashMap<Gob, AtomicBoolean> barrelInfo = new HashMap();
-
         if (!(testItems = gui.getInventory().getItems(new NAlias("Seed"))).isEmpty()) {
-
-            if (!barrels.isEmpty()) {
-                for (Gob barrel : barrels) {
-                    TransferToBarrel tb;
-                    (tb = new TransferToBarrel(barrel, new NAlias("Seed"))).run(gui);
-                    barrelInfo.put(barrel, new AtomicBoolean(tb.isFull()));
-                }
-
-                Gob trough = Finder.findGob(troughArea, new NAlias("gfx/terobjs/trough"));
-
-                if (!gui.getInventory().getItems(new NAlias("Seed")).isEmpty()) {
-                    new TransferToTrough(trough, new NAlias("Seed")).run(gui);
-                }
-            }
-
-            if (gui.getInventory().getNumberFreeCoord(testItems.get(0)) == 0) {
-                new TransferToPiles(seedOutput.getRCArea(), new NAlias("Seed")).run(gui);
-            }
+            transferSeeds(gui);
         }
 
         if (!(testItems = gui.getInventory().getItems(new NAlias(this.secondaryItemAlias))).isEmpty()) {
@@ -125,6 +91,47 @@ public class LettuceAndPumpkinCollector implements Action {
         }
 
         return Results.SUCCESS();
+    }
+
+    private void transferSeeds(NGameUI gui) throws InterruptedException {
+        if (isQualityGrid) {
+            // Quality mode: transfer seeds to containers
+            ArrayList<Container> containers = new ArrayList<>();
+            for (Gob sm : Finder.findGobs(seedOutput.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
+                Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name), null);
+                cand.initattr(Container.Space.class);
+                containers.add(cand);
+            }
+
+            if (containers.isEmpty())
+                throw new RuntimeException("No container found in seed area!");
+
+            Container container = containers.get(0);
+            new TransferToContainer(container, new NAlias("Seed")).run(gui);
+            new CloseTargetContainer(container).run(gui);
+        } else {
+            // Regular mode: transfer seeds to barrels, then trough, then piles
+            ArrayList<Gob> barrels = Finder.findGobs(seedOutput, new NAlias("barrel"));
+
+            if (!barrels.isEmpty()) {
+                for (Gob barrel : barrels) {
+                    TransferToBarrel tb = new TransferToBarrel(barrel, new NAlias("Seed"));
+                    tb.run(gui);
+                    if (!tb.isFull()) break;
+                }
+
+                if (troughArea != null && !gui.getInventory().getItems(new NAlias("Seed")).isEmpty()) {
+                    Gob trough = Finder.findGob(troughArea, new NAlias("gfx/terobjs/trough"));
+                    if (trough != null) {
+                        new TransferToTrough(trough, new NAlias("Seed")).run(gui);
+                    }
+                }
+            }
+
+            if (!gui.getInventory().getItems(new NAlias("Seed")).isEmpty()) {
+                new TransferToPiles(seedOutput.getRCArea(), new NAlias("Seed")).run(gui);
+            }
+        }
     }
 
     private void splitItems(NGameUI gui) throws InterruptedException {

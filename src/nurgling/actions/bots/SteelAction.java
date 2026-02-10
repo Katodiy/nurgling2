@@ -32,7 +32,7 @@ public class SteelAction implements Action {
             ArrayList<Container> containers = new ArrayList<>();
 
             for (Gob sm : Finder.findGobs(smelters, new NAlias("gfx/terobjs/steelcrucible"))) {
-                Container cand = new Container(sm, "Steelbox");
+                Container cand = new Container(sm, "Steelbox", smelters);
 
                 cand.initattr(Container.FuelLvl.class);
                 cand.getattr(Container.FuelLvl.class).setMaxlvl(15);

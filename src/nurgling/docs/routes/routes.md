@@ -1,90 +1,88 @@
-# Routes System
+# @enc.routes.title
 
-The **Routes System** allows you to create paths between different locations, enabling automated navigation for bots and manual travel convenience.
+@enc.routes.intro
 
-## Accessing the Routes Interface
+## @enc.routes.accessing_title
 
-To open the Routes interface, locate the button resembling a wheel or helm:
+@enc.routes.accessing_text
 
 ![Routes Button](../images/routes/routes_button.png)
 
-Clicking this button opens the main Routes UI. Your screen may appear largely empty initially:
+@enc.routes.accessing_click
 
 ![Routes Main UI](../images/routes/routes_main_ui.png)
 
-## Managing Routes
+## @enc.routes.managing_title
 
-Below is an overview of the main elements in the Routes UI.
+@enc.routes.managing_intro
 
-### Routes List
+### @enc.routes.list_title
 
 ![Routes List](../images/routes/routes_list.png)
 
-The **Routes List** displays all saved routes. From this panel you can:
+@enc.routes.list_intro
 
-- View existing routes
-- Select routes for editing
-- Delete routes you no longer need
-- Create new routes
-- Rename existing routes
+- @enc.routes.list_view
+- @enc.routes.list_select
+- @enc.routes.list_delete
+- @enc.routes.list_create
+- @enc.routes.list_rename
 
-### Route Info
+### @enc.routes.info_title
 
 ![Route Points](../images/routes/route_points.png)
 
-Each route is composed of **multiple points** that define its path. The **Route Info** panel allows you to:
-- View special route points, such as doors, ladders, and mine holes
-- Navigate directly to any route point by clicking it, provided a connection exists from your current location
+@enc.routes.info_text
 
-*Note:* This panel is primarily for testing and advanced adjustments. Most users will rarely need to interact with it.
+*@enc.common.note* @enc.routes.info_note
 
-### Route Actions
+### @enc.routes.actions_title
 
 ![Route Actions](../images/routes/routes_actions.png)
 
-The **Route Actions** panel is where you manage route creation and recording:
+@enc.routes.actions_intro
 
-- **Red dot:** Start or stop route recording
-- **Green plus:** Add a route point at your current location. *Note:* it's very important to only use this functionality either in the middle of recording, at the end or start of the route. **Important:** Only place points at the start, end, or midpoint of a route during recording. Randomly adding points far from the last will break the route.
-- **Green fire:** Add a **hearthfire route point**. Hearthfire route points are special points that do not appear in a route. To define a hearthfire route point go to your hearthfire and click the button. Your character will navigate to the hearthfire and set a route point.
-- **Use Hearth Fires in Global PF:** When enabled, the system calculates whether traveling via a hearthfire is faster than walking the route. If so, it will use the hearthfire.
+- @enc.routes.action_red
+- @enc.routes.action_green
+- @enc.routes.action_fire
+- @enc.routes.action_hearth
 
-*Tip:* Beginners are advised to avoid hearthfires initially. Master standard route creation before using hearthfire points.
+*@enc.common.tip* @enc.routes.tip_hearth
 
-## Creating Your First Route
+## @enc.routes.first_route_title
 
-1. Click the **green plus** at the top right of the Routes UI. A new route will appear (e.g., Route 0).
-2. Right-click the route to rename it if desired.
-3. Think of two areas in your village you would like to be connected. A good example could be going from `Outside` to `L3` or from `Outside` to the second floor of your `Stonestead` where your bed is.
-4. Click the **red dot** to begin recording.
-5. Travel to your destination. Your character will pause periodically to calculate route points—input is temporarily disabled until a **white dot** appears under your character. Continue walking normally, passing through doors, ladders, or mineholes as needed; the system automatically handles these.
-6. Press the **red dot** again to stop recording once you reach your destination.
+1. @enc.routes.create1
+2. @enc.routes.create2
+3. @enc.routes.create3
+4. @enc.routes.create4
+5. @enc.routes.create5
+6. @enc.routes.create6
 
-Your first route is now complete. Test it by clicking a route point in the **Route Info** panel—the character should navigate to the selected point.
+@enc.routes.first_complete
 
-As more routes are recorded, nearby points from different routes will automatically connect, creating a **network** that allows bots to find new paths across your village.
+@enc.routes.network_note
 
-## Example Usage
+## @enc.routes.example_title
 
-Suppose your inventory is full after looting:
+@enc.routes.example_intro
 
 ![Inventory](../images/routes/inventory.png)
 
-And you have designated areas for each item in the PUT section of the zone setup:
+@enc.routes.example_areas
 
 ![Areas](../images/routes/areas.png)
 
-For this scenario to work we have to make sure all areas are reachable via a route or multiple routes. Here is a good example of a route point that is connected to a few areas. 
+@enc.routes.example_reachable
 
-*Note:* Connections between route points and areas are established automatically during route recording.
-*Note:* **Green lines:** connection between a route point and an area. **Orange lines** Connection between individual route points.
+*@enc.common.note* @enc.routes.example_note1
+*@enc.common.note* @enc.routes.example_note2
 
 ![area_route_point_connection.png](../images/routes/area_route_point_connection.png)
 
-Once configured, use the `Free Inventory` bot to deposit items into their designated areas using the routes you created.
+@enc.routes.example_freeinv
 
-## Tips
+## @enc.routes.tips_title
 
-1. If a route point is misplaced during recording, you can adjust it: select the route, click and hold the point, and move it within a 5x5 radius for fine-tuning.
+1. @enc.routes.final_tip
 
 ![move_route_point.png](../images/routes/move_route_point.png)

@@ -3,6 +3,7 @@ package nurgling.widgets;
 import haven.*;
 import nurgling.LocalizedResourceTimer;
 import nurgling.LocalizedResourceTimerService;
+import nurgling.i18n.L10n;
 
 public class LocalizedResourceTimerDialog extends Window {
     private MapFile.SMarker currentMarker;
@@ -17,7 +18,7 @@ public class LocalizedResourceTimerDialog extends Window {
     private Button removeButton;
     
     public LocalizedResourceTimerDialog() {
-        super(UI.scale(new Coord(235, 140)), "Resource Timer");
+        super(UI.scale(new Coord(235, 140)), L10n.get("timer.title"));
         initializeWidgets();
         hide(); // Start hidden
     }
@@ -40,7 +41,7 @@ public class LocalizedResourceTimerDialog extends Window {
         int y = UI.scale(5);
         
         // Title label
-        titleLabel = new Label("Set timer for: ");
+        titleLabel = new Label(L10n.get("timer.set_for"));
         add(titleLabel, UI.scale(new Coord(10, y)));
         y += UI.scale(18);
         
@@ -66,7 +67,7 @@ public class LocalizedResourceTimerDialog extends Window {
         };
         add(hoursEntry, UI.scale(new Coord(10, inputY)));
         
-        add(new Label("hrs"), UI.scale(new Coord(55, inputY + 3)));
+        add(new Label(L10n.get("timer.hrs")), UI.scale(new Coord(55, inputY + 3)));
         
         minutesEntry = new TextEntry(UI.scale(40), "") {
             @Override
@@ -83,12 +84,12 @@ public class LocalizedResourceTimerDialog extends Window {
         };
         add(minutesEntry, UI.scale(new Coord(85, inputY)));
         
-        add(new Label("mins"), UI.scale(new Coord(130, inputY + 3)));
+        add(new Label(L10n.get("timer.mins")), UI.scale(new Coord(130, inputY + 3)));
         
         y += UI.scale(30);
         
         // Buttons with consistent spacing - always reserve space for Remove button
-        Button saveButton = new Button(UI.scale(65), "Save") {
+        Button saveButton = new Button(UI.scale(65), L10n.get("common.save")) {
             @Override
             public void click() {
                 saveTimer();
@@ -96,7 +97,7 @@ public class LocalizedResourceTimerDialog extends Window {
         };
         add(saveButton, UI.scale(new Coord(10, y)));
         
-        Button cancelButton = new Button(UI.scale(65), "Cancel") {
+        Button cancelButton = new Button(UI.scale(65), L10n.get("common.cancel")) {
             @Override
             public void click() {
                 close();
@@ -105,7 +106,7 @@ public class LocalizedResourceTimerDialog extends Window {
         add(cancelButton, UI.scale(new Coord(85, y)));
         
         // Remove button (initially hidden) - always positioned consistently
-        removeButton = new Button(UI.scale(65), "Remove") {
+        removeButton = new Button(UI.scale(65), L10n.get("common.remove")) {
             @Override
             public void click() {
                 removeTimer();
@@ -117,11 +118,11 @@ public class LocalizedResourceTimerDialog extends Window {
     
     private void updateWidgetContent() {
         // Update title
-        titleLabel.settext("Set timer for: " + currentResourceDisplayName);
+        titleLabel.settext(L10n.get("timer.set_for") + " " + currentResourceDisplayName);
         
         // Update existing timer info
         if(currentExistingTimer != null) {
-            existingTimerLabel.settext("Existing timer: " + currentExistingTimer.getFormattedRemainingTime());
+            existingTimerLabel.settext(L10n.get("timer.existing") + ": " + currentExistingTimer.getFormattedRemainingTime());
             existingTimerLabel.show();
             removeButton.show();
         } else {

@@ -51,6 +51,7 @@ public class NHitBox
             put("gfx/terobjs/arch/stonetower", new NHitBox(new Coord(-39,-39),new Coord(39,39)));
             put("gfx/terobjs/arch/windmill", new NHitBox(new Coord(-28,-28),new Coord(28,28)));
             put("gfx/terobjs/wonders/tarpit", new NHitBox(new Coord(-28,-28),new Coord(28,28)));
+            put("gfx/terobjs/coronationstone", new NHitBox(new Coord(-30,-35),new Coord(41,35)));
             put("gfx/terobjs/arch/stonestead", new NHitBox(new Coord(-45,-28),new Coord(45,28)));
             put("gfx/terobjs/villageidol", new NHitBox(new Coord(-11,-17),new Coord(11,17)));
             put("gfx/terobjs/pclaim", new NHitBox(new Coord(-3,-3),new Coord(3,3)));
@@ -58,6 +59,7 @@ public class NHitBox
             put("gfx/terobjs/candelabrum", new NHitBox(new Coord(-2,-2),new Coord(2,2)));
             put("gfx/terobjs/gardenpot", new NHitBox(new Coord(-2,-2),new Coord(2,2)));
             put("gfx/terobjs/cupboard", new NHitBox(new Coord2d(-5.5,-5.5),new Coord2d(5.5,5.5)));
+            put("gfx/terobjs/htable", new NHitBox(new Coord2d(-3.5,-7.0),new Coord2d(3.5,7.0), true));
             put("gfx/terobjs/lanternpost", new NHitBox(new Coord(-2,-2),new Coord(2,2)));
             put("gfx/terobjs/cistern", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
             put("gfx/terobjs/oven", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
@@ -70,6 +72,7 @@ public class NHitBox
             put("gfx/terobjs/charterstone", new NHitBox(new Coord(-9,-9),new Coord(9,9)));
             put("gfx/terobjs/steelcrucible", new NHitBox(new Coord(-3,-4),new Coord(3,4)));
             put("gfx/terobjs/beehive", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
+            put("gfx/terobjs/dng/giantspool", new NHitBox(new Coord(-3,-3),new Coord(3,3)));
             put("gfx/terobjs/column", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/meatgrinder", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
             put("gfx/terobjs/brazier", new NHitBox(new Coord(-4,-4),new Coord(4,4)));
@@ -117,6 +120,7 @@ public class NHitBox
             put("gfx/kritter/goat/nanny", new NHitBox(new Coord(-4,-2),new Coord(5,2)));
             put("gfx/kritter/goat/kid", new NHitBox(new Coord(-5,-2),new Coord(5,2)));
             put("gfx/kritter/reindeer/teimdeercow", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
+            put("gfx/kritter/reddeer/reddeer", new NHitBox(new Coord(-10,-4),new Coord(7,4)));
             put("gfx/kritter/reindeer/teimdeerbull", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
             put("gfx/kritter/reindeer/teimdeerkid", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
             put("gfx/kritter/reindeer/reindeer", new NHitBox(new Coord(-12,-2),new Coord(6,2)));
@@ -163,7 +167,7 @@ public class NHitBox
             return new NHitBox(new Coord(-5,-7),new Coord(5,7));
         else if(name.toLowerCase().endsWith("leaf"))
             return new NHitBox(new Coord(-5,-5),new Coord(5,5));
-        else if(name.toLowerCase().startsWith("flax") || name.toLowerCase().endsWith("hemp"))
+        else if(name.toLowerCase().startsWith("flax") || name.toLowerCase().endsWith("stockpile-hempfibre"))
             return new NHitBox(new Coord(-3,-3),new Coord(3,3));
         return null;
     }

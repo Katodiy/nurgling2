@@ -4,6 +4,7 @@ import haven.*;
 import nurgling.NUtils;
 import nurgling.actions.bots.registry.BotDescriptor;
 import nurgling.actions.bots.registry.BotRegistry;
+import nurgling.i18n.L10n;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -16,7 +17,7 @@ public class ScenarioBotSelectionDialog extends Window {
     public static final int COLS = 6;
 
     public ScenarioBotSelectionDialog(java.util.function.Consumer<BotDescriptor> onSelect) {
-        super(new Coord(ICON_SIZE * COLS + GRID_PADDING * 2, UI.scale(350)), "Select Bot");
+        super(new Coord(ICON_SIZE * COLS + GRID_PADDING * 2, UI.scale(350)), L10n.get("botselect.title"));
 
         List<BotDescriptor.BotType> groupOrder = List.of(RESOURCES, UTILS, PRODUCTIONS, FARMING, FARMING_QUALITY, LIVESTOCK);
         int contentWidth = ICON_SIZE * COLS + GRID_PADDING * 2;
@@ -31,13 +32,13 @@ public class ScenarioBotSelectionDialog extends Window {
 
             String title;
             switch (type) {
-                case PRODUCTIONS: title = "Production";  break;
-                case FARMING:  title = "Farmers";   break;
-                case FARMING_QUALITY: title = "Farmers Quality"; break;
-                case LIVESTOCK: title = "Livestock"; break;
-                case UTILS:    title = "Utils";     break;
-                case RESOURCES:    title = "Resources";     break;
-                default:       title = "Other";
+                case PRODUCTIONS: title = L10n.get("botselect.production");  break;
+                case FARMING:  title = L10n.get("botselect.farmers");   break;
+                case FARMING_QUALITY: title = L10n.get("botselect.farmers_quality"); break;
+                case LIVESTOCK: title = L10n.get("botselect.livestock"); break;
+                case UTILS:    title = L10n.get("botselect.utils");     break;
+                case RESOURCES:    title = L10n.get("botselect.resources");     break;
+                default:       title = L10n.get("botselect.other");
             }
 
             Label label = new Label(title);
@@ -57,7 +58,7 @@ public class ScenarioBotSelectionDialog extends Window {
                 IButton btn = new IButton(up, down, hover) {
                     public void click() { onSelect.accept(bot); }
                     @Override public Object tooltip(Coord c, Widget prev) {
-                        return Text.render(bot.displayName).tex();
+                        return Text.render(bot.getDisplayName()).tex();
                     }
                 };
                 btn.resize(new Coord(ICON_SIZE, ICON_SIZE));
@@ -77,11 +78,11 @@ public class ScenarioBotSelectionDialog extends Window {
             Scrollport scroll = new Scrollport(new Coord(contentWidth, maxGridHeight));
             scroll.cont.add(contentPanel, Coord.z);
             add(scroll, Coord.z);
-            add(new Button(UI.scale(120), "Cancel", this::reqdestroy),
+            add(new Button(UI.scale(120), L10n.get("common.cancel"), this::reqdestroy),
                     new Coord((contentWidth - UI.scale(120)) / 2, maxGridHeight + UI.scale(16)));
         } else {
             add(contentPanel, Coord.z);
-            add(new Button(UI.scale(120), "Cancel", this::reqdestroy),
+            add(new Button(UI.scale(120), L10n.get("common.cancel"), this::reqdestroy),
                     new Coord((contentWidth - UI.scale(120)) / 2, contentHeight + UI.scale(16)));
         }
 

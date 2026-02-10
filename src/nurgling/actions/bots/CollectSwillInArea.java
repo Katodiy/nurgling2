@@ -13,8 +13,6 @@ import nurgling.actions.TakeItemsFromContainer;
 import nurgling.actions.TakeItemsFromPile;
 import nurgling.actions.OpenTargetContainer;
 import nurgling.actions.TransferToTroughArea;
-import nurgling.NMapView;
-import nurgling.routes.RoutePoint;
 import nurgling.areas.NContext;
 import nurgling.tools.Container;
 import nurgling.tools.Finder;
@@ -30,12 +28,8 @@ import java.util.*;
  */
 public class CollectSwillInArea implements Action {
 
-    private RoutePoint closestRoutePoint = null;
-
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        // Store closest route point like FreeContainers
-        this.closestRoutePoint = ((NMapView) gui.map).routeGraphManager.getGraph().findNearestPointToPlayer(gui);
 
         // Simple area selection like FreeContainers
         SelectArea insa;
@@ -53,7 +47,7 @@ public class CollectSwillInArea implements Action {
         // Process containers first (like FreeContainers)
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob sm : Finder.findGobs(area, new NAlias(new ArrayList<>(NContext.contcaps.keySet())))) {
-            Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name));
+            Container cand = new Container(sm, NContext.contcaps.get(sm.ngob.name),null);
             containers.add(cand);
         }
 
@@ -217,15 +211,10 @@ public class CollectSwillInArea implements Action {
      * Return to collection area if needed using RoutePointNavigator.
      */
     private void returnToAreaIfNeeded(NGameUI gui, Pair<Coord2d, Coord2d> area) throws InterruptedException {
-        if (closestRoutePoint != null && (Boolean) NConfig.get(NConfig.Key.useGlobalPf)) {
             // Calculate if we're far from the area
             Coord2d areaCenter = new Coord2d((area.a.x + area.b.x) / 2, (area.a.y + area.b.y) / 2);
             double distance = areaCenter.dist(NUtils.player().rc);
 
-            if (distance > 500) {
-                new RoutePointNavigator(closestRoutePoint).run(gui);
-            }
-        }
     }
 
     /**

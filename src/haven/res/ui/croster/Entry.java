@@ -5,6 +5,8 @@ import haven.*;
 import haven.render.*;
 import java.util.*;
 import java.util.function.*;
+import java.util.Set;
+import java.util.HashSet;
 import haven.MenuGrid.Pagina;
 import nurgling.NStyle;
 import nurgling.widgets.NCheckBox;
@@ -12,7 +14,7 @@ import nurgling.widgets.NCheckBox;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-@haven.FromResource(name = "ui/croster", version = 76)
+@haven.FromResource(name = "ui/croster", version = 77)
 public class Entry extends Widget {
     public static final int WIDTH = CattleRoster.WIDTH;
     public static final int HEIGHT = UI.scale(20);
@@ -42,22 +44,30 @@ public class Entry extends Widget {
     public static final Tex ownedo = Loading.waitfor(Resource.classres(Entry.class).pool.load("gfx/hud/rosters/owned-o", 1)::get).layer(Resource.imgc).tex();
     public static final Tex ownedm = Loading.waitfor(Resource.classres(Entry.class).pool.load("gfx/hud/rosters/owned-m", 1)::get).layer(Resource.imgc).tex();
     public static final Function<Integer, Tex> ownrend = v -> ((v == 3) ? ownedm : ((v == 1) ? ownedo : ownedn));
+    public static final Color markedForKill = new Color(200, 50, 50, 100);
+    public static final Set<UID> killList = new HashSet<>();
+
     public final UID id;
     public String name;
     public int grp;
     public double q;
     public int idx;
+    public int areaId = -1;  // Area ID the animal is bound to (-1 = not bound)
     public NCheckBox mark;
 
     public Entry(Coord sz, UID id, String name) {
 	super(sz);
 	this.id = id;
 	this.name = name;
-	this.mark = adda(new NCheckBox("", this::selected, false), UI.scale(5), sz.y / 2, 0, 0.5);
+	this.mark = adda(new NCheckBox(""), UI.scale(5), sz.y / 2, 0, 0.5);
     }
 
     protected void drawbg(GOut g) {
-	g.chcolor(((idx & 1) == 0) ? every : other);
+	if(killList.contains(id)) {
+	    g.chcolor(markedForKill);
+	} else {
+	    g.chcolor(((idx & 1) == 0) ? every : other);
+	}
 	g.frect(Coord.z, sz);
 	g.chcolor();
     }

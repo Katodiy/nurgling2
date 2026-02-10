@@ -81,7 +81,13 @@ public class TakeItemsFromContainer implements Action
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         NInventory inv = gui.getInventory(cont.cap);
+        int remainingToTake = minSize; // Track how many items we still need to take
+        
         for(String name: names) {
+            if (remainingToTake <= 0) {
+                break; // Already took enough items
+            }
+            
             WItem item = inv.getItem(name);
             if (item != null) {
 
@@ -89,7 +95,7 @@ public class TakeItemsFromContainer implements Action
                 int oldSpace = gui.getInventory().getItems(name).size();
                 ArrayList<WItem> items = getItems(gui, name);
                 int items_size = items.size();
-                target_size = Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getFullStackSize(name), items.size()));
+                target_size = Math.min(remainingToTake, Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getFullStackSize(name), items.size()));
 
 
                 int temptr = target_size;
@@ -100,12 +106,17 @@ public class TakeItemsFromContainer implements Action
                     items = getItems(gui, name);
                     if(gui.getInventory().getItems(name).size()>=target_size+oldSpace)
                         break;
-                    temptr=Math.min(minSize,Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getFullStackSize(name), items.size()));
+                    temptr=Math.min(remainingToTake, Math.min(gui.getInventory().getNumberFreeCoord(target_coord.swapXY())*StackSupporter.getFullStackSize(name), items.size()));
                     i = -1;
                 }
                 WaitItems wi = new WaitItems(gui.getInventory(), new NAlias(name), oldSpace + target_size);
                 NUtils.getUI().core.addTask(wi);
                 cont.update();
+                
+                // Reduce remainingToTake by how many we actually took
+                int actuallyTaken = gui.getInventory().getItems(name).size() - oldSpace;
+                remainingToTake -= actuallyTaken;
+                
                 if(items_size>target_size) {
                     took = false;
                     return Results.FAIL();

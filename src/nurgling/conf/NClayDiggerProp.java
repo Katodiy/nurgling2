@@ -2,6 +2,7 @@ package nurgling.conf;
 
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.NUtils;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -71,16 +72,19 @@ public class NClayDiggerProp implements JConf
 
     public static NClayDiggerProp get(NUI.NSessInfo sessInfo)
     {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         ArrayList<NClayDiggerProp> chopProps = ((ArrayList<NClayDiggerProp>) NConfig.get(NConfig.Key.claydiggerprop));
         if (chopProps == null)
             chopProps = new ArrayList<>();
         for (NClayDiggerProp prop : chopProps)
         {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid))
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid))
             {
                 return prop;
             }
         }
-        return new NClayDiggerProp(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NClayDiggerProp(sessInfo.username, chrid);
     }
 }

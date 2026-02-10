@@ -2,6 +2,7 @@ package nurgling.conf;
 
 import nurgling.NConfig;
 import nurgling.NUI;
+import nurgling.NUtils;
 import nurgling.widgets.bots.FishingTarget;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -109,16 +110,19 @@ public class NFishingSettings implements JConf
 
     public static NFishingSettings get(NUI.NSessInfo sessInfo)
     {
+        if (sessInfo == null || NUtils.getGameUI() == null || NUtils.getGameUI().getCharInfo() == null)
+            return null;
+        String chrid = NUtils.getGameUI().getCharInfo().chrid;
         ArrayList<NFishingSettings> chopProps = ((ArrayList<NFishingSettings>) NConfig.get(NConfig.Key.fishingsettings));
         if (chopProps == null)
             chopProps = new ArrayList<>();
         for (NFishingSettings prop : chopProps)
         {
-            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(sessInfo.characterInfo.chrid))
+            if (prop.username.equals(sessInfo.username) && prop.chrid.equals(chrid))
             {
                 return prop;
             }
         }
-        return new NFishingSettings(sessInfo.username, sessInfo.characterInfo.chrid);
+        return new NFishingSettings(sessInfo.username, chrid);
     }
 }

@@ -2,10 +2,7 @@ package nurgling;
 
 import haven.*;
 import haven.render.*;
-import nurgling.NGob;
-import nurgling.areas.NArea;
-import nurgling.routes.RouteGraph;
-import nurgling.routes.RoutePoint;
+
 
 import java.awt.*;
 import java.util.*;
@@ -144,11 +141,6 @@ public class NPathVisualizer implements RenderTree.Node
                 mp.update(lines);
             }
         }
-
-        if (NUtils.getGameUI() != null && NUtils.getGameUI().routesWidget != null && NUtils.getGameUI().routesWidget.visible)
-        {
-            updateRouteGraphPaths(categorized);
-        }
     }
 
     /**
@@ -191,96 +183,10 @@ public class NPathVisualizer implements RenderTree.Node
         }
     }
 
-    /**
-     * Updates path visualizations for route graph connections.
-     *
-     * @param categorized Map containing categorized path segments
-     */
-    private void updateRouteGraphPaths(EnumMap<PathCategory, List<Pair<Coord3f, Coord3f>>> categorized)
-    {
-        final NMapView mv = (NMapView) NUtils.getGameUI().map;
-        if (mv == null) return;
-
-        final RouteGraph graph = mv.routeGraphManager.getGraph();
-        final MCache map = mv.glob.map;
-
-
-        Cache cache = new Cache(map);
-
-        updateGraphConnections(categorized, graph, map, cache);
-        updateAreaConnections(categorized, graph, map, cache);
-    }
 
     /**
      * Updates visualizations for graph point connections.
      */
-    private void updateGraphConnections(EnumMap<PathCategory, List<Pair<Coord3f, Coord3f>>> categorized,
-                                        RouteGraph graph, MCache map, Cache cache)
-    {
-        List<Pair<Coord3f, Coord3f>> gpf = categorized.get(PathCategory.GPF);
-        Set<Integer> seen = new HashSet<Integer>();
-
-        for (RoutePoint p : graph.getPoints())
-        {
-            if (cache.get(p.gridId) == null) continue;
-            Coord3f a = p.toCoord3f(map);
-            if (a == null) continue;
-
-            for (int nId : p.getNeighbors())
-            {
-                int key = IntPair.key(p.id, nId);
-                if (seen.add(key))
-                {
-                    RoutePoint n = graph.getPoint(nId);
-                    if (n != null && cache.get(n.gridId) != null)
-                    {
-                        Coord3f b = n.toCoord3f(map);
-                        if (b != null) gpf.add(new Pair<>(a, b));
-                    }
-                }
-            }
-        }
-        paths.get(PathCategory.GPF).update(gpf);
-    }
-
-    /**
-     * Updates visualizations for area connections.
-     */
-    private void updateAreaConnections(EnumMap<PathCategory, List<Pair<Coord3f, Coord3f>>> categorized,
-                                       RouteGraph graph, MCache map, Cache cache)
-    {
-        List<Pair<Coord3f, Coord3f>> gpfa = categorized.get(PathCategory.GPFAREAS);
-        Map<Integer, Pair<Double, Pair<Coord3f, Coord3f>>> best = new HashMap<>();
-
-        for (RoutePoint p : graph.getPoints())
-        {
-            if (cache.get(p.gridId) == null) continue;
-            Coord3f pt = p.toCoord3f(map);
-            if (pt == null) continue;
-
-            for (int areaId : p.getReachableAreas())
-            {
-                NArea ar = map.areas.get(areaId);
-                if (ar == null) continue;
-                Coord3f center = ar.getCenter3f();
-                if (center == null) continue;
-
-                double d = ar.getDistance(Coord2d.of(pt.x, pt.y));
-                Pair<Double, Pair<Coord3f, Coord3f>> old = best.get(areaId);
-                if (old == null || d < old.a)
-                {
-                    best.put(areaId, new Pair<>(d, new Pair<>(center, pt)));
-                }
-            }
-        }
-
-        for (Pair<Double, Pair<Coord3f, Coord3f>> v : best.values())
-        {
-            gpfa.add(v.b);
-        }
-        paths.get(PathCategory.GPFAREAS).update(gpfa);
-    }
-
     /**
      * Helper class for generating unique keys for point pairs.
      */

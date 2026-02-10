@@ -3,7 +3,8 @@ package nurgling.tasks;
 import haven.MCache;
 import nurgling.NGameUI;
 import nurgling.areas.NGlobalCoord;
-import nurgling.routes.RoutePoint;
+
+import java.util.ArrayList;
 
 public class WaitForMapLoad extends NTask {
     private final NGameUI gui;
@@ -18,7 +19,7 @@ public class WaitForMapLoad extends NTask {
     @Override
     public boolean check() {
         boolean canContinue = false;
-        for (MCache.Grid grid : gui.map.glob.map.grids.values()) {
+        for (MCache.Grid grid : new ArrayList<>(gui.map.glob.map.grids.values())) {
             if(this.coord.getGridId()==0)
                 return true;
             if (grid.id == this.coord.getGridId()) {

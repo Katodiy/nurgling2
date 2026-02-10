@@ -5,7 +5,6 @@ import nurgling.areas.*;
 import nurgling.conf.*;
 import nurgling.conf.QuickActionPreset;
 import nurgling.profiles.ProfileManager;
-import nurgling.routes.Route;
 import nurgling.scenarios.Scenario;
 import nurgling.widgets.NCornerMiniMap;
 import org.json.*;
@@ -26,6 +25,7 @@ public class NConfig
     {
         vilol, claimol, realmol,
         minimapVilol, minimapClaimol, minimapRealmol,
+        selectedWorld,
         showVarity,
         autoFlower,
         autoSplitter,
@@ -46,6 +46,7 @@ public class NConfig
         nextshowCSprite,
         showCSprite,
         hideNature,
+        hideEarthworm,
         invert_hor,
         invert_ver,
         kinprop,
@@ -97,8 +98,9 @@ public class NConfig
         smokeprop,
         worldexplorerprop,
         questNotified, lpassistent, fishingsettings,
-        serverNode, serverUser, serverPass, ndbenable, harvestautorefill, cleanupQContainers, autoEquipTravellersSacks, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
-        temsmarktime, exploredAreaEnable, player_box, player_fov, temsmarkdist, tempmark, tempmarkIgnoreDist, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
+        serverNode, serverUser, serverPass, postgresMaxConnections, ndbenable, dbStatsOverlay, harvestautorefill, cleanupQContainers, autoEquipTravellersSacks, qualityGrindSeedingPatter, postgres, sqlite, dbFilePath, simplecrops,
+        temsmarktime, exploredAreaEnable, chunkNavOverlay, player_box, player_fov, temsmarkdist, tempmark, tempmarkIgnoreDist, gridbox, useGlobalPf, useHFinGlobalPF, boxFillColor, boxEdgeColor, boxLineWidth, ropeAfterFeeding, ropeAfterTaiming, eatingConf, deersprop,dropConf, printpfmap, fonts,
+        areaRankPresets,  // Map of areaId -> Map of animalType -> presetName
         shortCupboards,
         shortWalls,
         decalsOnTop,
@@ -114,7 +116,6 @@ public class NConfig
         waypointRetryOnStuck,
         verboseCal,
         highlightRockTiles,
-        showFullPathLines,
         preferredMovementSpeed,
         preferredHorseSpeed,
         uiOpacity,
@@ -132,6 +133,7 @@ public class NConfig
         bbDisplayMode,
         showBeehiveRadius,
         showTroughRadius,
+        showMoundBedRadius,
         showDamageShields,
         disableTileSmoothing,
         disableTileTransitions,
@@ -141,6 +143,8 @@ public class NConfig
         simpleInspect,
         showSpeedometer,
         showPathLine,
+        pathLineWidth,
+        pathLineColor,
         parasiteBotEnabled,
         leechAction,
         tickAction,
@@ -153,7 +157,30 @@ public class NConfig
         buttonStyle,
         showQuestGiverNames,
         showThingwallNames,
-        trackingVectors
+        showPartyMemberNames,
+        trackingVectors,
+        randomAreaColor,
+        treeScaleDisableZoomHide,
+        treeScaleMinThreshold,
+        thinOutlines,
+        itemQualityOverlay,
+        stackQualityOverlay,
+        amountOverlay,
+        studyInfoOverlay,
+        progressOverlay,
+        volumeOverlay,
+        equipProxySlots,
+        equipmentBotConfig,
+        // Starvation alert settings
+        starvationAlertEnabled,
+        starvationPopup1Threshold,
+        starvationPopup2Threshold,
+        starvationVignetteStartThreshold,
+        starvationVignetteCriticalThreshold,
+        starvationSoundThreshold,
+        starvationSoundInterval,
+        // Localization
+        language
     }
 
     public enum BBDisplayMode
@@ -184,6 +211,7 @@ public class NConfig
         conf.put(Key.minimapVilol, false);
         conf.put(Key.minimapClaimol, false);
         conf.put(Key.minimapRealmol, false);
+        conf.put(Key.selectedWorld, null);
         conf.put(Key.showVarity, false);
         conf.put(Key.autoFlower, false);
         conf.put(Key.autoSplitter, false);
@@ -200,6 +228,7 @@ public class NConfig
         conf.put(Key.nextshowCSprite, false);
         conf.put(Key.showCSprite, true);
         conf.put(Key.hideNature, false);
+        conf.put(Key.hideEarthworm, true);  // true = show earthworms (checkbox unchecked by default)
         conf.put(Key.invert_hor, false);
         conf.put(Key.invert_ver, false);
         conf.put(Key.show_drag_menu, true);
@@ -235,6 +264,7 @@ public class NConfig
         conf.put(Key.simplecrops, true);
         conf.put(Key.simpleInspect, false);
         conf.put(Key.ndbenable, false);
+        conf.put(Key.dbStatsOverlay, false);
         conf.put(Key.harvestautorefill, false);
         conf.put(Key.cleanupQContainers, false);
         conf.put(Key.autoEquipTravellersSacks, false);
@@ -243,11 +273,13 @@ public class NConfig
         conf.put(Key.useHFinGlobalPF, false);
         conf.put(Key.sqlite, false);
         conf.put(Key.postgres, false);
+        conf.put(Key.postgresMaxConnections, 5);
         conf.put(Key.dbFilePath, "");
         conf.put(Key.serverNode, "");
         conf.put(Key.serverPass, "");
         conf.put(Key.serverUser, "");
         conf.put(Key.exploredAreaEnable, false);
+        conf.put(Key.chunkNavOverlay, false);
         conf.put(Key.player_box, false);
         conf.put(Key.player_fov, false);
         conf.put(Key.gridbox, false);
@@ -275,9 +307,10 @@ public class NConfig
         conf.put(Key.waypointRetryOnStuck, true);
         conf.put(Key.verboseCal, false);
         conf.put(Key.highlightRockTiles, true);
-        conf.put(Key.showFullPathLines, false);
         conf.put(Key.showSpeedometer, false);
         conf.put(Key.showPathLine, false);
+        conf.put(Key.pathLineWidth, 4);
+        conf.put(Key.pathLineColor, new Color(255, 255, 0));  // Yellow
 
         ArrayList<HashMap<String, Object>> qpattern = new ArrayList<>();
         HashMap<String, Object> res1 = new HashMap<>();
@@ -347,7 +380,14 @@ public class NConfig
         arearadprop.add(new NAreaRad("gfx/kritter/walrus/walrus", 100));
         arearadprop.add(new NAreaRad("gfx/kritter/orca/orca", 100));
         arearadprop.add(new NAreaRad("gfx/kritter/wolverine/wolverine", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/eagleowl/eagleowl", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/goldeneagle/goldeneagle", 100));
+        arearadprop.add(new NAreaRad("gfx/kritter/goat/goat", 100));
         arearadprop.add(new NAreaRad("gfx/kritter/troll/troll", 200));
+        arearadprop.add(new NAreaRad("gfx/kritter/rat/rat", 200));
+        arearadprop.add(new NAreaRad("gfx/kritter/eagle/eagle", 200));
+        arearadprop.add(new NAreaRad("gfx/kritter/cavelouse/cavelouse", 200));
+        arearadprop.add(new NAreaRad("gfx/kritter/boreworm/boreworm", 200));
         conf.put(Key.animalrad, arearadprop);
 
         // Movement speed setting (0=Crawl, 1=Walk, 2=Run, 3=Sprint)
@@ -376,6 +416,7 @@ public class NConfig
         // Object radius overlays - simple boolean flags
         conf.put(Key.showBeehiveRadius, false);
         conf.put(Key.showTroughRadius, false);
+        conf.put(Key.showMoundBedRadius, false);
 
         // Damage shields display
         conf.put(Key.showDamageShields, true);
@@ -386,36 +427,99 @@ public class NConfig
         conf.put(Key.disableCloudShadows, false);
         conf.put(Key.darkenDeepOcean, false);
         conf.put(Key.disableDrugEffects, true);  // Default to disabled for better performance
-
+        
         // Parasite bot settings
         conf.put(Key.parasiteBotEnabled, false);
-        conf.put(Key.leechAction, "ground");  // "ground" or "inventory"
-        conf.put(Key.tickAction, "ground");   // "ground" or "inventory"
-
+        conf.put(Key.leechAction, "ground");  // "nothing", "ground" or "inventory"
+        conf.put(Key.tickAction, "ground");   // "nothing", "ground" or "inventory"
+        
         // Safety settings - auto hearth/logout on unknown players
         conf.put(Key.autoHearthOnUnknown, false);
         conf.put(Key.autoLogoutOnUnknown, false);
         conf.put(Key.alarmDelayFrames, 20);  // Delay before unknown player triggers alarm
-
+        
         // Auth obfuscation - bypass firewall blocks
         conf.put(Key.alwaysObfuscate, false);
-
+        
         // Map marker name display settings
         conf.put(Key.showQuestGiverNames, true);
         conf.put(Key.showThingwallNames, true);
+        conf.put(Key.showPartyMemberNames, true);
 
         // Map tracking vectors
         conf.put(Key.trackingVectors, false);
+
+        // Random area color on creation
+        conf.put(Key.randomAreaColor, false);
+
+        // Tree scale overlay settings
+        conf.put(Key.treeScaleDisableZoomHide, false);  // If true, always show full label (don't hide on zoom out)
+        conf.put(Key.treeScaleMinThreshold, 0);  // Minimum growth % to display tree scale (0 = show all)
+
+        // Outline rendering settings
+        conf.put(Key.thinOutlines, false);  // If true, use thinner object outlines
+
+        // Item quality overlay settings
+        conf.put(Key.itemQualityOverlay, new ItemQualityOverlaySettings());
+        // Stack quality overlay settings
+        ItemQualityOverlaySettings stackDefaults = new ItemQualityOverlaySettings();
+        stackDefaults.corner = ItemQualityOverlaySettings.Corner.TOP_LEFT;
+        conf.put(Key.stackQualityOverlay, stackDefaults);
+        // Amount overlay settings
+        ItemQualityOverlaySettings amountDefaults = new ItemQualityOverlaySettings();
+        amountDefaults.corner = ItemQualityOverlaySettings.Corner.BOTTOM_RIGHT;
+        amountDefaults.useThresholds = false;
+        conf.put(Key.amountOverlay, amountDefaults);
+        // Study info overlay settings
+        ItemQualityOverlaySettings studyDefaults = new ItemQualityOverlaySettings();
+        studyDefaults.corner = ItemQualityOverlaySettings.Corner.BOTTOM_LEFT;
+        studyDefaults.useThresholds = false;
+        studyDefaults.defaultColor = new java.awt.Color(255, 255, 50);
+        conf.put(Key.studyInfoOverlay, studyDefaults);
+        // Progress/meter overlay settings
+        ItemQualityOverlaySettings progressDefaults = new ItemQualityOverlaySettings();
+        progressDefaults.corner = ItemQualityOverlaySettings.Corner.BOTTOM_LEFT;
+        progressDefaults.useThresholds = false;
+        progressDefaults.defaultColor = new java.awt.Color(234, 164, 101);
+        progressDefaults.showBackground = true;
+        conf.put(Key.progressOverlay, progressDefaults);
+        // Volume overlay settings (CustomName - kg/l)
+        ItemQualityOverlaySettings volumeDefaults = new ItemQualityOverlaySettings();
+        volumeDefaults.corner = ItemQualityOverlaySettings.Corner.TOP_LEFT;
+        volumeDefaults.useThresholds = false;
+        volumeDefaults.defaultColor = new java.awt.Color(65, 255, 115);
+        volumeDefaults.showBackground = true;
+        conf.put(Key.volumeOverlay, volumeDefaults);
+
+        // Equipment proxy slots - default to Left Hand, Right Hand, Belt
+        ArrayList<Integer> defaultEquipProxySlots = new ArrayList<>();
+        defaultEquipProxySlots.add(6);  // HAND_LEFT
+        defaultEquipProxySlots.add(7);  // HAND_RIGHT
+        defaultEquipProxySlots.add(5);  // BELT
+        conf.put(Key.equipProxySlots, defaultEquipProxySlots);
+
+        // Starvation alert settings
+        conf.put(Key.starvationAlertEnabled, true);
+        conf.put(Key.starvationPopup1Threshold, 2700);  // First warning popup (0 to disable)
+        conf.put(Key.starvationPopup2Threshold, 2500);  // Critical warning popup (0 to disable)
+        conf.put(Key.starvationVignetteStartThreshold, 2300);  // Vignette starts (0 to disable)
+        conf.put(Key.starvationVignetteCriticalThreshold, 2000);  // Vignette intensifies (0 to disable)
+        conf.put(Key.starvationSoundThreshold, 2000);  // Sound alarm threshold (0 to disable)
+        conf.put(Key.starvationSoundInterval, 10000);  // Sound interval in milliseconds
     }
 
 
     HashMap<Key, Object> conf = new HashMap<>();
     private boolean isUpd = false;
     private boolean isAreasUpd = false;
+    private long lastAreasChangeTime = 0;
+    private static final long AREAS_DEBOUNCE_MS = 3000; // 3 seconds debounce for area changes
     private boolean isExploredUpd = false;
+    private long lastExploredChangeTime = 0;
+    private static final long EXPLORED_DEBOUNCE_MS = 5000; // 5 seconds debounce for explored area changes
     private boolean isRoutesUpd = false;
     private boolean isScenariosUpd = false;
-    String path = ((HashDirCache) ResCache.global).base + "\\..\\" + "nconfig.nurgling.json";
+    String path = NUtils.getDataFile("nconfig.nurgling.json");
 
     public boolean isUpdated()
     {
@@ -424,7 +528,13 @@ public class NConfig
 
     public boolean isAreasUpdated()
     {
-        return isAreasUpd;
+        // Only return true if areas changed AND debounce period has passed
+        // This batches multiple rapid changes into a single DB update
+        if (isAreasUpd && lastAreasChangeTime > 0) {
+            long elapsed = System.currentTimeMillis() - lastAreasChangeTime;
+            return elapsed >= AREAS_DEBOUNCE_MS;
+        }
+        return false;
     }
 
     public boolean isRoutesUpdated() {
@@ -435,7 +545,15 @@ public class NConfig
         return isScenariosUpd;
     }
 
-    public boolean isExploredUpdated() { return isExploredUpd; }
+    public boolean isExploredUpdated() {
+        // Only return true if explored area changed AND debounce period has passed
+        // This batches multiple rapid changes into a single file update
+        if (isExploredUpd && lastExploredChangeTime > 0) {
+            long elapsed = System.currentTimeMillis() - lastExploredChangeTime;
+            return elapsed >= EXPLORED_DEBOUNCE_MS;
+        }
+        return false;
+    }
 
     public static Object get(Key key)
     {
@@ -465,49 +583,89 @@ public class NConfig
     public static void needAreasUpdate()
     {
         // Only update profile-specific config (areas are per-world)
+        // Record timestamp for debouncing - actual save happens after AREAS_DEBOUNCE_MS of inactivity
+        long now = System.currentTimeMillis();
         try {
             if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
                 nurgling.NUtils.getUI().core.config.isAreasUpd = true;
+                nurgling.NUtils.getUI().core.config.lastAreasChangeTime = now;
             }
         } catch (Exception e) {
             // Fallback to global config if profile config not available
             if (current != null)
             {
                 current.isAreasUpd = true;
+                current.lastAreasChangeTime = now;
             }
         }
     }
 
-    public static void needRoutesUpdate()
-    {
-        // Only update profile-specific config (routes are per-world)
-        try {
-            if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
-                nurgling.NUtils.getUI().core.config.isRoutesUpd = true;
-            }
-        } catch (Exception e) {
-            // Fallback to global config if profile config not available
-            if (current != null)
-            {
-                current.isRoutesUpd = true;
-            }
-        }
-    }
+
 
     public static void needExploredUpdate()
     {
         // Only update profile-specific config (explored area is per-world)
+        // Record timestamp for debouncing - actual save happens after EXPLORED_DEBOUNCE_MS of inactivity
+        long now = System.currentTimeMillis();
         try {
             if (nurgling.NUtils.getGameUI() != null && nurgling.NUtils.getUI() != null && nurgling.NUtils.getUI().core != null) {
                 nurgling.NUtils.getUI().core.config.isExploredUpd = true;
+                nurgling.NUtils.getUI().core.config.lastExploredChangeTime = now;
             }
         } catch (Exception e) {
             // Fallback to global config if profile config not available
             if (current != null)
             {
                 current.isExploredUpd = true;
+                current.lastExploredChangeTime = now;
             }
         }
+    }
+
+    // Area rank preset bindings - stored separately from areas (which sync from DB)
+    @SuppressWarnings("unchecked")
+    public static String getAreaRankPreset(int areaId, String animalType) {
+        Map<Integer, Map<String, String>> presets = (Map<Integer, Map<String, String>>) get(Key.areaRankPresets);
+        if (presets == null) return null;
+        Map<String, String> areaPresets = presets.get(areaId);
+        if (areaPresets == null) return null;
+        return areaPresets.get(animalType);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void setAreaRankPreset(int areaId, String animalType, String presetName) {
+        Map<Integer, Map<String, String>> presets = (Map<Integer, Map<String, String>>) get(Key.areaRankPresets);
+        if (presets == null) {
+            presets = new HashMap<>();
+        }
+        Map<String, String> areaPresets = presets.computeIfAbsent(areaId, k -> new HashMap<>());
+        if (presetName == null || presetName.isEmpty()) {
+            areaPresets.remove(animalType);
+            if (areaPresets.isEmpty()) {
+                presets.remove(areaId);
+            }
+        } else {
+            areaPresets.put(animalType, presetName);
+        }
+        set(Key.areaRankPresets, presets);
+    }
+
+    /**
+     * Get all area IDs that have a rank preset configured for a specific animal type
+     * @param animalType Animal type (cows, goats, sheeps, pigs, horses, deers)
+     * @return Set of area IDs with configured presets
+     */
+    @SuppressWarnings("unchecked")
+    public static Set<Integer> getAreasWithRankPreset(String animalType) {
+        Set<Integer> result = new HashSet<>();
+        Map<Integer, Map<String, String>> presets = (Map<Integer, Map<String, String>>) get(Key.areaRankPresets);
+        if (presets == null) return result;
+        for (Map.Entry<Integer, Map<String, String>> entry : presets.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().containsKey(animalType)) {
+                result.add(entry.getKey());
+            }
+        }
+        return result;
     }
 
     public static NConfig current;
@@ -555,7 +713,7 @@ public class NConfig
         if (profileManager != null) {
             return profileManager.getConfigPathString(filename);
         }
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + filename;
+        return NUtils.getDataFile(filename);
     }
 
     /**
@@ -608,6 +766,14 @@ public class NConfig
     }
 
     /**
+     * Gets the dynamic path for labeled marks configuration file
+     * (water/soil quality marks from Checker bots)
+     */
+    public String getLabeledMarksPath() {
+        return getProfileAwarePath("labeled_marks.nurgling.json");
+    }
+
+    /**
      * Gets the dynamic path for resource timers configuration file
      */
     public String getResourceTimersPath() {
@@ -619,7 +785,31 @@ public class NConfig
      * Note: scenarios are always stored globally, not per-profile
      */
     public String getScenariosPath() {
-        return ((HashDirCache) ResCache.global).base + "\\..\\" + "scenarios.nurgling.json";
+        return NUtils.getDataFile("scenarios.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for equipment presets configuration file
+     * Note: equipment presets are always stored globally, not per-profile
+     */
+    public String getEquipmentPresetsPath() {
+        return NUtils.getDataFile("equipment_presets.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for craft presets configuration file
+     * Note: craft presets are always stored globally, not per-profile
+     */
+    public String getCraftPresetsPath() {
+        return NUtils.getDataFile("craft_presets.nurgling.json");
+    }
+
+    /**
+     * Gets the dynamic path for custom icons configuration file
+     * Note: custom icons are always stored globally, not per-profile
+     */
+    public String getCustomIconsPath() {
+        return ((HashDirCache) ResCache.global).base + "\\..\\" + "custom_icons.nurgling.json";
     }
 
     @SuppressWarnings("unchecked")
@@ -729,6 +919,11 @@ public class NConfig
                     res.addAll(objs);
                     break;
                 }
+                else if (jobj instanceof Number) {
+                    // Handle arrays of numbers (integers, longs, etc.)
+                    res.addAll(objs);
+                    break;
+                }
             }
             return res;
         }
@@ -766,6 +961,9 @@ public class NConfig
                                 case "FontSettings":
                                     conf.put(Key.fonts, new FontSettings(hobj));
                                     break;
+                                case "ItemQualityOverlaySettings":
+                                    conf.put(Key.valueOf(entry.getKey()), new ItemQualityOverlaySettings(hobj));
+                                    break;
                                 case "Color":
                                     try {
                                         int red = ((Number) hobj.get("red")).intValue();
@@ -782,6 +980,25 @@ public class NConfig
                                     conf.put(Key.valueOf(entry.getKey()), entry.getValue());
                                     break;
                             }
+                        } else if (entry.getKey().equals(Key.areaRankPresets.name())) {
+                            // Special handling for areaRankPresets: convert String keys to Integer
+                            Map<Integer, Map<String, String>> converted = new HashMap<>();
+                            for (Map.Entry<String, Object> areaEntry : hobj.entrySet()) {
+                                try {
+                                    int areaId = Integer.parseInt(areaEntry.getKey());
+                                    if (areaEntry.getValue() instanceof Map) {
+                                        Map<String, String> animalPresets = new HashMap<>();
+                                        Map<String, Object> rawPresets = (Map<String, Object>) areaEntry.getValue();
+                                        for (Map.Entry<String, Object> presetEntry : rawPresets.entrySet()) {
+                                            if (presetEntry.getValue() instanceof String) {
+                                                animalPresets.put(presetEntry.getKey(), (String) presetEntry.getValue());
+                                            }
+                                        }
+                                        converted.put(areaId, animalPresets);
+                                    }
+                                } catch (NumberFormatException ignore) {}
+                            }
+                            conf.put(Key.areaRankPresets, converted);
                         } else {
                             conf.put(Key.valueOf(entry.getKey()), entry.getValue());
                         }
@@ -884,24 +1101,75 @@ public class NConfig
     {
         if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
         {
-            JSONObject main = new JSONObject();
-            JSONArray jareas = new JSONArray();
-            for(NArea area : ((NMapView)NUtils.getGameUI().map).glob.map.areas.values())
-            {
-                jareas.put(area.toJson());
+            // If customPath is provided, write to file (for manual export only)
+            if (customPath != null) {
+                writeAreasToFile(customPath);
+                return;
             }
-            main.put("areas",jareas);
-            try
-            {
-                FileWriter f = new FileWriter(customPath==null?getAreasPath():customPath,StandardCharsets.UTF_8);
-                main.write(f);
-                f.close();
-                current.isAreasUpd = false;
+
+            // If DB is enabled - ONLY use DB, never fallback to file
+            if ((Boolean) NConfig.get(NConfig.Key.ndbenable)) {
+                // Reset flags to prevent repeated calls (use 'this' not 'current' - they may be different instances)
+                this.isAreasUpd = false;
+                this.lastAreasChangeTime = 0;
+
+                if (NCore.databaseManager != null && NCore.databaseManager.isReady()) {
+                    try {
+                        String profile = NUtils.getGameUI().getGenus();
+                        if (profile == null || profile.isEmpty()) {
+                            profile = "global";
+                        }
+                        java.util.Map<Integer, NArea> areas = ((NMapView)NUtils.getGameUI().map).glob.map.areas;
+                        // Capture 'this' for use in async callback
+                        final NConfig self = this;
+                        NCore.databaseManager.getAreaService().exportAreasToDatabaseAsync(areas, profile)
+                            .thenAccept(count -> {
+                                // Silent save - no spam
+                            })
+                            .exceptionally(e -> {
+                                System.err.println("Failed to save areas to database: " + e.getMessage());
+                                if (e.getCause() != null) {
+                                    e.getCause().printStackTrace();
+                                }
+                                // Set flag back to retry later (with timestamp for debounce)
+                                self.isAreasUpd = true;
+                                self.lastAreasChangeTime = System.currentTimeMillis();
+                                return null;
+                            });
+                    } catch (Exception e) {
+                        System.err.println("Failed to save areas to database: " + e.getMessage());
+                        this.isAreasUpd = true;
+                        this.lastAreasChangeTime = System.currentTimeMillis();
+                    }
+                }
+                // DB enabled but not ready - just skip, will retry on next tick
+                return;
             }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
+
+            // DB not enabled - write to file
+            writeAreasToFile(getAreasPath());
+        }
+    }
+
+    private void writeAreasToFile(String path) {
+        JSONObject main = new JSONObject();
+        JSONArray jareas = new JSONArray();
+        for(NArea area : ((NMapView)NUtils.getGameUI().map).glob.map.areas.values())
+        {
+            jareas.put(area.toJson());
+        }
+        main.put("areas",jareas);
+        try
+        {
+            FileWriter f = new FileWriter(path, StandardCharsets.UTF_8);
+            main.write(f);
+            f.close();
+            this.isAreasUpd = false;
+            this.lastAreasChangeTime = 0;
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 
@@ -911,21 +1179,25 @@ public class NConfig
         {
             try
             {
-                FileWriter f = new FileWriter(customPath==null?getExploredPath():customPath,StandardCharsets.UTF_8);
-                ((NCornerMiniMap)NUtils.getGameUI().mmap).exploredArea.toJson().write(f);
-                f.close();
-                current.isExploredUpd = false;
+                String filePath = customPath == null ? getExploredPath() : customPath;
+                // Merge with existing data on disk to prevent data loss when multiple clients run
+                ((NCornerMiniMap)NUtils.getGameUI().mmap).exploredArea.mergeAndSaveToFile(filePath);
+                this.isExploredUpd = false;
+                this.lastExploredChangeTime = 0;
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                throw new RuntimeException(e);
+                // Log error but don't crash
+                System.err.println("Error saving explored area: " + e.getMessage());
             }
         }
     }
 
 
+    /**
+     * Merge areas - duplicate strategy (rename conflicts with "Other_" prefix)
+     */
     public void mergeAreas(File file) {
-
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
         {
@@ -955,33 +1227,10 @@ public class NConfig
         }
     }
 
-    public void writeRoutes(String customPath)
-    {
-        if(NUtils.getGameUI()!=null && NUtils.getGameUI().map!=null)
-        {
-            JSONObject main = new JSONObject();
-            JSONArray jroutes = new JSONArray();
-            for(Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values())
-            {
-                jroutes.put(route.toJson());
-            }
-            main.put("routes",jroutes);
-
-            try
-            {
-                FileWriter f = new FileWriter(customPath==null?getRoutesPath():customPath,StandardCharsets.UTF_8);
-                main.write(f);
-                f.close();
-                this.isRoutesUpd = false;
-            }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    public void mergeRoutes(File file) {
+    /**
+     * Replace areas - full replace strategy (delete all old, add new)
+     */
+    public void replaceAreas(File file) {
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
         {
@@ -992,21 +1241,95 @@ public class NConfig
         }
 
         if (!contentBuilder.toString().isEmpty()) {
-            JSONObject main = new JSONObject(contentBuilder.toString());
-            JSONArray array = (JSONArray) main.get("routes");
-            for (int i = 0; i < array.length(); i++) {
-                Route a = new Route((JSONObject) array.get(i));
-                int id = 1;
-                for (Route route : ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().values()) {
-                    if (route.name.equals(a.name)) {
-                        a.name = "Other_" + a.name;
+            // Remove all existing areas and their overlays
+            NMapView mapView = (NMapView) NUtils.getGameUI().map;
+            synchronized (mapView.glob.map.areas) {
+                // Remove overlays for all areas
+                for (Integer areaId : new java.util.ArrayList<>(mapView.glob.map.areas.keySet())) {
+                    if (mapView.nols.containsKey(areaId)) {
+                        mapView.nols.get(areaId).remove();
+                        mapView.nols.remove(areaId);
                     }
-                    if (route.id >= id) {
-                        id = route.id + 1;
+                    NArea area = mapView.glob.map.areas.get(areaId);
+                    if (area != null) {
+                        Gob dummy = mapView.dummys.get(area.gid);
+                        if (dummy != null) {
+                            mapView.glob.oc.remove(dummy);
+                            mapView.dummys.remove(area.gid);
+                        }
                     }
                 }
-                a.id = id;
-                ((NMapView) NUtils.getGameUI().map).routeGraphManager.getRoutes().put(a.id, a);
+                // Clear all areas
+                mapView.glob.map.areas.clear();
+            }
+
+            // Add new areas from file
+            JSONObject main = new JSONObject(contentBuilder.toString());
+            JSONArray array = (JSONArray) main.get("areas");
+            for (int i = 0; i < array.length(); i++) {
+                NArea a = new NArea((JSONObject) array.get(i));
+                a.id = i + 1;
+                ((NMapView) NUtils.getGameUI().map).glob.map.areas.put(a.id, a);
+            }
+        }
+    }
+
+    /**
+     * Overwrite areas - replace areas with same name, add new ones
+     */
+    public void overwriteAreas(File file) {
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8))
+        {
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        }
+        catch (IOException ignore)
+        {
+        }
+
+        if (!contentBuilder.toString().isEmpty()) {
+            NMapView mapView = (NMapView) NUtils.getGameUI().map;
+            JSONObject main = new JSONObject(contentBuilder.toString());
+            JSONArray array = (JSONArray) main.get("areas");
+
+            for (int i = 0; i < array.length(); i++) {
+                NArea newArea = new NArea((JSONObject) array.get(i));
+
+                // Find existing area with same name
+                NArea existingArea = null;
+                for (NArea area : mapView.glob.map.areas.values()) {
+                    if (area.name.equals(newArea.name)) {
+                        existingArea = area;
+                        break;
+                    }
+                }
+
+                if (existingArea != null) {
+                    // Remove old area's overlays
+                    if (mapView.nols.containsKey(existingArea.id)) {
+                        mapView.nols.get(existingArea.id).remove();
+                        mapView.nols.remove(existingArea.id);
+                    }
+                    Gob dummy = mapView.dummys.get(existingArea.gid);
+                    if (dummy != null) {
+                        mapView.glob.oc.remove(dummy);
+                        mapView.dummys.remove(existingArea.gid);
+                    }
+
+                    // Replace with new area using same id
+                    newArea.id = existingArea.id;
+                    mapView.glob.map.areas.put(newArea.id, newArea);
+                } else {
+                    // Add as new area with new id
+                    int maxId = 0;
+                    for (NArea area : mapView.glob.map.areas.values()) {
+                        if (area.id > maxId) {
+                            maxId = area.id;
+                        }
+                    }
+                    newArea.id = maxId + 1;
+                    mapView.glob.map.areas.put(newArea.id, newArea);
+                }
             }
         }
     }

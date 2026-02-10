@@ -173,6 +173,7 @@ public class MapWnd extends Window implements Console.Directory {
 		    return(true);
 		}
 	    }
+	    /* XXX: Shift-clicks that do not drag should be propagated to the map. */
 	    if((ev.b == 1) && (checkhit(c) || ui.modshift)) {
 		MapWnd.this.drag(parentpos(MapWnd.this, c));
 		return(true);
@@ -273,14 +274,15 @@ public class MapWnd extends Window implements Console.Directory {
 	    super(file);
 	}
 
-	public void drawgrid(GOut g, Coord ul, DisplayGrid disp) {
-	    super.drawgrid(g, ul, disp);
+	@Override
+	protected void drawgridOverlays(GOut g, Coord ul, DisplayGrid disp, Coord size) {
 	    for(String tag : overlays) {
 		try {
 		    Tex img = disp.olimg(tag);
 		    if(img != null) {
 			g.chcolor(255, 255, 255, olalpha);
-			g.image(img, ul, UI.scale(img.sz()));
+			// Use the same size as the grid tile for correct scaling
+			g.image(img, ul, size);
 		    }
 		} catch(Loading l) {
 		}
@@ -740,7 +742,7 @@ public class MapWnd extends Window implements Console.Directory {
 			    Resource.Tooltip tt = res.layer(Resource.tooltip);
 			    if(tt == null)
 				return;
-			    rnm = tt.t;
+			    rnm = tt.text();
 			}
 			double now = Utils.rtime();
 			if(f == 0)

@@ -12,6 +12,9 @@ import nurgling.tasks.WaitPlaced;
 import nurgling.tasks.WaitPlob;
 import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
+import nurgling.NGItem;
+import haven.WItem;
+import java.util.ArrayList;
 
 import static haven.OCache.posres;
 
@@ -20,6 +23,10 @@ public class PileMaker implements Action{
     Coord2d startFrom;
     NAlias items;
     NAlias pileName;
+    int th = 0;
+
+    // When set, use exact name matching instead of NAlias substring matching
+    String exactName = null;
 
     public Gob getPile() {
         return pile;
@@ -39,12 +46,28 @@ public class PileMaker implements Action{
         this.pileName = pileName;
     }
 
+    public PileMaker(Pair<Coord2d, Coord2d> out, NAlias items, NAlias pileName, int th) {
+        this.out = out;
+        this.items = items;
+        this.pileName = pileName;
+        this.th = th;
+    }
+
+    public PileMaker(Pair<Coord2d, Coord2d> out, String exactName, NAlias pileName, int th) {
+        this.out = out;
+        this.exactName = exactName;
+        this.items = new NAlias(exactName);
+        this.pileName = pileName;
+        this.th = th;
+    }
+
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
 
         if (gui.hand.isEmpty()) {
-            if(NUtils.takeItemToHand(NUtils.getGameUI().getInventory().getItem(items))==null)
-                
+            ArrayList<WItem> witems = getMatchingItems(gui);
+            if(witems.isEmpty() || NUtils.takeItemToHand(witems.get(0))==null)
+
                 return Results.FAIL();
         }
         if(startFrom != null)
@@ -65,5 +88,23 @@ public class PileMaker implements Action{
         pile = wp.getPile();
         NUtils.addTask(new WaitStockpile(true));
         return Results.SUCCESS();
+    }
+
+    /**
+     * Gets items from inventory, using exact name match if exactName is set,
+     * otherwise uses NAlias substring matching.
+     */
+    private ArrayList<WItem> getMatchingItems(NGameUI gui) throws InterruptedException {
+        ArrayList<WItem> allItems = NUtils.getGameUI().getInventory().getItems(items, th);
+        if (exactName == null) {
+            return allItems;
+        }
+        ArrayList<WItem> exactMatches = new ArrayList<>();
+        for (WItem witem : allItems) {
+            if (((NGItem) witem.item).name().equals(exactName)) {
+                exactMatches.add(witem);
+            }
+        }
+        return exactMatches;
     }
 }

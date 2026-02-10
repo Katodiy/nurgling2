@@ -4,6 +4,7 @@ import haven.*;
 import haven.Label;
 import nurgling.NConfig;
 import nurgling.conf.FontSettings;
+import nurgling.i18n.L10n;
 import nurgling.widgets.NColorWidget;
 
 import java.awt.*;
@@ -16,15 +17,19 @@ public class Fonts extends Panel {
     );
 
     public enum FontType {
-        DEFAULT("Default font"),
-        UI("Interface font"),
-        QUESTS("Quests list"),
-        BARRELS("Barrels labels"),
-        CHARACTERS("Characters names");
+        DEFAULT("fonts.type.default"),
+        UI("fonts.type.ui"),
+        QUESTS("fonts.type.quests"),
+        BARRELS("fonts.type.barrels"),
+        CHARACTERS("fonts.type.characters");
 
-        final String displayName;
-        FontType(String displayName) {
-            this.displayName = displayName;
+        final String key;
+        FontType(String key) {
+            this.key = key;
+        }
+        
+        public String getDisplayName() {
+            return L10n.get(key);
         }
     }
 
@@ -38,10 +43,10 @@ public class Fonts extends Panel {
     private boolean colorable = false;
 
     public Fonts() {
-        super("Fonts");
+        super(L10n.get("fonts.title"));
 
         // Главный комбобокс для выбора типа текста
-        add(new Label("Text type:"), UI.scale(10, 40));
+        add(new Label(L10n.get("fonts.text_type")), UI.scale(10, 40));
         fontTypeSelector = add(new Dropbox<FontType>(UI.scale(200), FontType.values().length, UI.scale(16)) {
             @Override
             protected FontType listitem(int i) { return FontType.values()[i]; }
@@ -49,7 +54,7 @@ public class Fonts extends Panel {
             protected int listitems() { return FontType.values().length; }
             @Override
             protected void drawitem(GOut g, FontType item, int i) {
-                g.text(item.displayName, Coord.z);
+                g.text(item.getDisplayName(), Coord.z);
             }
             @Override
             public void change(FontType item) {
@@ -59,7 +64,7 @@ public class Fonts extends Panel {
         }, UI.scale(100, 40));
 
         // Выбор семейства шрифтов
-        add(new Label("Font family:"), UI.scale(10, 80));
+        add(new Label(L10n.get("fonts.font_family")), UI.scale(10, 80));
         familySelector = add(new Dropbox<String>(UI.scale(200), FONT_FAMILIES.size(), UI.scale(16)) {
             @Override protected String listitem(int i) { return FONT_FAMILIES.get(i); }
             @Override protected int listitems() { return FONT_FAMILIES.size(); }
@@ -69,11 +74,11 @@ public class Fonts extends Panel {
                 updatePreview();
             }
         }, UI.scale(100, 80));
-        colorButton = add(new NColorWidget("Color"), familySelector.pos("ur").add(UI.scale(20,-8)));
+        colorButton = add(new NColorWidget(L10n.get("fonts.color")), familySelector.pos("ur").add(UI.scale(20,-8)));
         colorButton.hide();
 
         // Размер шрифта
-        add(new Label("Font size:"), UI.scale(10, 120));
+        add(new Label(L10n.get("fonts.font_size")), UI.scale(10, 120));
         sizeLabel = new Label("12");
         addhlp(UI.scale(100, 122), UI.scale(5),
                 sizeSlider = new HSlider(UI.scale(200), 8, 24, 12) {
@@ -181,7 +186,7 @@ public class Fonts extends Panel {
 
         public void updateFont(String family, int size) {
             if(family!=null && currentSettings!=null)
-                previewText = new Text.Foundry(currentSettings.getFont(family),size).render("Sample text: 123 ABC abc");
+                previewText = new Text.Foundry(currentSettings.getFont(family),size).render(L10n.get("fonts.preview"));
         }
 
         public void draw(GOut g) {

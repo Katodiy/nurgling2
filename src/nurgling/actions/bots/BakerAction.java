@@ -30,7 +30,7 @@ public class BakerAction implements Action {
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob sm : Finder.findGobs(ovens, new NAlias("gfx/terobjs/oven")))
         {
-            Container cand = new Container(sm, "Oven");
+            Container cand = new Container(sm, "Oven", ovens);
 
             cand.initattr(Container.Space.class);
             cand.initattr(Container.FuelLvl.class);

@@ -29,10 +29,19 @@ public class SpecialisationData {
             "Blood Stern", "Blueberries", "Cavebulb", "Chantrelles", "Chiming Bluebell",
             "Chives", "Clover", "Dandelion", "Dill", "Heartsease", "Kvann",
             "Lady's Mantle", "Liberty Caps", "Lupine", "Parasol Mushroom", "Sage",
-            "Stalagoom", "Stinging Nettle", "Strawberry", "Tansy", "Thyme",
+            "Stalagoom", "Stinging Nettle", "Strawberries", "Tansy", "Thyme",
             "Troll Mushroom", "Uncommon Snapdragon", "Yarrow"
         ));
         data.put("plantingGardenPots", gardenPotPlants);
         data.put("gardenPotSeeds", gardenPotPlants);
+        ArrayList<String> dframe = new ArrayList<>(Arrays.asList("Hides", "Fish"));
+        data.put("dframe", dframe);
+        
+        // Construction materials subtypes
+        ArrayList<String> buildMaterials = new ArrayList<>(Arrays.asList(
+            "Block", "Board", "Stone", "String", "Nugget", "Metal Bar", 
+            "Clay", "Brick", "Thatch", "Branch", "Bough", "Log", "Fibre"
+        ));
+        data.put("buildMaterials", buildMaterials);
     }
 }

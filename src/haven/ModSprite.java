@@ -434,9 +434,15 @@ public class ModSprite extends Sprite implements Sprite.CUpd, EquipTarget {
 
 	public void operate(Cons cons) {
 	    int flags = cons.spr().flags;
+	    // Check for customMask (nurgling: barrel/dframe material override)
+	    Gob gob = cons.spr().gob;
+	    int matFlags = flags;
+	    if (gob != null && gob.ngob != null && gob.ngob.customMask) {
+		matFlags = gob.ngob.mask();
+	    }
 	    for(FastMesh.MeshRes mr : meshes) {
 		if((mr.id < 0) || (((1 << mr.id) & flags) != 0))
-		    cons.add(new Part(mr.m, mr.mat.get()));
+		    cons.add(new Part(mr.m, mr.mat.get(matFlags)));
 	    }
 	}
 

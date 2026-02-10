@@ -9,6 +9,9 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -90,8 +93,9 @@ public class ExploredArea {
     
     public ExploredArea(NMiniMap miniMap) {
         this.miniMap = miniMap;
-        loadFromFile();
-        loadSessionFromFile();
+        // Note: Don't load from file here! The profile may not be initialized yet.
+        // Data is loaded later via reloadFromFile() when the profile is ready.
+        // This prevents loading from the wrong path and losing profile-specific data.
     }
     
     /**
@@ -272,13 +276,38 @@ public class ExploredArea {
     /**
      * Reload explored area data from file.
      * Call this after profile initialization to load profile-specific data.
+     * Merges file data with any in-memory data (in case exploration happened before profile init).
      */
     public void reloadFromFile() {
+        // Save current in-memory data before loading
+        Map<GridKey, boolean[]> currentData = new HashMap<>(gridMasks);
+        
+        // Load from file
         gridMasks.clear();
         loadFromFile();
-        // Also reload session data
+        
+        // Merge in-memory data back (OR operation - keep explored tiles from both)
+        for (Map.Entry<GridKey, boolean[]> entry : currentData.entrySet()) {
+            GridKey key = entry.getKey();
+            boolean[] memoryMask = entry.getValue();
+            
+            boolean[] fileMask = gridMasks.get(key);
+            if (fileMask == null) {
+                // Grid only in memory, add it
+                gridMasks.put(key, memoryMask);
+            } else {
+                // Merge: OR the masks
+                for (int i = 0; i < MASK_SIZE; i++) {
+                    fileMask[i] = fileMask[i] || memoryMask[i];
+                }
+            }
+        }
+        
+        // Also reload session data (session doesn't need merge - it's temporary)
         sessionGridMasks.clear();
         loadSessionFromFile();
+        
+        seq++;
     }
     
     /**
@@ -549,5 +578,213 @@ public class ExploredArea {
         } catch (Exception e) {
             return null;
         }
+    }
+    
+    /**
+     * Merge in-memory data with existing file data and save with file locking.
+     * This prevents data loss when multiple clients run simultaneously.
+     * 
+     * Algorithm:
+     * 1. Acquire exclusive file lock
+     * 2. Read existing data from file
+     * 3. Merge: for each grid, OR the masks together (explored in file OR explored in memory)
+     * 4. Write merged result
+     * 5. Update in-memory data with merged result
+     * 6. Release lock
+     */
+    public void mergeAndSaveToFile(String filePath) throws IOException {
+        File file = new File(filePath);
+        File parentDir = file.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+        
+        // Create lock file to coordinate access
+        File lockFile = new File(filePath + ".lock");
+        
+        try (RandomAccessFile raf = new RandomAccessFile(lockFile, "rw");
+             FileChannel channel = raf.getChannel()) {
+            
+            // Acquire exclusive lock (blocks until available)
+            FileLock lock = null;
+            try {
+                lock = channel.tryLock();
+                if (lock == null) {
+                    // Could not acquire lock immediately, wait a bit and try again
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    lock = channel.tryLock();
+                }
+                
+                if (lock == null) {
+                    // Still no lock, fall back to simple save
+                    System.err.println("Could not acquire file lock, saving without merge");
+                    saveWithoutMerge(filePath);
+                    return;
+                }
+                
+                // Read existing data from file
+                Map<GridKey, boolean[]> diskData = readFromDisk(filePath);
+                
+                // Merge: OR the masks together
+                // First, copy disk data to merged result
+                Map<GridKey, boolean[]> mergedData = new HashMap<>();
+                for (Map.Entry<GridKey, boolean[]> entry : diskData.entrySet()) {
+                    boolean[] copy = new boolean[MASK_SIZE];
+                    System.arraycopy(entry.getValue(), 0, copy, 0, MASK_SIZE);
+                    mergedData.put(entry.getKey(), copy);
+                }
+                
+                // Then, merge in-memory data
+                for (Map.Entry<GridKey, boolean[]> entry : gridMasks.entrySet()) {
+                    GridKey key = entry.getKey();
+                    boolean[] memoryMask = entry.getValue();
+                    
+                    boolean[] existingMask = mergedData.get(key);
+                    if (existingMask == null) {
+                        // New grid, just add it
+                        boolean[] copy = new boolean[MASK_SIZE];
+                        System.arraycopy(memoryMask, 0, copy, 0, MASK_SIZE);
+                        mergedData.put(key, copy);
+                    } else {
+                        // Merge: OR the masks
+                        for (int i = 0; i < MASK_SIZE; i++) {
+                            existingMask[i] = existingMask[i] || memoryMask[i];
+                        }
+                    }
+                }
+                
+                // Write merged result to file
+                JSONObject doc = toJsonFromData(mergedData);
+                try (FileWriter f = new FileWriter(filePath, StandardCharsets.UTF_8)) {
+                    doc.write(f);
+                }
+                
+                // Update in-memory data with merged result (so we have the latest data)
+                // This is important to prevent re-saving stale data
+                for (Map.Entry<GridKey, boolean[]> entry : mergedData.entrySet()) {
+                    GridKey key = entry.getKey();
+                    boolean[] mergedMask = entry.getValue();
+                    boolean[] currentMask = gridMasks.get(key);
+                    
+                    if (currentMask == null) {
+                        // Grid from disk that we didn't have
+                        gridMasks.put(key, mergedMask);
+                    } else {
+                        // Update our mask with merged data
+                        for (int i = 0; i < MASK_SIZE; i++) {
+                            currentMask[i] = mergedMask[i];
+                        }
+                    }
+                }
+                
+            } finally {
+                if (lock != null) {
+                    try {
+                        lock.release();
+                    } catch (Exception e) {
+                        // Ignore
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // If locking fails, fall back to simple save
+            System.err.println("Error during merge-save, falling back to simple save: " + e.getMessage());
+            saveWithoutMerge(filePath);
+        }
+    }
+    
+    /**
+     * Simple save without merge (fallback when locking fails).
+     */
+    private void saveWithoutMerge(String filePath) throws IOException {
+        try (FileWriter f = new FileWriter(filePath, StandardCharsets.UTF_8)) {
+            toJson().write(f);
+        }
+    }
+    
+    /**
+     * Read grid data from disk file.
+     */
+    private Map<GridKey, boolean[]> readFromDisk(String filePath) {
+        Map<GridKey, boolean[]> result = new HashMap<>();
+        
+        File file = new File(filePath);
+        if (!file.exists()) {
+            return result;
+        }
+        
+        try {
+            StringBuilder contentBuilder = new StringBuilder();
+            try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8)) {
+                stream.forEach(s -> contentBuilder.append(s).append("\n"));
+            }
+            
+            if (contentBuilder.length() == 0) {
+                return result;
+            }
+            
+            JSONObject json = new JSONObject(contentBuilder.toString());
+            if (!json.has("grids")) {
+                return result;
+            }
+            
+            JSONArray gridsArray = json.getJSONArray("grids");
+            for (int i = 0; i < gridsArray.length(); i++) {
+                JSONObject gridJson = gridsArray.getJSONObject(i);
+                
+                long segmentId = gridJson.getLong("seg");
+                int gx = gridJson.getInt("gx");
+                int gy = gridJson.getInt("gy");
+                
+                GridKey key = new GridKey(segmentId, new Coord(gx, gy));
+                
+                // Decode RLE compressed mask
+                String rle = gridJson.getString("mask");
+                boolean[] mask = decodeRLE(rle);
+                
+                if (mask != null) {
+                    result.put(key, mask);
+                }
+            }
+        } catch (Exception e) {
+            // Ignore load errors, return what we have
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Convert given data to JSON (for saving merged data).
+     */
+    private JSONObject toJsonFromData(Map<GridKey, boolean[]> data) {
+        JSONArray gridsArray = new JSONArray();
+        
+        for (Map.Entry<GridKey, boolean[]> entry : data.entrySet()) {
+            GridKey key = entry.getKey();
+            boolean[] mask = entry.getValue();
+            
+            // Skip empty masks
+            if (!hasAnyExploredTiles(mask)) {
+                continue;
+            }
+            
+            JSONObject gridJson = new JSONObject();
+            gridJson.put("seg", key.segmentId);
+            gridJson.put("gx", key.gridCoord.x);
+            gridJson.put("gy", key.gridCoord.y);
+            
+            // Encode mask with RLE compression
+            gridJson.put("mask", encodeRLE(mask));
+            
+            gridsArray.put(gridJson);
+        }
+        
+        JSONObject doc = new JSONObject();
+        doc.put("grids", gridsArray);
+        return doc;
     }
 }

@@ -24,7 +24,7 @@ public class DFrameHidesAction implements Action {
     NAlias raw = new NAlias("Fresh");
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
-        NArea.Specialisation rdframe = new NArea.Specialisation(Specialisation.SpecName.dframe.toString());
+        NArea.Specialisation rdframe = new NArea.Specialisation(Specialisation.SpecName.dframe.toString(), "Hides");
         NArea.Specialisation rrawhides = new NArea.Specialisation(Specialisation.SpecName.rawhides.toString());
 
         ArrayList<NArea.Specialisation> req = new ArrayList<>();
@@ -35,9 +35,10 @@ public class DFrameHidesAction implements Action {
 
             ArrayList<Container> containers = new ArrayList<>();
 
-            for (Gob dframe : Finder.findGobs(NContext.findSpec(Specialisation.SpecName.dframe.toString()),
+            NArea dframesarea = NContext.findSpec(rdframe);
+            for (Gob dframe : Finder.findGobs(dframesarea,
                     new NAlias("gfx/terobjs/dframe"))) {
-                Container cand = new Container(dframe,"Frame" );
+                Container cand = new Container(dframe,"Frame" , dframesarea);
 
                 cand.initattr(Container.Space.class);
                 cand.initattr(Container.Tetris.class);
@@ -52,7 +53,7 @@ public class DFrameHidesAction implements Action {
 
                 containers.add(cand);
             }
-            Pair<Coord2d,Coord2d> rca = NContext.findSpec(Specialisation.SpecName.dframe.toString()).getRCArea();
+            Pair<Coord2d,Coord2d> rca = dframesarea.getRCArea();
             boolean dir = rca.b.x - rca.a.x > rca.b.y - rca.a.y;
             containers.sort(new Comparator<Container>() {
                 @Override
@@ -80,8 +81,9 @@ public class DFrameHidesAction implements Action {
 
 
             new FreeContainers(containers, new NAlias(new ArrayList<>(Arrays.asList("Fur", "Hide", "Scale", "Tail", "skin", "hide")), new ArrayList<>(Arrays.asList("Fresh", "Raw")))).run(gui);
-            new FillContainersFromPiles(containers, NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), raw).run(gui);
-            new TransferToPiles(NContext.findSpec(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
+            NUtils.navigateToArea(NContext.findSpecGlobal(Specialisation.SpecName.rawhides.toString()));
+            new FillContainersFromPiles(containers, NContext.findSpecGlobal(Specialisation.SpecName.rawhides.toString()).getRCArea(), raw).run(gui);
+            new TransferToPiles(NContext.findSpecGlobal(Specialisation.SpecName.rawhides.toString()).getRCArea(), new NAlias("Fresh")).run(gui);
 
             return Results.SUCCESS();
         }

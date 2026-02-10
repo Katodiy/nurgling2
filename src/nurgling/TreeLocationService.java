@@ -33,7 +33,7 @@ public class TreeLocationService implements ProfileAwareService {
 
     public TreeLocationService(NGameUI gui) {
         this.gui = gui;
-        this.dataFile = ((HashDirCache) ResCache.global).base + "\\..\\" + "tree_locations.nurgling.json";
+        this.dataFile = NUtils.getDataFile("tree_locations.nurgling.json");
         loadTreeLocations();
     }
 

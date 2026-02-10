@@ -161,9 +161,9 @@ public class SeedCrop implements Action {
                 NUtils.dropToInv();
             }
 
-            if (!barrels.isEmpty() && gui.getInventory().getItems(iseed).size() < 2)
+            if (!barrels.isEmpty() && lacksUsableSeeds(gui, true))
                 fetchSeedsFromBarrel(gui, barrels);
-            else if (!stockpiles.isEmpty())
+            else if (!stockpiles.isEmpty() && lacksUsableSeeds(gui, false))
                 fetchSeedsFromStockpiles(gui);
 
         }
@@ -181,11 +181,38 @@ public class SeedCrop implements Action {
                 }
             }
         }
-        if (gui.getInventory().getItems(iseed).size() < 2) {
-            NUtils.getGameUI().msg("No items for seeding");
+        if (lacksUsableSeeds(gui, !barrels.isEmpty())) {
+            NUtils.getGameUI().msg("No usable seeds for seeding");
             return;
         }
         if (count > 0) {
+            // Check if we have sufficient seeds for all cells in this area
+            if (!hasSufficientSeeds(gui, count, !barrels.isEmpty())) {
+                // Try to fetch more seeds
+                if (!barrels.isEmpty()) {
+                    fetchSeedsFromBarrel(gui, barrels);
+                } else if (!stockpiles.isEmpty()) {
+                    fetchSeedsFromStockpiles(gui);
+                }
+                // Re-check after fetch - if still insufficient, drop seeds back and abort
+                if (!hasSufficientSeeds(gui, count, !barrels.isEmpty())) {
+                    // Return seeds to barrel before aborting
+                    if (!gui.hand.isEmpty()) {
+                        NUtils.dropToInv();
+                    }
+                    if (!barrels.isEmpty() && !gui.getInventory().getItems(iseed).isEmpty()) {
+                        for (Gob barrel : barrels) {
+                            TransferToBarrel tb;
+                            (tb = new TransferToBarrel(barrel, iseed)).run(gui);
+                            if (!tb.isFull())
+                                break;
+                        }
+                    }
+                    gui.error("NO SEEDS: ABORT");
+                    throw new InterruptedException();
+                }
+            }
+
             if (PathFinder.isAvailable(target_coord)) {
                 new PathFinder(target_coord).run(NUtils.getGameUI());
                 if (setDir.get()) {
@@ -211,9 +238,9 @@ public class SeedCrop implements Action {
                 stacks_size = NUtils.getGameUI().getInventory().getItems(iseed).size();
             }
 
-            WItem seedItem = NUtils.getGameUI().getInventory().getItem(iseed);
+            WItem seedItem = findUsableSeedStack(gui, !barrels.isEmpty());
             if (seedItem == null) {
-                NUtils.getGameUI().msg("No seeds available for planting");
+                NUtils.getGameUI().msg("No usable seeds available for planting");
                 return;
             }
 
@@ -251,13 +278,23 @@ public class SeedCrop implements Action {
             }
         }
 
+        // Ensure hand is empty before trying to take from barrel
+        // (TransferToBarrel may leave small stacks in hand if they can't be combined)
+        if (!gui.hand.isEmpty()) {
+            NUtils.dropToInv();
+        }
+
         for (Gob barrel : barrels) {
-            if (gui.getInventory().getItems(iseed).size() < 2 && NUtils.barrelHasContent(barrel)) {
+            // Stop if inventory is full
+            if (gui.getInventory().getFreeSpace() <= 0) {
+                break;
+            }
+            if (NUtils.barrelHasContent(barrel)) {
                 new TakeFromBarrel(barrel, iseed).run(gui);
             }
         }
 
-        if (gui.getInventory().getItems(iseed).size() < 2) {
+        if (lacksUsableSeeds(gui, true)) {
             if (!gui.getInventory().getItems(iseed).isEmpty()) {
                 for (Gob barrel : barrels) {
                     TransferToBarrel tb;
@@ -325,7 +362,7 @@ public class SeedCrop implements Action {
         // 2. Find all containers in the seed area (chests, cupboards, etc)
         ArrayList<Container> containers = new ArrayList<>();
         for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name), null);
             cand.initattr(Container.Space.class);
             containers.add(cand);
         }
@@ -366,7 +403,7 @@ public class SeedCrop implements Action {
 
         // Return seeds to the chest
         for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+            Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name), null);
             cand.initattr(Container.Space.class);
             containers.add(cand);
         }
@@ -540,6 +577,87 @@ public class SeedCrop implements Action {
                 return false;
         }
         return true;
+    }
+
+    /**
+     * Checks if inventory lacks usable seed stacks.
+     * For barrel mode (stacked seeds): usable means >= 5 seeds (can plant at least 1 cell).
+     * For stockpile mode (individual items): any item is usable.
+     *
+     * @param gui The game UI
+     * @param isStackedMode True if using barrels (stacked seeds), false for stockpiles
+     * @return True if NO usable seeds exist (need to fetch more)
+     */
+    private boolean lacksUsableSeeds(NGameUI gui, boolean isStackedMode) throws InterruptedException {
+        return findUsableSeedStack(gui, isStackedMode) == null;
+    }
+
+    /**
+     * Finds the first seed stack that can be used for planting.
+     * For barrel mode: requires amount >= 5 (can plant at least 1 cell).
+     * For stockpile mode: any seed item is usable.
+     *
+     * @param gui The game UI
+     * @param isStackedMode True if using barrels (stacked seeds), false for stockpiles
+     * @return A usable WItem, or null if none found
+     */
+    private WItem findUsableSeedStack(NGameUI gui, boolean isStackedMode) throws InterruptedException {
+        for (WItem seed : gui.getInventory().getItems(iseed)) {
+            if (!isStackedMode) {
+                // Stockpile seeds are individual items, always usable
+                return seed;
+            }
+            // Barrel seeds are stacked - need >= 5 to plant at least one cell
+            GItem.Amount amount = ((NGItem) seed.item).getInfo(GItem.Amount.class);
+            if (amount == null) {
+                // No amount info - treat as usable (shouldn't happen for barrel seeds)
+                return seed;
+            }
+            if (amount.itemnum() >= 5) {
+                return seed;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Calculates total seeds available in inventory (sum of all stack amounts).
+     * For barrel mode only - stockpile mode counts individual items differently.
+     *
+     * @param gui The game UI
+     * @return Total number of seeds across all stacks
+     */
+    private int getTotalSeedsInInventory(NGameUI gui) throws InterruptedException {
+        int total = 0;
+        for (WItem seed : gui.getInventory().getItems(iseed)) {
+            GItem.Amount amount = ((NGItem) seed.item).getInfo(GItem.Amount.class);
+            if (amount != null) {
+                total += amount.itemnum();
+            } else {
+                // No amount info - count as 1 (individual item)
+                total += 1;
+            }
+        }
+        return total;
+    }
+
+    /**
+     * Checks if we have sufficient seeds to plant the required number of cells.
+     *
+     * @param gui The game UI
+     * @param cellsNeeded Number of cells to plant
+     * @param isStackedMode True if using barrels (stacked seeds), false for stockpiles
+     * @return True if we have enough seeds
+     */
+    private boolean hasSufficientSeeds(NGameUI gui, int cellsNeeded, boolean isStackedMode) throws InterruptedException {
+        if (!isStackedMode) {
+            // Stockpile mode: each item is one seed, need cellsNeeded items
+            return gui.getInventory().getItems(iseed).size() >= cellsNeeded;
+        }
+        // Barrel mode: need cellsNeeded * 5 total seeds
+        int seedsNeeded = cellsNeeded * 5;
+        int totalSeeds = getTotalSeedsInInventory(gui);
+        return totalSeeds >= seedsNeeded;
     }
 }
 

@@ -10,6 +10,8 @@ import nurgling.areas.*;
 import nurgling.tasks.*;
 import nurgling.tools.*;
 
+import java.util.ArrayList;
+
 public class UseWorkStation implements Action
 {
     public UseWorkStation(NContext context)
@@ -24,17 +26,62 @@ public class UseWorkStation implements Action
         if(cnt.workstation.selected==-1)
         {
             Gob ws = Finder.findGob(new NAlias(cnt.workstation.station));
-            if(ws == null)
-                return Results.FAIL();
+            
+            boolean isReachable = ws != null && PathFinder.isAvailable(ws);
+            
+            if(!isReachable) {
+                // Workstation not visible or not reachable - need global navigation
+                cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
+                ws = Finder.findGob(new NAlias(cnt.workstation.station));
+                if(ws == null)
+                    return Results.FAIL();
+            }
             cnt.workstation.selected = ws.id;
         }
-        cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
+        // Check if workstation is visible AND reachable
         Gob ws = Finder.findGob(cnt.workstation.selected);
+        
+        if (ws == null) {
+            cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
+            ws = Finder.findGob(cnt.workstation.selected);
+        } else if (!PathFinder.isAvailable(ws)) {
+            cnt.navigateToAreaIfNeeded(workstation_spec_map.get(cnt.workstation.station).toString());
+            ws = Finder.findGob(cnt.workstation.selected);
+        }
+        
         if(ws == null)
             return Results.ERROR("NO WORKSTATION");
         else
         {
-            new PathFinder(ws).run(gui);
+            // First check if we have a pre-calculated targetPoint (set by TransferBarrelToWorkstation)
+            boolean usedTargetPoint = false;
+            
+            if (cnt.workstation.targetPoint != null) {
+                Coord2d targetCoord = cnt.workstation.targetPoint.getCurrentCoord();
+                if (targetCoord != null) {
+                    new PathFinder(targetCoord).run(gui);
+                    usedTargetPoint = true;
+                }
+            }
+            
+            // If no targetPoint, try to find common approach point with nearby barrel
+            if (!usedTargetPoint) {
+                Gob barrel = findBarrelNearWorkstation(ws);
+                
+                if (barrel != null) {
+                    Coord2d commonPoint = PathFinder.findNearestCommonApproachPoint(ws, barrel);
+                    if (commonPoint != null) {
+                        new PathFinder(commonPoint).run(gui);
+                        usedTargetPoint = true;
+                    }
+                }
+            }
+            
+            // Fallback to regular pathfinding to workstation
+            if (!usedTargetPoint) {
+                new PathFinder(ws).run(gui);
+            }
+            
             if(cnt.workstation.station.contains("gfx/terobjs/pow") || cnt.workstation.station.contains("gfx/terobjs/cauldron"))
             {
                 new SelectFlowerAction("Open",Finder.findGob(cnt.workstation.selected)).run(gui);
@@ -59,5 +106,44 @@ public class UseWorkStation implements Action
             }
         }
         return Results.SUCCESS();
+    }
+    
+    /**
+     * Find a barrel that is placed near the workstation.
+     * First tries to find by stored hashes (most reliable), then falls back to proximity search.
+     */
+    private Gob findBarrelNearWorkstation(Gob workstation) throws InterruptedException {
+        if (workstation == null) return null;
+        
+        // First try to find by stored hashes (most reliable when barrel was placed by us)
+        if (cnt.workstation != null && !cnt.workstation.placedBarrelHashes.isEmpty()) {
+            for (String hash : cnt.workstation.placedBarrelHashes.values()) {
+                Gob barrel = findBarrelByHash(hash);
+                if (barrel != null) {
+                    return barrel;
+                }
+            }
+        }
+        
+        // Fallback: search for barrels within ~25 units of workstation
+        double searchRadius = 25.0;
+        Gob nearestBarrel = Finder.findGob(workstation.rc, new NAlias("barrel"), null, searchRadius);
+        
+        return nearestBarrel;
+    }
+    
+    /**
+     * Find barrel by its hash.
+     */
+    private Gob findBarrelByHash(String hash) {
+        if (hash == null) return null;
+        
+        ArrayList<Gob> barrels = Finder.findGobs(new NAlias("barrel"));
+        for (Gob barrel : barrels) {
+            if (hash.equals(barrel.ngob.hash)) {
+                return barrel;
+            }
+        }
+        return null;
     }
 }

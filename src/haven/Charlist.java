@@ -27,6 +27,7 @@
 package haven;
 
 import nurgling.*;
+import nurgling.i18n.L10n;
 
 import java.awt.Color;
 import java.util.*;
@@ -46,6 +47,11 @@ public class Charlist extends Widget {
     private boolean dirty;
     private boolean showdisc;
 
+    /** Override this method to filter displayed characters */
+    protected List<Char> getDisplayChars() {
+	return chars;
+    }
+
     @RName("charlist")
     public static class $_ implements Factory {
 	public Widget create(UI ui, Object[] args) {
@@ -63,7 +69,7 @@ public class Charlist extends Widget {
 	sad = adda(new IButton("nurgling/hud/buttons/csad/", "u", "d", "o"), bsz.x / 2, list.c.y + list.sz.y + margin, 0.5, 0)
 	    .action(() -> scroll(1));
 	sau.hide(); sad.hide();
-        Button logout  = add(new Button(UI.scale(90), "Log out") {
+        Button logout  = add(new Button(UI.scale(90), L10n.get("charlist.logout")) {
             @Override
             public void click() {
                 RemoteUI rui = (RemoteUI) ui.rcvr;
@@ -105,7 +111,7 @@ public class Charlist extends Widget {
 	    Widget avaf = adda(Frame.with(this.ava = new Avaview(Avaview.dasz, -1, "avacam"), false), Coord.of(sz.y / 2), 0.5, 0.5);
 	    name = add(new ILabel(chr.name, nf), avaf.pos("ur").adds(5, 0));
 	    disc = add(new ILabel("", df), name.pos("bl"));
-	    adda(new Button(UI.scale(100), "Play"), pos("cbr").subs(10, 2), 1.0, 1.0).action(() -> Charlist.this.wdgmsg("play", chr.name));
+	    adda(new Button(UI.scale(100), L10n.get("charlist.play")), pos("cbr").subs(10, 2), 1.0, 1.0).action(() -> Charlist.this.wdgmsg("play", chr.name));
 	}
 
 	public void tick(double dt) {
@@ -135,7 +141,7 @@ public class Charlist extends Widget {
 	    super(Coord.of(bsz.x, ((bsz.y + margin) * h) - margin), bsz.y, margin);
 	}
 
-	protected List<Char> items() {return(chars);}
+	protected List<Char> items() {return(getDisplayChars());}
 	protected Charbox makeitem(Char chr, int idx, Coord sz) {return(new Charbox(chr));}
 
 	protected void drawslot(GOut g, Char item, int idx, Area area) {}

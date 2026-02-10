@@ -30,9 +30,13 @@ import java.util.stream.Collectors;
 public class Requestor implements Action {
     private static final int MAX_QUEUE_SIZE = 1000;
     private static final int PREPGRID_RETRY_LIMIT = 3;
+    private static final long TASK_TIMEOUT_MS = 30000; // 30 seconds max lifetime for a task
+    private static final long GRID_TASK_TIMEOUT_MS = 15000; // 15 seconds for grid-related tasks
     
     public final BlockingQueue<MapperTask> list = new ArrayBlockingQueue<>(MAX_QUEUE_SIZE);
     private final Map<String, Integer> prepGridRetries = new HashMap<>();
+    private long lastCleanupTime = System.currentTimeMillis();
+    private static final long CLEANUP_INTERVAL_MS = 5000; // Cleanup every 5 seconds
     NMappingClient parent;
     
     public Requestor(NMappingClient parent) {
@@ -45,16 +49,35 @@ public class Requestor implements Action {
     {
         String type;
         Object[] args;
+        final long createdAt;
 
         public MapperTask(String type, Object[] args) {
             this.type = type;
             this.args = args;
+            this.createdAt = System.currentTimeMillis();
+        }
+
+        public boolean isExpired() {
+            long timeout = getTimeoutForType(type);
+            return System.currentTimeMillis() - createdAt > timeout;
+        }
+        
+        private long getTimeoutForType(String taskType) {
+            switch (taskType) {
+                case "prepGrid":
+                case "reqGrid":
+                case "overlayUpload":
+                    return GRID_TASK_TIMEOUT_MS;
+                default:
+                    return TASK_TIMEOUT_MS;
+            }
         }
 
         @Override
         public String toString() {
             return "MapperTask{" +
                     "type='" + type + '\'' +
+                    ", age=" + (System.currentTimeMillis() - createdAt) + "ms" +
                     '}';
         }
     }
@@ -65,8 +88,19 @@ public class Requestor implements Action {
     @Override
     public Results run(NGameUI gui) throws InterruptedException {
         while (!parent.done.get()) {
+            // Periodic cleanup of expired tasks
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastCleanupTime > CLEANUP_INTERVAL_MS) {
+                cleanupExpiredTasks();
+                lastCleanupTime = currentTime;
+            }
+            
             MapperTask task = list.poll(1, TimeUnit.SECONDS);
             if (task != null) {
+                // Skip expired tasks to prevent queue buildup
+                if (task.isExpired()) {
+                    continue;
+                }
                 switch (task.type) {
                     case "reqGrid": {
                         String[][] gridMap = NUtils.getGameUI().map.glob.map.constructSection((Coord)task.args[0]);
@@ -169,7 +203,12 @@ public class Requestor implements Action {
                                         if(NParser.checkName(pose, "dead"))
                                             continue;
                                     }
-                                    MCache.Grid gb = NUtils.getGameUI().map.glob.map.getgrid(NUtils.toGC(player.rc));
+                                    MCache.Grid gb = null;
+                                    try {
+                                        gb = NUtils.getGameUI().map.glob.map.getgrid(NUtils.toGC(borka.rc));
+                                    } catch (MCache.LoadingMap e) {
+                                        continue;
+                                    }
                                     if(gb == null) {
                                         continue;
                                     }
@@ -224,16 +263,17 @@ public class Requestor implements Action {
                                     Coord mgc = new Coord(Math.floorDiv(md.m.tc.x, 100), Math.floorDiv(md.m.tc.y, 100));
                                     NUtils.addTask(new NTask() {
                                         int count = 0;
+                                        private static final int MAX_FRAMES = 100; // ~0.5 sec at 200fps, prevents queue buildup
                                         @Override
                                         public boolean check() {
-                                            if(count++>=200)
+                                            if(count++ >= MAX_FRAMES)
                                                 return true;
                                             return ((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done();
                                         }
 
                                         @Override
                                         public String toString() {
-                                            return "Requester2: ((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()" + String.valueOf(((MapFile.Segment.ByCoord)md.indirGrid).cur!=null) +String.valueOf( ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()) ;
+                                            return "Requester2: grid loading check, frame " + count + "/" + MAX_FRAMES;
                                         }
                                     });
                                     if(!(((MapFile.Segment.ByCoord)md.indirGrid).cur!=null && ((MapFile.Segment.ByCoord)md.indirGrid).cur.loading.done()))
@@ -349,10 +389,24 @@ public class Requestor implements Action {
     }
 
     public void senGridRequest(Coord lastGC) {
+        // Avoid duplicate reqGrid tasks for same coordinates
+        for(MapperTask task : list) {
+            if(task.type.equals("reqGrid") && task.args != null && lastGC.equals(task.args[0])) {
+                return;
+            }
+        }
+        // Clean up expired tasks periodically when adding new ones
+        cleanupExpiredTasks();
         list.offer(new MapperTask("reqGrid", new Object[]{lastGC}));
     }
 
     public void prepGrid(String string, MCache.Grid g) {
+        // Avoid duplicate prepGrid tasks for same grid
+        for(MapperTask task : list) {
+            if(task.type.equals("prepGrid") && task.args != null && string.equals(task.args[0])) {
+                return;
+            }
+        }
         list.offer(new MapperTask("prepGrid", new Object[]{string, g}));
     }
 
@@ -364,6 +418,14 @@ public class Requestor implements Action {
             }
         }
         list.offer(new MapperTask("track", null));
+    }
+    
+    /**
+     * Removes expired tasks from the queue to prevent buildup.
+     * Called periodically when adding new tasks.
+     */
+    private void cleanupExpiredTasks() {
+        list.removeIf(MapperTask::isExpired);
     }
 
     public void processMap(MapFile mapfile, Predicate<MapFile.Marker> uploadCheck) {

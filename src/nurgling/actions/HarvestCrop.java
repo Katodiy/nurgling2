@@ -157,7 +157,7 @@ public class HarvestCrop implements Action {
             if (!new Drink(0.9, false).run(gui).isSuccess)
                 if ((Boolean) NConfig.get(NConfig.Key.harvestautorefill)) {
                     if (FillWaterskins.checkIfNeed())
-                        if (!(new FillWaterskins(true).run(gui).IsSuccess()))
+                        if (!(new FillWaterskins().run(gui).IsSuccess()))
                             throw new InterruptedException();
                         else if (!new Drink(0.9, false).run(gui).isSuccess)
                             throw new InterruptedException();
@@ -303,7 +303,7 @@ public class HarvestCrop implements Action {
                 // Find all containers in the seed area
                 ArrayList<Container> containers = new ArrayList<>();
                 for (Gob sm : Finder.findGobs(seed.getRCArea(), new NAlias(new ArrayList<>(Context.contcaps.keySet())))) {
-                    Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name));
+                    Container cand = new Container(sm, Context.contcaps.get(sm.ngob.name), null);
                     cand.initattr(Container.Space.class);
                     containers.add(cand);
                 }

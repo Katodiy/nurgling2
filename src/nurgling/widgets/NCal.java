@@ -2,6 +2,7 @@ package nurgling.widgets;
 
 import haven.*;
 import nurgling.NConfig;
+import nurgling.NGameUI;
 
 public class NCal extends Cal {
     @Override
@@ -64,7 +65,7 @@ public class NCal extends Cal {
         int daysLeft = a.srday;
         // Convert total game time to real time: game_seconds / server_ratio = real_seconds
         int totalGameSeconds = a.srday * 86400 + a.srhh * 3600 + a.srmm * 60;
-        double realSeconds = totalGameSeconds / 3.29;
+        double realSeconds = totalGameSeconds / NGameUI.worldSpeed;
         double rlDaysLeft = realSeconds / 86400.0;
 
         // Get moon phase
