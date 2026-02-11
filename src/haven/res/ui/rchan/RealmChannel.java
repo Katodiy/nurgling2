@@ -3,9 +3,6 @@ package haven.res.ui.rchan;
 
 import haven.*;
 import nurgling.*;
-import space.dynomake.libretranslate.Language;
-import space.dynomake.libretranslate.Translator;
-import space.dynomake.libretranslate.type.TranslateResponse;
 
 import java.util.*;
 import java.awt.Color;
@@ -71,32 +68,33 @@ public class RealmChannel extends ChatUI.MultiChat {
 	    }
 
 	    public Text get() {
-			if (true)//todo: a toggle in the config
-				return (ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), nm, text)), w, TextAttribute.FOREGROUND, from.color));
-			else {
-				final CountDownLatch latch = new CountDownLatch(1);
-				final RichText[] value = new RichText[1];
-				Thread translateThread = new Thread("ChatTranslate") {
-					@Override
-					public void run() {
-						TranslateResponse r = Translator.translateDetect(Language.ENGLISH, text);
-						System.out.println(r.getDetectedLanguage().getLanguage());
-						if (!r.getDetectedLanguage().getLanguage().equals("en")) {
-							if (!r.getTranslatedText().isEmpty())
-								value[0] = (ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), nm, text + "(" + r.getTranslatedText() + ")")), w, TextAttribute.FOREGROUND, from.color));
-						} else
-							value[0] = (ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), nm, text)), w, TextAttribute.FOREGROUND, from.color));
-						latch.countDown(); // Release await() in the main thread.
-					}
-				};
-				translateThread.start();
-				try {
-					latch.await();
-					return value[0];
-				} catch (InterruptedException e) {
-					throw new RuntimeException(e);
-				}
-			}
+//			if (true)//todo: a toggle in the config
+//				return (ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), nm, text)), w, TextAttribute.FOREGROUND, from.color));
+//			else {
+//				final CountDownLatch latch = new CountDownLatch(1);
+//				final RichText[] value = new RichText[1];
+//				Thread translateThread = new Thread("ChatTranslate") {
+//					@Override
+//					public void run() {
+//						TranslateResponse r = Translator.translateDetect(Language.ENGLISH, text);
+//						System.out.println(r.getDetectedLanguage().getLanguage());
+//						if (!r.getDetectedLanguage().getLanguage().equals("en")) {
+//							if (!r.getTranslatedText().isEmpty())
+//								value[0] = (ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), nm, text + "(" + r.getTranslatedText() + ")")), w, TextAttribute.FOREGROUND, from.color));
+//						} else
+//							value[0] = (ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), nm, text)), w, TextAttribute.FOREGROUND, from.color));
+//						latch.countDown(); // Release await() in the main thread.
+//					}
+//				};
+//				translateThread.start();
+//				try {
+//					latch.await();
+//					return value[0];
+//				} catch (InterruptedException e) {
+//					throw new RuntimeException(e);
+//				}
+//			}
+            return ChatUI.fnd.render(RichText.Parser.quote(String.format("[%s] %s: %s", NUtils.timestamp(), this.nm, PNamedMessage.this.text)), this.w, new Object[]{TextAttribute.FOREGROUND, PNamedMessage.this.from.color});
 		}
 	}
 

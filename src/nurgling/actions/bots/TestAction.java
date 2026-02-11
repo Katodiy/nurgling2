@@ -13,8 +13,6 @@ import nurgling.tools.Finder;
 import nurgling.tools.NAlias;
 import nurgling.widgets.NEquipory;
 import nurgling.widgets.Specialisation;
-import space.dynomake.libretranslate.Language;
-import space.dynomake.libretranslate.Translator;
 
 import java.util.ArrayList;
 import java.util.Optional;

@@ -47,7 +47,7 @@ public class CollectItemsToPile implements Action{
             ArrayList<WItem> testItems = null;
             if(!(testItems = gui.getInventory ().getItems(items)).isEmpty()) {
                 if (gui.getInventory().getNumberFreeCoord(testItems.get(0)) == 0) {
-                    new TransferToPiles(out, items, playerc ).run(gui);
+                    new TransferToPiles(out, items).run(gui);
                 }
             }
 
@@ -61,7 +61,7 @@ public class CollectItemsToPile implements Action{
             NUtils.takeFromEarth ( item );
         }
 
-        new TransferToPiles(out, items, playerc ).run ( gui );
+        new TransferToPiles(out, items).run ( gui );
         return Results.SUCCESS();
     }
 }

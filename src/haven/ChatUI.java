@@ -29,8 +29,6 @@ package haven;
 import nurgling.*;
 import nurgling.tools.Finder;
 import nurgling.widgets.*;
-import space.dynomake.libretranslate.Language;
-import space.dynomake.libretranslate.Translator;
 
 import java.util.*;
 import java.awt.Color;
@@ -872,8 +870,8 @@ public class ChatUI extends Widget
 	public EntryChannel(boolean closable) {
 	    super(closable);
 	    setfocusctl(true);
-		if(false)//todo: a toggle
-			Translator.setUrlApi("http://localhost:5000/translate");
+//		if(false)//todo: a toggle
+//			Translator.setUrlApi("http://localhost:5000/translate");
 	    this.in = new TextEntry(0, "") {
 		    public void activate(String text) {
 			if(text.length() > 0)
@@ -920,22 +918,22 @@ public class ChatUI extends Widget
 
 	public void send(String text) {
 	    history.add(text);
-		String[] split = text.split("\\s");
-		String cmd = split[0];
-		if(cmd.equalsIgnoreCase(":cn") && false){//todo: toggle in the settings
-			if(split.length > 1) {
-				String toTranslate = text.replace(":cn ", "");
-				final String[] translated = new String[1];
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						translated[0] = Translator.translate(Language.ENGLISH, Language.CHINESE,toTranslate);
-						wdgmsg("msg", translated[0]);
-					}
-				}).start();
-				return;
-			}
-		}
+//		String[] split = text.split("\\s");
+//		String cmd = split[0];
+//		if(cmd.equalsIgnoreCase(":cn") && false){//todo: toggle in the settings
+//			if(split.length > 1) {
+//				String toTranslate = text.replace(":cn ", "");
+//				final String[] translated = new String[1];
+//				new Thread(new Runnable() {
+//					@Override
+//					public void run() {
+//						translated[0] = Translator.translate(Language.ENGLISH, Language.CHINESE,toTranslate);
+//						wdgmsg("msg", translated[0]);
+//					}
+//				}).start();
+//				return;
+//			}
+//		}
 	    wdgmsg("msg", text);
 	}
     }

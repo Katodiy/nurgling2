@@ -1,284 +1,297 @@
 <?xml version="1.0" ?>
 
 <project name="hafen" default="deftgt" xmlns:if="ant:if">
-  <property file="build.properties" />
-  <property name="ext-lib-base" value="http://www.havenandhearth.com/java" />
+    <property file="build.properties" />
+    <property name="ext-lib-base" value="http://www.havenandhearth.com/java" />
+    <property name="ant.logging.level" value="verbose" />
+    <record name="build_output.log" loglevel="verbose" action="start" />
 
-  <target name="build-env">
-    <mkdir dir="build" />
-    <mkdir dir="build/classes" />
-    <available property="has-res-jar" file="bin/builtin-res.jar" />
-    <available property="unpacked-lib" file="build/classes-lib" />
-  </target>
+    <target name="build-env">
+        <mkdir dir="build" />
+        <mkdir dir="build/classes" />
+        <available property="has-res-jar" file="bin/builtin-res.jar" />
+        <available property="unpacked-lib" file="build/classes-lib" />
+    </target>
 
-  <target name="make-buildinfo" depends="build-env">
-    <touch file="build/classes/buildinfo" datetime="01/01/2000 12:00 am" />
-    <loadproperties srcFile="build/classes/buildinfo" prefix="buildinfo." />
-    <exec executable="git" outputproperty="git-rev" failifexecutionfails="false">
-      <arg line="rev-parse HEAD" />
-    </exec>
-    <condition property="buildinfo-unchanged">
-      <equals arg1="${buildinfo.git-rev}" arg2="${git-rev}" />
-    </condition>
-  </target>
+    <target name="make-buildinfo" depends="build-env">
+        <touch file="build/classes/buildinfo" datetime="01/01/2000 12:00 am" />
+        <loadproperties srcFile="build/classes/buildinfo" prefix="buildinfo." />
+        <exec executable="git" outputproperty="git-rev" failifexecutionfails="false">
+            <arg line="rev-parse HEAD" />
+        </exec>
+        <condition property="buildinfo-unchanged">
+            <equals arg1="${buildinfo.git-rev}" arg2="${git-rev}" />
+        </condition>
+    </target>
 
-  <target name="buildinfo" depends="make-buildinfo" unless="buildinfo-unchanged">
-    <echo message="Updating buildinfo" />
-    <echo file="build/classes/buildinfo" xml:space="default">
-      git-rev = ${git-rev}
-    </echo>
-  </target>
-
-
-  <macrodef name="extlib">
-    <attribute name="name" />
-    <attribute name="path" />
-    <attribute name="url" />
-    <sequential>
-      <local name="@{name}-files" />
-      <mkdir dir="@{path}" />
-      <loadresource property="@{name}-files">
-	<url url="@{url}/lib-files" />
-	<filterchain>
-	  <prefixlines prefix="@{url}/" />
-	</filterchain>
-      </loadresource>
-      <get dest="@{path}/" usetimestamp="true" maxtime="60" retries="3" verbose="true">
-	<resourcelist>
-	  <propertyresource name="@{name}-files" />
-	</resourcelist>
-      </get>
-      <touch file="@{path}/has-@{name}" />
-    </sequential>
-  </macrodef>
-
-  <target name="extlib-env">
-    <mkdir dir="lib/ext" />
-    <available property="extlib/has-jogl" file="lib/ext/jogl/has-jogl" />
-    <available property="extlib/has-lwjgl-base" file="lib/ext/lwjgl/has-lwjgl-base" />
-    <available property="extlib/has-lwjgl-gl" file="lib/ext/lwjgl/has-lwjgl-gl" />
-    <available property="extlib/has-steamworks" file="lib/ext/steamworks/has-steamworks" />
-  </target>
-
-  <target name="extlib/jogl" depends="extlib-env" unless="extlib/has-jogl">
-    <extlib name="jogl" path="lib/ext/jogl" url="${ext-lib-base}/jogl/current" />
-  </target>
-
-  <target name="extlib/lwjgl-base" depends="extlib-env" unless="extlib/has-lwjgl-base">
-    <extlib name="lwjgl-base" path="lib/ext/lwjgl" url="${ext-lib-base}/lwjgl/current/lwjgl" />
-  </target>
-
-  <target name="extlib/lwjgl-gl" depends="extlib-env, extlib/lwjgl-base" unless="extlib/has-lwjgl-gl">
-    <extlib name="lwjgl-gl" path="lib/ext/lwjgl" url="${ext-lib-base}/lwjgl/current/lwjgl-opengl" />
-  </target>
-
-  <target name="extlib/steamworks" depends="extlib-env" unless="extlib/has-steamworks">
-    <extlib name="steamworks" path="lib/ext/steamworks" url="${ext-lib-base}/steamworks/current" />
-  </target>
+    <target name="buildinfo" depends="make-buildinfo" unless="buildinfo-unchanged">
+        <echo message="Updating buildinfo" />
+        <echo file="build/classes/buildinfo" xml:space="default">
+            git-rev = ${git-rev}
+        </echo>
+    </target>
 
 
-  <target name="hafen-client" depends="build-env, extlib/jogl, extlib/lwjgl-gl, extlib/steamworks, resources">
-    <condition property="explicit-annotations">
-      <javaversion atleast="21" />
-    </condition>
-    <javac srcdir="src" destdir="build/classes" debug="on"
-	   source="1.8" target="1.8" includeantruntime="no"
-           encoding="UTF-8"
-	   bootclasspath="${boot-classpath}">
-      <classpath>
-	<pathelement path="lib/ext/jogl/jogl-all.jar" />
-	<pathelement path="lib/ext/jogl/gluegen-rt.jar" />
-	<pathelement path="lib/ext/lwjgl/lwjgl-fat.jar" />
-	<pathelement path="lib/ext/lwjgl/lwjgl-awt.jar" />
-	<pathelement path="lib/ext/lwjgl/lwjgl-opengl-fat.jar" />
-	<pathelement path="lib/ext/steamworks/steamworks4j.jar" />
-    <pathelement path="etc/json-java.jar" />
-    <pathelement path="lib/libretranslate-java-1.0.9.jar" />
-    <pathelement path="etc/postgresql-42.7.5.jar" />
-    <pathelement path="etc/sqlite-jdbc-3.49.1.0.jar" />
-	<pathelement path="lib/jglob.jar" />
-      </classpath>
-      <compilerarg if:set="explicit-annotations" value="-proc:full" />
-      <compilerarg value="-Xlint:unchecked" />
-      <compilerarg value="-Xlint:deprecation" />
-      <compilerarg value="-Xlint:-options" />
-      <!-- <compilerarg value="-Xbarda" /> -->
-    </javac>
-    <copy todir="build/classes">
-      <fileset dir="src" excludes="**/*.java" />
-    </copy>
-    <copy todir="build/classes/haven" file="etc/ressrv.crt" />
-    <copy todir="build/classes/haven" file="etc/authsrv.crt" />
-    <copy todir="build/classes/haven" file="etc/res-preload" />
-    <copy todir="build/classes/haven" file="etc/res-bgload" />
-    <copy todir="build/classes/haven" file="etc/icon.png" />
-    <copy file="local-boot.properties" tofile="build/classes/haven/boot-props" failonerror="false" quiet="true" />
-  </target>
+    <macrodef name="extlib">
+        <attribute name="name" />
+        <attribute name="path" />
+        <attribute name="url" />
+        <sequential>
+            <local name="@{name}-files" />
+            <mkdir dir="@{path}" />
+            <loadresource property="@{name}-files">
+                <url url="@{url}/lib-files" />
+                <filterchain>
+                    <prefixlines prefix="@{url}/" />
+                </filterchain>
+            </loadresource>
+            <get dest="@{path}/" usetimestamp="true" maxtime="60" retries="3" verbose="true">
+                <resourcelist>
+                    <propertyresource name="@{name}-files" />
+                </resourcelist>
+            </get>
+            <touch file="@{path}/has-@{name}" />
+        </sequential>
+    </macrodef>
 
-  <target name="lib-classes" depends="build-env" unless="unpacked-lib">
-    <mkdir dir="build/classes-lib" />
-    <unjar src="lib/jglob.jar" dest="build/classes-lib">
-      <patternset excludes="META-INF/**" />
-    </unjar>
-  </target>
+    <target name="extlib-env">
+        <mkdir dir="lib/ext" />
+        <available property="extlib/has-jogl" file="lib/ext/jogl/has-jogl" />
+        <available property="extlib/has-lwjgl-base" file="lib/ext/lwjgl/has-lwjgl-base" />
+        <available property="extlib/has-lwjgl-gl" file="lib/ext/lwjgl/has-lwjgl-gl" />
+        <available property="extlib/has-steamworks" file="lib/ext/steamworks/has-steamworks" />
+    </target>
 
-  <target name="jar" depends="hafen-client, buildinfo, lib-classes">
-    <jar destfile="build/hafen.jar" update="true">
-      <fileset dir="build/classes" />
-      <fileset dir="build/classes-lib" />
-      <manifest>
-	<attribute name="Main-Class" value="haven.MainFrame" />
-	<attribute name="Class-Path" value="jogl-all.jar gluegen-rt.jar lwjgl-fat.jar lwjgl-awt.jar lwjgl-opengl-fat.jar steamworks4j.jar builtin-res.jar hafen-res.jar nurgling-res.jar json-java.jar postgresql-42.7.5.jar sqlite-jdbc-3.49.1.0.jar libretranslate-java-1.0.9.jar" />
-      </manifest>
-    </jar>
-    <chmod file="build/hafen.jar" perm="a+x" />
-  </target>
+    <target name="extlib/jogl" depends="extlib-env" unless="extlib/has-jogl">
+        <extlib name="jogl" path="lib/ext/jogl" url="${ext-lib-base}/jogl/current" />
+    </target>
 
-  <target name="res-jar" depends="build-env" unless="has-res-jar">
-    <get src="${ext-lib-base}/builtin-res.jar" dest="lib/ext/builtin-res.jar"
-	 usetimestamp="true" />
-    <get src="${ext-lib-base}/hafen-res.jar" dest="lib/ext/hafen-res.jar"
-	 usetimestamp="true" />
-    <available property="lib-res-jar" file="lib/ext/hafen-res.jar" />
-    <fail unless="lib-res-jar" message="hafen-res.jar not available" />
-    <available property="lib-builtin-jar" file="lib/ext/builtin-res.jar" />
-    <fail unless="lib-builtin-jar" message="builtin-res.jar not available" />
-  </target>
+    <target name="extlib/lwjgl-base" depends="extlib-env" unless="extlib/has-lwjgl-base">
+        <extlib name="lwjgl-base" path="lib/ext/lwjgl" url="${ext-lib-base}/lwjgl/current/lwjgl" />
+    </target>
 
-  <target name="jars" depends="build-env, jar, extlib/jogl, extlib/lwjgl-gl, extlib/steamworks">
-    <copy todir="build" failonerror="false" quiet="true">
-      <fileset dir="lib">
-	<include name="builtin-res.jar" />
-	<include name="hafen-res.jar" />
-      </fileset>
-    </copy>
-    <copy todir="build">
-      <fileset dir="lib/ext/jogl"><include name="*.jar" /></fileset>
-      <fileset dir="lib/ext/lwjgl"><include name="*.jar" /></fileset>
-      <fileset dir="lib/ext/steamworks"><include name="*.jar" /></fileset>
-    </copy>
-    <copy file="local-config.properties" tofile="build/haven-config.properties" failonerror="false" quiet="true" />
-  </target>
+    <target name="extlib/lwjgl-gl" depends="extlib-env, extlib/lwjgl-base" unless="extlib/has-lwjgl-gl">
+        <extlib name="lwjgl-gl" path="lib/ext/lwjgl" url="${ext-lib-base}/lwjgl/current/lwjgl-opengl" />
+    </target>
 
-  <target name="bin" depends="jar, extlib/jogl, extlib/lwjgl-gl, extlib/steamworks, res-jar">
-    <mkdir dir="bin" />
-    <copy todir="bin">
-      <fileset dir="build">
-	<include name="hafen.jar" />
-      </fileset>
-      <fileset dir="lib/ext">
-	<include name="hafen-res.jar" />
-	<include name="builtin-res.jar" />
-      </fileset>
-      <fileset dir="lib/ext/jogl"><include name="*.jar" /></fileset>
-      <fileset dir="lib/ext/lwjgl"><include name="*.jar" /></fileset>
-      <fileset dir="lib/ext/steamworks"><include name="*.jar" /></fileset>
-    </copy>
-    <copy file="etc/ansgar-config.properties" tofile="bin/haven-config.properties" />
-    <chmod file="bin/hafen.jar" perm="a+x" />
-  </target>
+    <target name="extlib/steamworks" depends="extlib-env" unless="extlib/has-steamworks">
+        <extlib name="steamworks" path="lib/ext/steamworks" url="${ext-lib-base}/steamworks/current" />
+    </target>
 
-  <target name="deftgt" depends="jars, bin" />
 
-  <target name="run" depends="bin">
-    <condition property="jogl-exports">
-      <javaversion atleast="16" />
-    </condition>
-    <condition property="jogl-access">
-      <javaversion atleast="24" />
-    </condition>
-    <java jar="bin/hafen.jar" fork="true">
-      <sysproperty key="sun.java2d.uiScale.enabled" value="false" />
-      <sysproperty key="java.net.preferIPv6Addresses" value="system" />
-      <jvmarg if:set="jogl-exports" value="--add-exports=java.base/java.lang=ALL-UNNAMED" />
-      <jvmarg if:set="jogl-exports" value="--add-exports=java.desktop/sun.awt=ALL-UNNAMED" />
-      <jvmarg if:set="jogl-exports" value="--add-exports=java.desktop/sun.java2d=ALL-UNNAMED" />
-      <jvmarg if:set="jogl-access" value="--enable-native-access=ALL-UNNAMED" />
-      <!-- <sysproperty key="haven.renderer" value="lwjgl" /> -->
-    </java>
-  </target>
+    <target name="hafen-client" depends="build-env, extlib/jogl, extlib/lwjgl-gl, extlib/steamworks, resources">
+        <condition property="explicit-annotations">
+            <javaversion atleast="21" />
+        </condition>
+        <javac srcdir="src" destdir="build/classes" debug="on"
+               source="1.8" target="1.8" includeantruntime="no"
+               encoding="UTF-8"
+               bootclasspath="${boot-classpath}">
+            <classpath>
+                <pathelement path="lib/ext/jogl/jogl-all.jar" />
+                <pathelement path="lib/ext/jogl/gluegen-rt.jar" />
+                <pathelement path="lib/ext/lwjgl/lwjgl-fat.jar" />
+                <pathelement path="lib/ext/lwjgl/lwjgl-awt.jar" />
+                <pathelement path="lib/ext/lwjgl/lwjgl-opengl-fat.jar" />
+                <pathelement path="lib/ext/steamworks/steamworks4j.jar" />
+                <pathelement path="etc/json-java.jar" />
+                <pathelement path="etc/postgresql-42.7.5.jar" />
+                <pathelement path="etc/sqlite-jdbc-3.49.1.0.jar" />
+                <pathelement path="lib/jglob.jar" />
+            </classpath>
+            <compilerarg if:set="explicit-annotations" value="-proc:full" />
+            <compilerarg value="-Xlint:unchecked" />
+            <compilerarg value="-Xlint:deprecation" />
+            <compilerarg value="-Xlint:-options" />
+            <!-- <compilerarg value="-Xbarda" /> -->
+        </javac>
+        <copy todir="build/classes">
+            <fileset dir="src" excludes="**/*.java" />
+        </copy>
+        <copy todir="build/classes/haven" file="etc/ressrv.crt" />
+        <copy todir="build/classes/haven" file="etc/authsrv.crt" />
+        <copy todir="build/classes/haven" file="etc/res-preload" />
+        <copy todir="build/classes/haven" file="etc/res-bgload" />
+        <copy todir="build/classes/haven" file="etc/icon.png" />
+        <copy file="local-boot.properties" tofile="build/classes/haven/boot-props" failonerror="false" quiet="true" />
+    </target>
 
-  <target name="clean">
-    <delete dir="build" />
-    <delete dir="lib/ext" />
-    <delete dir="bin" />
-  </target>
+    <target name="lib-classes" depends="build-env" unless="unpacked-lib">
+        <mkdir dir="build/classes-lib" />
+        <unjar src="lib/jglob.jar" dest="build/classes-lib">
+            <patternset excludes="META-INF/**" />
+        </unjar>
+    </target>
 
-  <target name="resources">
+    <target name="jar" depends="hafen-client, buildinfo, lib-classes">
+        <jar destfile="build/hafen.jar" update="true">
+            <fileset dir="build/classes" />
+            <fileset dir="build/classes-lib" />
+            <manifest>
+                <attribute name="Main-Class" value="haven.MainFrame" />
+                <attribute name="Class-Path" value="jogl-all.jar gluegen-rt.jar lwjgl-fat.jar lwjgl-awt.jar lwjgl-opengl-fat.jar steamworks4j.jar builtin-res.jar hafen-res.jar nurgling-res.jar json-java.jar postgresql-42.7.5.jar sqlite-jdbc-3.49.1.0.jar" />
+            </manifest>
+        </jar>
+        <chmod file="build/hafen.jar" perm="a+x" />
+    </target>
 
-    <java jar="etc/LayerUtil.jar" fork="true">
-      <arg line="-re resources/src resources/compiled/res"/>
-    </java>
+    <target name="res-jar" depends="build-env" unless="has-res-jar">
+        <get src="${ext-lib-base}/builtin-res.jar" dest="lib/ext/builtin-res.jar"
+             usetimestamp="true" />
+        <get src="${ext-lib-base}/hafen-res.jar" dest="lib/ext/hafen-res.jar"
+             usetimestamp="true" />
+        <available property="lib-res-jar" file="lib/ext/hafen-res.jar" />
+        <fail unless="lib-res-jar" message="hafen-res.jar not available" />
+        <available property="lib-builtin-jar" file="lib/ext/builtin-res.jar" />
+        <fail unless="lib-builtin-jar" message="builtin-res.jar not available" />
+    </target>
 
-    <jar destfile="build/nurgling-res.jar" update="true">
-      <fileset dir="resources/compiled" />
-    </jar>
-    <copy todir="bin/" file="build/nurgling-res.jar" />
-    <copy todir="bin/" file="etc/json-java.jar" />
-    <copy todir="bin/" file="lib/libretranslate-java-1.0.9.jar" />
-    <copy todir="bin/" file="etc/postgresql-42.7.5.jar" />
-    <copy todir="bin/" file="etc/sqlite-jdbc-3.49.1.0.jar" />
-  </target>
+    <target name="jars" depends="build-env, jar, extlib/jogl, extlib/lwjgl-gl, extlib/steamworks">
+        <copy todir="build" failonerror="false" quiet="true">
+            <fileset dir="lib">
+                <include name="builtin-res.jar" />
+                <include name="hafen-res.jar" />
+            </fileset>
+        </copy>
+        <copy todir="build">
+            <fileset dir="lib/ext/jogl"><include name="*.jar" /></fileset>
+            <fileset dir="lib/ext/lwjgl"><include name="*.jar" /></fileset>
+            <fileset dir="lib/ext/steamworks"><include name="*.jar" /></fileset>
+        </copy>
+        <copy file="local-config.properties" tofile="build/haven-config.properties" failonerror="false" quiet="true" />
+    </target>
 
-  <target name="pre-release" depends="build-env, jar, extlib/jogl">
-    <copy todir="release" failonerror="false" quiet="true">
-      <file name="lib/ext/builtin-res.jar" />
-      <file name="lib/ext/hafen-res.jar" />
-      <file name="etc/json-java.jar" />
-      <file name="lib/libretranslate-java-1.0.9.jar" />
-      <file name="etc/postgresql-42.7.5.jar" />
-      <file name="etc/sqlite-jdbc-3.49.1.0.jar" />
-    </copy>
-    <copy todir="release">
-      <fileset dir="lib/ext/jogl">
-        <include name="*.jar" />
-      </fileset>
-      <fileset dir="lib/ext/lwjgl">
-        <include name="*.jar" />
-      </fileset>
-    </copy>
-    <copy file="etc/ansgar-config.properties" tofile="release/haven-config.properties" failonerror="false" quiet="true" />
-    <copy todir="release/" file="build/nurgling-res.jar" />
-    <copy todir="release/" file="build/hafen.jar" />
-    <copy todir="release/" file="etc/run.bat" />
-    <copy todir="release/" file="etc/run8.bat" />
-    <copy todir="release/" file="etc/run_updater.bat" />
-    <copy todir="release/" file="etc/run_updater8.bat" />
-    <copy todir="release/" file="etc/nurgling_launcher.jar" />
-  </target>
+    <target name="bin" depends="jar, extlib/jogl, extlib/lwjgl-gl, extlib/steamworks, res-jar">
+        <mkdir dir="bin" />
+        <copy todir="bin">
+            <fileset dir="build">
+                <include name="hafen.jar" />
+            </fileset>
+            <fileset dir="lib/ext">
+                <include name="hafen-res.jar" />
+                <include name="builtin-res.jar" />
+            </fileset>
+            <fileset dir="lib/ext/jogl"><include name="*.jar" /></fileset>
+            <fileset dir="lib/ext/lwjgl"><include name="*.jar" /></fileset>
+            <fileset dir="lib/ext/steamworks"><include name="*.jar" /></fileset>
+        </copy>
+        <copy file="etc/ansgar-config.properties" tofile="bin/haven-config.properties" />
+        <chmod file="bin/hafen.jar" perm="a+x" />
+    </target>
 
-  <target name="steam-release" depends="build-env, jar, extlib/jogl">
-    <copy todir="steam" failonerror="false" quiet="true">
-      <file name="lib/ext/builtin-res.jar" />
-      <file name="lib/ext/hafen-res.jar" />
-      <file name="etc/json-java.jar" />
-      <file name="lib/libretranslate-java-1.0.9.jar" />
-      <file name="etc/postgresql-42.7.5.jar"  />
-      <file name="etc/sqlite-jdbc-3.49.1.0.jar"  />
-      <file name="etc/icon.png" />
-    </copy>
-    <copy todir="steam">
-      <fileset dir="lib/ext/jogl">
-        <include name="*.jar" />
-      </fileset>
-      <fileset dir="lib/ext/lwjgl">
-        <include name="*.jar" />
-      </fileset>
-    </copy>
-    <copy file="etc/workshop-client.properties" tofile="steam/workshop-client.properties" failonerror="false" quiet="true" />
-    <copy todir="steam/" file="build/nurgling-res.jar" />
-    <copy todir="steam/" file="build/hafen.jar" />
-  </target>
+    <target name="deftgt" depends="jars, bin" />
 
-  <property name="version.num" value="2.100"/>
-  <target name="version" depends="pre-release">
-    <buildnumber file="build.num"/>
-    <exec executable="java" failifexecutionfails="false">
-      <arg line="-jar etc/nurgling_launcher.jar hash release ${version.num}.${build.number}" />
-    </exec>
-  </target>
+    <target name="run" depends="bin">
+        <condition property="jogl-exports">
+            <javaversion atleast="16" />
+        </condition>
+        <condition property="jogl-access">
+            <javaversion atleast="24" />
+        </condition>
+        <java jar="bin/hafen.jar" fork="true">
+            <sysproperty key="sun.java2d.uiScale.enabled" value="false" />
+            <sysproperty key="java.net.preferIPv6Addresses" value="system" />
+            <jvmarg if:set="jogl-exports" value="--add-exports=java.base/java.lang=ALL-UNNAMED" />
+            <jvmarg if:set="jogl-exports" value="--add-exports=java.desktop/sun.awt=ALL-UNNAMED" />
+            <jvmarg if:set="jogl-exports" value="--add-exports=java.desktop/sun.java2d=ALL-UNNAMED" />
+            <jvmarg if:set="jogl-access" value="--enable-native-access=ALL-UNNAMED" />
+            <!-- <sysproperty key="haven.renderer" value="lwjgl" /> -->
+        </java>
+    </target>
 
-  <target name="release" depends="version">
-    <copy todir="release/" file="ver" />
-  </target>
+    <target name="clean">
+        <delete dir="build" />
+        <delete dir="lib/ext" />
+        <delete dir="bin" />
+    </target>
+
+    <target name="resources">
+        <exec executable="java" failifexecutionfails="false">
+            <arg line="-jar etc/LayerUtil.jar -re resources/src resources/compiled/res" />
+        </exec>
+        <jar destfile="build/nurgling-res.jar" update="true">
+            <fileset dir="resources/compiled" />
+        </jar>
+        <copy todir="bin/" file="build/nurgling-res.jar" />
+        <copy todir="bin/" file="etc/json-java.jar" />
+        <copy todir="bin/" file="etc/postgresql-42.7.5.jar" />
+        <copy todir="bin/" file="etc/sqlite-jdbc-3.49.1.0.jar" />
+    </target>
+
+    <target name="pre-release" depends="build-env, jar, extlib/jogl">
+        <copy todir="release" failonerror="false" quiet="true">
+            <file name="lib/ext/builtin-res.jar" />
+            <file name="lib/ext/hafen-res.jar" />
+            <file name="etc/json-java.jar" />
+            <file name="etc/postgresql-42.7.5.jar" />
+            <file name="etc/sqlite-jdbc-3.49.1.0.jar" />
+        </copy>
+        <copy todir="release">
+            <fileset dir="lib/ext/jogl">
+                <include name="*.jar" />
+            </fileset>
+            <fileset dir="lib/ext/lwjgl">
+                <include name="*.jar" />
+            </fileset>
+        </copy>
+        <copy file="etc/ansgar-config.properties" tofile="release/haven-config.properties" failonerror="false" quiet="true" />
+        <copy todir="release/" file="build/nurgling-res.jar" />
+        <copy todir="release/" file="build/hafen.jar" />
+        <copy todir="release/" file="etc/run.bat" />
+        <copy todir="release/" file="etc/run8.bat" />
+        <copy todir="release/" file="etc/run_updater.bat" />
+        <copy todir="release/" file="etc/run_updater8.bat" />
+        <copy todir="release/" file="etc/nurgling_launcher.jar" />
+    </target>
+
+    <target name="steam-release" depends="build-env, jar, extlib/jogl">
+        <copy todir="steam" failonerror="false" quiet="true">
+            <file name="lib/ext/builtin-res.jar" />
+            <file name="lib/ext/hafen-res.jar" />
+            <file name="etc/json-java.jar" />
+            <file name="etc/postgresql-42.7.5.jar"  />
+            <file name="etc/sqlite-jdbc-3.49.1.0.jar"  />
+            <file name="etc/icon.png" />
+        </copy>
+        <copy todir="steam">
+            <fileset dir="lib/ext/jogl">
+                <include name="*.jar" />
+            </fileset>
+            <fileset dir="lib/ext/lwjgl">
+                <include name="*.jar" />
+            </fileset>
+        </copy>
+        <copy file="etc/workshop-client.properties" tofile="steam/workshop-client.properties" failonerror="false" quiet="true" />
+        <copy todir="steam/" file="build/nurgling-res.jar" />
+        <copy todir="steam/" file="build/hafen.jar" />
+    </target>
+
+    <property name="version.num" value="2.100"/>
+    <target name="version" depends="pre-release">
+        <buildnumber file="build.num"/>
+        <exec executable="java" failifexecutionfails="false">
+            <arg line="-jar etc/nurgling_launcher.jar hash release ${version.num}.${build.number}" />
+        </exec>
+    </target>
+
+    <target name="release" depends="version">
+        <copy todir="release/" file="ver" />
+    </target>
+
+    <target name="jogl-macos-update">
+        <mkdir dir="lib/ext/jogl" />
+        <get dest="lib/ext/jogl/" verbose="true">
+            <url url="https://jogamp.org/deployment/v2.5.0/jar/jogl-all.jar" />
+            <url url="https://jogamp.org/deployment/v2.5.0/jar/jogl-all-natives-macosx-universal.jar" />
+            <url url="https://jogamp.org/deployment/v2.5.0/jar/gluegen-rt.jar" />
+            <url url="https://jogamp.org/deployment/v2.5.0/jar/gluegen-rt-natives-macosx-universal.jar" />
+        </get>
+        <mkdir dir="lib/ext/jogl/natives/macosx-universal" />
+        <unjar src="lib/ext/jogl/jogl-all-natives-macosx-universal.jar" dest="lib/ext/jogl">
+            <patternset includes="natives/**" />
+        </unjar>
+        <unjar src="lib/ext/jogl/gluegen-rt-natives-macosx-universal.jar" dest="lib/ext/jogl">
+            <patternset includes="natives/**" />
+        </unjar>
+    </target>
 </project>
