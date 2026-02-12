@@ -169,13 +169,10 @@ public class NRockTileHighlightOverlay extends NOverlay {
 
                 try {
                     int tileId = map.gettile(gc);
+                    String tileName = map.tilesetname(tileId);
 
-                    if (tileId >= 0 && tileId < map.nsets.length) {
-                        Resource.Spec tileSpec = map.nsets[tileId];
-
-                        if (tileSpec != null && selectedTileResources.contains(tileSpec.name)) {
-                            highlightGrid[tx][ty] = true;
-                        }
+                    if (tileName != null && selectedTileResources.contains(tileName)) {
+                        highlightGrid[tx][ty] = true;
                     }
                 } catch (Exception e) {
                     // Skip

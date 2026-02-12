@@ -201,6 +201,10 @@ public class Window extends Widget {
     }
 
     public static class DefaultDeco extends DragDeco {
+	public static final Text.Forge cf =  new PUtils.BlurFurn(new PUtils.TexFurn(new Text.Foundry(Text.fraktur, 15).aa(true), ctex),
+								   UI.rscale(0.75), UI.rscale(1.0), new Color(96, 96, 0));
+	public static final Text.Forge ncf = new PUtils.BlurFurn(new PUtils.TexFurn(new Text.Foundry(Text.fraktur, 15).aa(true), ctex),
+								   UI.rscale(0.75), UI.rscale(1.0), Color.BLACK);
 	public final boolean lg;
 	public final IButton cbtn;
 	public boolean dragsize, cfocus;

@@ -84,11 +84,12 @@ public class ModSprite extends Sprite implements Sprite.CUpd, EquipTarget {
 	public default void gtick(Render g) {}
     }
 
-    public static class Part {
+    public static class Part implements Resource.Metadata {
 	public RenderTree.Node obj;
 	public LinkedList<NodeWrap> wraps = new LinkedList<>();
 	public LinkedList<Pipe.Op> state = new LinkedList<>();
 	public LinkedList<Supplier<? extends Pipe.Op>> dynstate = new LinkedList<>();
+	public Collection<Resource.Metadata> info = new ArrayList<>();
 
 	public Part(RenderTree.Node obj, NodeWrap... wraps) {
 	    this.obj = obj;
@@ -128,6 +129,17 @@ public class ModSprite extends Sprite implements Sprite.CUpd, EquipTarget {
 		ret = RUtils.StateTickNode.of(ret, rst);
 	    }
 	    return(ret);
+	}
+
+	public Map<?, ?> info() {
+	    ArrayList<Map<?, ?>> infos = new ArrayList<>();
+	    for(Collection<?> src : new Collection<?>[]{wraps, state, info, Collections.singletonList(obj)}) {
+		for(Object obj : src) {
+		    if(obj instanceof Resource.Metadata)
+			infos.add(((Resource.Metadata)obj).info());
+		}
+	    }
+	    return(new UnionMap<>(infos));
 	}
     }
 
@@ -347,17 +359,15 @@ public class ModSprite extends Sprite implements Sprite.CUpd, EquipTarget {
     }
 
     private void attrupdate() {
-	synchronized(gob) {
-	    Mod[] omods = getomods();
-	    if(!Arrays.equals(omods, this.omods)) {
-		Mod[] pmods = this.omods;
-		this.omods = omods;
-		try {
-		    update();
-		} catch(Loading l) {
-		    this.omods = pmods;
-		    throw(l);
-		}
+	Mod[] omods = getomods();
+	if(!Arrays.equals(omods, this.omods)) {
+	    Mod[] pmods = this.omods;
+	    this.omods = omods;
+	    try {
+		update();
+	    } catch(Loading l) {
+		this.omods = pmods;
+		throw(l);
 	    }
 	}
     }
@@ -366,8 +376,11 @@ public class ModSprite extends Sprite implements Sprite.CUpd, EquipTarget {
 	if(gob != null) {
 	    int seq = gob.updateseq;
 	    if(seq != lastupd) {
-		gob.glob.loader.defer(this::attrupdate, null);
-		lastupd = seq;
+		try {
+		    attrupdate();
+		    lastupd = seq;
+		} catch(Loading l) {
+		}
 	    }
 	}
 	boolean ret = false;
@@ -479,6 +492,7 @@ public class ModSprite extends Sprite implements Sprite.CUpd, EquipTarget {
 		    if(parts[i] == null)
 			parts[i] = lr.l.make(this);
 		    Part part = new Part(parts[i]);
+		    part.info.add(lr);
 		    part.unwrap();
 		    cons.add(part);
 		    if(part.obj instanceof Sprite) {
@@ -525,6 +539,7 @@ public class ModSprite extends Sprite implements Sprite.CUpd, EquipTarget {
 	}
 
 	public void operate(Cons cons) {
+	    /* XXX: Trim animations that aren't actually bound to any current parts? */
 	    int flags = cons.spr().flags;
 	    Collection<MeshAnim.Animation> anims = new ArrayList<>(descs.length);
 	    Map<MeshAnim.Res, MeshAnim.Animation> newids = new HashMap<>();
