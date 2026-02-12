@@ -15,7 +15,7 @@ import nurgling.conf.ItemQualityOverlaySettings;
 import nurgling.conf.ItemQualityOverlaySettings.Corner;
 
 /* >tt: Quality */
-@haven.FromResource(name = "ui/tt/q/quality", version = 27)
+@haven.FromResource(name = "ui/tt/q/quality", version = 28)
 public class Quality extends QBuff implements GItem.OverlayInfo<Tex> {
     public static boolean show = Utils.getprefb("qtoggle", false);
     NGItem ownitem = null;
