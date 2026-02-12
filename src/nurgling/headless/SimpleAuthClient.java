@@ -31,7 +31,7 @@ public class SimpleAuthClient {
         // Run authentication in a HackThread to match expected threading model
         HackThread th = new HackThread(() -> {
             try {
-                AuthClient client = new AuthClient(host, authPort);
+                AuthClient client = new AuthClient(new haven.NamedSocketAddress(host, authPort));
                 try {
                     AuthClient.NativeCred cred = new AuthClient.NativeCred(username, password);
                     String authedUser = cred.tryauth(client);
