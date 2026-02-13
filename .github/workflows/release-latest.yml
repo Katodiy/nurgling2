@@ -82,7 +82,7 @@ jobs:
       - name: Add batch files to version manifest
         shell: pwsh
         run: |
-          $files = @("run_updater.bat", "run_updater8.bat", "run_updater_latest.bat", "run_updater_stable.bat", "nurgling_launcher.jar")
+          $files = @("run_updater.bat", "run_updater_latest.bat", "run_updater_stable.bat", "nurgling_launcher.jar")
           foreach ($file in $files) {
             $path = "release\$file"
             if (Test-Path $path) {
