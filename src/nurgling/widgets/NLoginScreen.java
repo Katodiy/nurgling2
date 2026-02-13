@@ -35,6 +35,41 @@ public class NLoginScreen extends LoginScreen
     private static final long BASE_RETRY_DELAY_MS = 1000; // Start with 1 second
     private static final long MAX_RETRY_DELAY_MS = 30000; // Cap at 30 seconds
 
+    /**
+     * Compares two version strings numerically.
+     * @param remoteVersion the remote version string (e.g., "2.103.1")
+     * @param localVersion the local version string (e.g., "2.103.0")
+     * @return true if remoteVersion is greater than localVersion
+     */
+    private static boolean isRemoteVersionNewer(String remoteVersion, String localVersion) {
+        if (remoteVersion == null || localVersion == null) {
+            return false;
+        }
+        String[] remoteParts = remoteVersion.trim().split("\\.");
+        String[] localParts = localVersion.trim().split("\\.");
+
+        int maxLength = Math.max(remoteParts.length, localParts.length);
+        for (int i = 0; i < maxLength; i++) {
+            int remotePart = i < remoteParts.length ? parseVersionPart(remoteParts[i]) : 0;
+            int localPart = i < localParts.length ? parseVersionPart(localParts[i]) : 0;
+
+            if (remotePart > localPart) {
+                return true;
+            } else if (remotePart < localPart) {
+                return false;
+            }
+        }
+        return false; // versions are equal
+    }
+
+    private static int parseVersionPart(String part) {
+        try {
+            return Integer.parseInt(part);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
     public NLoginScreen(String hostname)
     {
         super(hostname);
@@ -96,8 +131,8 @@ public class NLoginScreen extends LoginScreen
                     String line2 = reader2.readLine();
                     reader2.close();
                     
-                    // Compare versions
-                    if (line != null && line2 != null && !line2.contains(line))
+                    // Compare versions - only show update message if remote is newer than local
+                    if (isRemoteVersionNewer(line, line2))
                     {
                         Window win = adda(new Window(new Coord(UI.scale(150, 40)), L10n.get("login.attention"))
                         {

@@ -43,8 +43,56 @@ jobs:
           restore-keys: |
             extlibs-${{ runner.os }}-
 
+      - name: Fetch and increment version
+        shell: pwsh
+        run: |
+          # Get version.num from build.xml
+          $buildXml = Get-Content "build.xml" -Raw
+          if ($buildXml -match 'version\.num"\s+value="([^"]+)"') {
+            $versionNum = $matches[1]
+          } else {
+            $versionNum = "2.103"
+          }
+          Write-Host "version.num from build.xml: $versionNum"
+
+          $verUrl = "https://raw.githubusercontent.com/${{ env.RELEASE_REPO }}/${{ env.RELEASE_BRANCH }}/ver"
+          try {
+            $currentVer = (Invoke-WebRequest -Uri $verUrl -UseBasicParsing).Content.Split("`n")[0].Trim()
+            Write-Host "Current version in release repo: $currentVer"
+            $parts = $currentVer.Split(".")
+            $currentMajorMinor = "$($parts[0]).$($parts[1])"
+
+            if ($currentMajorMinor -eq $versionNum) {
+              $buildNum = [int]$parts[-1] + 1
+              Write-Host "Same major.minor version, incrementing build number to: $buildNum"
+            } else {
+              $buildNum = 0
+              Write-Host "Major.minor version changed ($currentMajorMinor -> $versionNum), starting at build number: $buildNum"
+            }
+          } catch {
+            Write-Host "Could not fetch version from release repo, starting at build 0"
+            $buildNum = 0
+          }
+          "#Build Number for ANT. Do not edit!`nbuild.number=$buildNum" | Out-File -FilePath "build.num" -Encoding ASCII -NoNewline
+          Write-Host "Created build.num with build.number=$buildNum"
+
       - name: Build with Ant
         run: ant release
+
+      - name: Add batch files to version manifest
+        shell: pwsh
+        run: |
+          $files = @("run_updater.bat", "run_updater8.bat", "run_updater_latest.bat", "run_updater_stable.bat", "nurgling_launcher.jar")
+          foreach ($file in $files) {
+            $path = "release\$file"
+            if (Test-Path $path) {
+              $hash = (Get-FileHash $path -Algorithm SHA256).Hash.ToLower()
+              Add-Content -Path "release\ver" -Value "$file=$hash"
+              Write-Host "Added $file=$hash"
+            } else {
+              Write-Host "Warning: $file not found in release folder"
+            }
+          }
 
       - name: Verify build artifacts
         shell: pwsh

@@ -216,7 +216,7 @@
     <copy todir="bin/" file="etc/sqlite-jdbc-3.49.1.0.jar" />
   </target>
 
-  <target name="pre-release" depends="build-env, jar, extlib/jogl">
+  <target name="pre-release" depends="build-env, jar, extlib/jogl, res-jar">
     <copy todir="release" failonerror="false" quiet="true">
       <file name="lib/ext/builtin-res.jar" />
       <file name="lib/ext/hafen-res.jar" />
@@ -266,7 +266,7 @@
     <copy todir="steam/" file="build/hafen.jar" />
   </target>
 
-  <property name="version.num" value="2.100"/>
+  <property name="version.num" value="2.103"/>
   <target name="version" depends="pre-release">
     <buildnumber file="build.num"/>
     <exec executable="java" failifexecutionfails="false">
