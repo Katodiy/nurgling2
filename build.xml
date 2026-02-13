@@ -239,6 +239,8 @@
     <copy todir="release/" file="etc/run8.bat" />
     <copy todir="release/" file="etc/run_updater.bat" />
     <copy todir="release/" file="etc/run_updater8.bat" />
+    <copy todir="release/" file="etc/run_updater_stable.bat" />
+    <copy todir="release/" file="etc/run_updater_latest.bat" />
     <copy todir="release/" file="etc/nurgling_launcher.jar" />
   </target>
 

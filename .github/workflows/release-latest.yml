@@ -1,0 +1,107 @@
+name: Build and Release to Latest
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+
+  workflow_dispatch:
+    inputs:
+      release_message:
+        description: 'Release message (optional)'
+        required: false
+        default: ''
+
+env:
+  JAVA_VERSION: '17'
+  RELEASE_REPO: aleksandrsvoboda/nurgling-release
+  RELEASE_BRANCH: latest
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout nurgling2
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache external libraries
+        uses: actions/cache@v4
+        with:
+          path: lib/ext
+          key: extlibs-${{ runner.os }}-${{ hashFiles('build.xml') }}
+          restore-keys: |
+            extlibs-${{ runner.os }}-
+
+      - name: Build with Ant
+        run: ant release
+
+      - name: Verify build artifacts
+        shell: pwsh
+        run: |
+          $requiredFiles = @("hafen.jar", "ver", "nurgling_launcher.jar", "nurgling-res.jar")
+          foreach ($file in $requiredFiles) {
+            if (!(Test-Path "release\$file")) {
+              Write-Error "Missing required file: release\$file"
+              exit 1
+            }
+          }
+
+          $version = (Get-Content "release\ver" -First 1).Trim()
+          Write-Host "Build successful - Version: $version"
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nurgling-release-${{ env.VERSION }}
+          path: release/
+          retention-days: 30
+
+      - name: Push to release repository
+        shell: pwsh
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          git clone "https://x-access-token:$env:RELEASE_TOKEN@github.com/${{ env.RELEASE_REPO }}.git" release-repo
+          cd release-repo
+
+          git checkout ${{ env.RELEASE_BRANCH }}
+          if ($LASTEXITCODE -ne 0) {
+            git checkout -b ${{ env.RELEASE_BRANCH }}
+          }
+
+          Get-ChildItem -Exclude ".git" | Remove-Item -Recurse -Force
+
+          Copy-Item "..\release\*" . -Recurse
+
+          git add -A
+
+          $message = "Release ${{ env.VERSION }}"
+          if ("${{ github.event.inputs.release_message }}" -ne "") {
+            $message = "$message - ${{ github.event.inputs.release_message }}"
+          } else {
+            $triggerMsg = "${{ github.event.head_commit.message }}" -replace "`n.*", ""
+            if ($triggerMsg.Length -gt 50) {
+              $triggerMsg = $triggerMsg.Substring(0, 50) + "..."
+            }
+            $message = "$message - $triggerMsg"
+          }
+
+          git commit -m $message
+          git push origin ${{ env.RELEASE_BRANCH }}
+
+          Write-Host "Successfully pushed to ${{ env.RELEASE_REPO }}@${{ env.RELEASE_BRANCH }}"
