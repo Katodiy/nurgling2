@@ -1,15 +1,25 @@
 package nurgling.widgets;
 
 import haven.*;
-import nurgling.*;
-import nurgling.navigation.*;
+import haven.Button;
+import haven.Label;
+import haven.Window;
+import nurgling.NGameUI;
+import nurgling.NMapView;
+import nurgling.NUtils;
+import nurgling.navigation.ChunkNavData;
+import nurgling.navigation.ChunkNavManager;
+import nurgling.navigation.ChunkPath;
+import nurgling.navigation.ChunkPortal;
 
-import java.awt.Color;
-import java.awt.image.BufferedImage;
+import java.awt.*;
 import java.awt.image.WritableRaster;
 import java.util.*;
+import java.util.List;
+import java.util.Queue;
 
-import static nurgling.navigation.ChunkNavConfig.*;
+import static nurgling.navigation.ChunkNavConfig.CELLS_PER_EDGE;
+import static nurgling.navigation.ChunkNavConfig.CHUNK_SIZE;
 
 /**
  * In-game visualization of ChunkNav data.
@@ -83,6 +93,7 @@ public class ChunkNavVisualizerWindow extends Window {
     private final CheckBox gridCb;
     private final CheckBox cellLinesCb;
     private final Button deleteChunkBtn;
+    private final Button deleteAllChunksBtn;
 
     public ChunkNavVisualizerWindow() {
         super(new Coord(UI.scale(WINDOW_WIDTH), UI.scale(WINDOW_HEIGHT)), "ChunkNav Visualizer");
@@ -165,6 +176,15 @@ public class ChunkNavVisualizerWindow extends Window {
             }
         }, new Coord(UI.scale(10), y));
         deleteChunkBtn.disable(true);  // Disabled until a chunk is selected
+        y += UI.scale(40);
+
+        deleteAllChunksBtn = add(new Button(UI.scale(SETTINGS_WIDTH - 20), "Delete ALL Chunks") {
+            @Override
+            public void click() {
+                super.click();
+                deleteAllChunks();
+            }
+        }, new Coord(UI.scale(10), y));
         y += UI.scale(40);
 
         statusLabel = add(new Label("Ready"), new Coord(UI.scale(10), y));
@@ -852,25 +872,39 @@ public class ChunkNavVisualizerWindow extends Window {
             return;
         }
 
-        ChunkNavData chunk = chunks.get(selectedChunkIdx);
+        // Perform deletion
+        boolean success = deleteChunk(selectedChunkIdx);
+        if (success) {
+            selectedChunkIdx = -1;
+            reloadData();
+        }
+    }
+
+    private void deleteAllChunks() {
+        for (ChunkNavData chunk : chunks) {
+            deleteChunk(chunks.indexOf(chunk));
+        }
+        reloadData();
+    }
+
+    private boolean deleteChunk(int idx){
+        ChunkNavData chunk = chunks.get(idx);
         long gridId = chunk.gridId;
 
         ChunkNavManager manager = getChunkNavManager();
         if (manager == null) {
             statusLabel.settext("Error: ChunkNav not available");
-            return;
+            return false;
         }
 
         // Perform deletion
         boolean success = manager.deleteChunk(gridId);
         if (success) {
             statusLabel.settext("Deleted chunk " + gridId);
-            // Clear selection and reload data
-            selectedChunkIdx = -1;
-            reloadData();
         } else {
             statusLabel.settext("Failed to delete chunk");
         }
+        return success;
     }
 
     @Override
