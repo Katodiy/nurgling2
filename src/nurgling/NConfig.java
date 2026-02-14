@@ -1015,6 +1015,16 @@ public class NConfig
             conf.put(Key.showSpeedometer, true);
         }
 
+        // Migration: Replace old Katodiy baseurl with new aleksandrsvoboda URL
+        if (conf.containsKey(Key.baseurl)) {
+            String currentUrl = (String) conf.get(Key.baseurl);
+            if (currentUrl != null && currentUrl.toLowerCase().contains("katodiy")) {
+                conf.put(Key.baseurl, "https://raw.githubusercontent.com/aleksandrsvoboda/nurgling-release/stable/ver");
+                isUpd = true; // Mark config as updated so it gets saved
+                System.out.println("[NConfig] Migrated baseurl from Katodiy to aleksandrsvoboda");
+            }
+        }
+
         conf.put(Key.showCSprite,conf.get(Key.nextshowCSprite));
         conf.put(Key.flatsurface,conf.get(Key.nextflatsurface));
     }
