@@ -22,11 +22,21 @@ public class WaitChipperState extends NTask
         this.prop = null;
     }
 
+    public WaitChipperState(Gob bumling, boolean ignoreInventoryFull)
+    {
+        this.player = NUtils.player();
+        this.bumling = bumling;
+        this.prop = null;
+        this.ignoreInventoryFull = ignoreInventoryFull;
+    }
+
 
 
     Gob player;
     Gob bumling;
     NChipperProp prop;
+    boolean ignoreInventoryFull = false;
+
     public enum State
     {
         WORKING,
@@ -46,7 +56,7 @@ public class WaitChipperState extends NTask
         {
             state = State.BUMLINGNOTFOUND;
         }
-        else if(space <= 1 && space >= 0)
+        else if(!ignoreInventoryFull && space <= 1 && space >= 0)
         {
             state = State.TIMEFORPILE;
         }

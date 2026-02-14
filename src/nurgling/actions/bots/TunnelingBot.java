@@ -467,7 +467,7 @@ public class TunnelingBot implements Action {
 
                 new SelectFlowerAction("Chip stone", bumling).run(gui);
 
-                WaitChipperState wcs = new WaitChipperState(bumling);
+                WaitChipperState wcs = new WaitChipperState(bumling, true);
                 NUtils.getUI().core.addTask(wcs);
 
                 switch (wcs.getState()) {
@@ -481,15 +481,6 @@ public class TunnelingBot implements Action {
                     case DANGER:
                         gui.msg("Warning: Low energy while chipping stones");
                         return;
-                    case TIMEFORPILE:
-                        // Drop stones from hand and inventory
-                        if (gui.vhand != null) {
-                            NUtils.drop(gui.vhand);
-                        }
-                        for (WItem item : gui.getInventory().getItems(Chipper.stones)) {
-                            NUtils.drop(item);
-                        }
-                        break;
                 }
 
                 // Re-check if bumling still exists
