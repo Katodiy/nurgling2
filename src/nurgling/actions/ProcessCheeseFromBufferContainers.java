@@ -780,16 +780,16 @@ public class ProcessCheeseFromBufferContainers implements Action {
 
     /**
      * Find the order that contains a specific cheese type in its progression
+     * AND actually needs more of this cheese (step.left > 0).
+     * This fixes the bug where cheese was attributed to the wrong order when
+     * multiple orders share the same intermediate cheese type.
      */
     private CheeseOrder findOrderContainingCheeseType(String cheeseType) {
         for (CheeseOrder order : ordersManager.getOrders().values()) {
-            // Check if this order's progression chain contains the cheese type
-            List<CheeseBranch.Cheese> chain = CheeseBranch.getChainToProduct(order.getCheeseType());
-            if (chain != null) {
-                for (CheeseBranch.Cheese step : chain) {
-                    if (step.name.equals(cheeseType)) {
-                        return order; // Found order with matching progression
-                    }
+            // Check if this order still needs this cheese type (step.left > 0)
+            for (CheeseOrder.StepStatus step : order.getStatus()) {
+                if (step.name.equals(cheeseType) && step.left > 0) {
+                    return order; // Found order that actually needs this cheese
                 }
             }
         }
