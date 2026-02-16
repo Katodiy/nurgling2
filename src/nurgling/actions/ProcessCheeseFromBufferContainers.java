@@ -726,66 +726,99 @@ public class ProcessCheeseFromBufferContainers implements Action {
     }
 
     /**
-     * Update cheese orders after moving cheese to the next stage
+     * Update cheese orders after moving cheese to the next stage.
+     * Distributes moved cheese across multiple orders that need it (FIFO by order ID).
      * When cheese moves from current place to next place, we need to:
      * 1. Reduce count of current stage step by amount moved
      * 2. Add/increase count of next stage step by amount moved
+     *
+     * This fixes the batch overflow bug where all cheese was attributed to one order
+     * even when multiple orders needed the same intermediate cheese type.
      */
     private void updateOrdersAfterCheeseMovement(String cheeseType, int movedCount,
                                                  CheeseBranch.Place fromPlace) {
-        // First find which order this cheese belongs to
-        CheeseOrder relevantOrder = findOrderContainingCheeseType(cheeseType);
-        if (relevantOrder == null) {
-            return;
-        }
+        int remaining = movedCount;
 
-        // Find the next cheese type and its correct location in the progression chain for this specific order
-        CheeseBranch.Cheese nextCheeseStep = getNextCheeseStepInChain(cheeseType, fromPlace, relevantOrder.getCheeseType());
-        if (nextCheeseStep == null) {
-            return;
-        }
-
-        String nextCheeseType = nextCheeseStep.name;
-        CheeseBranch.Place nextCheesePlace = nextCheeseStep.place;
-
-        // Look for current stage step and reduce it
-        for (CheeseOrder.StepStatus step : relevantOrder.getStatus()) {
-            if (step.name.equals(cheeseType) && step.place.equals(fromPlace.toString())) {
-                step.left = Math.max(0, step.left - movedCount);
-                break;
+        // Distribution loop - give cheese to orders until exhausted
+        while (remaining > 0) {
+            // Find next order that needs this cheese (sorted by ID for FIFO)
+            CheeseOrder order = findOrderContainingCheeseType(cheeseType);
+            if (order == null) {
+                break; // No more orders need this cheese
             }
-        }
 
-        // Look for next stage step and increase it (or create it)
-        // Use the correct cheese progression place, not the physical destination
-        CheeseOrder.StepStatus nextStep = null;
-        for (CheeseOrder.StepStatus step : relevantOrder.getStatus()) {
-            if (step.name.equals(nextCheeseType) && step.place.equals(nextCheesePlace.toString())) {
-                nextStep = step;
-                break;
+            // Find the current step for this cheese type
+            CheeseOrder.StepStatus currentStep = null;
+            for (CheeseOrder.StepStatus step : order.getStatus()) {
+                if (step.name.equals(cheeseType) && step.place.equals(fromPlace.toString())) {
+                    currentStep = step;
+                    break;
+                }
             }
+
+            if (currentStep == null || currentStep.left <= 0) {
+                break; // Shouldn't happen if findOrderContainingCheeseType works correctly
+            }
+
+            // Calculate how much this order can absorb
+            int amountForThisOrder = Math.min(currentStep.left, remaining);
+
+            // Find the next cheese step in this order's progression chain
+            CheeseBranch.Cheese nextCheeseStep = getNextCheeseStepInChain(cheeseType, fromPlace, order.getCheeseType());
+            if (nextCheeseStep == null) {
+                break; // No next step found
+            }
+
+            // Update current step (reduce by amount allocated to this order)
+            currentStep.left -= amountForThisOrder;
+
+            // Update or create next step
+            String nextCheeseType = nextCheeseStep.name;
+            CheeseBranch.Place nextCheesePlace = nextCheeseStep.place;
+
+            CheeseOrder.StepStatus nextStep = null;
+            for (CheeseOrder.StepStatus step : order.getStatus()) {
+                if (step.name.equals(nextCheeseType) && step.place.equals(nextCheesePlace.toString())) {
+                    nextStep = step;
+                    break;
+                }
+            }
+
+            if (nextStep != null) {
+                nextStep.left += amountForThisOrder;
+            } else {
+                // Create new step for next stage
+                nextStep = new CheeseOrder.StepStatus(nextCheeseType, nextCheesePlace.toString(), amountForThisOrder);
+                order.getStatus().add(nextStep);
+            }
+
+            ordersManager.addOrUpdateOrder(order);
+            remaining -= amountForThisOrder;
         }
 
-        if (nextStep != null) {
-            nextStep.left += movedCount;
-        } else {
-            // Create new step for next stage using correct progression location
-            nextStep = new CheeseOrder.StepStatus(nextCheeseType, nextCheesePlace.toString(), movedCount);
-            relevantOrder.getStatus().add(nextStep);
+        // Log warning about orphan cheese (moved but not tracked by any order)
+        if (remaining > 0) {
+            NUtils.getGameUI().msg("Warning: " + remaining + " " + cheeseType + " trays moved but no order needs them");
         }
 
-        ordersManager.addOrUpdateOrder(relevantOrder);
-        ordersNeedSaving = true; // Mark that orders need saving, but don't save yet
+        if (movedCount > remaining) {
+            ordersNeedSaving = true; // Mark that orders need saving if we updated any
+        }
     }
 
     /**
      * Find the order that contains a specific cheese type in its progression
      * AND actually needs more of this cheese (step.left > 0).
+     * Orders are sorted by ID (FIFO) to ensure deterministic distribution.
      * This fixes the bug where cheese was attributed to the wrong order when
      * multiple orders share the same intermediate cheese type.
      */
     private CheeseOrder findOrderContainingCheeseType(String cheeseType) {
-        for (CheeseOrder order : ordersManager.getOrders().values()) {
+        // Sort orders by ID for deterministic FIFO behavior
+        ArrayList<CheeseOrder> sortedOrders = new ArrayList<>(ordersManager.getOrders().values());
+        sortedOrders.sort((a, b) -> Integer.compare(a.getId(), b.getId()));
+
+        for (CheeseOrder order : sortedOrders) {
             // Check if this order still needs this cheese type (step.left > 0)
             for (CheeseOrder.StepStatus step : order.getStatus()) {
                 if (step.name.equals(cheeseType) && step.left > 0) {
