@@ -465,6 +465,8 @@ public class TunnelingBot implements Action {
             while (bumling != null && Finder.findGob(bumling.id) != null && attempts < maxAttempts) {
                 attempts++;
 
+                NUtils.drop(NUtils.getGameUI().vhand);
+
                 new SelectFlowerAction("Chip stone", bumling).run(gui);
 
                 WaitChipperState wcs = new WaitChipperState(bumling, true);
