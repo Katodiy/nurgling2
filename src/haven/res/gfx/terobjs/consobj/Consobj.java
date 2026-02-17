@@ -3,18 +3,18 @@
 
 package haven.res.gfx.terobjs.consobj;
 
+import java.util.*;
 import haven.*;
 import haven.render.*;
 import haven.res.lib.obst.*;
 import nurgling.NConfig;
-
 import static haven.MCache.tilesz;
 
 /* >spr: Consobj */
-@haven.FromResource(name = "gfx/terobjs/consobj", version = 35)
+@haven.FromResource(name = "gfx/terobjs/consobj", version = 36)
 public class Consobj extends Sprite implements Sprite.CUpd {
-    public final static Indir<Resource> signres = Resource.remote().load("gfx/terobjs/sign", 6);
-    public final static Indir<Resource> poleres = Resource.remote().load("gfx/terobjs/arch/conspole", 2);
+    public final static Indir<Resource> signres = Resource.classres(Consobj.class).pool.load("gfx/terobjs/sign", 6);
+    public final static Indir<Resource> poleres = Resource.classres(Consobj.class).pool.load("gfx/terobjs/arch/conspole", 2);
     public final static float bscale = 1f / 11;
     private static Material bmat = null;
     public final Gob gob = owner.context(Gob.class);
@@ -25,6 +25,8 @@ public class Consobj extends Sprite implements Sprite.CUpd {
     public final Location[] poles;
     final MCache map;
     final RenderTree.Node bound;
+    private final Collection<RenderTree.Slot> slots = new ArrayList<>(1);
+    private boolean hidesign;
 
     Coord3f gnd(float rx, float ry) {
 	double a = -gob.a;
@@ -135,13 +137,30 @@ public class Consobj extends Sprite implements Sprite.CUpd {
 	return(bmat.apply(mesh));
     }
 
-    public void added(RenderTree.Slot slot) {
-	slot.add(sign);
+    private void parts(RenderTree.Slot slot) {
+	if(!hidesign)
+	    slot.add(sign);
 	if(bound != null) {
 	    slot.add(bound);
 	    for(Location loc : poles)
 		slot.add(pole, loc);
 	}
+    }
+
+    public void added(RenderTree.Slot slot) {
+	parts(slot);
+	slots.add(slot);
+    }
+
+    public void removed(RenderTree.Slot slot) {
+	slots.remove(slot);
+    }
+
+    public void hidesign(boolean hide) {
+	if(hide == hidesign)
+	    return;
+	hidesign = hide;
+	RUtils.readd(slots, this::parts, () -> hidesign = !hide);
     }
 
     public void update(Message sdt) {

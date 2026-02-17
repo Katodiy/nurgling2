@@ -15,7 +15,7 @@ import static haven.MCache.tilesz;
 import static haven.render.sl.Cons.*;
 import static haven.render.sl.Type.*;
 
-@haven.FromResource(name = "ui/surv", version = 45)
+@haven.FromResource(name = "ui/surv", version = 46)
 public class LandSurvey extends Window {
     public final Area area;
     public final Data data;
@@ -39,8 +39,10 @@ public class LandSurvey extends Window {
 		public void changed(boolean val)
 		{
 			super.changed(val);
+			lock(val);
 		}
 	}, prev.pos("ur").add(UI.scale(200) - NStyle.locki[0].sz().x - NStyle.locki[0].sz().x / 2, 0));
+	btnLock.a = true;
 	zdlbl = add(new Label("..."), prev.pos("bl").adds(0, 1));
 	wlbl = add(new Label("..."), zdlbl.pos("bl").adds(0, 1));
 	dlbl = add(new Label("..."), wlbl.pos("bl").adds(0, 1));
@@ -119,6 +121,10 @@ public class LandSurvey extends Window {
 	else
 	    wlbl.settext(String.format("Units of soil left over: %d", -sd));
 	dlbl.settext(String.format("Units of soil to dig: %d", hn));
+    }
+
+    private void lock(boolean enabled) {
+	wdgmsg("lock", enabled ? 0 : 1);
     }
 
     private void send() {
@@ -331,6 +337,8 @@ public class LandSurvey extends Window {
 	if(name == "data") {
 	    data.decode(Utils.iv(args[0]), (byte[])args[1]);
 	    upd = true;
+	} else if(name == "lock") {
+	    btnLock.a = !Utils.bv(args[0]);
 	} else {
 	    super.uimsg(name, args);
 	}
