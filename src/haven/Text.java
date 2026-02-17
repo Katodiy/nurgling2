@@ -136,7 +136,7 @@ public class Text implements Disposable {
 	public FontMetrics m;
 	public final Font font;
 	public final Color defcol;
-	public boolean aa = false;
+	public boolean aa = true;
 	private RichText.Foundry wfnd = null;
 		
 	public Foundry(Font f, Color defcol) {
