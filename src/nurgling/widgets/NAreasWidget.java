@@ -628,12 +628,15 @@ public class NAreasWidget extends Window
                                             NOverlay nol = NUtils.getGameUI().map.nols.get(key);
                                             nol.remove();
                                             NUtils.getGameUI().map.nols.remove(key);
-                                            Gob dummy = ((NMapView) NUtils.getGameUI().map).dummys.get(((NMapView) NUtils.getGameUI().map).glob.map.areas.get(key).gid);
-                                            if(dummy!=null) {
-                                                NUtils.getGameUI().map.glob.oc.remove(dummy);
-                                                ((NMapView) NUtils.getGameUI().map).dummys.remove(dummy.id);
+                                            NMapView mapView = (NMapView) NUtils.getGameUI().map;
+                                            synchronized (mapView.dummys) {
+                                                Gob dummy = mapView.dummys.get(mapView.glob.map.areas.get(key).gid);
+                                                if(dummy!=null) {
+                                                    mapView.glob.oc.remove(dummy);
+                                                    mapView.dummys.remove(dummy.id);
+                                                }
                                             }
-                                            ((NMapView) NUtils.getGameUI().map).glob.map.areas.remove(key);
+                                            mapView.glob.map.areas.remove(key);
                                             
                                             // Delete from database if enabled
                                             if ((Boolean) nurgling.NConfig.get(nurgling.NConfig.Key.ndbenable) &&

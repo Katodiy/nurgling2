@@ -1260,10 +1260,12 @@ public class NConfig
                     }
                     NArea area = mapView.glob.map.areas.get(areaId);
                     if (area != null) {
-                        Gob dummy = mapView.dummys.get(area.gid);
-                        if (dummy != null) {
-                            mapView.glob.oc.remove(dummy);
-                            mapView.dummys.remove(area.gid);
+                        synchronized (mapView.dummys) {
+                            Gob dummy = mapView.dummys.get(area.gid);
+                            if (dummy != null) {
+                                mapView.glob.oc.remove(dummy);
+                                mapView.dummys.remove(area.gid);
+                            }
                         }
                     }
                 }
@@ -1318,10 +1320,12 @@ public class NConfig
                         mapView.nols.get(existingArea.id).remove();
                         mapView.nols.remove(existingArea.id);
                     }
-                    Gob dummy = mapView.dummys.get(existingArea.gid);
-                    if (dummy != null) {
-                        mapView.glob.oc.remove(dummy);
-                        mapView.dummys.remove(existingArea.gid);
+                    synchronized (mapView.dummys) {
+                        Gob dummy = mapView.dummys.get(existingArea.gid);
+                        if (dummy != null) {
+                            mapView.glob.oc.remove(dummy);
+                            mapView.dummys.remove(existingArea.gid);
+                        }
                     }
                     
                     // Replace with new area using same id

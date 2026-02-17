@@ -137,7 +137,9 @@ public class NMapView extends MapView
 
     public static boolean hitNWidgetsInfo(Coord pc) {
         boolean isFound = false;
-        for(Long gobid: ((NMapView)NUtils.getGameUI().map).dummys.keySet())
+        NMapView mapView = (NMapView)NUtils.getGameUI().map;
+        synchronized (mapView.dummys) {
+        for(Long gobid: mapView.dummys.keySet())
         {
             Gob gob = Finder.findGob(gobid);
             Gob.Overlay ol;
@@ -165,6 +167,7 @@ public class NMapView extends MapView
                 }
             }
         }
+        } // synchronized (mapView.dummys)
         return isFound;
     }
 
@@ -260,19 +263,23 @@ public class NMapView extends MapView
             dummy.virtual = true;
             area.gid = dummy.id;
             dummy.addcustomol(new NAreaLabel(dummy, area));
-            dummys.put(dummy.id, dummy);
+            synchronized (dummys) {
+                dummys.put(dummy.id, dummy);
+            }
             glob.oc.add(dummy);
         }
     }
 
     public void destroyDummys()
     {
-        for(Gob d: dummys.values())
-        {
-            if(glob.oc.getgob(d.id)!=null)
-                glob.oc.remove(d);
+        synchronized (dummys) {
+            for(Gob d: dummys.values())
+            {
+                if(glob.oc.getgob(d.id)!=null)
+                    glob.oc.remove(d);
+            }
+            dummys.clear();
         }
-        dummys.clear();
     }
 
     public void destroyRouteDummys()
@@ -1388,10 +1395,12 @@ public class NMapView extends MapView
             // Track locally deleted areas to prevent restoration during sync
             locallyDeletedAreas.add(areaId);
             System.out.println("Area deleted locally: " + areaId + " (" + area.name + ")");
-            Gob dummy = dummys.get(area.gid);
-            if(dummy != null) {
-                glob.oc.remove(dummy);
-                dummys.remove(area.gid);
+            synchronized (dummys) {
+                Gob dummy = dummys.get(area.gid);
+                if(dummy != null) {
+                    glob.oc.remove(dummy);
+                    dummys.remove(area.gid);
+                }
             }
             NUtils.getGameUI().areas.removeArea(areaId);
 
@@ -1458,10 +1467,12 @@ public class NMapView extends MapView
                 NOverlay nol = NUtils.getGameUI().map.nols.get(area.id);
                 if (nol != null)
                     nol.remove();
-                Gob dummy = dummys.get(area.gid);
-                if(dummy != null) {
-                    glob.oc.remove(dummy);
-                    dummys.remove(area.gid);
+                synchronized (dummys) {
+                    Gob dummy = dummys.get(area.gid);
+                    if(dummy != null) {
+                        glob.oc.remove(dummy);
+                        dummys.remove(area.gid);
+                    }
                 }
                 NUtils.getGameUI().map.nols.remove(area.id);
             }
