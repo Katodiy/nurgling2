@@ -100,7 +100,7 @@ public class TunnelingDialog extends Window {
     private static Direction savedDirection = Direction.NORTH;
     private static TunnelSide savedTunnelSide = TunnelSide.WEST;
     private static TunnelSide savedWingSide = TunnelSide.NORTH;
-    private static SupportType savedSupportType = SupportType.MINE_SUPPORT;
+    private static SupportType savedSupportType = SupportType.STONE_COLUMN;
     private static boolean savedWingNorth = false;
     private static boolean savedWingSouth = false;
     private static boolean savedWingEast = false;
