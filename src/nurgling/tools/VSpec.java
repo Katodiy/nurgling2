@@ -1584,7 +1584,7 @@ public class VSpec {
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-plumpudding\",\"name\":\"Unbaked Plum Pudding\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-poultrypotpie\",\"name\":\"Unbaked Poultry Pot Pie\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pumpkinbread\",\"name\":\"Unbaked Pumpkin Bread\"}"));
-        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pumpkinpie\",\"name\":\"Unbaked Pumpkin Pie\"}"));
+        doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pumpkinpie\",\"name\":\"Pumpkin Pie Dough\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-pirozhki\",\"name\":\"Mushroom & Onion Pirozhki Dough\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-raisinbuttercake\",\"name\":\"Unbaked Raisin Butter-Cake\"}"));
         doughs.add(new JSONObject("{\"static\":\"gfx/invobjs/dough-ringofbrodgar\",\"name\":\"Unbaked Ring of Brodgar\"}"));
