@@ -96,6 +96,8 @@ public class ItemQualityOverlaySettings implements JConf {
     // Study info settings
     public float studyTimeRatio = 3.29f; // Server to real time ratio
     public TimeFormat timeFormat = TimeFormat.AUTO;
+    public boolean compactTooltip = false; // Compact curio tooltip format
+    public boolean showLphPerWeight = false; // Show LP/H/Weight in compact tooltip
     
     public enum TimeFormat {
         AUTO("Auto"),
@@ -169,6 +171,12 @@ public class ItemQualityOverlaySettings implements JConf {
         if (map.containsKey("timeFormat")) {
             this.timeFormat = TimeFormat.fromString((String) map.get("timeFormat"));
         }
+        if (map.containsKey("compactTooltip")) {
+            this.compactTooltip = (Boolean) map.get("compactTooltip");
+        }
+        if (map.containsKey("showLphPerWeight")) {
+            this.showLphPerWeight = (Boolean) map.get("showLphPerWeight");
+        }
         if (map.containsKey("showOutline")) {
             this.showOutline = (Boolean) map.get("showOutline");
         }
@@ -228,6 +236,8 @@ public class ItemQualityOverlaySettings implements JConf {
         ret.put("hidden", hidden);
         ret.put("studyTimeRatio", studyTimeRatio);
         ret.put("timeFormat", timeFormat.name());
+        ret.put("compactTooltip", compactTooltip);
+        ret.put("showLphPerWeight", showLphPerWeight);
         ret.put("showOutline", showOutline);
         ret.put("outlineColor", colorToMap(outlineColor));
         ret.put("outlineWidth", outlineWidth);
@@ -257,6 +267,8 @@ public class ItemQualityOverlaySettings implements JConf {
         copy.hidden = this.hidden;
         copy.studyTimeRatio = this.studyTimeRatio;
         copy.timeFormat = this.timeFormat;
+        copy.compactTooltip = this.compactTooltip;
+        copy.showLphPerWeight = this.showLphPerWeight;
         copy.showOutline = this.showOutline;
         copy.outlineColor = this.outlineColor;
         copy.outlineWidth = this.outlineWidth;

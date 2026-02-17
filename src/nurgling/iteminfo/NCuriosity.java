@@ -1,6 +1,7 @@
 package nurgling.iteminfo;
 
 import haven.*;
+import haven.res.ui.tt.q.qbuff.QBuff;
 import haven.resutil.Curiosity;
 import nurgling.NConfig;
 import nurgling.NGItem;
@@ -9,6 +10,8 @@ import nurgling.conf.ItemQualityOverlaySettings;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Field;
+import java.util.List;
 
 import static nurgling.NConfig.Key.is_real_time;
 
@@ -30,6 +33,87 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     private int lastRemaining = -1;
 
     NGItem.MeterInfo m = null;
+
+    // Cached info for compact tooltip rendering
+    private ItemInfo.Name cachedName = null;
+    private QBuff cachedQBuff = null;
+
+    // Font foundries for compact tooltip (Open Sans)
+    private static final int HEADER_FONT_SIZE = 12;  // Name + quality line
+    private static final int BODY_FONT_SIZE = 11;    // LP, Study time, Mental weight lines
+
+    private static Text.Foundry keyFoundry = null;        // Open Sans Regular for keys (11px)
+    private static Text.Foundry valueFoundry = null;      // Open Sans Semibold for values (11px)
+    private static Text.Foundry headerFoundry = null;     // Open Sans Semibold for header values (12px)
+    private static Text.Foundry headerRegularFoundry = null; // Open Sans Regular for header (12px)
+
+    private static Font getOpenSansRegular() {
+        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
+        return fontSettings != null ? fontSettings.getFont("Open Sans") : null;
+    }
+
+    private static Font getOpenSansSemibold() {
+        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
+        return fontSettings != null ? fontSettings.getFont("Open Sans Semibold") : null;
+    }
+
+
+    private static Text.Foundry getKeyFoundry() {
+        if (keyFoundry == null) {
+            Font font = getOpenSansRegular();
+            int size = UI.scale(BODY_FONT_SIZE);
+            if (font == null) {
+                font = new Font("SansSerif", Font.PLAIN, size);
+            } else {
+                font = font.deriveFont(Font.PLAIN, (float) size);
+            }
+            keyFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
+        }
+        return keyFoundry;
+    }
+
+    private static Text.Foundry getValueFoundry() {
+        if (valueFoundry == null) {
+            Font font = getOpenSansSemibold();
+            int size = UI.scale(BODY_FONT_SIZE);
+            if (font == null) {
+                font = new Font("SansSerif", Font.BOLD, size);
+            } else {
+                font = font.deriveFont(Font.PLAIN, (float) size);
+            }
+            valueFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
+        }
+        return valueFoundry;
+    }
+
+    private static Text.Foundry getHeaderFoundry() {
+        if (headerFoundry == null) {
+            Font font = getOpenSansSemibold();
+            int size = UI.scale(HEADER_FONT_SIZE);
+            if (font == null) {
+                font = new Font("SansSerif", Font.BOLD, size);
+            } else {
+                font = font.deriveFont(Font.PLAIN, (float) size);
+            }
+            headerFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
+        }
+        return headerFoundry;
+    }
+
+    private static Text.Foundry getHeaderRegularFoundry() {
+        if (headerRegularFoundry == null) {
+            Font font = getOpenSansRegular();
+            int size = UI.scale(HEADER_FONT_SIZE);
+            if (font == null) {
+                font = new Font("SansSerif", Font.PLAIN, size);
+            } else {
+                font = font.deriveFont(Font.PLAIN, (float) size);
+            }
+            headerRegularFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
+        }
+        return headerRegularFoundry;
+    }
+
     public NCuriosity(Owner owner, int exp, int mw, int enc, int time) {
         super(owner, exp, mw, enc, time);
         this.lph = (exp > 0 && time > 0) ? (3600 * exp / time) : 0;
@@ -47,7 +131,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     private static ItemQualityOverlaySettings getSettings() {
         long now = System.currentTimeMillis();
         if (forceRefresh || cachedSettings == null || now - lastSettingsCheck > SETTINGS_CHECK_INTERVAL) {
-            ItemQualityOverlaySettings newSettings = 
+            ItemQualityOverlaySettings newSettings =
                 (ItemQualityOverlaySettings) NConfig.get(NConfig.Key.studyInfoOverlay);
             if (newSettings == null) {
                 newSettings = new ItemQualityOverlaySettings();
@@ -64,7 +148,87 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         return cachedSettings;
     }
 
+    /**
+     * Check if compact tooltip mode is enabled
+     */
+    public static boolean isCompactMode() {
+        return getSettings().compactTooltip;
+    }
+
+    @Override
+    public int order() {
+        // In compact mode, render first (before Name which is 0)
+        return isCompactMode() ? -1 : super.order();
+    }
+
+    @Override
+    public void prepare(ItemInfo.Layout l) {
+        super.prepare(l);
+
+        // Cache QBuff info (needed for rendering regardless of when we remove it)
+        if (isCompactMode() && owner instanceof GItem) {
+            GItem item = (GItem) owner;
+            cachedQBuff = ItemInfo.find(QBuff.class, item.info());
+        }
+    }
+
+    @Override
+    public void layout(ItemInfo.Layout l) {
+        if (!isCompactMode()) {
+            super.layout(l);
+            return;
+        }
+
+        // In compact mode, we render first (order -1)
+        // Replace Name and QBuff tips with no-op tips so they don't render separately
+        // Using set() instead of remove() avoids ConcurrentModificationException
+
+        try {
+            // Use reflection to access the private tips list
+            Field tipsField = ItemInfo.Layout.class.getDeclaredField("tips");
+            tipsField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            List<ItemInfo.Tip> tips = (List<ItemInfo.Tip>) tipsField.get(l);
+
+            // Create a no-op tip to replace suppressed tips
+            ItemInfo.Tip noOpTip = new ItemInfo.Tip(owner) {
+                @Override
+                public BufferedImage tipimg() { return null; }
+            };
+
+            // Find and replace Name tips, cache the first one
+            for (int i = 0; i < tips.size(); i++) {
+                ItemInfo.Tip tip = tips.get(i);
+                if (tip instanceof ItemInfo.Name) {
+                    if (cachedName == null) {
+                        cachedName = (ItemInfo.Name) tip;
+                    }
+                    tips.set(i, noOpTip);
+                } else if (tip.getClass().getName().contains("QBuff$Table")) {
+                    // Replace QBuff.Table with no-op
+                    tips.set(i, noOpTip);
+                }
+            }
+
+        } catch (Exception e) {
+            // Reflection failed, Name and QBuff may render separately
+        }
+
+        // Now render our compact tooltip
+        super.layout(l);
+    }
+
     public BufferedImage tipimg() {
+        ItemQualityOverlaySettings settings = getSettings();
+
+        if (settings.compactTooltip) {
+            return renderCompactTooltip(settings);
+        } else {
+            return renderVerboseTooltip();
+        }
+    }
+
+    private BufferedImage renderVerboseTooltip() {
         StringBuilder buf = new StringBuilder();
         if(exp > 0)
             buf.append(String.format("Learning points: $col[192,192,255]{%s} ($col[192,192,255]{%s}/h)\n", Utils.thformat(exp), Utils.thformat(Math.round(exp / (time / 3600.0)))));
@@ -85,6 +249,243 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
             buf.append(String.format("LP/H/Weight: $col[192,255,255]{%d}\n", lph(this.lph / mw)));
         }
         return(RichText.render(buf.toString(), 0).img);
+    }
+
+    private BufferedImage renderCompactTooltip(ItemQualityOverlaySettings settings) {
+        // Calculate remaining time for display
+        rm = (int)(remaining()/server_ratio);
+
+        // First, build the name line with icon (requires image composition)
+        BufferedImage nameLine = renderNameLine();
+
+        java.util.List<BufferedImage> lines = new java.util.ArrayList<>();
+
+        if (nameLine != null) {
+            lines.add(nameLine);
+        }
+
+        // Line 2: LP + LP/H + optionally LP/H/W
+        // Colors: LP=purple (192,192,255), LP/H=cyan (192,255,255)
+        if (exp > 0) {
+            java.util.List<BufferedImage> parts = new java.util.ArrayList<>();
+            parts.add(renderKey("LP:"));
+            parts.add(renderValue(Utils.thformat(exp), new Color(192, 192, 255)));
+            parts.add(renderSpacer(8));
+            parts.add(renderKey("LP/H:"));
+            parts.add(renderValue(String.valueOf(lph(this.lph)), new Color(192, 255, 255)));
+            if (settings.showLphPerWeight && mw > 0 && lph > 0) {
+                parts.add(renderSpacer(8));
+                parts.add(renderKey("LP/H/W:"));
+                parts.add(renderValue(String.valueOf(lph(this.lph / mw)), new Color(192, 255, 255)));
+            }
+            lines.add(composeHorizontal(parts));
+        }
+
+        // Line 3: Study time (real time)
+        // Color: green (192,255,192)
+        if (time > 0) {
+            int realTime = (int)(time / server_ratio);
+            java.util.List<BufferedImage> parts = new java.util.ArrayList<>();
+            parts.add(renderKey("Study time:"));
+            parts.add(renderValue(formatCompactStudyTime(realTime), new Color(192, 255, 192)));
+            lines.add(composeHorizontal(parts));
+        }
+
+        // Line 4: Mental weight + EXP cost
+        // Colors: Mental weight=pink (255,192,255), EXP cost=yellow (255,255,192)
+        if (mw > 0 || enc > 0) {
+            java.util.List<BufferedImage> parts = new java.util.ArrayList<>();
+            if (mw > 0) {
+                parts.add(renderKey("Mental weight:"));
+                parts.add(renderValue(String.valueOf(mw), new Color(255, 192, 255)));
+            }
+            if (enc > 0) {
+                if (mw > 0) parts.add(renderSpacer(8));
+                parts.add(renderKey("EXP cost:"));
+                parts.add(renderValue(String.valueOf(enc), new Color(255, 255, 192)));
+            }
+            lines.add(composeHorizontal(parts));
+        }
+
+        // Combine all lines with 2px spacing (+ 5px descent = 7px visual gap)
+        BufferedImage combined = ItemInfo.catimgs(2, lines.toArray(new BufferedImage[0]));
+
+        // Add 10px padding: top, left, right + 2px bottom gap before resource line (+ 5px descent = 7px visual)
+        int padding = 10;
+        int bottomGap = 2;
+        BufferedImage result = TexI.mkbuf(new Coord(
+            combined.getWidth() + padding * 2,
+            combined.getHeight() + padding + bottomGap
+        ));
+        Graphics g = result.getGraphics();
+        g.drawImage(combined, padding, padding, null);
+        g.dispose();
+        return result;
+    }
+
+    /** Render a key label (Open Sans Regular, white) */
+    private BufferedImage renderKey(String text) {
+        return getKeyFoundry().render(text, Color.WHITE).img;
+    }
+
+    /** Render a value (Open Sans Semibold, colored) */
+    private BufferedImage renderValue(String text, Color color) {
+        return getValueFoundry().render(text, color).img;
+    }
+
+    /** Create a transparent spacer of given width */
+    private BufferedImage renderSpacer(int width) {
+        return TexI.mkbuf(new Coord(width, 1));
+    }
+
+    /** Compose images horizontally with small gaps */
+    private BufferedImage composeHorizontal(java.util.List<BufferedImage> images) {
+        int totalWidth = 0;
+        int maxHeight = 0;
+        int gap = 3; // gap between key and value
+        for (BufferedImage img : images) {
+            totalWidth += img.getWidth();
+            maxHeight = Math.max(maxHeight, img.getHeight());
+        }
+        // Add gaps (one less than number of images, excluding spacers which handle their own spacing)
+        totalWidth += gap * Math.max(0, images.size() - 1);
+
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+        Graphics g = result.getGraphics();
+        int x = 0;
+        for (int i = 0; i < images.size(); i++) {
+            BufferedImage img = images.get(i);
+            g.drawImage(img, x, (maxHeight - img.getHeight()) / 2, null);
+            x += img.getWidth();
+            if (i < images.size() - 1) {
+                x += gap;
+            }
+        }
+        g.dispose();
+        return result;
+    }
+
+    /**
+     * Render the name line: Name + Quality Icon + Quality Value + Remaining Time
+     * Uses the same font as other item names (from cached Name tip)
+     */
+    private BufferedImage renderNameLine() {
+        // Get name image - prefer the cached one which has the correct font
+        BufferedImage nameImg = null;
+        if (cachedName != null && cachedName.str != null) {
+            // Use the pre-rendered name image which matches other item names
+            nameImg = cachedName.str.img;
+        } else if (owner instanceof GItem) {
+            // Fallback: render with standard foundry
+            try {
+                String nameText = ItemInfo.Name.Default.get((ItemInfo.Owner) owner);
+                if (nameText != null) {
+                    nameImg = Text.std.render(nameText).img;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (nameImg == null) {
+            return null;
+        }
+
+        int totalWidth = nameImg.getWidth();
+        int maxHeight = nameImg.getHeight();
+
+        // Quality icon and value (12px Open Sans Semibold, cyan)
+        BufferedImage qIcon = null;
+        BufferedImage qImg = null;
+        if (cachedQBuff != null && cachedQBuff.q > 0) {
+            totalWidth += 5; // spacing
+            qIcon = cachedQBuff.icon;
+            if (qIcon != null) {
+                totalWidth += qIcon.getWidth() + 3;
+                maxHeight = Math.max(maxHeight, qIcon.getHeight());
+            }
+            qImg = getHeaderFoundry().render(String.valueOf((int) cachedQBuff.q), new Color(0, 255, 255)).img;
+            totalWidth += qImg.getWidth();
+            maxHeight = Math.max(maxHeight, qImg.getHeight());
+        }
+
+        // Remaining time (12px Open Sans Regular, gray)
+        BufferedImage timeImg = null;
+        String remainingTime = getCompactRemainingTime();
+        if (remainingTime != null && !remainingTime.isEmpty()) {
+            totalWidth += 7; // spacing
+            timeImg = getHeaderRegularFoundry().render("(" + remainingTime + ")", new Color(128, 128, 128)).img;
+            totalWidth += timeImg.getWidth();
+            maxHeight = Math.max(maxHeight, timeImg.getHeight());
+        }
+
+        // Compose the line
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+        Graphics g = result.getGraphics();
+        int x = 0;
+
+        // Draw name
+        g.drawImage(nameImg, x, (maxHeight - nameImg.getHeight()) / 2, null);
+        x += nameImg.getWidth();
+
+        // Draw quality icon and value
+        if (cachedQBuff != null && cachedQBuff.q > 0) {
+            x += 5;
+            if (qIcon != null) {
+                g.drawImage(qIcon, x, (maxHeight - qIcon.getHeight()) / 2, null);
+                x += qIcon.getWidth() + 3;
+            }
+            if (qImg != null) {
+                g.drawImage(qImg, x, (maxHeight - qImg.getHeight()) / 2, null);
+                x += qImg.getWidth();
+            }
+        }
+
+        // Draw remaining time
+        if (timeImg != null) {
+            x += 7;
+            g.drawImage(timeImg, x, (maxHeight - timeImg.getHeight()) / 2, null);
+        }
+
+        g.dispose();
+        return result;
+    }
+
+    /**
+     * Get remaining time formatted for display on name line (in real time)
+     */
+    public String getCompactRemainingTime() {
+        int remainingInGame = remaining();
+        if (remainingInGame <= 0) {
+            return null;
+        }
+        int remainingReal = (int)(remainingInGame / server_ratio);
+        int totalReal = (int)(time / server_ratio);
+        // Only show if study has started (remaining < total)
+        if (remainingReal > 0 && remainingReal < totalReal) {
+            return formatCompactTime(remainingReal);
+        }
+        return null;
+    }
+
+    private String formatCompactTime(int seconds) {
+        if (seconds <= 0) return "00:00";
+        int hours = seconds / 3600;
+        int mins = (seconds % 3600) / 60;
+        if (hours > 0) {
+            return String.format("%dh %02dm", hours, mins);
+        } else {
+            int secs = seconds % 60;
+            return String.format("%02d:%02d", mins, secs);
+        }
+    }
+
+    private String formatCompactStudyTime(int seconds) {
+        int hours = seconds / 3600;
+        int mins = (seconds % 3600) / 60;
+        if (hours > 0) {
+            return String.format("%dh %dm", hours, mins);
+        } else {
+            return String.format("%dm", mins);
+        }
     }
 
     public static int lph(int lph){

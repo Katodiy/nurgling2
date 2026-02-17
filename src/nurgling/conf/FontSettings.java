@@ -14,6 +14,8 @@ public class FontSettings implements JConf {
     private static final Font roboto = Resource.local().loadwait("nurgling/font/roboto").flayer(Resource.Font.class).font.deriveFont(Font.PLAIN);
 
     private static final Font helvetica = Resource.local().loadwait("nurgling/font/helvetica").flayer(Resource.Font.class).font.deriveFont(Font.PLAIN);
+    private static final Font opensans = Resource.local().loadwait("nurgling/font/opensans").flayer(Resource.Font.class).font.deriveFont(Font.PLAIN);
+    private static final Font opensansSemibold = Resource.local().loadwait("nurgling/font/opensans-semibold").flayer(Resource.Font.class).font.deriveFont(Font.PLAIN);
 
     public Font getFont(String name)
     {
@@ -23,6 +25,10 @@ public class FontSettings implements JConf {
             return helvetica;
         else if(name.equals("Roboto"))
             return roboto;
+        else if(name.equals("Open Sans"))
+            return opensans;
+        else if(name.equals("Open Sans Semibold"))
+            return opensansSemibold;
         else if(name.equals("Sans"))
             return sans;
         else if(name.equals("Serif"))
