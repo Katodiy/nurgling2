@@ -49,8 +49,11 @@ public final class TooltipStyle {
     /** Spacing between quality icon and quality number */
     public static final int ICON_TO_TEXT_SPACING = 3;
 
-    /** Outer padding around tooltip content */
+    /** Outer padding around tooltip content (top, left, right) */
     public static final int OUTER_PADDING = 10;
+
+    /** Outer padding for bottom of tooltip content */
+    public static final int OUTER_PADDING_BOTTOM = 7;
 
     /** GLPanel background margin beyond tooltip content */
     public static final int GLPANEL_MARGIN = 2;

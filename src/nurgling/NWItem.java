@@ -28,6 +28,10 @@ public class NWItem extends WItem
         return Math.max(0, UI.scale(TooltipStyle.OUTER_PADDING) - UI.scale(TooltipStyle.GLPANEL_MARGIN));
     }
 
+    private static int getTooltipPaddingBottom() {
+        return Math.max(0, UI.scale(TooltipStyle.OUTER_PADDING_BOTTOM) - UI.scale(TooltipStyle.GLPANEL_MARGIN));
+    }
+
     /**
      * Custom tooltip class that wraps the image with padding
      */
@@ -50,8 +54,9 @@ public class NWItem extends WItem
 
         private BufferedImage addPadding(BufferedImage img) {
             int padding = getTooltipPadding();
+            int paddingBottom = getTooltipPaddingBottom();
             int newWidth = img.getWidth() + padding * 2;
-            int newHeight = img.getHeight() + padding * 2;
+            int newHeight = img.getHeight() + padding + paddingBottom;
             BufferedImage result = TexI.mkbuf(new Coord(newWidth, newHeight));
             Graphics g = result.getGraphics();
             g.drawImage(img, padding, padding, null);
