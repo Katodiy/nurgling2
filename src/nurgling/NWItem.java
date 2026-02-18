@@ -6,11 +6,76 @@ import nurgling.iteminfo.NSearchable;
 import nurgling.tools.NSearchItem;
 import org.json.*;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.List;
+
 public class NWItem extends WItem
 {
+    private static final int TOOLTIP_PADDING_TOP = 8;
+    private static final int TOOLTIP_PADDING_SIDES = 10;
+
     public NWItem(GItem item)
     {
         super(item);
+    }
+
+    /**
+     * Custom tooltip class that wraps the image with padding
+     */
+    public class PaddedTip implements Indir<Tex>, ItemInfo.InfoTip {
+        private final List<ItemInfo> info;
+        private final TexI tex;
+
+        public PaddedTip(List<ItemInfo> info, BufferedImage img) {
+            this.info = info;
+            if (img == null)
+                throw new Loading();
+            // Add padding around the tooltip
+            BufferedImage padded = addPadding(img);
+            tex = new TexI(padded);
+        }
+
+        public GItem item() { return item; }
+        public List<ItemInfo> info() { return info; }
+        public Tex get() { return tex; }
+
+        private BufferedImage addPadding(BufferedImage img) {
+            int newWidth = img.getWidth() + TOOLTIP_PADDING_SIDES * 2;
+            int newHeight = img.getHeight() + TOOLTIP_PADDING_TOP + TOOLTIP_PADDING_SIDES;
+            BufferedImage result = TexI.mkbuf(new Coord(newWidth, newHeight));
+            Graphics g = result.getGraphics();
+            g.drawImage(img, TOOLTIP_PADDING_SIDES, TOOLTIP_PADDING_TOP, null);
+            g.dispose();
+            return result;
+        }
+    }
+
+    private PaddedTip nlongtip = null;
+    private List<ItemInfo> nttinfo = null;
+    private boolean nlastModshift = false;
+
+    @Override
+    public Object tooltip(Coord c, Widget prev) {
+        List<ItemInfo> info = item.info();
+        if (info.size() < 1)
+            return null;
+        // Reset tooltip cache if Shift state changed
+        if (ui.modshift != nlastModshift) {
+            nlongtip = null;
+            nlastModshift = ui.modshift;
+        }
+        if (info != nttinfo) {
+            nlongtip = null;
+            nttinfo = info;
+        }
+        if (nlongtip == null || ((NGItem) item).needlongtip()) {
+            BufferedImage img = NTooltip.build(info);
+            if (img != null) {
+                nlongtip = new PaddedTip(info, img);
+            }
+        }
+        return nlongtip;
     }
 
     @Override

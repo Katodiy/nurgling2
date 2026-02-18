@@ -1,0 +1,259 @@
+package nurgling;
+
+import haven.*;
+import haven.res.ui.tt.q.qbuff.QBuff;
+import nurgling.conf.FontSettings;
+import nurgling.iteminfo.NCuriosity;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Custom tooltip builder for all items.
+ * Renders name + quality icon + quality number on one line using Open Sans fonts.
+ */
+public class NTooltip {
+    // Font sizes
+    private static final int NAME_FONT_SIZE = 12;
+    private static final int RESOURCE_FONT_SIZE = 9;
+
+    // Cached foundries
+    private static Text.Foundry nameFoundry = null;
+    private static Text.Foundry qualityFoundry = null;
+    private static Text.Foundry resourceFoundry = null;
+
+    private static Font getOpenSansRegular() {
+        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
+        return fontSettings != null ? fontSettings.getFont("Open Sans") : null;
+    }
+
+    private static Font getOpenSansSemibold() {
+        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
+        return fontSettings != null ? fontSettings.getFont("Open Sans Semibold") : null;
+    }
+
+    private static Text.Foundry getNameFoundry() {
+        if (nameFoundry == null) {
+            Font font = getOpenSansSemibold();
+            int size = UI.scale(NAME_FONT_SIZE);
+            if (font == null) {
+                font = new Font("SansSerif", Font.BOLD, size);
+            } else {
+                font = font.deriveFont(Font.PLAIN, (float) size);
+            }
+            nameFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
+        }
+        return nameFoundry;
+    }
+
+    private static Text.Foundry getQualityFoundry() {
+        if (qualityFoundry == null) {
+            Font font = getOpenSansSemibold();
+            int size = UI.scale(NAME_FONT_SIZE);
+            if (font == null) {
+                font = new Font("SansSerif", Font.BOLD, size);
+            } else {
+                font = font.deriveFont(Font.PLAIN, (float) size);
+            }
+            qualityFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
+        }
+        return qualityFoundry;
+    }
+
+    private static Text.Foundry getResourceFoundry() {
+        if (resourceFoundry == null) {
+            Font font = getOpenSansRegular();
+            int size = UI.scale(RESOURCE_FONT_SIZE);
+            if (font == null) {
+                font = new Font("SansSerif", Font.PLAIN, size);
+            } else {
+                font = font.deriveFont(Font.PLAIN, (float) size);
+            }
+            resourceFoundry = new Text.Foundry(font, new Color(128, 128, 128)).aa(true);
+        }
+        return resourceFoundry;
+    }
+
+    /**
+     * Build a custom tooltip for an item.
+     * Renders name + quality on one line, then other info, then resource path.
+     */
+    public static BufferedImage build(List<ItemInfo> info) {
+        if (info == null || info.isEmpty()) {
+            return null;
+        }
+
+        ItemInfo.Owner owner = info.get(0).owner;
+        List<BufferedImage> lines = new ArrayList<>();
+
+        // Find Name, QBuff, and NCuriosity info
+        String nameText = null;
+        QBuff qbuff = null;
+        NCuriosity curiosity = null;
+
+        for (ItemInfo ii : info) {
+            if (ii instanceof ItemInfo.Name) {
+                nameText = ((ItemInfo.Name) ii).str.text;
+            }
+            if (ii instanceof QBuff) {
+                qbuff = (QBuff) ii;
+            }
+            if (ii instanceof NCuriosity) {
+                curiosity = (NCuriosity) ii;
+            }
+        }
+
+        // If no name found, try default
+        if (nameText == null) {
+            try {
+                nameText = ItemInfo.Name.Default.get(owner);
+            } catch (Exception ignored) {}
+        }
+
+        // Get remaining time for curios
+        String remainingTime = null;
+        if (curiosity != null && NCuriosity.isCompactMode()) {
+            remainingTime = curiosity.getCompactRemainingTime();
+        }
+
+        // Render name line with quality and optional remaining time
+        if (nameText != null) {
+            BufferedImage nameLine = renderNameLine(nameText, qbuff, remainingTime);
+            if (nameLine != null) {
+                lines.add(nameLine);
+            }
+        }
+
+        // Render other tips (excluding Name and QBuff which we've handled)
+        BufferedImage otherTips = renderOtherTips(info);
+        if (otherTips != null) {
+            lines.add(otherTips);
+        }
+
+        // Render resource line
+        if (owner instanceof GItem) {
+            String resPath = ((GItem) owner).res.get().name;
+            BufferedImage resLine = getResourceFoundry().render(resPath, new Color(128, 128, 128)).img;
+            lines.add(resLine);
+        }
+
+        if (lines.isEmpty()) {
+            return null;
+        }
+
+        // Combine with 2px spacing (+ 5px descent = 7px visual gap)
+        return ItemInfo.catimgs(2, lines.toArray(new BufferedImage[0]));
+    }
+
+    /**
+     * Render the name line: Name + Quality Icon + Quality Value + Optional Remaining Time
+     */
+    private static BufferedImage renderNameLine(String nameText, QBuff qbuff, String remainingTime) {
+        BufferedImage nameImg = getNameFoundry().render(nameText, Color.WHITE).img;
+
+        int totalWidth = nameImg.getWidth();
+        int maxHeight = nameImg.getHeight();
+
+        // Quality icon and value
+        BufferedImage qIcon = null;
+        BufferedImage qImg = null;
+        if (qbuff != null && qbuff.q > 0) {
+            totalWidth += 7; // spacing
+            qIcon = qbuff.icon;
+            if (qIcon != null) {
+                totalWidth += qIcon.getWidth() + 3;
+                maxHeight = Math.max(maxHeight, qIcon.getHeight());
+            }
+            qImg = getQualityFoundry().render(String.valueOf((int) qbuff.q), new Color(0, 255, 255)).img;
+            totalWidth += qImg.getWidth();
+            maxHeight = Math.max(maxHeight, qImg.getHeight());
+        }
+
+        // Remaining time for curios
+        BufferedImage timeImg = null;
+        if (remainingTime != null && !remainingTime.isEmpty()) {
+            totalWidth += 7; // spacing
+            timeImg = getNameFoundry().render("(" + remainingTime + ")", new Color(128, 128, 128)).img;
+            totalWidth += timeImg.getWidth();
+            maxHeight = Math.max(maxHeight, timeImg.getHeight());
+        }
+
+        // Compose the line
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+        Graphics g = result.getGraphics();
+        int x = 0;
+
+        // Draw name
+        g.drawImage(nameImg, x, (maxHeight - nameImg.getHeight()) / 2, null);
+        x += nameImg.getWidth();
+
+        // Draw quality icon and value
+        if (qbuff != null && qbuff.q > 0) {
+            x += 7;
+            if (qIcon != null) {
+                g.drawImage(qIcon, x, (maxHeight - qIcon.getHeight()) / 2, null);
+                x += qIcon.getWidth() + 3;
+            }
+            if (qImg != null) {
+                g.drawImage(qImg, x, (maxHeight - qImg.getHeight()) / 2, null);
+                x += qImg.getWidth();
+            }
+        }
+
+        // Draw remaining time
+        if (timeImg != null) {
+            x += 7;
+            g.drawImage(timeImg, x, (maxHeight - timeImg.getHeight()) / 2, null);
+        }
+
+        g.dispose();
+        return result;
+    }
+
+    /**
+     * Render other tips (excluding Name and QBuff.Table)
+     */
+    private static BufferedImage renderOtherTips(List<ItemInfo> info) {
+        if (info.isEmpty()) {
+            return null;
+        }
+
+        // Create a layout and add tips, excluding Name and QBuff.Table
+        ItemInfo.Layout l = new ItemInfo.Layout(info.get(0).owner);
+        boolean hasTips = false;
+
+        for (ItemInfo ii : info) {
+            if (ii instanceof ItemInfo.Tip) {
+                ItemInfo.Tip tip = (ItemInfo.Tip) ii;
+                // Skip Name - we render it ourselves
+                if (tip instanceof ItemInfo.Name) {
+                    continue;
+                }
+                // Skip QBuff and QBuff.Table - we render quality in name line
+                if (tip instanceof QBuff || tip.getClass().getName().contains("QBuff")) {
+                    continue;
+                }
+                l.add(tip);
+                hasTips = true;
+            }
+        }
+
+        if (!hasTips) {
+            return null;
+        }
+
+        try {
+            BufferedImage rendered = l.render();
+            // Check if the rendered image has valid dimensions
+            if (rendered == null || rendered.getWidth() <= 0 || rendered.getHeight() <= 0) {
+                return null;
+            }
+            return rendered;
+        } catch (Exception e) {
+            // Layout had no visible content
+            return null;
+        }
+    }
+}

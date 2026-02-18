@@ -376,17 +376,7 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 		@Override
 		public BufferedImage tipimg() {
 			String resPath = ((GItem) info.get(0).owner).res.toString();
-			BufferedImage text = RichText.render(String.format("$col[128,128,128]{$size[9]{%s}}", resPath), 0).img;
-			// Add 10px padding: left, right, bottom (top handled by previous tip)
-			int padding = 10;
-			BufferedImage result = TexI.mkbuf(new Coord(
-				text.getWidth() + padding * 2,
-				text.getHeight() + padding
-			));
-			java.awt.Graphics g = result.getGraphics();
-			g.drawImage(text, padding, 0, null);
-			g.dispose();
-			return result;
+			return RichText.render(String.format("$col[128,128,128]{$size[9]{%s}}", resPath), 0).img;
 		}
 		@Override
 		public int order() { return 10000; } // Render at the bottom

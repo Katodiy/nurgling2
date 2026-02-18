@@ -1,7 +1,6 @@
 package nurgling.iteminfo;
 
 import haven.*;
-import haven.res.ui.tt.q.qbuff.QBuff;
 import haven.resutil.Curiosity;
 import nurgling.NConfig;
 import nurgling.NGItem;
@@ -10,8 +9,6 @@ import nurgling.conf.ItemQualityOverlaySettings;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.Field;
-import java.util.List;
 
 import static nurgling.NConfig.Key.is_real_time;
 
@@ -34,18 +31,11 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
 
     NGItem.MeterInfo m = null;
 
-    // Cached info for compact tooltip rendering
-    private ItemInfo.Name cachedName = null;
-    private QBuff cachedQBuff = null;
-
     // Font foundries for compact tooltip (Open Sans)
-    private static final int HEADER_FONT_SIZE = 12;  // Name + quality line
     private static final int BODY_FONT_SIZE = 11;    // LP, Study time, Mental weight lines
 
     private static Text.Foundry keyFoundry = null;        // Open Sans Regular for keys (11px)
     private static Text.Foundry valueFoundry = null;      // Open Sans Semibold for values (11px)
-    private static Text.Foundry headerFoundry = null;     // Open Sans Semibold for header values (12px)
-    private static Text.Foundry headerRegularFoundry = null; // Open Sans Regular for header (12px)
 
     private static Font getOpenSansRegular() {
         FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
@@ -86,33 +76,6 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         return valueFoundry;
     }
 
-    private static Text.Foundry getHeaderFoundry() {
-        if (headerFoundry == null) {
-            Font font = getOpenSansSemibold();
-            int size = UI.scale(HEADER_FONT_SIZE);
-            if (font == null) {
-                font = new Font("SansSerif", Font.BOLD, size);
-            } else {
-                font = font.deriveFont(Font.PLAIN, (float) size);
-            }
-            headerFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
-        }
-        return headerFoundry;
-    }
-
-    private static Text.Foundry getHeaderRegularFoundry() {
-        if (headerRegularFoundry == null) {
-            Font font = getOpenSansRegular();
-            int size = UI.scale(HEADER_FONT_SIZE);
-            if (font == null) {
-                font = new Font("SansSerif", Font.PLAIN, size);
-            } else {
-                font = font.deriveFont(Font.PLAIN, (float) size);
-            }
-            headerRegularFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
-        }
-        return headerRegularFoundry;
-    }
 
     public NCuriosity(Owner owner, int exp, int mw, int enc, int time) {
         super(owner, exp, mw, enc, time);
@@ -164,57 +127,11 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     @Override
     public void prepare(ItemInfo.Layout l) {
         super.prepare(l);
-
-        // Cache QBuff info (needed for rendering regardless of when we remove it)
-        if (isCompactMode() && owner instanceof GItem) {
-            GItem item = (GItem) owner;
-            cachedQBuff = ItemInfo.find(QBuff.class, item.info());
-        }
     }
 
     @Override
     public void layout(ItemInfo.Layout l) {
-        if (!isCompactMode()) {
-            super.layout(l);
-            return;
-        }
-
-        // In compact mode, we render first (order -1)
-        // Replace Name and QBuff tips with no-op tips so they don't render separately
-        // Using set() instead of remove() avoids ConcurrentModificationException
-
-        try {
-            // Use reflection to access the private tips list
-            Field tipsField = ItemInfo.Layout.class.getDeclaredField("tips");
-            tipsField.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            List<ItemInfo.Tip> tips = (List<ItemInfo.Tip>) tipsField.get(l);
-
-            // Create a no-op tip to replace suppressed tips
-            ItemInfo.Tip noOpTip = new ItemInfo.Tip(owner) {
-                @Override
-                public BufferedImage tipimg() { return null; }
-            };
-
-            // Find and replace Name tips, cache the first one
-            for (int i = 0; i < tips.size(); i++) {
-                ItemInfo.Tip tip = tips.get(i);
-                if (tip instanceof ItemInfo.Name) {
-                    if (cachedName == null) {
-                        cachedName = (ItemInfo.Name) tip;
-                    }
-                    tips.set(i, noOpTip);
-                } else if (tip.getClass().getName().contains("QBuff$Table")) {
-                    // Replace QBuff.Table with no-op
-                    tips.set(i, noOpTip);
-                }
-            }
-
-        } catch (Exception e) {
-            // Reflection failed, Name and QBuff may render separately
-        }
-
-        // Now render our compact tooltip
+        // NTooltip handles Name and QBuff rendering, we just render curio stats
         super.layout(l);
     }
 
@@ -255,16 +172,12 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         // Calculate remaining time for display
         rm = (int)(remaining()/server_ratio);
 
-        // First, build the name line with icon (requires image composition)
-        BufferedImage nameLine = renderNameLine();
+        // Name line is now rendered by NTooltip for all items
+        // We only render the curio-specific stats here
 
         java.util.List<BufferedImage> lines = new java.util.ArrayList<>();
 
-        if (nameLine != null) {
-            lines.add(nameLine);
-        }
-
-        // Line 2: LP + LP/H + optionally LP/H/W
+        // Line 1: LP + LP/H + optionally LP/H/W
         // Colors: LP=purple (192,192,255), LP/H=cyan (192,255,255)
         if (exp > 0) {
             java.util.List<BufferedImage> parts = new java.util.ArrayList<>();
@@ -310,17 +223,8 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         // Combine all lines with 2px spacing (+ 5px descent = 7px visual gap)
         BufferedImage combined = ItemInfo.catimgs(2, lines.toArray(new BufferedImage[0]));
 
-        // Add 10px padding: top, left, right + 2px bottom gap before resource line (+ 5px descent = 7px visual)
-        int padding = 10;
-        int bottomGap = 2;
-        BufferedImage result = TexI.mkbuf(new Coord(
-            combined.getWidth() + padding * 2,
-            combined.getHeight() + padding + bottomGap
-        ));
-        Graphics g = result.getGraphics();
-        g.drawImage(combined, padding, padding, null);
-        g.dispose();
-        return result;
+        // Return combined image - padding is handled by NWItem.PaddedTip for all tooltips
+        return combined;
     }
 
     /** Render a key label (Open Sans Regular, white) */
@@ -365,89 +269,6 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         return result;
     }
 
-    /**
-     * Render the name line: Name + Quality Icon + Quality Value + Remaining Time
-     * Uses the same font as other item names (from cached Name tip)
-     */
-    private BufferedImage renderNameLine() {
-        // Get name image - prefer the cached one which has the correct font
-        BufferedImage nameImg = null;
-        if (cachedName != null && cachedName.str != null) {
-            // Use the pre-rendered name image which matches other item names
-            nameImg = cachedName.str.img;
-        } else if (owner instanceof GItem) {
-            // Fallback: render with standard foundry
-            try {
-                String nameText = ItemInfo.Name.Default.get((ItemInfo.Owner) owner);
-                if (nameText != null) {
-                    nameImg = Text.std.render(nameText).img;
-                }
-            } catch (Exception ignored) {}
-        }
-
-        if (nameImg == null) {
-            return null;
-        }
-
-        int totalWidth = nameImg.getWidth();
-        int maxHeight = nameImg.getHeight();
-
-        // Quality icon and value (12px Open Sans Semibold, cyan)
-        BufferedImage qIcon = null;
-        BufferedImage qImg = null;
-        if (cachedQBuff != null && cachedQBuff.q > 0) {
-            totalWidth += 5; // spacing
-            qIcon = cachedQBuff.icon;
-            if (qIcon != null) {
-                totalWidth += qIcon.getWidth() + 3;
-                maxHeight = Math.max(maxHeight, qIcon.getHeight());
-            }
-            qImg = getHeaderFoundry().render(String.valueOf((int) cachedQBuff.q), new Color(0, 255, 255)).img;
-            totalWidth += qImg.getWidth();
-            maxHeight = Math.max(maxHeight, qImg.getHeight());
-        }
-
-        // Remaining time (12px Open Sans Regular, gray)
-        BufferedImage timeImg = null;
-        String remainingTime = getCompactRemainingTime();
-        if (remainingTime != null && !remainingTime.isEmpty()) {
-            totalWidth += 7; // spacing
-            timeImg = getHeaderRegularFoundry().render("(" + remainingTime + ")", new Color(128, 128, 128)).img;
-            totalWidth += timeImg.getWidth();
-            maxHeight = Math.max(maxHeight, timeImg.getHeight());
-        }
-
-        // Compose the line
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
-        Graphics g = result.getGraphics();
-        int x = 0;
-
-        // Draw name
-        g.drawImage(nameImg, x, (maxHeight - nameImg.getHeight()) / 2, null);
-        x += nameImg.getWidth();
-
-        // Draw quality icon and value
-        if (cachedQBuff != null && cachedQBuff.q > 0) {
-            x += 5;
-            if (qIcon != null) {
-                g.drawImage(qIcon, x, (maxHeight - qIcon.getHeight()) / 2, null);
-                x += qIcon.getWidth() + 3;
-            }
-            if (qImg != null) {
-                g.drawImage(qImg, x, (maxHeight - qImg.getHeight()) / 2, null);
-                x += qImg.getWidth();
-            }
-        }
-
-        // Draw remaining time
-        if (timeImg != null) {
-            x += 7;
-            g.drawImage(timeImg, x, (maxHeight - timeImg.getHeight()) / 2, null);
-        }
-
-        g.dispose();
-        return result;
-    }
 
     /**
      * Get remaining time formatted for display on name line (in real time)
