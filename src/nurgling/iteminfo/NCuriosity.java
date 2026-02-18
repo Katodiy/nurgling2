@@ -196,10 +196,10 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         // Colors: LP=purple (192,192,255), LP/H=cyan (192,255,255)
         if (exp > 0) {
             java.util.List<BufferedImage> pairs = new java.util.ArrayList<>();
-            pairs.add(renderPair("LP:", Utils.thformat(exp), new Color(192, 192, 255)));
-            pairs.add(renderPair("LP/H:", String.valueOf(lph(this.lph)), new Color(192, 255, 255)));
+            pairs.add(renderPair("LP:", Utils.thformat(exp), new Color(210, 178, 255)));  // #D2B2FF
+            pairs.add(renderPair("LP/H:", String.valueOf(lph(this.lph)), new Color(0, 238, 255)));  // #00EEFF
             if (settings.showLphPerWeight && mw > 0 && lph > 0) {
-                pairs.add(renderPair("LP/H/W:", String.valueOf(lph(this.lph / mw)), new Color(192, 255, 255)));
+                pairs.add(renderPair("LP/H/W:", String.valueOf(lph(this.lph / mw)), new Color(0, 238, 255)));  // #00EEFF
             }
             lines.add(composePairs(pairs));
         }
@@ -209,7 +209,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         if (time > 0) {
             int realTime = (int)(time / server_ratio);
             // Single pair, no need for composePairs
-            lines.add(renderPair("Study time:", formatCompactStudyTime(realTime), new Color(192, 255, 192)));
+            lines.add(renderPair("Study time:", formatCompactStudyTime(realTime), new Color(153, 255, 132)));  // #99FF84
         }
 
         // Line 3: Mental weight + EXP cost
@@ -217,10 +217,10 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         if (mw > 0 || enc > 0) {
             java.util.List<BufferedImage> pairs = new java.util.ArrayList<>();
             if (mw > 0) {
-                pairs.add(renderPair("Mental weight:", String.valueOf(mw), new Color(255, 192, 255)));
+                pairs.add(renderPair("Mental weight:", String.valueOf(mw), new Color(255, 148, 232)));  // #FF94E8
             }
             if (enc > 0) {
-                pairs.add(renderPair("EXP cost:", String.valueOf(enc), new Color(255, 255, 192)));
+                pairs.add(renderPair("EXP cost:", String.valueOf(enc), new Color(255, 255, 130)));  // #FFFF82
             }
             lines.add(composePairs(pairs));
         }

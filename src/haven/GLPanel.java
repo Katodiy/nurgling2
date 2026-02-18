@@ -203,7 +203,7 @@ public interface GLPanel extends UIPanel, UI.Context {
 		Coord m = UI.scale(2, 2);
 		g.chcolor(244, 247, 21, 192);
 		g.rect2(pos.sub(m).sub(1, 1), br.add(m).add(1, 1));
-		g.chcolor(35, 35, 35, 192);
+		g.chcolor(37, 43, 41, 230);  // #252B29 at 90% opacity
 		g.frect2(pos.sub(m), br.add(m));
 		g.chcolor();
 		g.image(tex, pos);
