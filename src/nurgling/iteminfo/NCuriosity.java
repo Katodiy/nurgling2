@@ -6,6 +6,7 @@ import nurgling.NConfig;
 import nurgling.NGItem;
 import nurgling.conf.FontSettings;
 import nurgling.conf.ItemQualityOverlaySettings;
+import nurgling.styles.TooltipStyle;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -23,16 +24,12 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     private static final long SETTINGS_CHECK_INTERVAL = 200;
     private static long settingsVersion = 0;
     private static boolean forceRefresh = false;
-    
+
     private Tex cachedOverlay = null;
     private long lastSettingsVersion = -1;
     private int lastRemaining = -1;
 
     NGItem.MeterInfo m = null;
-
-    // Font foundries for compact tooltip (Open Sans)
-    private static final int BODY_FONT_SIZE = 11;    // LP, Study time, Mental weight lines
-    private static final int INTERNAL_SPACING = 7;   // Spacing between lines (in logical pixels, will be scaled)
 
     private static Text.Foundry keyFoundry = null;        // Open Sans Regular for keys (11px)
     private static Text.Foundry valueFoundry = null;      // Open Sans Semibold for values (11px)
@@ -51,7 +48,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     private static Text.Foundry getKeyFoundry() {
         if (keyFoundry == null) {
             Font font = getOpenSansRegular();
-            int size = UI.scale(BODY_FONT_SIZE);
+            int size = UI.scale(TooltipStyle.FONT_SIZE_BODY);
             if (font == null) {
                 font = new Font("SansSerif", Font.PLAIN, size);
             } else {
@@ -65,7 +62,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     private static Text.Foundry getValueFoundry() {
         if (valueFoundry == null) {
             Font font = getOpenSansSemibold();
-            int size = UI.scale(BODY_FONT_SIZE);
+            int size = UI.scale(TooltipStyle.FONT_SIZE_BODY);
             if (font == null) {
                 font = new Font("SansSerif", Font.BOLD, size);
             } else {
@@ -79,7 +76,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     /** Get the font descent for the body font (used for baseline-relative spacing) */
     private static int getBodyFontDescent() {
         Font font = getOpenSansRegular();
-        int size = UI.scale(BODY_FONT_SIZE);
+        int size = UI.scale(TooltipStyle.FONT_SIZE_BODY);
         if (font == null) {
             font = new Font("SansSerif", Font.PLAIN, size);
         } else {
@@ -163,34 +160,30 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         java.util.List<BufferedImage> lines = new java.util.ArrayList<>();
 
         // Line 1: LP + LP/H + optionally LP/H/W
-        // Colors: LP=purple (192,192,255), LP/H=cyan (192,255,255)
         if (exp > 0) {
             java.util.List<BufferedImage> pairs = new java.util.ArrayList<>();
-            pairs.add(renderPair("LP:", Utils.thformat(exp), new Color(210, 178, 255)));  // #D2B2FF
-            pairs.add(renderPair("LP/H:", String.valueOf(lph(this.lph)), new Color(0, 238, 255)));  // #00EEFF
+            pairs.add(renderPair("LP:", Utils.thformat(exp), TooltipStyle.COLOR_LP));
+            pairs.add(renderPair("LP/H:", String.valueOf(lph(this.lph)), TooltipStyle.COLOR_LPH));
             if (mw > 0 && lph > 0) {
-                pairs.add(renderPair("LP/H/W:", String.valueOf(lph(this.lph / mw)), new Color(0, 238, 255)));  // #00EEFF
+                pairs.add(renderPair("LP/H/W:", String.valueOf(lph(this.lph / mw)), TooltipStyle.COLOR_LPH));
             }
             lines.add(composePairs(pairs));
         }
 
         // Line 2: Study time (real time)
-        // Color: green (192,255,192)
         if (time > 0) {
             int realTime = (int)(time / server_ratio);
-            // Single pair, no need for composePairs
-            lines.add(renderPair("Study time:", formatCompactStudyTime(realTime), new Color(153, 255, 132)));  // #99FF84
+            lines.add(renderPair("Study time:", formatCompactStudyTime(realTime), TooltipStyle.COLOR_STUDY_TIME));
         }
 
         // Line 3: Mental weight + EXP cost
-        // Colors: Mental weight=pink (255,192,255), EXP cost=yellow (255,255,192)
         if (mw > 0 || enc > 0) {
             java.util.List<BufferedImage> pairs = new java.util.ArrayList<>();
             if (mw > 0) {
-                pairs.add(renderPair("Mental weight:", String.valueOf(mw), new Color(255, 148, 232)));  // #FF94E8
+                pairs.add(renderPair("Mental weight:", String.valueOf(mw), TooltipStyle.COLOR_MENTAL_WEIGHT));
             }
             if (enc > 0) {
-                pairs.add(renderPair("EXP cost:", String.valueOf(enc), new Color(255, 255, 130)));  // #FFFF82
+                pairs.add(renderPair("EXP cost:", String.valueOf(enc), TooltipStyle.COLOR_EXP_COST));
             }
             lines.add(composePairs(pairs));
         }
@@ -204,7 +197,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         // Get font descent for baseline-relative spacing
         // Spacing = desired_baseline_to_top - descent (since bottom of image is at baseline + descent)
         int descent = getBodyFontDescent();
-        int baselineSpacing = UI.scale(INTERNAL_SPACING) - descent; // 7px scaled from baseline to next line's top
+        int baselineSpacing = UI.scale(TooltipStyle.INTERNAL_SPACING) - descent;
 
         // Combine all lines with baseline-relative spacing
         // Return combined image - padding is handled by NWItem.PaddedTip for all tooltips

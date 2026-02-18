@@ -3,6 +3,7 @@ package nurgling;
 import haven.*;
 import haven.res.lib.itemtex.*;
 import nurgling.iteminfo.NSearchable;
+import nurgling.styles.TooltipStyle;
 import nurgling.tools.NSearchItem;
 import org.json.*;
 
@@ -12,11 +13,6 @@ import java.util.List;
 
 public class NWItem extends WItem
 {
-    // Target padding from background edge to content (in logical pixels, will be scaled)
-    private static final int TARGET_PADDING = 10;
-    // GLPanel.drawtooltip adds this margin around the background (in logical pixels)
-    private static final int GLPANEL_MARGIN = 2;
-
     public NWItem(GItem item)
     {
         super(item);
@@ -24,12 +20,12 @@ public class NWItem extends WItem
 
     /**
      * Calculate actual padding needed.
-     * GLPanel.drawtooltip adds UI.scale(GLPANEL_MARGIN) background margin around the image,
+     * GLPanel.drawtooltip adds GLPANEL_MARGIN background margin around the image,
      * so we subtract that to achieve the target total padding.
      * Both values are scaled to maintain proper proportions at any UI scale.
      */
     private static int getTooltipPadding() {
-        return Math.max(0, UI.scale(TARGET_PADDING) - UI.scale(GLPANEL_MARGIN));
+        return Math.max(0, UI.scale(TooltipStyle.OUTER_PADDING) - UI.scale(TooltipStyle.GLPANEL_MARGIN));
     }
 
     /**

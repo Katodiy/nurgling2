@@ -4,6 +4,7 @@ import haven.*;
 import haven.res.ui.tt.q.qbuff.QBuff;
 import nurgling.conf.FontSettings;
 import nurgling.iteminfo.NCuriosity;
+import nurgling.styles.TooltipStyle;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -15,16 +16,6 @@ import java.util.List;
  * Renders name + quality icon + quality number on one line using Open Sans fonts.
  */
 public class NTooltip {
-    // Font sizes
-    private static final int NAME_FONT_SIZE = 12;
-    private static final int RESOURCE_FONT_SIZE = 9;
-
-    // Spacing constants (matching Figma design, in logical pixels - will be scaled)
-    // Note: Outer padding (10px) is handled by NWItem.PaddedTip
-    private static final int SECTION_SPACING = 10;      // Between Name, LP Info group, Resource
-    private static final int INTERNAL_SPACING = 7;      // Within LP Info group (LP, Study time, Mental weight)
-    private static final int HORIZONTAL_SPACING = 7;    // Between elements on the name line
-    private static final int ICON_TO_TEXT_SPACING = 3;  // Between quality icon and quality number
 
     // Cached foundries
     private static Text.Foundry nameFoundry = null;
@@ -44,7 +35,7 @@ public class NTooltip {
     private static Text.Foundry getNameFoundry() {
         if (nameFoundry == null) {
             Font font = getOpenSansSemibold();
-            int size = UI.scale(NAME_FONT_SIZE);
+            int size = UI.scale(TooltipStyle.FONT_SIZE_NAME);
             if (font == null) {
                 font = new Font("SansSerif", Font.BOLD, size);
             } else {
@@ -58,7 +49,7 @@ public class NTooltip {
     private static Text.Foundry getQualityFoundry() {
         if (qualityFoundry == null) {
             Font font = getOpenSansSemibold();
-            int size = UI.scale(NAME_FONT_SIZE);
+            int size = UI.scale(TooltipStyle.FONT_SIZE_NAME);
             if (font == null) {
                 font = new Font("SansSerif", Font.BOLD, size);
             } else {
@@ -72,13 +63,13 @@ public class NTooltip {
     private static Text.Foundry getResourceFoundry() {
         if (resourceFoundry == null) {
             Font font = getOpenSansRegular();
-            int size = UI.scale(RESOURCE_FONT_SIZE);
+            int size = UI.scale(TooltipStyle.FONT_SIZE_RESOURCE);
             if (font == null) {
                 font = new Font("SansSerif", Font.PLAIN, size);
             } else {
                 font = font.deriveFont(Font.PLAIN, (float) size);
             }
-            resourceFoundry = new Text.Foundry(font, new Color(128, 128, 128)).aa(true);
+            resourceFoundry = new Text.Foundry(font, TooltipStyle.COLOR_RESOURCE_PATH).aa(true);
         }
         return resourceFoundry;
     }
@@ -138,14 +129,14 @@ public class NTooltip {
         BufferedImage resLine = null;
         if (owner instanceof GItem) {
             String resPath = ((GItem) owner).res.get().name;
-            resLine = cropTopOnly(getResourceFoundry().render(resPath, new Color(128, 128, 128)).img);
+            resLine = cropTopOnly(getResourceFoundry().render(resPath, TooltipStyle.COLOR_RESOURCE_PATH).img);
         }
 
         // Calculate baseline-relative spacing (all spacing values are scaled)
         // Spacing = desired_baseline_to_top - descent_of_line_above
-        int nameDescentVal = getFontDescent(NAME_FONT_SIZE);  // 12px font for name line
-        int bodyDescentVal = getFontDescent(11);              // 11px font for curio stats (from NCuriosity)
-        int scaledSectionSpacing = UI.scale(SECTION_SPACING);
+        int nameDescentVal = getFontDescent(TooltipStyle.FONT_SIZE_NAME);
+        int bodyDescentVal = getFontDescent(TooltipStyle.FONT_SIZE_BODY);
+        int scaledSectionSpacing = UI.scale(TooltipStyle.SECTION_SPACING);
 
         // Combine sections with SECTION_SPACING (10px scaled) between main groups:
         // Group structure: Name | LP Info group | Resource
@@ -235,8 +226,8 @@ public class NTooltip {
      */
     private static BufferedImage renderNameLine(String nameText, QBuff qbuff, String remainingTime) {
         BufferedImage nameImg = getNameFoundry().render(nameText, Color.WHITE).img;
-        int hSpacing = UI.scale(HORIZONTAL_SPACING);
-        int iconToTextSpacing = UI.scale(ICON_TO_TEXT_SPACING);
+        int hSpacing = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
+        int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
 
         int totalWidth = nameImg.getWidth();
         int maxHeight = nameImg.getHeight();
@@ -260,7 +251,7 @@ public class NTooltip {
         BufferedImage timeImg = null;
         if (remainingTime != null && !remainingTime.isEmpty()) {
             totalWidth += hSpacing;
-            timeImg = getNameFoundry().render("(" + remainingTime + ")", new Color(128, 128, 128)).img;
+            timeImg = getNameFoundry().render("(" + remainingTime + ")", TooltipStyle.COLOR_RESOURCE_PATH).img;
             totalWidth += timeImg.getWidth();
             maxHeight = Math.max(maxHeight, timeImg.getHeight());
         }
