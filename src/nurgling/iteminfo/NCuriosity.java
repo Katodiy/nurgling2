@@ -76,6 +76,20 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         return valueFoundry;
     }
 
+    /** Get the font descent for the body font (used for baseline-relative spacing) */
+    private static int getBodyFontDescent() {
+        Font font = getOpenSansRegular();
+        int size = UI.scale(BODY_FONT_SIZE);
+        if (font == null) {
+            font = new Font("SansSerif", Font.PLAIN, size);
+        } else {
+            font = font.deriveFont(Font.PLAIN, (float) size);
+        }
+        java.awt.image.BufferedImage tmp = new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.awt.FontMetrics fm = tmp.getGraphics().getFontMetrics(font);
+        return fm.getDescent();
+    }
+
 
     public NCuriosity(Owner owner, int exp, int mw, int enc, int time) {
         super(owner, exp, mw, enc, time);
@@ -180,48 +194,49 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         // Line 1: LP + LP/H + optionally LP/H/W
         // Colors: LP=purple (192,192,255), LP/H=cyan (192,255,255)
         if (exp > 0) {
-            java.util.List<BufferedImage> parts = new java.util.ArrayList<>();
-            parts.add(renderKey("LP:"));
-            parts.add(renderValue(Utils.thformat(exp), new Color(192, 192, 255)));
-            parts.add(renderSpacer(8));
-            parts.add(renderKey("LP/H:"));
-            parts.add(renderValue(String.valueOf(lph(this.lph)), new Color(192, 255, 255)));
+            java.util.List<BufferedImage> pairs = new java.util.ArrayList<>();
+            pairs.add(renderPair("LP:", Utils.thformat(exp), new Color(192, 192, 255)));
+            pairs.add(renderPair("LP/H:", String.valueOf(lph(this.lph)), new Color(192, 255, 255)));
             if (settings.showLphPerWeight && mw > 0 && lph > 0) {
-                parts.add(renderSpacer(8));
-                parts.add(renderKey("LP/H/W:"));
-                parts.add(renderValue(String.valueOf(lph(this.lph / mw)), new Color(192, 255, 255)));
+                pairs.add(renderPair("LP/H/W:", String.valueOf(lph(this.lph / mw)), new Color(192, 255, 255)));
             }
-            lines.add(composeHorizontal(parts));
+            lines.add(composePairs(pairs));
         }
 
-        // Line 3: Study time (real time)
+        // Line 2: Study time (real time)
         // Color: green (192,255,192)
         if (time > 0) {
             int realTime = (int)(time / server_ratio);
-            java.util.List<BufferedImage> parts = new java.util.ArrayList<>();
-            parts.add(renderKey("Study time:"));
-            parts.add(renderValue(formatCompactStudyTime(realTime), new Color(192, 255, 192)));
-            lines.add(composeHorizontal(parts));
+            // Single pair, no need for composePairs
+            lines.add(renderPair("Study time:", formatCompactStudyTime(realTime), new Color(192, 255, 192)));
         }
 
-        // Line 4: Mental weight + EXP cost
+        // Line 3: Mental weight + EXP cost
         // Colors: Mental weight=pink (255,192,255), EXP cost=yellow (255,255,192)
         if (mw > 0 || enc > 0) {
-            java.util.List<BufferedImage> parts = new java.util.ArrayList<>();
+            java.util.List<BufferedImage> pairs = new java.util.ArrayList<>();
             if (mw > 0) {
-                parts.add(renderKey("Mental weight:"));
-                parts.add(renderValue(String.valueOf(mw), new Color(255, 192, 255)));
+                pairs.add(renderPair("Mental weight:", String.valueOf(mw), new Color(255, 192, 255)));
             }
             if (enc > 0) {
-                if (mw > 0) parts.add(renderSpacer(8));
-                parts.add(renderKey("EXP cost:"));
-                parts.add(renderValue(String.valueOf(enc), new Color(255, 255, 192)));
+                pairs.add(renderPair("EXP cost:", String.valueOf(enc), new Color(255, 255, 192)));
             }
-            lines.add(composeHorizontal(parts));
+            lines.add(composePairs(pairs));
         }
 
-        // Combine all lines with 2px spacing (+ 5px descent = 7px visual gap)
-        BufferedImage combined = ItemInfo.catimgs(2, lines.toArray(new BufferedImage[0]));
+        // Crop top only (keeps baseline-relative bottom position)
+        java.util.List<BufferedImage> croppedLines = new java.util.ArrayList<>();
+        for (BufferedImage line : lines) {
+            croppedLines.add(cropTopOnly(line));
+        }
+
+        // Get font descent for baseline-relative spacing
+        // Spacing = desired_baseline_to_top - descent (since bottom of image is at baseline + descent)
+        int descent = getBodyFontDescent();
+        int baselineSpacing = 7 - descent; // 7px from baseline to next line's top
+
+        // Combine all lines with baseline-relative spacing
+        BufferedImage combined = ItemInfo.catimgs(baselineSpacing, croppedLines.toArray(new BufferedImage[0]));
 
         // Return combined image - padding is handled by NWItem.PaddedTip for all tooltips
         return combined;
@@ -237,31 +252,92 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         return getValueFoundry().render(text, color).img;
     }
 
+    /** Render a key+value pair with natural spacing (key includes space after colon) */
+    private BufferedImage renderPair(String key, String value, Color valueColor) {
+        // Key includes trailing space for natural spacing: "LP: " + "3,834"
+        BufferedImage keyImg = renderKey(key + " ");
+        BufferedImage valueImg = renderValue(value, valueColor);
+        int totalWidth = keyImg.getWidth() + valueImg.getWidth();
+        int maxHeight = Math.max(keyImg.getHeight(), valueImg.getHeight());
+
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+        Graphics g = result.getGraphics();
+        g.drawImage(keyImg, 0, (maxHeight - keyImg.getHeight()) / 2, null);
+        g.drawImage(valueImg, keyImg.getWidth(), (maxHeight - valueImg.getHeight()) / 2, null);
+        g.dispose();
+        return result;
+    }
+
     /** Create a transparent spacer of given width */
     private BufferedImage renderSpacer(int width) {
         return TexI.mkbuf(new Coord(width, 1));
     }
 
-    /** Compose images horizontally with small gaps */
-    private BufferedImage composeHorizontal(java.util.List<BufferedImage> images) {
+    /**
+     * Crop top of image to first visible pixel, but keep bottom at original position.
+     * This ensures baseline-relative spacing: the bottom of the image stays at a fixed
+     * position relative to the baseline (baseline + descent), so spacing is measured
+     * from baseline, not from descenders.
+     */
+    private BufferedImage cropTopOnly(BufferedImage img) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int alphaThreshold = 128; // Ignore anti-aliased pixels
+
+        // Find top-most row with visible pixels
+        int top = 0;
+        topSearch:
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int alpha = (img.getRGB(x, y) >> 24) & 0xFF;
+                if (alpha > alphaThreshold) {
+                    top = y;
+                    break topSearch;
+                }
+            }
+        }
+
+        // If no visible pixels or no top cropping needed, return original
+        if (top == 0) {
+            return img;
+        }
+
+        // Crop only from the top, keep the bottom at original position
+        int newHeight = height - top;
+        BufferedImage cropped = new BufferedImage(width, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = cropped.getGraphics();
+        g.drawImage(img, 0, 0, width, newHeight, 0, top, width, height, null);
+        g.dispose();
+
+        return cropped;
+    }
+
+    /** Compose key/value pairs horizontally with 7px gap between pairs */
+    private BufferedImage composePairs(java.util.List<BufferedImage> pairs) {
+        if (pairs.isEmpty()) {
+            return TexI.mkbuf(new Coord(1, 1));
+        }
+        if (pairs.size() == 1) {
+            return pairs.get(0);
+        }
+
         int totalWidth = 0;
         int maxHeight = 0;
-        int gap = 3; // gap between key and value
-        for (BufferedImage img : images) {
+        int gap = 7; // gap between pairs (matches Figma design)
+        for (BufferedImage img : pairs) {
             totalWidth += img.getWidth();
             maxHeight = Math.max(maxHeight, img.getHeight());
         }
-        // Add gaps (one less than number of images, excluding spacers which handle their own spacing)
-        totalWidth += gap * Math.max(0, images.size() - 1);
+        totalWidth += gap * (pairs.size() - 1);
 
         BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
         Graphics g = result.getGraphics();
         int x = 0;
-        for (int i = 0; i < images.size(); i++) {
-            BufferedImage img = images.get(i);
+        for (int i = 0; i < pairs.size(); i++) {
+            BufferedImage img = pairs.get(i);
             g.drawImage(img, x, (maxHeight - img.getHeight()) / 2, null);
             x += img.getWidth();
-            if (i < images.size() - 1) {
+            if (i < pairs.size() - 1) {
                 x += gap;
             }
         }

@@ -19,6 +19,11 @@ public class NTooltip {
     private static final int NAME_FONT_SIZE = 12;
     private static final int RESOURCE_FONT_SIZE = 9;
 
+    // Spacing constants (matching Figma design)
+    // Note: Outer padding (10px) is handled by NWItem.PaddedTip
+    private static final int SECTION_SPACING = 10;      // Between Name, LP Info group, Resource
+    private static final int INTERNAL_SPACING = 7;      // Within LP Info group (LP, Study time, Mental weight)
+
     // Cached foundries
     private static Text.Foundry nameFoundry = null;
     private static Text.Foundry qualityFoundry = null;
@@ -119,32 +124,107 @@ public class NTooltip {
         }
 
         // Render name line with quality and optional remaining time
+        BufferedImage nameLine = null;
         if (nameText != null) {
-            BufferedImage nameLine = renderNameLine(nameText, qbuff, remainingTime);
-            if (nameLine != null) {
-                lines.add(nameLine);
-            }
+            nameLine = cropTopOnly(renderNameLine(nameText, qbuff, remainingTime));
         }
 
         // Render other tips (excluding Name and QBuff which we've handled)
-        BufferedImage otherTips = renderOtherTips(info);
-        if (otherTips != null) {
-            lines.add(otherTips);
-        }
+        BufferedImage otherTips = cropTopOnly(renderOtherTips(info));
 
         // Render resource line
+        BufferedImage resLine = null;
         if (owner instanceof GItem) {
             String resPath = ((GItem) owner).res.get().name;
-            BufferedImage resLine = getResourceFoundry().render(resPath, new Color(128, 128, 128)).img;
-            lines.add(resLine);
+            resLine = cropTopOnly(getResourceFoundry().render(resPath, new Color(128, 128, 128)).img);
         }
 
-        if (lines.isEmpty()) {
+        // Calculate baseline-relative spacing
+        // Spacing = desired_baseline_to_top - descent_of_line_above
+        int nameDescentVal = getFontDescent(NAME_FONT_SIZE);  // 12px font for name line
+        int bodyDescentVal = getFontDescent(11);              // 11px font for curio stats (from NCuriosity)
+
+        // Combine sections with SECTION_SPACING (10px) between main groups:
+        // Group structure: Name | LP Info group | Resource
+        // LP Info group internal spacing (7px) is handled by NCuriosity
+
+        // First combine otherTips (LP Info group) and resLine with 10px section spacing
+        BufferedImage statsAndRes = null;
+        if (otherTips != null && resLine != null) {
+            int statsToResSpacing = SECTION_SPACING - bodyDescentVal;
+            statsAndRes = ItemInfo.catimgs(statsToResSpacing, otherTips, resLine);
+        } else if (otherTips != null) {
+            statsAndRes = otherTips;
+        } else if (resLine != null) {
+            statsAndRes = resLine;
+        }
+
+        // Then combine nameLine with statsAndRes using 10px section spacing
+        // Note: Outer padding is handled by NWItem.PaddedTip
+        if (nameLine != null && statsAndRes != null) {
+            int nameToStatsSpacing = SECTION_SPACING - nameDescentVal;
+            return ItemInfo.catimgs(nameToStatsSpacing, nameLine, statsAndRes);
+        } else if (nameLine != null) {
+            return nameLine;
+        } else if (statsAndRes != null) {
+            return statsAndRes;
+        }
+
+        return null;
+    }
+
+    /**
+     * Crop top of image to first visible pixel, but keep bottom at original position.
+     * This ensures baseline-relative spacing.
+     */
+    private static BufferedImage cropTopOnly(BufferedImage img) {
+        if (img == null) {
             return null;
         }
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int alphaThreshold = 128; // Ignore anti-aliased pixels
 
-        // Combine with 2px spacing (+ 5px descent = 7px visual gap)
-        return ItemInfo.catimgs(2, lines.toArray(new BufferedImage[0]));
+        // Find top-most row with visible pixels
+        int top = 0;
+        topSearch:
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int alpha = (img.getRGB(x, y) >> 24) & 0xFF;
+                if (alpha > alphaThreshold) {
+                    top = y;
+                    break topSearch;
+                }
+            }
+        }
+
+        // If no top cropping needed, return original
+        if (top == 0) {
+            return img;
+        }
+
+        // Crop only from the top, keep the bottom at original position
+        int newHeight = height - top;
+        BufferedImage cropped = new BufferedImage(width, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = cropped.getGraphics();
+        g.drawImage(img, 0, 0, width, newHeight, 0, top, width, height, null);
+        g.dispose();
+
+        return cropped;
+    }
+
+    /** Get font descent for a given font size (used for baseline-relative spacing) */
+    private static int getFontDescent(int fontSize) {
+        Font font = getOpenSansRegular();
+        int size = UI.scale(fontSize);
+        if (font == null) {
+            font = new Font("SansSerif", Font.PLAIN, size);
+        } else {
+            font = font.deriveFont(Font.PLAIN, (float) size);
+        }
+        BufferedImage tmp = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        java.awt.FontMetrics fm = tmp.getGraphics().getFontMetrics(font);
+        return fm.getDescent();
     }
 
     /**
@@ -163,7 +243,7 @@ public class NTooltip {
             totalWidth += 7; // spacing
             qIcon = qbuff.icon;
             if (qIcon != null) {
-                totalWidth += qIcon.getWidth() + 3;
+                totalWidth += qIcon.getWidth() + 7;
                 maxHeight = Math.max(maxHeight, qIcon.getHeight());
             }
             qImg = getQualityFoundry().render(String.valueOf((int) qbuff.q), new Color(0, 255, 255)).img;
@@ -194,7 +274,7 @@ public class NTooltip {
             x += 7;
             if (qIcon != null) {
                 g.drawImage(qIcon, x, (maxHeight - qIcon.getHeight()) / 2, null);
-                x += qIcon.getWidth() + 3;
+                x += qIcon.getWidth() + 7;
             }
             if (qImg != null) {
                 g.drawImage(qImg, x, (maxHeight - qImg.getHeight()) / 2, null);

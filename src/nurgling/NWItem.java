@@ -12,12 +12,21 @@ import java.util.List;
 
 public class NWItem extends WItem
 {
-    private static final int TOOLTIP_PADDING_TOP = 8;
-    private static final int TOOLTIP_PADDING_SIDES = 10;
+    // Target padding from background edge to content
+    private static final int TARGET_PADDING = 10;
 
     public NWItem(GItem item)
     {
         super(item);
+    }
+
+    /**
+     * Calculate actual padding needed.
+     * GLPanel.drawtooltip adds UI.scale(2) background margin around the image,
+     * so we subtract that to achieve the target total padding.
+     */
+    private static int getTooltipPadding() {
+        return Math.max(0, TARGET_PADDING - UI.scale(2));
     }
 
     /**
@@ -41,11 +50,12 @@ public class NWItem extends WItem
         public Tex get() { return tex; }
 
         private BufferedImage addPadding(BufferedImage img) {
-            int newWidth = img.getWidth() + TOOLTIP_PADDING_SIDES * 2;
-            int newHeight = img.getHeight() + TOOLTIP_PADDING_TOP + TOOLTIP_PADDING_SIDES;
+            int padding = getTooltipPadding();
+            int newWidth = img.getWidth() + padding * 2;
+            int newHeight = img.getHeight() + padding * 2;
             BufferedImage result = TexI.mkbuf(new Coord(newWidth, newHeight));
             Graphics g = result.getGraphics();
-            g.drawImage(img, TOOLTIP_PADDING_SIDES, TOOLTIP_PADDING_TOP, null);
+            g.drawImage(img, padding, padding, null);
             g.dispose();
             return result;
         }
