@@ -169,7 +169,6 @@ public class ItemQualityOverlaySettings implements JConf {
         if (map.containsKey("timeFormat")) {
             this.timeFormat = TimeFormat.fromString((String) map.get("timeFormat"));
         }
-        // compactTooltip and showLphPerWeight settings removed - compact tooltip is now always enabled
         if (map.containsKey("showOutline")) {
             this.showOutline = (Boolean) map.get("showOutline");
         }

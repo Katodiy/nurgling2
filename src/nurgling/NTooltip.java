@@ -251,7 +251,7 @@ public class NTooltip {
                 totalWidth += qIcon.getWidth() + iconToTextSpacing;
                 maxHeight = Math.max(maxHeight, qIcon.getHeight());
             }
-            qImg = getQualityFoundry().render(String.valueOf((int) qbuff.q), new Color(0, 255, 255)).img;
+            qImg = getQualityFoundry().render(String.valueOf((int) qbuff.q), Color.WHITE).img;
             totalWidth += qImg.getWidth();
             maxHeight = Math.max(maxHeight, qImg.getHeight());
         }
