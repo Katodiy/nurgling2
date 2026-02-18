@@ -15,7 +15,6 @@ import static nurgling.NConfig.Key.is_real_time;
 public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     public static final float server_ratio = 3.29f;
     public int rm = 0;
-    private static final int delta = 60;
     public transient final int lph;
 
     // Cached settings
@@ -127,10 +126,10 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     }
 
     /**
-     * Check if compact tooltip mode is enabled
+     * Check if compact tooltip mode is enabled (always true - compact is the only mode)
      */
     public static boolean isCompactMode() {
-        return getSettings().compactTooltip;
+        return true;
     }
 
     @Override
@@ -151,39 +150,10 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     }
 
     public BufferedImage tipimg() {
-        ItemQualityOverlaySettings settings = getSettings();
-
-        if (settings.compactTooltip) {
-            return renderCompactTooltip(settings);
-        } else {
-            return renderVerboseTooltip();
-        }
+        return renderCompactTooltip();
     }
 
-    private BufferedImage renderVerboseTooltip() {
-        StringBuilder buf = new StringBuilder();
-        if(exp > 0)
-            buf.append(String.format("Learning points: $col[192,192,255]{%s} ($col[192,192,255]{%s}/h)\n", Utils.thformat(exp), Utils.thformat(Math.round(exp / (time / 3600.0)))));
-        if(time > 0) {
-            buf.append(String.format("Study time: $col[192,255,192]{%s} ($col[192,255,255]{%s})\n", timefmt(time), timefmt((int)(time/server_ratio))));
-        }
-        rm = (int)(remaining()/server_ratio);
-        if(rm!=time)
-        {
-            buf.append(String.format("Remaining time: $col[192,255,192]{%s}\n", timefmt(rm)));
-        }
-        if(mw > 0)
-            buf.append(String.format("Mental weight: $col[255,192,255]{%d}\n", mw));
-        if(enc > 0)
-            buf.append(String.format("Experience cost: $col[255,255,192]{%d}\n", enc));
-        if(lph>0) {
-            buf.append(String.format("LP/H: $col[192,255,255]{%d}\n", lph(this.lph)));
-            buf.append(String.format("LP/H/Weight: $col[192,255,255]{%d}\n", lph(this.lph / mw)));
-        }
-        return(RichText.render(buf.toString(), 0).img);
-    }
-
-    private BufferedImage renderCompactTooltip(ItemQualityOverlaySettings settings) {
+    private BufferedImage renderCompactTooltip() {
         // Calculate remaining time for display
         rm = (int)(remaining()/server_ratio);
 
@@ -198,7 +168,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
             java.util.List<BufferedImage> pairs = new java.util.ArrayList<>();
             pairs.add(renderPair("LP:", Utils.thformat(exp), new Color(210, 178, 255)));  // #D2B2FF
             pairs.add(renderPair("LP/H:", String.valueOf(lph(this.lph)), new Color(0, 238, 255)));  // #00EEFF
-            if (settings.showLphPerWeight && mw > 0 && lph > 0) {
+            if (mw > 0 && lph > 0) {
                 pairs.add(renderPair("LP/H/W:", String.valueOf(lph(this.lph / mw)), new Color(0, 238, 255)));  // #00EEFF
             }
             lines.add(composePairs(pairs));
@@ -237,10 +207,8 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         int baselineSpacing = UI.scale(INTERNAL_SPACING) - descent; // 7px scaled from baseline to next line's top
 
         // Combine all lines with baseline-relative spacing
-        BufferedImage combined = ItemInfo.catimgs(baselineSpacing, croppedLines.toArray(new BufferedImage[0]));
-
         // Return combined image - padding is handled by NWItem.PaddedTip for all tooltips
-        return combined;
+        return ItemInfo.catimgs(baselineSpacing, croppedLines.toArray(new BufferedImage[0]));
     }
 
     /** Render a key label (Open Sans Regular, white) */
@@ -267,11 +235,6 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         g.drawImage(valueImg, keyImg.getWidth(), (maxHeight - valueImg.getHeight()) / 2, null);
         g.dispose();
         return result;
-    }
-
-    /** Create a transparent spacer of given width */
-    private BufferedImage renderSpacer(int width) {
-        return TexI.mkbuf(new Coord(width, 1));
     }
 
     /**
@@ -423,10 +386,6 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     static int[] div = {60, 60, 24};
     static String[] units = {"s", "m", "h", "d"};
     
-    protected static String shorttime(int time) {
-        return shorttime(time, ItemQualityOverlaySettings.TimeFormat.AUTO);
-    }
-    
     protected static String shorttime(int time, ItemQualityOverlaySettings.TimeFormat format) {
         if (time <= 0) return "0s";
         
@@ -533,9 +492,8 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         
         int w = img.getWidth();
         int h = img.getHeight();
-        int padding = width;
-        
-        BufferedImage result = new BufferedImage(w + padding * 2, h + padding * 2, BufferedImage.TYPE_INT_ARGB);
+
+        BufferedImage result = new BufferedImage(w + width * 2, h + width * 2, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = result.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
@@ -550,12 +508,12 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         for (int dx = -width; dx <= width; dx++) {
             for (int dy = -width; dy <= width; dy++) {
                 if (dx != 0 || dy != 0) {
-                    g.drawImage(coloredImg, padding + dx, padding + dy, null);
+                    g.drawImage(coloredImg, width + dx, width + dy, null);
                 }
             }
         }
         
-        g.drawImage(img, padding, padding, null);
+        g.drawImage(img, width, width, null);
         g.dispose();
         
         return result;
