@@ -12,8 +12,10 @@ import java.util.List;
 
 public class NWItem extends WItem
 {
-    // Target padding from background edge to content
+    // Target padding from background edge to content (in logical pixels, will be scaled)
     private static final int TARGET_PADDING = 10;
+    // GLPanel.drawtooltip adds this margin around the background (in logical pixels)
+    private static final int GLPANEL_MARGIN = 2;
 
     public NWItem(GItem item)
     {
@@ -22,11 +24,12 @@ public class NWItem extends WItem
 
     /**
      * Calculate actual padding needed.
-     * GLPanel.drawtooltip adds UI.scale(2) background margin around the image,
+     * GLPanel.drawtooltip adds UI.scale(GLPANEL_MARGIN) background margin around the image,
      * so we subtract that to achieve the target total padding.
+     * Both values are scaled to maintain proper proportions at any UI scale.
      */
     private static int getTooltipPadding() {
-        return Math.max(0, TARGET_PADDING - UI.scale(2));
+        return Math.max(0, UI.scale(TARGET_PADDING) - UI.scale(GLPANEL_MARGIN));
     }
 
     /**

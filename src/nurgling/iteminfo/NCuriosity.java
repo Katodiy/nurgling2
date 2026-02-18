@@ -33,6 +33,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
 
     // Font foundries for compact tooltip (Open Sans)
     private static final int BODY_FONT_SIZE = 11;    // LP, Study time, Mental weight lines
+    private static final int INTERNAL_SPACING = 7;   // Spacing between lines (in logical pixels, will be scaled)
 
     private static Text.Foundry keyFoundry = null;        // Open Sans Regular for keys (11px)
     private static Text.Foundry valueFoundry = null;      // Open Sans Semibold for values (11px)
@@ -233,7 +234,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         // Get font descent for baseline-relative spacing
         // Spacing = desired_baseline_to_top - descent (since bottom of image is at baseline + descent)
         int descent = getBodyFontDescent();
-        int baselineSpacing = 7 - descent; // 7px from baseline to next line's top
+        int baselineSpacing = UI.scale(INTERNAL_SPACING) - descent; // 7px scaled from baseline to next line's top
 
         // Combine all lines with baseline-relative spacing
         BufferedImage combined = ItemInfo.catimgs(baselineSpacing, croppedLines.toArray(new BufferedImage[0]));

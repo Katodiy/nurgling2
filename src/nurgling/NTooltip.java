@@ -19,10 +19,12 @@ public class NTooltip {
     private static final int NAME_FONT_SIZE = 12;
     private static final int RESOURCE_FONT_SIZE = 9;
 
-    // Spacing constants (matching Figma design)
+    // Spacing constants (matching Figma design, in logical pixels - will be scaled)
     // Note: Outer padding (10px) is handled by NWItem.PaddedTip
     private static final int SECTION_SPACING = 10;      // Between Name, LP Info group, Resource
     private static final int INTERNAL_SPACING = 7;      // Within LP Info group (LP, Study time, Mental weight)
+    private static final int HORIZONTAL_SPACING = 7;    // Between elements on the name line
+    private static final int ICON_TO_TEXT_SPACING = 3;  // Between quality icon and quality number
 
     // Cached foundries
     private static Text.Foundry nameFoundry = null;
@@ -139,19 +141,20 @@ public class NTooltip {
             resLine = cropTopOnly(getResourceFoundry().render(resPath, new Color(128, 128, 128)).img);
         }
 
-        // Calculate baseline-relative spacing
+        // Calculate baseline-relative spacing (all spacing values are scaled)
         // Spacing = desired_baseline_to_top - descent_of_line_above
         int nameDescentVal = getFontDescent(NAME_FONT_SIZE);  // 12px font for name line
         int bodyDescentVal = getFontDescent(11);              // 11px font for curio stats (from NCuriosity)
+        int scaledSectionSpacing = UI.scale(SECTION_SPACING);
 
-        // Combine sections with SECTION_SPACING (10px) between main groups:
+        // Combine sections with SECTION_SPACING (10px scaled) between main groups:
         // Group structure: Name | LP Info group | Resource
         // LP Info group internal spacing (7px) is handled by NCuriosity
 
         // First combine otherTips (LP Info group) and resLine with 10px section spacing
         BufferedImage statsAndRes = null;
         if (otherTips != null && resLine != null) {
-            int statsToResSpacing = SECTION_SPACING - bodyDescentVal;
+            int statsToResSpacing = scaledSectionSpacing - bodyDescentVal;
             statsAndRes = ItemInfo.catimgs(statsToResSpacing, otherTips, resLine);
         } else if (otherTips != null) {
             statsAndRes = otherTips;
@@ -162,7 +165,7 @@ public class NTooltip {
         // Then combine nameLine with statsAndRes using 10px section spacing
         // Note: Outer padding is handled by NWItem.PaddedTip
         if (nameLine != null && statsAndRes != null) {
-            int nameToStatsSpacing = SECTION_SPACING - nameDescentVal;
+            int nameToStatsSpacing = scaledSectionSpacing - nameDescentVal;
             return ItemInfo.catimgs(nameToStatsSpacing, nameLine, statsAndRes);
         } else if (nameLine != null) {
             return nameLine;
@@ -232,6 +235,8 @@ public class NTooltip {
      */
     private static BufferedImage renderNameLine(String nameText, QBuff qbuff, String remainingTime) {
         BufferedImage nameImg = getNameFoundry().render(nameText, Color.WHITE).img;
+        int hSpacing = UI.scale(HORIZONTAL_SPACING);
+        int iconToTextSpacing = UI.scale(ICON_TO_TEXT_SPACING);
 
         int totalWidth = nameImg.getWidth();
         int maxHeight = nameImg.getHeight();
@@ -240,10 +245,10 @@ public class NTooltip {
         BufferedImage qIcon = null;
         BufferedImage qImg = null;
         if (qbuff != null && qbuff.q > 0) {
-            totalWidth += 7; // spacing
+            totalWidth += hSpacing;
             qIcon = qbuff.icon;
             if (qIcon != null) {
-                totalWidth += qIcon.getWidth() + 7;
+                totalWidth += qIcon.getWidth() + iconToTextSpacing;
                 maxHeight = Math.max(maxHeight, qIcon.getHeight());
             }
             qImg = getQualityFoundry().render(String.valueOf((int) qbuff.q), new Color(0, 255, 255)).img;
@@ -254,7 +259,7 @@ public class NTooltip {
         // Remaining time for curios
         BufferedImage timeImg = null;
         if (remainingTime != null && !remainingTime.isEmpty()) {
-            totalWidth += 7; // spacing
+            totalWidth += hSpacing;
             timeImg = getNameFoundry().render("(" + remainingTime + ")", new Color(128, 128, 128)).img;
             totalWidth += timeImg.getWidth();
             maxHeight = Math.max(maxHeight, timeImg.getHeight());
@@ -271,10 +276,10 @@ public class NTooltip {
 
         // Draw quality icon and value
         if (qbuff != null && qbuff.q > 0) {
-            x += 7;
+            x += hSpacing;
             if (qIcon != null) {
                 g.drawImage(qIcon, x, (maxHeight - qIcon.getHeight()) / 2, null);
-                x += qIcon.getWidth() + 7;
+                x += qIcon.getWidth() + iconToTextSpacing;
             }
             if (qImg != null) {
                 g.drawImage(qImg, x, (maxHeight - qImg.getHeight()) / 2, null);
@@ -284,7 +289,7 @@ public class NTooltip {
 
         // Draw remaining time
         if (timeImg != null) {
-            x += 7;
+            x += hSpacing;
             g.drawImage(timeImg, x, (maxHeight - timeImg.getHeight()) / 2, null);
         }
 
