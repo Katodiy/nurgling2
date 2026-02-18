@@ -1,13 +1,104 @@
 package nurgling.styles;
 
-import java.awt.Color;
+import haven.Text;
+import haven.UI;
+import nurgling.NConfig;
+import nurgling.conf.FontSettings;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
 
 /**
- * Centralized style constants for tooltips.
+ * Centralized style constants and utilities for tooltips.
  * All spacing values are in logical pixels and should be scaled with UI.scale() when used.
  */
 public final class TooltipStyle {
     private TooltipStyle() {} // Prevent instantiation
+
+    // ============ FONT UTILITIES ============
+
+    public static Font getOpenSansRegular() {
+        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
+        return fontSettings != null ? fontSettings.getFont("Open Sans") : null;
+    }
+
+    public static Font getOpenSansSemibold() {
+        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
+        return fontSettings != null ? fontSettings.getFont("Open Sans Semibold") : null;
+    }
+
+    /**
+     * Create a Text.Foundry with the specified font settings.
+     * @param semibold true for Open Sans Semibold, false for Open Sans Regular
+     * @param fontSize font size in logical pixels (will be scaled)
+     * @param color default text color
+     */
+    public static Text.Foundry createFoundry(boolean semibold, int fontSize, Color color) {
+        Font font = semibold ? getOpenSansSemibold() : getOpenSansRegular();
+        int size = UI.scale(fontSize);
+        if (font == null) {
+            font = new Font("SansSerif", semibold ? Font.BOLD : Font.PLAIN, size);
+        } else {
+            font = font.deriveFont(Font.PLAIN, (float) size);
+        }
+        return new Text.Foundry(font, color).aa(true);
+    }
+
+    /**
+     * Get font descent for a given font size (used for baseline-relative spacing).
+     */
+    public static int getFontDescent(int fontSize) {
+        Font font = getOpenSansRegular();
+        int size = UI.scale(fontSize);
+        if (font == null) {
+            font = new Font("SansSerif", Font.PLAIN, size);
+        } else {
+            font = font.deriveFont(Font.PLAIN, (float) size);
+        }
+        BufferedImage tmp = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        FontMetrics fm = tmp.getGraphics().getFontMetrics(font);
+        return fm.getDescent();
+    }
+
+    /**
+     * Crop top of image to first visible pixel, but keep bottom at original position.
+     * This ensures baseline-relative spacing.
+     */
+    public static BufferedImage cropTopOnly(BufferedImage img) {
+        if (img == null) {
+            return null;
+        }
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int alphaThreshold = 128; // Ignore anti-aliased pixels
+
+        // Find top-most row with visible pixels
+        int top = 0;
+        topSearch:
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int alpha = (img.getRGB(x, y) >> 24) & 0xFF;
+                if (alpha > alphaThreshold) {
+                    top = y;
+                    break topSearch;
+                }
+            }
+        }
+
+        // If no top cropping needed, return original
+        if (top == 0) {
+            return img;
+        }
+
+        // Crop only from the top, keep the bottom at original position
+        int newHeight = height - top;
+        BufferedImage cropped = new BufferedImage(width, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = cropped.getGraphics();
+        g.drawImage(img, 0, 0, width, newHeight, 0, top, width, height, null);
+        g.dispose();
+
+        return cropped;
+    }
 
     // ============ COLORS ============
 

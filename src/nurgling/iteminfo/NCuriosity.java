@@ -31,62 +31,23 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
 
     NGItem.MeterInfo m = null;
 
-    private static Text.Foundry keyFoundry = null;        // Open Sans Regular for keys (11px)
-    private static Text.Foundry valueFoundry = null;      // Open Sans Semibold for values (11px)
-
-    private static Font getOpenSansRegular() {
-        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
-        return fontSettings != null ? fontSettings.getFont("Open Sans") : null;
-    }
-
-    private static Font getOpenSansSemibold() {
-        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
-        return fontSettings != null ? fontSettings.getFont("Open Sans Semibold") : null;
-    }
-
+    // Cached foundries
+    private static Text.Foundry keyFoundry = null;
+    private static Text.Foundry valueFoundry = null;
 
     private static Text.Foundry getKeyFoundry() {
         if (keyFoundry == null) {
-            Font font = getOpenSansRegular();
-            int size = UI.scale(TooltipStyle.FONT_SIZE_BODY);
-            if (font == null) {
-                font = new Font("SansSerif", Font.PLAIN, size);
-            } else {
-                font = font.deriveFont(Font.PLAIN, (float) size);
-            }
-            keyFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
+            keyFoundry = TooltipStyle.createFoundry(false, TooltipStyle.FONT_SIZE_BODY, Color.WHITE);
         }
         return keyFoundry;
     }
 
     private static Text.Foundry getValueFoundry() {
         if (valueFoundry == null) {
-            Font font = getOpenSansSemibold();
-            int size = UI.scale(TooltipStyle.FONT_SIZE_BODY);
-            if (font == null) {
-                font = new Font("SansSerif", Font.BOLD, size);
-            } else {
-                font = font.deriveFont(Font.PLAIN, (float) size);
-            }
-            valueFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
+            valueFoundry = TooltipStyle.createFoundry(true, TooltipStyle.FONT_SIZE_BODY, Color.WHITE);
         }
         return valueFoundry;
     }
-
-    /** Get the font descent for the body font (used for baseline-relative spacing) */
-    private static int getBodyFontDescent() {
-        Font font = getOpenSansRegular();
-        int size = UI.scale(TooltipStyle.FONT_SIZE_BODY);
-        if (font == null) {
-            font = new Font("SansSerif", Font.PLAIN, size);
-        } else {
-            font = font.deriveFont(Font.PLAIN, (float) size);
-        }
-        java.awt.image.BufferedImage tmp = new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-        java.awt.FontMetrics fm = tmp.getGraphics().getFontMetrics(font);
-        return fm.getDescent();
-    }
-
 
     public NCuriosity(Owner owner, int exp, int mw, int enc, int time) {
         super(owner, exp, mw, enc, time);
@@ -96,12 +57,12 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
     public NCuriosity(Curiosity inf) {
         this(inf.owner, inf.exp, inf.mw, inf.enc, inf.time);
     }
-    
+
     public static void invalidateCache() {
         forceRefresh = true;
         settingsVersion++;
     }
-    
+
     private static ItemQualityOverlaySettings getSettings() {
         long now = System.currentTimeMillis();
         if (forceRefresh || cachedSettings == null || now - lastSettingsCheck > SETTINGS_CHECK_INTERVAL) {
@@ -122,22 +83,9 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         return cachedSettings;
     }
 
-    /**
-     * Check if compact tooltip mode is enabled (always true - compact is the only mode)
-     */
-    public static boolean isCompactMode() {
-        return true;
-    }
-
     @Override
     public int order() {
-        // In compact mode, render first (before Name which is 0)
-        return isCompactMode() ? -1 : super.order();
-    }
-
-    @Override
-    public void prepare(ItemInfo.Layout l) {
-        super.prepare(l);
+        return -1; // Render first (before Name which is 0)
     }
 
     @Override
@@ -191,16 +139,14 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         // Crop top only (keeps baseline-relative bottom position)
         java.util.List<BufferedImage> croppedLines = new java.util.ArrayList<>();
         for (BufferedImage line : lines) {
-            croppedLines.add(cropTopOnly(line));
+            croppedLines.add(TooltipStyle.cropTopOnly(line));
         }
 
         // Get font descent for baseline-relative spacing
-        // Spacing = desired_baseline_to_top - descent (since bottom of image is at baseline + descent)
-        int descent = getBodyFontDescent();
+        int descent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
         int baselineSpacing = UI.scale(TooltipStyle.INTERNAL_SPACING) - descent;
 
         // Combine all lines with baseline-relative spacing
-        // Return combined image - padding is handled by NWItem.PaddedTip for all tooltips
         return ItemInfo.catimgs(baselineSpacing, croppedLines.toArray(new BufferedImage[0]));
     }
 
@@ -216,7 +162,6 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
 
     /** Render a key+value pair with natural spacing (key includes space after colon) */
     private BufferedImage renderPair(String key, String value, Color valueColor) {
-        // Key includes trailing space for natural spacing: "LP: " + "3,834"
         BufferedImage keyImg = renderKey(key + " ");
         BufferedImage valueImg = renderValue(value, valueColor);
         int totalWidth = keyImg.getWidth() + valueImg.getWidth();
@@ -230,45 +175,6 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         return result;
     }
 
-    /**
-     * Crop top of image to first visible pixel, but keep bottom at original position.
-     * This ensures baseline-relative spacing: the bottom of the image stays at a fixed
-     * position relative to the baseline (baseline + descent), so spacing is measured
-     * from baseline, not from descenders.
-     */
-    private BufferedImage cropTopOnly(BufferedImage img) {
-        int width = img.getWidth();
-        int height = img.getHeight();
-        int alphaThreshold = 128; // Ignore anti-aliased pixels
-
-        // Find top-most row with visible pixels
-        int top = 0;
-        topSearch:
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int alpha = (img.getRGB(x, y) >> 24) & 0xFF;
-                if (alpha > alphaThreshold) {
-                    top = y;
-                    break topSearch;
-                }
-            }
-        }
-
-        // If no visible pixels or no top cropping needed, return original
-        if (top == 0) {
-            return img;
-        }
-
-        // Crop only from the top, keep the bottom at original position
-        int newHeight = height - top;
-        BufferedImage cropped = new BufferedImage(width, newHeight, BufferedImage.TYPE_INT_ARGB);
-        Graphics g = cropped.getGraphics();
-        g.drawImage(img, 0, 0, width, newHeight, 0, top, width, height, null);
-        g.dispose();
-
-        return cropped;
-    }
-
     /** Compose key/value pairs horizontally with 7px gap between pairs */
     private BufferedImage composePairs(java.util.List<BufferedImage> pairs) {
         if (pairs.isEmpty()) {
@@ -280,7 +186,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
 
         int totalWidth = 0;
         int maxHeight = 0;
-        int gap = 7; // gap between pairs (matches Figma design)
+        int gap = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
         for (BufferedImage img : pairs) {
             totalWidth += img.getWidth();
             maxHeight = Math.max(maxHeight, img.getHeight());
@@ -301,7 +207,6 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         g.dispose();
         return result;
     }
-
 
     /**
      * Get remaining time formatted for display on name line (in real time)
@@ -346,7 +251,6 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         return (Boolean)NConfig.get(is_real_time) ? ((int) (server_ratio * lph)) : lph;
     }
 
-
     public int remaining() {
         if(owner instanceof NGItem) {
             NGItem item = ((NGItem) owner);
@@ -378,10 +282,10 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
 
     static int[] div = {60, 60, 24};
     static String[] units = {"s", "m", "h", "d"};
-    
+
     protected static String shorttime(int time, ItemQualityOverlaySettings.TimeFormat format) {
         if (time <= 0) return "0s";
-        
+
         switch (format) {
             case SECONDS:
                 return time + "s";
@@ -412,7 +316,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
                 return buf.length() > 0 ? buf.toString() : "0s";
         }
     }
-    
+
     @Override
     public Tex overlay() {
         if(owner instanceof NGItem) {
@@ -426,15 +330,15 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
                 float ratio = settings.studyTimeRatio > 0 ? settings.studyTimeRatio : server_ratio;
                 int currentRemaining = (int) (rawRemaining / ratio);
                 long currentVersion = settingsVersion;
-                
+
                 // Check if we can reuse cached overlay
-                if (cachedOverlay != null && lastSettingsVersion == currentVersion && 
+                if (cachedOverlay != null && lastSettingsVersion == currentVersion &&
                     Math.abs(lastRemaining - currentRemaining) <= 1) {
                     return cachedOverlay;
                 }
-                
+
                 BufferedImage text = renderTimeText(currentRemaining, settings);
-                
+
                 if (settings.showBackground) {
                     BufferedImage bi = new BufferedImage(text.getWidth(), text.getHeight(), BufferedImage.TYPE_INT_ARGB);
                     Graphics2D graphics = bi.createGraphics();
@@ -446,7 +350,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
                 } else {
                     cachedOverlay = new TexI(text);
                 }
-                
+
                 lastSettingsVersion = currentVersion;
                 lastRemaining = currentRemaining;
                 return cachedOverlay;
@@ -454,7 +358,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         }
         return null;
     }
-    
+
     private BufferedImage renderTimeText(int seconds, ItemQualityOverlaySettings settings) {
         FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
         Font font;
@@ -468,28 +372,28 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         } else {
             font = new Font("SansSerif", Font.PLAIN, UI.scale(settings.fontSize));
         }
-        
+
         String timeText = shorttime(seconds, settings.timeFormat);
         Text.Foundry fnd = new Text.Foundry(font, settings.defaultColor).aa(true);
         BufferedImage textImg = fnd.render(timeText, settings.defaultColor).img;
-        
+
         if (settings.showOutline) {
             return outlineWithWidth(textImg, settings.outlineColor, settings.outlineWidth);
         } else {
             return textImg;
         }
     }
-    
+
     private BufferedImage outlineWithWidth(BufferedImage img, Color outlineColor, int width) {
         if (width <= 0) return img;
-        
+
         int w = img.getWidth();
         int h = img.getHeight();
 
         BufferedImage result = new BufferedImage(w + width * 2, h + width * 2, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = result.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        
+
         BufferedImage coloredImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics2D cg = coloredImg.createGraphics();
         cg.drawImage(img, 0, 0, null);
@@ -497,7 +401,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
         cg.setColor(outlineColor);
         cg.fillRect(0, 0, w, h);
         cg.dispose();
-        
+
         for (int dx = -width; dx <= width; dx++) {
             for (int dy = -width; dy <= width; dy++) {
                 if (dx != 0 || dy != 0) {
@@ -505,13 +409,12 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
                 }
             }
         }
-        
+
         g.drawImage(img, width, width, null);
         g.dispose();
-        
+
         return result;
     }
-
 
     @Override
     public void drawoverlay(GOut g, Tex data) {
@@ -519,7 +422,7 @@ public class NCuriosity extends Curiosity implements GItem.OverlayInfo<Tex>{
             ItemQualityOverlaySettings settings = getSettings();
             int pad = settings.showOutline ? settings.outlineWidth : 0;
             Coord pos;
-            
+
             switch (settings.corner) {
                 case TOP_LEFT:
                     pos = new Coord(-pad, -pad);

@@ -2,13 +2,11 @@ package nurgling;
 
 import haven.*;
 import haven.res.ui.tt.q.qbuff.QBuff;
-import nurgling.conf.FontSettings;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.styles.TooltipStyle;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,57 +17,18 @@ public class NTooltip {
 
     // Cached foundries
     private static Text.Foundry nameFoundry = null;
-    private static Text.Foundry qualityFoundry = null;
     private static Text.Foundry resourceFoundry = null;
-
-    private static Font getOpenSansRegular() {
-        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
-        return fontSettings != null ? fontSettings.getFont("Open Sans") : null;
-    }
-
-    private static Font getOpenSansSemibold() {
-        FontSettings fontSettings = (FontSettings) NConfig.get(NConfig.Key.fonts);
-        return fontSettings != null ? fontSettings.getFont("Open Sans Semibold") : null;
-    }
 
     private static Text.Foundry getNameFoundry() {
         if (nameFoundry == null) {
-            Font font = getOpenSansSemibold();
-            int size = UI.scale(TooltipStyle.FONT_SIZE_NAME);
-            if (font == null) {
-                font = new Font("SansSerif", Font.BOLD, size);
-            } else {
-                font = font.deriveFont(Font.PLAIN, (float) size);
-            }
-            nameFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
+            nameFoundry = TooltipStyle.createFoundry(true, TooltipStyle.FONT_SIZE_NAME, Color.WHITE);
         }
         return nameFoundry;
     }
 
-    private static Text.Foundry getQualityFoundry() {
-        if (qualityFoundry == null) {
-            Font font = getOpenSansSemibold();
-            int size = UI.scale(TooltipStyle.FONT_SIZE_NAME);
-            if (font == null) {
-                font = new Font("SansSerif", Font.BOLD, size);
-            } else {
-                font = font.deriveFont(Font.PLAIN, (float) size);
-            }
-            qualityFoundry = new Text.Foundry(font, Color.WHITE).aa(true);
-        }
-        return qualityFoundry;
-    }
-
     private static Text.Foundry getResourceFoundry() {
         if (resourceFoundry == null) {
-            Font font = getOpenSansRegular();
-            int size = UI.scale(TooltipStyle.FONT_SIZE_RESOURCE);
-            if (font == null) {
-                font = new Font("SansSerif", Font.PLAIN, size);
-            } else {
-                font = font.deriveFont(Font.PLAIN, (float) size);
-            }
-            resourceFoundry = new Text.Foundry(font, TooltipStyle.COLOR_RESOURCE_PATH).aa(true);
+            resourceFoundry = TooltipStyle.createFoundry(false, TooltipStyle.FONT_SIZE_RESOURCE, TooltipStyle.COLOR_RESOURCE_PATH);
         }
         return resourceFoundry;
     }
@@ -84,7 +43,6 @@ public class NTooltip {
         }
 
         ItemInfo.Owner owner = info.get(0).owner;
-        List<BufferedImage> lines = new ArrayList<>();
 
         // Find Name, QBuff, and NCuriosity info
         String nameText = null;
@@ -112,30 +70,30 @@ public class NTooltip {
 
         // Get remaining time for curios
         String remainingTime = null;
-        if (curiosity != null && NCuriosity.isCompactMode()) {
+        if (curiosity != null) {
             remainingTime = curiosity.getCompactRemainingTime();
         }
 
         // Render name line with quality and optional remaining time
         BufferedImage nameLine = null;
         if (nameText != null) {
-            nameLine = cropTopOnly(renderNameLine(nameText, qbuff, remainingTime));
+            nameLine = TooltipStyle.cropTopOnly(renderNameLine(nameText, qbuff, remainingTime));
         }
 
         // Render other tips (excluding Name and QBuff which we've handled)
-        BufferedImage otherTips = cropTopOnly(renderOtherTips(info));
+        BufferedImage otherTips = TooltipStyle.cropTopOnly(renderOtherTips(info));
 
         // Render resource line
         BufferedImage resLine = null;
         if (owner instanceof GItem) {
             String resPath = ((GItem) owner).res.get().name;
-            resLine = cropTopOnly(getResourceFoundry().render(resPath, TooltipStyle.COLOR_RESOURCE_PATH).img);
+            resLine = TooltipStyle.cropTopOnly(getResourceFoundry().render(resPath, TooltipStyle.COLOR_RESOURCE_PATH).img);
         }
 
         // Calculate baseline-relative spacing (all spacing values are scaled)
         // Spacing = desired_baseline_to_top - descent_of_line_above
-        int nameDescentVal = getFontDescent(TooltipStyle.FONT_SIZE_NAME);
-        int bodyDescentVal = getFontDescent(TooltipStyle.FONT_SIZE_BODY);
+        int nameDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_NAME);
+        int bodyDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
         int scaledSectionSpacing = UI.scale(TooltipStyle.SECTION_SPACING);
 
         // Combine sections with SECTION_SPACING (10px scaled) between main groups:
@@ -168,60 +126,6 @@ public class NTooltip {
     }
 
     /**
-     * Crop top of image to first visible pixel, but keep bottom at original position.
-     * This ensures baseline-relative spacing.
-     */
-    private static BufferedImage cropTopOnly(BufferedImage img) {
-        if (img == null) {
-            return null;
-        }
-        int width = img.getWidth();
-        int height = img.getHeight();
-        int alphaThreshold = 128; // Ignore anti-aliased pixels
-
-        // Find top-most row with visible pixels
-        int top = 0;
-        topSearch:
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int alpha = (img.getRGB(x, y) >> 24) & 0xFF;
-                if (alpha > alphaThreshold) {
-                    top = y;
-                    break topSearch;
-                }
-            }
-        }
-
-        // If no top cropping needed, return original
-        if (top == 0) {
-            return img;
-        }
-
-        // Crop only from the top, keep the bottom at original position
-        int newHeight = height - top;
-        BufferedImage cropped = new BufferedImage(width, newHeight, BufferedImage.TYPE_INT_ARGB);
-        Graphics g = cropped.getGraphics();
-        g.drawImage(img, 0, 0, width, newHeight, 0, top, width, height, null);
-        g.dispose();
-
-        return cropped;
-    }
-
-    /** Get font descent for a given font size (used for baseline-relative spacing) */
-    private static int getFontDescent(int fontSize) {
-        Font font = getOpenSansRegular();
-        int size = UI.scale(fontSize);
-        if (font == null) {
-            font = new Font("SansSerif", Font.PLAIN, size);
-        } else {
-            font = font.deriveFont(Font.PLAIN, (float) size);
-        }
-        BufferedImage tmp = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-        java.awt.FontMetrics fm = tmp.getGraphics().getFontMetrics(font);
-        return fm.getDescent();
-    }
-
-    /**
      * Render the name line: Name + Quality Icon + Quality Value + Optional Remaining Time
      */
     private static BufferedImage renderNameLine(String nameText, QBuff qbuff, String remainingTime) {
@@ -242,7 +146,7 @@ public class NTooltip {
                 totalWidth += qIcon.getWidth() + iconToTextSpacing;
                 maxHeight = Math.max(maxHeight, qIcon.getHeight());
             }
-            qImg = getQualityFoundry().render(String.valueOf((int) qbuff.q), Color.WHITE).img;
+            qImg = getNameFoundry().render(String.valueOf((int) qbuff.q), Color.WHITE).img;
             totalWidth += qImg.getWidth();
             maxHeight = Math.max(maxHeight, qImg.getHeight());
         }
