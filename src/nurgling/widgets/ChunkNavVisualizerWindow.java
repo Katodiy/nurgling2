@@ -83,6 +83,7 @@ public class ChunkNavVisualizerWindow extends Window {
     private final CheckBox gridCb;
     private final CheckBox cellLinesCb;
     private final Button deleteChunkBtn;
+    private final Button deleteAllBtn;
 
     public ChunkNavVisualizerWindow() {
         super(new Coord(UI.scale(WINDOW_WIDTH), UI.scale(WINDOW_HEIGHT)), "ChunkNav Visualizer");
@@ -165,6 +166,15 @@ public class ChunkNavVisualizerWindow extends Window {
             }
         }, new Coord(UI.scale(10), y));
         deleteChunkBtn.disable(true);  // Disabled until a chunk is selected
+        y += UI.scale(30);
+
+        deleteAllBtn = add(new Button(UI.scale(SETTINGS_WIDTH - 20), "Delete All") {
+            @Override
+            public void click() {
+                super.click();
+                deleteAllChunks();
+            }
+        }, new Coord(UI.scale(10), y));
         y += UI.scale(40);
 
         statusLabel = add(new Label("Ready"), new Coord(UI.scale(10), y));
@@ -871,6 +881,24 @@ public class ChunkNavVisualizerWindow extends Window {
         } else {
             statusLabel.settext("Failed to delete chunk");
         }
+    }
+
+    /**
+     * Delete ALL chunks from memory and disk.
+     */
+    private void deleteAllChunks() {
+        ChunkNavManager manager = getChunkNavManager();
+        if (manager == null) {
+            statusLabel.settext("Error: ChunkNav not available");
+            return;
+        }
+
+        int count = manager.deleteAllChunks();
+        statusLabel.settext("Deleted " + count + " chunks");
+
+        // Clear selection and reload data
+        selectedChunkIdx = -1;
+        reloadData();
     }
 
     @Override

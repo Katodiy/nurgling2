@@ -703,6 +703,34 @@ public class ChunkNavManager {
     }
 
     /**
+     * Delete ALL chunks from memory and disk.
+     * This is a destructive operation that clears all navigation data.
+     * @return The number of chunks deleted
+     */
+    public int deleteAllChunks() {
+        if (!initialized || fileStore == null) {
+            return 0;
+        }
+
+        // Get count before clearing
+        int count = graph.getAllChunks().size();
+
+        // Clear all chunks from memory
+        graph.clear();
+
+        // Delete all chunk files from disk
+        int filesDeleted = fileStore.deleteAllChunkFiles();
+
+        // Reset the portal tracker to clear any cached state
+        if (portalTracker != null) {
+            portalTracker.reset();
+        }
+
+        System.out.println("ChunkNav: Deleted all chunks (" + count + " from memory, " + filesDeleted + " files)");
+        return count;
+    }
+
+    /**
      * Get statistics about the navigation system.
      */
     public String getStats() {
