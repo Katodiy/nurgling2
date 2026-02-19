@@ -45,6 +45,9 @@ public class PortalTraversalTracker {
 
     private static final long CHECK_INTERVAL_MS = 100;
 
+    // Track recording state to detect OFF -> ON transitions
+    private boolean wasRecordingEnabled = false;
+
     // Layer mappings based on portal exit type
     // Maps portal exit name patterns to the layer the destination chunk should be assigned
     // The EXIT portal (what you see after traversing) determines the layer
@@ -102,9 +105,24 @@ public class PortalTraversalTracker {
      * Safe to call frequently - internally throttled.
      */
     public void tick() {
-        // Skip if ChunkNav overlay is disabled
+        // Check if ChunkNav overlay is enabled
         Object val = NConfig.get(NConfig.Key.chunkNavOverlay);
-        if (!(val instanceof Boolean) || !(Boolean) val) {
+        boolean recordingEnabled = (val instanceof Boolean) && (Boolean) val;
+
+        // Detect recording state change: OFF -> ON
+        // When recording is turned back on, reset state to prevent detecting stale grid changes
+        // that happened while recording was off. This fixes the bug where exiting a building,
+        // turning off recording, walking away, then turning recording back on would cause
+        // the exit portal to be recorded at the wrong location.
+        if (recordingEnabled && !wasRecordingEnabled) {
+            reset();
+            // Set lastGridId to current grid so we start fresh from current state
+            lastGridId = graph.getPlayerChunkId();
+        }
+        wasRecordingEnabled = recordingEnabled;
+
+        // Skip if ChunkNav overlay is disabled
+        if (!recordingEnabled) {
             return;
         }
 
