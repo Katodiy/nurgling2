@@ -70,6 +70,52 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         return getValueFoundry().render(text, color).img;
     }
 
+    /**
+     * Result of composing an icon with text - contains image and text positioning info.
+     */
+    private static class IconLineResult {
+        final BufferedImage image;
+        final int textTopOffset;  // Pixels from image top to text top
+
+        IconLineResult(BufferedImage image, int textTopOffset) {
+            this.image = image;
+            this.textTopOffset = textTopOffset;
+        }
+    }
+
+    /**
+     * Compose an icon with a text line. Icon is NOT clipped - full icon is visible.
+     * Returns both the image and the text top offset for proper spacing calculations.
+     * When adding to layout, subtract textTopOffset from spacing to measure TEXT-to-TEXT.
+     */
+    private static IconLineResult composeIconLine(BufferedImage icon, BufferedImage textLine) {
+        int textHeight = textLine.getHeight();
+        int textWidth = textLine.getWidth();
+        int iconHeight = icon.getHeight();
+        int iconWidth = icon.getWidth();
+        int gap = UI.scale(2);
+
+        // Center icon and text relative to each other
+        int maxHeight = Math.max(iconHeight, textHeight);
+        int iconY = (maxHeight - iconHeight) / 2;
+        int textY = (maxHeight - textHeight) / 2;
+
+        int resultWidth = iconWidth + gap + textWidth;
+        BufferedImage result = TexI.mkbuf(new Coord(resultWidth, maxHeight));
+        Graphics g = result.getGraphics();
+
+        // Draw icon centered
+        g.drawImage(icon, 0, iconY, null);
+
+        // Draw text centered
+        g.drawImage(textLine, iconWidth + gap, textY, null);
+
+        g.dispose();
+
+        // textTopOffset = how many pixels from image top to text top
+        return new IconLineResult(result, textY);
+    }
+
     public NFoodInfo(Owner owner, double end, double glut, double sev, double cons, Event[] evs, Effect[] efs, int[] types)
     {
         super(owner, end, glut, sev, cons, evs, efs, types);
@@ -361,22 +407,36 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         l.cmp.add(fepLine, Coord.of(0, l.cmp.sz.y + lineSpacing));
 
         // ===== GROUP 2: Stats (10px gap before, 7px between each stat) =====
+        // Track previous line's text bottom offset for proper spacing
+        int prevTextBottomOffset = 0;  // For text-only lines, this is 0
+
         boolean firstStat = true;
         for (int i = 0; i < evs.length; i++) {
             Color col = Utils.blendcol(evs[i].ev.col, Color.WHITE, 0.5);
-            BufferedImage line = TooltipStyle.cropTopOnly(catimgsh(0, evs[i].img,
+            // Render text part separately and crop it
+            BufferedImage textPart = TooltipStyle.cropTopOnly(catimgsh(0,
                 label(" "),
                 value(evs[i].ev.nm, col),
                 label("  "),
                 value(Utils.odformat2(evs[i].a, 2), col),
                 label(" "),
                 value("(" + Utils.odformat2(evs[i].a / fepSum * 100, 0) + "%)", TooltipStyle.COLOR_PERCENTAGE)));
-            int spacing = firstStat ? groupSpacing : lineSpacing;
-            l.cmp.add(line, Coord.of(0, l.cmp.sz.y + spacing));
+            // Compose with icon - returns image and text positioning info
+            IconLineResult result = composeIconLine(evs[i].img, textPart);
+
+            // Adjust spacing: subtract current line's textTopOffset and previous line's textBottomOffset
+            int baseSpacing = firstStat ? groupSpacing : lineSpacing;
+            int adjustedSpacing = baseSpacing - result.textTopOffset - prevTextBottomOffset;
+
+            l.cmp.add(result.image, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
+
+            // Calculate this line's text bottom offset for next iteration
+            // textBottomOffset = image height - textTop - textHeight = textTopOffset (when centered)
+            prevTextBottomOffset = result.textTopOffset;
             firstStat = false;
         }
 
-        // Effects (continue in stats group)
+        // Effects (continue in stats group) - these are text-only lines
         for (int i = 0; i < efs.length; i++) {
             BufferedImage efi = ItemInfo.longtip(efs[i].info);
             if (efi == null) continue;
@@ -384,8 +444,11 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                 efi = catimgsh(0, efi, label(" "), value("(" + (int) Math.round(efs[i].p * 100) + "% chance)", TooltipStyle.COLOR_PERCENTAGE));
             }
             efi = TooltipStyle.cropTopOnly(efi);
-            int spacing = firstStat ? groupSpacing : lineSpacing;
-            l.cmp.add(efi, Coord.of(0, l.cmp.sz.y + spacing));
+            int baseSpacing = firstStat ? groupSpacing : lineSpacing;
+            // Adjust for previous icon line's text bottom offset
+            int adjustedSpacing = baseSpacing - prevTextBottomOffset;
+            l.cmp.add(efi, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
+            prevTextBottomOffset = 0;  // Text-only line has no offset
             firstStat = false;
         }
 
@@ -395,7 +458,10 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         BufferedImage expectedLine = TooltipStyle.cropTopOnly(catimgsh(0,
             label("Expected FEP: "), value(String.format("%.2f", expeted_fep), TooltipStyle.COLOR_EXPECTED_FEP),
             label(" "), value("(" + deltaStr + ")", TooltipStyle.COLOR_DELTA)));
-        l.cmp.add(expectedLine, Coord.of(0, l.cmp.sz.y + groupSpacing));
+        // Adjust for previous icon line's text bottom offset
+        int expectedSpacing = groupSpacing - prevTextBottomOffset;
+        l.cmp.add(expectedLine, Coord.of(0, l.cmp.sz.y + expectedSpacing));
+        prevTextBottomOffset = 0;  // Reset for text-only line
 
         // Expected total (7px after expected FEP)
         if (NUtils.getGameUI() != null && NUtils.getGameUI().chrwdg != null && NUtils.getGameUI().chrwdg.battr != null) {
@@ -406,6 +472,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             BufferedImage totalLine = TooltipStyle.cropTopOnly(catimgsh(0,
                 label("Expected total: "), value(String.format("%.2f", expeted_fep + cur_fep), TooltipStyle.COLOR_EXPECTED_FEP)));
             l.cmp.add(totalLine, Coord.of(0, l.cmp.sz.y + lineSpacing));
+            // prevTextBottomOffset stays 0 for text-only line
         }
 
         // ===== GROUP 4: Food types with icons (10px gap before, 7px between each type) =====
@@ -448,12 +515,9 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                         typeIcon = convolvedown(img.img, UI.scale(new Coord(16, 16)), tflt);
                     }
 
-                    // Build line: icon + food type name
-                    List<BufferedImage> parts = new ArrayList<>();
-                    if (typeIcon != null) {
-                        parts.add(typeIcon);
-                    }
-                    parts.add(value(foodTypeName, new Color(192, 255, 192)));
+                    // Build text part (food type name + drinks)
+                    List<BufferedImage> textParts = new ArrayList<>();
+                    textParts.add(value(foodTypeName, new Color(192, 255, 192)));
 
                     // Add drinks with vessel icons (if dataTables available)
                     if (NUtils.getUI().dataTables != null) {
@@ -465,24 +529,37 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                                 String vesselRes = NUtils.getUI().dataTables.vessel_res.get(vessel);
                                 if (vesselRes != null) {
                                     BufferedImage vesselIcon = convolvedown(Resource.loadsimg(vesselRes), UI.scale(new Coord(16, 16)), iconfilter);
-                                    parts.add(vesselIcon);
+                                    textParts.add(vesselIcon);
                                 }
-                                parts.add(value(drink, new Color(255, 255, 128)));
+                                textParts.add(value(drink, new Color(255, 255, 128)));
                             }
                         }
                     }
 
-                    // Compose line
-                    if (!parts.isEmpty()) {
-                        BufferedImage line = parts.get(0);
-                        for (int i = 1; i < parts.size(); i++) {
-                            line = catimgsh(UI.scale(2), line, parts.get(i));
-                        }
-                        line = TooltipStyle.cropTopOnly(line);
-                        int spacing = firstFoodType ? groupSpacing : lineSpacing;
-                        l.cmp.add(line, Coord.of(0, l.cmp.sz.y + spacing));
-                        firstFoodType = false;
+                    // Compose text parts horizontally and crop
+                    BufferedImage textLine = textParts.get(0);
+                    for (int i = 1; i < textParts.size(); i++) {
+                        textLine = catimgsh(UI.scale(2), textLine, textParts.get(i));
                     }
+                    textLine = TooltipStyle.cropTopOnly(textLine);
+
+                    // Compose with food type icon
+                    int baseSpacing = firstFoodType ? groupSpacing : lineSpacing;
+                    int adjustedSpacing;
+
+                    if (typeIcon != null) {
+                        IconLineResult result = composeIconLine(typeIcon, textLine);
+                        // Adjust spacing for icon positioning
+                        adjustedSpacing = baseSpacing - result.textTopOffset - prevTextBottomOffset;
+                        l.cmp.add(result.image, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
+                        prevTextBottomOffset = result.textTopOffset;
+                    } else {
+                        adjustedSpacing = baseSpacing - prevTextBottomOffset;
+                        l.cmp.add(textLine, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
+                        prevTextBottomOffset = 0;
+                    }
+
+                    firstFoodType = false;
                 }
             }
         }
