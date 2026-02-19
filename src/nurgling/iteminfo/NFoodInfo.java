@@ -342,33 +342,35 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             calcData();
         }
 
-        int groupSpacing = UI.scale(TooltipStyle.SECTION_SPACING);  // 10px between groups
-        int lineSpacing = UI.scale(TooltipStyle.INTERNAL_SPACING);  // 7px within groups
+        // Get font descent for baseline-relative spacing (like NCuriosity)
+        int descent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
+        int groupSpacing = UI.scale(TooltipStyle.SECTION_SPACING) - descent;  // 10px between groups
+        int lineSpacing = UI.scale(TooltipStyle.INTERNAL_SPACING) - descent;  // 7px within groups
 
         // ===== GROUP 1: Energy + FEP Sum =====
         // Line 1: Energy + Hunger
-        BufferedImage energyLine = catimgsh(0,
+        BufferedImage energyLine = TooltipStyle.cropTopOnly(catimgsh(0,
             label("Energy: "), value(Utils.odformat2(end * 100, 2) + "%", TooltipStyle.COLOR_ENERGY),
-            label("  Hunger: "), value(Utils.odformat2(glut * 100, 2) + "%", TooltipStyle.COLOR_HUNGER));
+            label("  Hunger: "), value(Utils.odformat2(glut * 100, 2) + "%", TooltipStyle.COLOR_HUNGER)));
         l.cmp.add(energyLine, Coord.of(0, l.cmp.sz.y));
 
         // Line 2: FEP Sum + FEP/Hunger (7px after energy line)
-        BufferedImage fepLine = catimgsh(0,
+        BufferedImage fepLine = TooltipStyle.cropTopOnly(catimgsh(0,
             label("FEP Sum: "), value(Utils.odformat2(fepSum, 2), TooltipStyle.COLOR_FEP_SUM),
-            label("  FEP/Hunger: "), value(Utils.odformat2(fepSum / (100 * glut), 2), TooltipStyle.COLOR_FEP_HUNGER));
+            label("  FEP/Hunger: "), value(Utils.odformat2(fepSum / (100 * glut), 2), TooltipStyle.COLOR_FEP_HUNGER)));
         l.cmp.add(fepLine, Coord.of(0, l.cmp.sz.y + lineSpacing));
 
         // ===== GROUP 2: Stats (10px gap before, 7px between each stat) =====
         boolean firstStat = true;
         for (int i = 0; i < evs.length; i++) {
             Color col = Utils.blendcol(evs[i].ev.col, Color.WHITE, 0.5);
-            BufferedImage line = catimgsh(0, evs[i].img,
+            BufferedImage line = TooltipStyle.cropTopOnly(catimgsh(0, evs[i].img,
                 label(" "),
                 value(evs[i].ev.nm, col),
                 label("  "),
                 value(Utils.odformat2(evs[i].a, 2), col),
                 label(" "),
-                value("(" + Utils.odformat2(evs[i].a / fepSum * 100, 0) + "%)", TooltipStyle.COLOR_PERCENTAGE));
+                value("(" + Utils.odformat2(evs[i].a / fepSum * 100, 0) + "%)", TooltipStyle.COLOR_PERCENTAGE)));
             int spacing = firstStat ? groupSpacing : lineSpacing;
             l.cmp.add(line, Coord.of(0, l.cmp.sz.y + spacing));
             firstStat = false;
@@ -381,6 +383,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             if (efs[i].p != 1) {
                 efi = catimgsh(0, efi, label(" "), value("(" + (int) Math.round(efs[i].p * 100) + "% chance)", TooltipStyle.COLOR_PERCENTAGE));
             }
+            efi = TooltipStyle.cropTopOnly(efi);
             int spacing = firstStat ? groupSpacing : lineSpacing;
             l.cmp.add(efi, Coord.of(0, l.cmp.sz.y + spacing));
             firstStat = false;
@@ -389,9 +392,9 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         // ===== GROUP 3: Expected FEP + Expected total (10px gap before, 7px between) =====
         double error = expeted_fep * 0.005;
         String deltaStr = (delta >= 0 ? "+" : "") + String.format("%.2f", delta) + " \u00B1 " + String.format("%.2f", error);
-        BufferedImage expectedLine = catimgsh(0,
+        BufferedImage expectedLine = TooltipStyle.cropTopOnly(catimgsh(0,
             label("Expected FEP: "), value(String.format("%.2f", expeted_fep), TooltipStyle.COLOR_EXPECTED_FEP),
-            label(" "), value("(" + deltaStr + ")", TooltipStyle.COLOR_DELTA));
+            label(" "), value("(" + deltaStr + ")", TooltipStyle.COLOR_DELTA)));
         l.cmp.add(expectedLine, Coord.of(0, l.cmp.sz.y + groupSpacing));
 
         // Expected total (7px after expected FEP)
@@ -400,8 +403,8 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             for (BAttrWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.battr.feps.els) {
                 cur_fep += el.a;
             }
-            BufferedImage totalLine = catimgsh(0,
-                label("Expected total: "), value(String.format("%.2f", expeted_fep + cur_fep), TooltipStyle.COLOR_EXPECTED_FEP));
+            BufferedImage totalLine = TooltipStyle.cropTopOnly(catimgsh(0,
+                label("Expected total: "), value(String.format("%.2f", expeted_fep + cur_fep), TooltipStyle.COLOR_EXPECTED_FEP)));
             l.cmp.add(totalLine, Coord.of(0, l.cmp.sz.y + lineSpacing));
         }
 
@@ -475,6 +478,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                         for (int i = 1; i < parts.size(); i++) {
                             line = catimgsh(UI.scale(2), line, parts.get(i));
                         }
+                        line = TooltipStyle.cropTopOnly(line);
                         int spacing = firstFoodType ? groupSpacing : lineSpacing;
                         l.cmp.add(line, Coord.of(0, l.cmp.sz.y + spacing));
                         firstFoodType = false;
