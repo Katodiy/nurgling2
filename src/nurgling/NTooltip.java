@@ -215,6 +215,10 @@ public class NTooltip {
                 if (tip instanceof QBuff || tip.getClass().getName().contains("QBuff")) {
                     continue;
                 }
+                // Skip FoodTypes - NFoodInfo renders food types with icons
+                if (tip.getClass().getName().contains("FoodTypes")) {
+                    continue;
+                }
                 l.add(tip);
                 hasTips = true;
             }

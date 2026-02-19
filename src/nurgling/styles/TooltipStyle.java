@@ -120,6 +120,29 @@ public final class TooltipStyle {
     /** Resource path text color - gray */
     public static final Color COLOR_RESOURCE_PATH = new Color(128, 128, 128);
 
+    // ============ FOOD TOOLTIP COLORS ============
+
+    /** Energy value color - green */
+    public static final Color COLOR_ENERGY = new Color(100, 255, 100);
+
+    /** Hunger value color - orange */
+    public static final Color COLOR_HUNGER = new Color(255, 192, 128);
+
+    /** FEP Sum value color - bright green */
+    public static final Color COLOR_FEP_SUM = new Color(128, 255, 0);
+
+    /** FEP/Hunger value color - light green */
+    public static final Color COLOR_FEP_HUNGER = new Color(128, 255, 128);
+
+    /** Expected FEP value color - bright green */
+    public static final Color COLOR_EXPECTED_FEP = new Color(128, 255, 0);
+
+    /** Delta value color - cyan */
+    public static final Color COLOR_DELTA = new Color(0, 196, 255);
+
+    /** Percentage text color - gray */
+    public static final Color COLOR_PERCENTAGE = new Color(128, 128, 128);
+
     /** Tooltip background color - dark green-gray at 90% opacity */
     public static final Color COLOR_TOOLTIP_BG = new Color(37, 43, 41, 230);  // #252B29 @ 90%
 

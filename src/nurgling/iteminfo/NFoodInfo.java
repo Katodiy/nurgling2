@@ -6,12 +6,14 @@ import static haven.CharWnd.iconfilter;
 import static haven.PUtils.convolvedown;
 import haven.resutil.*;
 import nurgling.*;
+import nurgling.styles.TooltipStyle;
 import nurgling.tools.NSearchItem;
 import nurgling.widgets.*;
 
 import java.awt.*;
 import java.awt.image.*;
 import java.util.*;
+import java.util.List;
 
 public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSearchable
 {
@@ -39,6 +41,35 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     HashMap<String, Double> searchImage = new HashMap<>();
 
     double energy;
+
+    // Cached foundries for Open Sans tooltip rendering
+    private static Text.Foundry labelFoundry = null;
+    private static Text.Foundry valueFoundry = null;
+
+    private static Text.Foundry getLabelFoundry() {
+        if (labelFoundry == null) {
+            labelFoundry = TooltipStyle.createFoundry(false, TooltipStyle.FONT_SIZE_BODY, Color.WHITE);
+        }
+        return labelFoundry;
+    }
+
+    private static Text.Foundry getValueFoundry() {
+        if (valueFoundry == null) {
+            valueFoundry = TooltipStyle.createFoundry(true, TooltipStyle.FONT_SIZE_BODY, Color.WHITE);
+        }
+        return valueFoundry;
+    }
+
+    /** Render label text (Open Sans Regular, white) */
+    private static BufferedImage label(String text) {
+        return getLabelFoundry().render(text, Color.WHITE).img;
+    }
+
+    /** Render value text (Open Sans Semibold, colored) */
+    private static BufferedImage value(String text, Color color) {
+        return getValueFoundry().render(text, color).img;
+    }
+
     public NFoodInfo(Owner owner, double end, double glut, double sev, double cons, Event[] evs, Effect[] efs, int[] types)
     {
         super(owner, end, glut, sev, cons, evs, efs, types);
@@ -289,24 +320,18 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     }
     @Override
     public void layout(Layout l) {
-
-        if (owner instanceof GItem && NUtils.getGameUI()!=null)
-        {
+        if (owner instanceof GItem && NUtils.getGameUI() != null) {
             name = ((NGItem) owner).name();
             if (name == null)
                 return;
 
             NCharacterInfo ci = NUtils.getGameUI().getCharInfo();
-            if (ci != null)
-            {
+            if (ci != null) {
                 isVarity = !ci.varity.contains(name);
             }
-            if (NUtils.getGameUI().chrwdg != null)
-            {
-
-                for (int type : types)
-                {
-                    if(NUtils.getGameUI().chrwdg.battr.cons.els.size()>type) {
+            if (NUtils.getGameUI().chrwdg != null) {
+                for (int type : types) {
+                    if (NUtils.getGameUI().chrwdg.battr.cons.els.size() > type) {
                         BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(type);
                         if (c != null) {
                             efficiency = c.a * 100;
@@ -317,84 +342,146 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             calcData();
         }
 
+        int groupSpacing = UI.scale(TooltipStyle.SECTION_SPACING);  // 10px between groups
+        int lineSpacing = UI.scale(TooltipStyle.INTERNAL_SPACING);  // 7px within groups
 
-        String head = String.format("Energy: $col[128,128,255]{%s%%}, Hunger: $col[255,192,128]{%s\u2030}", Utils.odformat2(end * 100, 2), Utils.odformat2(glut * 1000, 2));
-        if(cons != 0)
-            head += String.format(", Satiation: $col[192,192,128]{%s%%}", Utils.odformat2(cons * 100, 2));
-        l.cmp.add(RichText.render(head, 0).img, Coord.of(0, l.cmp.sz.y));
-        l.cmp.add(RichText.render(String.format("FEP Sum: $col[128,255,0]{%s}, FEP/Hunger: $col[128,255,128]{%s}", Utils.odformat2(fepSum, 2), Utils.odformat2(fepSum / (100 * glut), 2)), 0).img,Coord.of(0, l.cmp.sz.y));
+        // ===== GROUP 1: Energy + FEP Sum =====
+        // Line 1: Energy + Hunger
+        BufferedImage energyLine = catimgsh(0,
+            label("Energy: "), value(Utils.odformat2(end * 100, 2) + "%", TooltipStyle.COLOR_ENERGY),
+            label("  Hunger: "), value(Utils.odformat2(glut * 100, 2) + "%", TooltipStyle.COLOR_HUNGER));
+        l.cmp.add(energyLine, Coord.of(0, l.cmp.sz.y));
 
-        for(int i = 0; i < evs.length; i++) {
+        // Line 2: FEP Sum + FEP/Hunger (7px after energy line)
+        BufferedImage fepLine = catimgsh(0,
+            label("FEP Sum: "), value(Utils.odformat2(fepSum, 2), TooltipStyle.COLOR_FEP_SUM),
+            label("  FEP/Hunger: "), value(Utils.odformat2(fepSum / (100 * glut), 2), TooltipStyle.COLOR_FEP_HUNGER));
+        l.cmp.add(fepLine, Coord.of(0, l.cmp.sz.y + lineSpacing));
+
+        // ===== GROUP 2: Stats (10px gap before, 7px between each stat) =====
+        boolean firstStat = true;
+        for (int i = 0; i < evs.length; i++) {
             Color col = Utils.blendcol(evs[i].ev.col, Color.WHITE, 0.5);
-            l.cmp.add(catimgsh(5, evs[i].img, RichText.render(String.format("%s: %s{%s} (%s%%)", evs[i].ev.nm, RichText.Parser.col2a(col), Utils.odformat2(evs[i].a, 2), Utils.odformat2(evs[i].a/fepSum*100, 0)), 0).img),
-                    Coord.of(UI.scale(5), l.cmp.sz.y));
+            BufferedImage line = catimgsh(0, evs[i].img,
+                label(" "),
+                value(evs[i].ev.nm, col),
+                label("  "),
+                value(Utils.odformat2(evs[i].a, 2), col),
+                label(" "),
+                value("(" + Utils.odformat2(evs[i].a / fepSum * 100, 0) + "%)", TooltipStyle.COLOR_PERCENTAGE));
+            int spacing = firstStat ? groupSpacing : lineSpacing;
+            l.cmp.add(line, Coord.of(0, l.cmp.sz.y + spacing));
+            firstStat = false;
         }
-        if(sev > 0)
-            l.cmp.add(RichText.render(String.format("Total: $col[128,192,255]{%s} ($col[128,192,255]{%s}/\u2030 hunger)", Utils.odformat2(sev, 2), Utils.odformat2(sev / (1000 * glut), 2)), 0).img,
-                    Coord.of(UI.scale(5), l.cmp.sz.y));
-        for(int i = 0; i < efs.length; i++) {
+
+        // Effects (continue in stats group)
+        for (int i = 0; i < efs.length; i++) {
             BufferedImage efi = ItemInfo.longtip(efs[i].info);
-            if(efs[i].p != 1)
-                efi = catimgsh(5, efi, RichText.render(String.format("$i{($col[192,192,255]{%d%%} chance)}", (int)Math.round(efs[i].p * 100)), 0).img);
-            l.cmp.add(efi, Coord.of(UI.scale(5), l.cmp.sz.y));
+            if (efi == null) continue;
+            if (efs[i].p != 1) {
+                efi = catimgsh(0, efi, label(" "), value("(" + (int) Math.round(efs[i].p * 100) + "% chance)", TooltipStyle.COLOR_PERCENTAGE));
+            }
+            int spacing = firstStat ? groupSpacing : lineSpacing;
+            l.cmp.add(efi, Coord.of(0, l.cmp.sz.y + spacing));
+            firstStat = false;
         }
 
-
-        l.cmp.add(RichText.render(String.format("$col[205,125,255]{%s}:", "Calculation"), 0).img,Coord.of(0, l.cmp.sz.y));
-
-
+        // ===== GROUP 3: Expected FEP + Expected total (10px gap before, 7px between) =====
         double error = expeted_fep * 0.005;
-        if (delta < 0)
-            l.cmp.add(RichText.render(String.format("Expected FEP: $col[128,255,0]{%.2f} $col[0,196,255]{(%.2f \u00B1 %.2f)}", expeted_fep, delta, error), 0).img,Coord.of(UI.scale(5), l.cmp.sz.y));
-        else
-            l.cmp.add(RichText.render(String.format("Expected FEP: $col[128,255,0]{%.2f} $col[255,0,0]{(+%.2f \u00B1 %.2f)} ", expeted_fep, delta, error), 0).img,Coord.of(UI.scale(5), l.cmp.sz.y));
-        double cur_fep = 0;
-        if(NUtils.getGameUI().chrwdg.battr!=null) {
+        String deltaStr = (delta >= 0 ? "+" : "") + String.format("%.2f", delta) + " \u00B1 " + String.format("%.2f", error);
+        BufferedImage expectedLine = catimgsh(0,
+            label("Expected FEP: "), value(String.format("%.2f", expeted_fep), TooltipStyle.COLOR_EXPECTED_FEP),
+            label(" "), value("(" + deltaStr + ")", TooltipStyle.COLOR_DELTA));
+        l.cmp.add(expectedLine, Coord.of(0, l.cmp.sz.y + groupSpacing));
+
+        // Expected total (7px after expected FEP)
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().chrwdg != null && NUtils.getGameUI().chrwdg.battr != null) {
+            double cur_fep = 0;
             for (BAttrWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.battr.feps.els) {
                 cur_fep += el.a;
             }
-            l.cmp.add(RichText.render(String.format("Expected total: $col[128,255,0]{%.2f}", expeted_fep + cur_fep), 0).img, Coord.of(UI.scale(5), l.cmp.sz.y));
+            BufferedImage totalLine = catimgsh(0,
+                label("Expected total: "), value(String.format("%.2f", expeted_fep + cur_fep), TooltipStyle.COLOR_EXPECTED_FEP));
+            l.cmp.add(totalLine, Coord.of(0, l.cmp.sz.y + lineSpacing));
+        }
 
-            if (NUtils.getUI().dataTables.data_food != null && NUtils.getUI().dataTables.data_food.containsKey(name)) {
-                drinkImg = drinkImg();
-                if (drinkImg != null && !drinkImg.isEmpty()) {
-                    l.cmp.add(RichText.render(String.format("$col[175,175,255]{%s}:", "Drink info"), 0).img, Coord.of(0, l.cmp.sz.y));
+        // ===== GROUP 4: Food types with icons (10px gap before, 7px between each type) =====
+        // Find FoodTypes ItemInfo and extract types using reflection
+        if (owner instanceof GItem && NUtils.getUI() != null) {
 
-                    for (BufferedImage cand : drinkImg) {
-                        l.cmp.add(cand, Coord.of(UI.scale(5), l.cmp.sz.y));
+            Resource[] foodTypeResources = null;
+
+            // Find FoodTypes in item info list and extract types via reflection
+            try {
+                List<ItemInfo> infos = ((GItem) owner).info();
+                for (ItemInfo info : infos) {
+                    if (info.getClass().getName().contains("FoodTypes")) {
+                        // types field is Resource[] not int[]
+                        java.lang.reflect.Field typesField = info.getClass().getDeclaredField("types");
+                        typesField.setAccessible(true);
+                        foodTypeResources = (Resource[]) typesField.get(info);
+                        break;
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            if (foodTypeResources != null && foodTypeResources.length > 0) {
+                boolean firstFoodType = true;
+                for (Resource typeRes : foodTypeResources) {
+                    if (typeRes == null) continue;
+
+                    // Get food type name from resource tooltip
+                    String foodTypeName = null;
+                    Resource.Tooltip tt = typeRes.layer(Resource.tooltip);
+                    if (tt != null) {
+                        foodTypeName = tt.t;
+                    }
+                    if (foodTypeName == null) continue;
+
+                    // Get food type icon from resource image
+                    BufferedImage typeIcon = null;
+                    Resource.Image img = typeRes.layer(Resource.imgc);
+                    if (img != null) {
+                        typeIcon = convolvedown(img.img, UI.scale(new Coord(16, 16)), tflt);
+                    }
+
+                    // Build line: icon + food type name
+                    List<BufferedImage> parts = new ArrayList<>();
+                    if (typeIcon != null) {
+                        parts.add(typeIcon);
+                    }
+                    parts.add(value(foodTypeName, new Color(192, 255, 192)));
+
+                    // Add drinks with vessel icons (if dataTables available)
+                    if (NUtils.getUI().dataTables != null) {
+                        List<String> drinks = NUtils.getUI().dataTables.data_drinks.get(foodTypeName);
+                        if (drinks != null && !drinks.isEmpty()) {
+                            for (String drink : drinks) {
+                                String vessel = NUtils.getUI().dataTables.data_vessel.getOrDefault(drink, "");
+                                if (vessel == null) vessel = "Any";
+                                String vesselRes = NUtils.getUI().dataTables.vessel_res.get(vessel);
+                                if (vesselRes != null) {
+                                    BufferedImage vesselIcon = convolvedown(Resource.loadsimg(vesselRes), UI.scale(new Coord(16, 16)), iconfilter);
+                                    parts.add(vesselIcon);
+                                }
+                                parts.add(value(drink, new Color(255, 255, 128)));
+                            }
+                        }
+                    }
+
+                    // Compose line
+                    if (!parts.isEmpty()) {
+                        BufferedImage line = parts.get(0);
+                        for (int i = 1; i < parts.size(); i++) {
+                            line = catimgsh(UI.scale(2), line, parts.get(i));
+                        }
+                        int spacing = firstFoodType ? groupSpacing : lineSpacing;
+                        l.cmp.add(line, Coord.of(0, l.cmp.sz.y + spacing));
+                        firstFoodType = false;
                     }
                 }
             }
         }
-    }
-
-    ArrayList<BufferedImage> drinkImg = null;
-
-    private ArrayList<BufferedImage> drinkImg()
-    {
-        if (drinkImg == null && NUtils.getUI().dataTables.data_food.get(name) != null)
-        {
-            drinkImg = new ArrayList<>();
-            for (String type : NUtils.getUI().dataTables.data_food.get(name))
-            {
-                if (NUtils.getUI().dataTables.data_drinks.get(type) != null)
-                {
-                    Iterator<String> iter = NUtils.getUI().dataTables.data_drinks.get(type).iterator();
-                    BufferedImage img = null;
-                    while (iter.hasNext())
-                    {
-                        String drink = iter.next();
-                        String vessel = (NUtils.getUI().dataTables.data_vessel.getOrDefault(drink, ""));
-                        if (vessel == null) vessel = "Any";
-                        img = RichText.render(String.format("%s$col[192,255,192]{%s}:", "\t", type), 0).img;
-                        img = catimgsh(5, img, RichText.render(String.format("$col[255,255,128]{%s} (%s)", drink, vessel), 0).img);
-                        img = catimgsh(5, img, convolvedown(Resource.loadsimg(NUtils.getUI().dataTables.vessel_res.get(vessel)), UI.scale(new Coord(16, 16)), iconfilter));
-                        drinkImg.add(img);
-                    }
-                }
-            }
-        }
-        return drinkImg;
     }
 
     public static Tex var_img = Resource.loadtex("nurgling/hud/items/overlays/varity");
