@@ -75,11 +75,13 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
      */
     private static class IconLineResult {
         final BufferedImage image;
-        final int textTopOffset;  // Pixels from image top to text top
+        final int textTopOffset;     // Pixels from image top to text top
+        final int textBottomOffset;  // Pixels from text bottom to image bottom
 
-        IconLineResult(BufferedImage image, int textTopOffset) {
+        IconLineResult(BufferedImage image, int textTopOffset, int textBottomOffset) {
             this.image = image;
             this.textTopOffset = textTopOffset;
+            this.textBottomOffset = textBottomOffset;
         }
     }
 
@@ -111,8 +113,12 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
      */
     private static IconLineResult composeElements(int gap, List<LineElement> elements) {
         if (elements.isEmpty()) {
-            return new IconLineResult(TexI.mkbuf(new Coord(1, 1)), 0);
+            return new IconLineResult(TexI.mkbuf(new Coord(1, 1)), 0, 0);
         }
+
+        // Get font descent - text images include descent below baseline
+        // We need to account for this when centering to align visual text center with icon center
+        int descent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
 
         // First pass: find max text height (only from non-icon elements)
         int maxTextHeight = 0;
@@ -140,7 +146,12 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         // Total height: text height + any icon extension above/below
         int iconExtension = Math.max(0, (maxIconHeight - maxTextHeight) / 2);
         int totalHeight = maxTextHeight + iconExtension * 2;
-        int textY = iconExtension;  // Text starts after icon extension above
+
+        // Calculate actual text Y position (accounting for descent shift for visual alignment)
+        // Text is centered then shifted down by descent/2
+        int textTopOffset = (totalHeight - maxTextHeight) / 2 + descent / 2;
+        // Text bottom offset is NOT the same due to descent shift
+        int textBottomOffset = totalHeight - textTopOffset - maxTextHeight;
 
         // Calculate total width
         int totalWidth = 0;
@@ -158,11 +169,13 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             LineElement elem = elements.get(i);
             int y;
             if (elem.isIcon) {
-                // Center icon vertically in total height
+                // Center icon vertically
                 y = (totalHeight - elem.image.getHeight()) / 2;
             } else {
-                // Position text at textY
-                y = textY;
+                // Center text, but adjust for descent so visual text center aligns with icon center
+                // Text visual center is at (height - descent) / 2 from top, not height / 2
+                // So we shift text DOWN by descent / 2 to compensate
+                y = (totalHeight - elem.image.getHeight()) / 2 + descent / 2;
             }
 
             g.drawImage(elem.image, x, y, null);
@@ -172,7 +185,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
 
         g.dispose();
 
-        return new IconLineResult(result, textY);
+        return new IconLineResult(result, textTopOffset, textBottomOffset);
     }
 
     /**
@@ -184,6 +197,17 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         elements.add(LineElement.icon(icon));
         elements.add(LineElement.text(textLine));
         return composeElements(UI.scale(2), elements);
+    }
+
+    /** Icon size for tooltips (80% of standard 16px) */
+    private static final int ICON_SIZE = 13;
+
+    /**
+     * Scale an icon to the standard tooltip icon size (75% of 16px = 12px).
+     */
+    private static BufferedImage scaleIcon(BufferedImage icon) {
+        if (icon == null) return null;
+        return convolvedown(icon, UI.scale(new Coord(ICON_SIZE, ICON_SIZE)), iconfilter);
     }
 
     public NFoodInfo(Owner owner, double end, double glut, double sev, double cons, Event[] evs, Effect[] efs, int[] types)
@@ -491,8 +515,9 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                 value(Utils.odformat2(evs[i].a, 2), col),
                 label(" "),
                 value("(" + Utils.odformat2(evs[i].a / fepSum * 100, 0) + "%)", TooltipStyle.COLOR_PERCENTAGE)));
-            // Compose with icon - returns image and text positioning info
-            IconLineResult result = composeIconLine(evs[i].img, textPart);
+            // Scale stat icon to 75% and compose with text
+            BufferedImage scaledIcon = scaleIcon(evs[i].img);
+            IconLineResult result = composeIconLine(scaledIcon, textPart);
 
             // Adjust spacing: subtract current line's textTopOffset and previous line's textBottomOffset
             int baseSpacing = firstStat ? groupSpacing : lineSpacing;
@@ -500,9 +525,8 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
 
             l.cmp.add(result.image, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
 
-            // Calculate this line's text bottom offset for next iteration
-            // textBottomOffset = image height - textTop - textHeight = textTopOffset (when centered)
-            prevTextBottomOffset = result.textTopOffset;
+            // Use text bottom offset for next iteration (not same as top due to descent shift)
+            prevTextBottomOffset = result.textBottomOffset;
             firstStat = false;
         }
 
@@ -578,11 +602,11 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                     }
                     if (foodTypeName == null) continue;
 
-                    // Get food type icon from resource image
+                    // Get food type icon from resource image (scaled to 75%)
                     BufferedImage typeIcon = null;
                     Resource.Image img = typeRes.layer(Resource.imgc);
                     if (img != null) {
-                        typeIcon = convolvedown(img.img, UI.scale(new Coord(16, 16)), tflt);
+                        typeIcon = convolvedown(img.img, UI.scale(new Coord(ICON_SIZE, ICON_SIZE)), tflt);
                     }
 
                     // Build elements list with proper icon/text marking
@@ -605,7 +629,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                                 if (vessel == null) vessel = "Any";
                                 String vesselRes = NUtils.getUI().dataTables.vessel_res.get(vessel);
                                 if (vesselRes != null) {
-                                    BufferedImage vesselIcon = convolvedown(Resource.loadsimg(vesselRes), UI.scale(new Coord(16, 16)), iconfilter);
+                                    BufferedImage vesselIcon = convolvedown(Resource.loadsimg(vesselRes), UI.scale(new Coord(ICON_SIZE, ICON_SIZE)), iconfilter);
                                     elements.add(LineElement.icon(vesselIcon));
                                 }
                                 elements.add(LineElement.text(TooltipStyle.cropTopOnly(value(drink, new Color(255, 255, 128)))));
@@ -619,7 +643,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                     int baseSpacing = firstFoodType ? groupSpacing : lineSpacing;
                     int adjustedSpacing = baseSpacing - result.textTopOffset - prevTextBottomOffset;
                     l.cmp.add(result.image, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
-                    prevTextBottomOffset = result.textTopOffset;
+                    prevTextBottomOffset = result.textBottomOffset;
 
                     firstFoodType = false;
                 }
