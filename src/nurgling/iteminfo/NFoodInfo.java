@@ -587,7 +587,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         String deltaStr = (delta >= 0 ? "+" : "") + String.format("%.2f", delta) + " \u00B1 " + String.format("%.2f", error);
         BufferedImage expectedLine = TooltipStyle.cropTopOnly(catimgsh(0,
             label("Expected FEP: "), value(String.format("%.2f", expeted_fep), TooltipStyle.COLOR_FOOD_FEP_HUNGER),
-            label(" "), value("(" + deltaStr + ")", TooltipStyle.COLOR_DELTA)));
+            label(" "), value("(" + deltaStr + ")", Color.WHITE)));
         // Adjust for previous icon line's text bottom offset
         int expectedSpacing = groupSpacing - prevTextBottomOffset;
         l.cmp.add(expectedLine, Coord.of(0, l.cmp.sz.y + expectedSpacing));

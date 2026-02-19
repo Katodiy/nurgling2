@@ -476,10 +476,19 @@ public class NTooltip {
         }
 
         // Wear percentage (only if item has wear)
+        // Color based on percentage: 0-20% red, 20-60% yellow, 60-100% green
         BufferedImage wearImg = null;
         if (wearPercent != null) {
             totalWidth += hSpacing;
-            wearImg = getNameFoundry().render("(" + wearPercent + "%)", TooltipStyle.COLOR_FOOD_FEP_SUM).img;
+            Color wearColor;
+            if (wearPercent <= 20) {
+                wearColor = new Color(255, 80, 80);  // Red
+            } else if (wearPercent <= 60) {
+                wearColor = new Color(255, 255, 80);  // Yellow
+            } else {
+                wearColor = new Color(80, 255, 80);  // Green
+            }
+            wearImg = getNameFoundry().render("(" + wearPercent + "%)", wearColor).img;
             totalWidth += wearImg.getWidth();
         }
 
