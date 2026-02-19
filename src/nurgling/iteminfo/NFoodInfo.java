@@ -71,7 +71,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     }
 
     /**
-     * Result of composing an icon with text - contains image and text positioning info.
+     * Result of composing elements - contains image and text positioning info.
      */
     private static class IconLineResult {
         final BufferedImage image;
@@ -84,36 +84,106 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     }
 
     /**
-     * Compose an icon with a text line. Icon is NOT clipped - full icon is visible.
-     * Returns both the image and the text top offset for proper spacing calculations.
-     * When adding to layout, subtract textTopOffset from spacing to measure TEXT-to-TEXT.
+     * Element for composing lines with mixed text and icons.
      */
-    private static IconLineResult composeIconLine(BufferedImage icon, BufferedImage textLine) {
-        int textHeight = textLine.getHeight();
-        int textWidth = textLine.getWidth();
-        int iconHeight = icon.getHeight();
-        int iconWidth = icon.getWidth();
-        int gap = UI.scale(2);
+    private static class LineElement {
+        final BufferedImage image;
+        final boolean isIcon;
 
-        // Center icon and text relative to each other
-        int maxHeight = Math.max(iconHeight, textHeight);
-        int iconY = (maxHeight - iconHeight) / 2;
-        int textY = (maxHeight - textHeight) / 2;
+        LineElement(BufferedImage image, boolean isIcon) {
+            this.image = image;
+            this.isIcon = isIcon;
+        }
 
-        int resultWidth = iconWidth + gap + textWidth;
-        BufferedImage result = TexI.mkbuf(new Coord(resultWidth, maxHeight));
+        static LineElement text(BufferedImage img) {
+            return new LineElement(img, false);
+        }
+
+        static LineElement icon(BufferedImage img) {
+            return new LineElement(img, true);
+        }
+    }
+
+    /**
+     * Compose multiple elements (text and icons) horizontally.
+     * TEXT elements define the line height - icons are centered vertically.
+     * Returns the composed image and text top offset for spacing calculations.
+     */
+    private static IconLineResult composeElements(int gap, List<LineElement> elements) {
+        if (elements.isEmpty()) {
+            return new IconLineResult(TexI.mkbuf(new Coord(1, 1)), 0);
+        }
+
+        // First pass: find max text height (only from non-icon elements)
+        int maxTextHeight = 0;
+        for (LineElement elem : elements) {
+            if (!elem.isIcon) {
+                maxTextHeight = Math.max(maxTextHeight, elem.image.getHeight());
+            }
+        }
+
+        // If no text elements, fall back to max of all heights
+        if (maxTextHeight == 0) {
+            for (LineElement elem : elements) {
+                maxTextHeight = Math.max(maxTextHeight, elem.image.getHeight());
+            }
+        }
+
+        // Find max icon height to determine total line height
+        int maxIconHeight = 0;
+        for (LineElement elem : elements) {
+            if (elem.isIcon) {
+                maxIconHeight = Math.max(maxIconHeight, elem.image.getHeight());
+            }
+        }
+
+        // Total height: text height + any icon extension above/below
+        int iconExtension = Math.max(0, (maxIconHeight - maxTextHeight) / 2);
+        int totalHeight = maxTextHeight + iconExtension * 2;
+        int textY = iconExtension;  // Text starts after icon extension above
+
+        // Calculate total width
+        int totalWidth = 0;
+        for (int i = 0; i < elements.size(); i++) {
+            totalWidth += elements.get(i).image.getWidth();
+            if (i > 0) totalWidth += gap;
+        }
+
+        // Create result image
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, totalHeight));
         Graphics g = result.getGraphics();
 
-        // Draw icon centered
-        g.drawImage(icon, 0, iconY, null);
+        int x = 0;
+        for (int i = 0; i < elements.size(); i++) {
+            LineElement elem = elements.get(i);
+            int y;
+            if (elem.isIcon) {
+                // Center icon vertically in total height
+                y = (totalHeight - elem.image.getHeight()) / 2;
+            } else {
+                // Position text at textY
+                y = textY;
+            }
 
-        // Draw text centered
-        g.drawImage(textLine, iconWidth + gap, textY, null);
+            g.drawImage(elem.image, x, y, null);
+            x += elem.image.getWidth();
+            if (i < elements.size() - 1) x += gap;
+        }
 
         g.dispose();
 
-        // textTopOffset = how many pixels from image top to text top
         return new IconLineResult(result, textY);
+    }
+
+    /**
+     * Compose a single icon with a text line.
+     * Convenience wrapper for composeElements with just icon + text.
+     */
+    private static IconLineResult composeIconLine(BufferedImage icon, BufferedImage textLine) {
+        List<LineElement> elements = new ArrayList<>();
+        elements.add(LineElement.icon(icon));
+        elements.add(LineElement.text(textLine));
+        return composeElements(UI.scale(2), elements);
     }
 
     public NFoodInfo(Owner owner, double end, double glut, double sev, double cons, Event[] evs, Effect[] efs, int[] types)
@@ -515,9 +585,16 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                         typeIcon = convolvedown(img.img, UI.scale(new Coord(16, 16)), tflt);
                     }
 
-                    // Build text part (food type name + drinks)
-                    List<BufferedImage> textParts = new ArrayList<>();
-                    textParts.add(value(foodTypeName, new Color(192, 255, 192)));
+                    // Build elements list with proper icon/text marking
+                    List<LineElement> elements = new ArrayList<>();
+
+                    // Add food type icon
+                    if (typeIcon != null) {
+                        elements.add(LineElement.icon(typeIcon));
+                    }
+
+                    // Add food type name (text, cropped)
+                    elements.add(LineElement.text(TooltipStyle.cropTopOnly(value(foodTypeName, new Color(192, 255, 192)))));
 
                     // Add drinks with vessel icons (if dataTables available)
                     if (NUtils.getUI().dataTables != null) {
@@ -529,35 +606,20 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                                 String vesselRes = NUtils.getUI().dataTables.vessel_res.get(vessel);
                                 if (vesselRes != null) {
                                     BufferedImage vesselIcon = convolvedown(Resource.loadsimg(vesselRes), UI.scale(new Coord(16, 16)), iconfilter);
-                                    textParts.add(vesselIcon);
+                                    elements.add(LineElement.icon(vesselIcon));
                                 }
-                                textParts.add(value(drink, new Color(255, 255, 128)));
+                                elements.add(LineElement.text(TooltipStyle.cropTopOnly(value(drink, new Color(255, 255, 128)))));
                             }
                         }
                     }
 
-                    // Compose text parts horizontally and crop
-                    BufferedImage textLine = textParts.get(0);
-                    for (int i = 1; i < textParts.size(); i++) {
-                        textLine = catimgsh(UI.scale(2), textLine, textParts.get(i));
-                    }
-                    textLine = TooltipStyle.cropTopOnly(textLine);
+                    // Compose all elements - TEXT defines height, icons centered
+                    IconLineResult result = composeElements(UI.scale(2), elements);
 
-                    // Compose with food type icon
                     int baseSpacing = firstFoodType ? groupSpacing : lineSpacing;
-                    int adjustedSpacing;
-
-                    if (typeIcon != null) {
-                        IconLineResult result = composeIconLine(typeIcon, textLine);
-                        // Adjust spacing for icon positioning
-                        adjustedSpacing = baseSpacing - result.textTopOffset - prevTextBottomOffset;
-                        l.cmp.add(result.image, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
-                        prevTextBottomOffset = result.textTopOffset;
-                    } else {
-                        adjustedSpacing = baseSpacing - prevTextBottomOffset;
-                        l.cmp.add(textLine, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
-                        prevTextBottomOffset = 0;
-                    }
+                    int adjustedSpacing = baseSpacing - result.textTopOffset - prevTextBottomOffset;
+                    l.cmp.add(result.image, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
+                    prevTextBottomOffset = result.textTopOffset;
 
                     firstFoodType = false;
                 }
