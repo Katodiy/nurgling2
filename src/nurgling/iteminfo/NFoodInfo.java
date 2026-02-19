@@ -502,19 +502,56 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         // Track previous line's text bottom offset for proper spacing
         int prevTextBottomOffset = 0;  // For text-only lines, this is 0
 
+        // First pass: calculate column widths for tabular alignment
+        int maxNameWidth = 0;
+        int maxValueWidth = 0;
+        int columnGap = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
+
+        for (int i = 0; i < evs.length; i++) {
+            BufferedImage nameImg = label(evs[i].ev.nm);
+            BufferedImage valueImg = value(Utils.odformat2(evs[i].a, 2), Color.WHITE);
+            maxNameWidth = Math.max(maxNameWidth, nameImg.getWidth());
+            maxValueWidth = Math.max(maxValueWidth, valueImg.getWidth());
+        }
+
+        // Second pass: render stats with aligned columns
         boolean firstStat = true;
         for (int i = 0; i < evs.length; i++) {
             Color col = Utils.blendcol(evs[i].ev.col, Color.WHITE, 0.5);
-            // Render text part separately and crop it
-            // Stat name is white, value is colored, percentage is gray
-            BufferedImage textPart = TooltipStyle.cropTopOnly(catimgsh(0,
-                label(" "),
-                label(evs[i].ev.nm),  // White stat name
-                label("  "),
-                value(Utils.odformat2(evs[i].a, 2), col),
-                label(" "),
-                value("(" + Utils.odformat2(evs[i].a / fepSum * 100, 0) + "%)", TooltipStyle.COLOR_PERCENTAGE)));
-            // Scale stat icon to 75% and compose with text
+
+            // Render each part separately
+            BufferedImage nameImg = label(evs[i].ev.nm);
+            BufferedImage valueImg = value(Utils.odformat2(evs[i].a, 2), col);
+            BufferedImage pctImg = value("(" + Utils.odformat2(evs[i].a / fepSum * 100, 0) + "%)", TooltipStyle.COLOR_PERCENTAGE);
+
+            // Calculate positions for tabular layout
+            // Name is left-aligned, value is right-aligned within its column, percentage follows
+            int nameColWidth = maxNameWidth;
+            int valueColWidth = maxValueWidth;
+
+            int totalWidth = nameColWidth + columnGap + valueColWidth + columnGap + pctImg.getWidth();
+            int maxHeight = Math.max(Math.max(nameImg.getHeight(), valueImg.getHeight()), pctImg.getHeight());
+
+            BufferedImage textPart = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+            Graphics g = textPart.getGraphics();
+
+            // Draw name (left-aligned in column)
+            int x = 0;
+            g.drawImage(nameImg, x, (maxHeight - nameImg.getHeight()) / 2, null);
+
+            // Draw value (right-aligned in column)
+            x = nameColWidth + columnGap + (valueColWidth - valueImg.getWidth());
+            g.drawImage(valueImg, x, (maxHeight - valueImg.getHeight()) / 2, null);
+
+            // Draw percentage (after value column)
+            x = nameColWidth + columnGap + valueColWidth + columnGap;
+            g.drawImage(pctImg, x, (maxHeight - pctImg.getHeight()) / 2, null);
+
+            g.dispose();
+
+            textPart = TooltipStyle.cropTopOnly(textPart);
+
+            // Scale stat icon and compose with text
             BufferedImage scaledIcon = scaleIcon(evs[i].img);
             IconLineResult result = composeIconLine(scaledIcon, textPart);
 
