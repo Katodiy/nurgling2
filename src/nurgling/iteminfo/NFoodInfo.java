@@ -65,6 +65,11 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         return getLabelFoundry().render(text, Color.WHITE).img;
     }
 
+    /** Render label text with custom color (Open Sans Regular, colored) */
+    private static BufferedImage labelColored(String text, Color color) {
+        return getLabelFoundry().render(text, color).img;
+    }
+
     /** Render value text (Open Sans Semibold, colored) */
     private static BufferedImage value(String text, Color color) {
         return getValueFoundry().render(text, color).img;
@@ -522,7 +527,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             // Render each part separately
             BufferedImage nameImg = label(evs[i].ev.nm);
             BufferedImage valueImg = value(Utils.odformat2(evs[i].a, 2), col);
-            BufferedImage pctImg = value("(" + Utils.odformat2(evs[i].a / fepSum * 100, 0) + "%)", TooltipStyle.COLOR_PERCENTAGE);
+            BufferedImage pctImg = labelColored("(" + Utils.odformat2(evs[i].a / fepSum * 100, 0) + "%)", TooltipStyle.COLOR_PERCENTAGE);
 
             // Calculate positions for tabular layout
             // Name is left-aligned, value is right-aligned within its column, percentage follows
@@ -571,7 +576,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             BufferedImage efi = ItemInfo.longtip(efs[i].info);
             if (efi == null) continue;
             if (efs[i].p != 1) {
-                efi = catimgsh(0, efi, label(" "), value("(" + (int) Math.round(efs[i].p * 100) + "% chance)", TooltipStyle.COLOR_PERCENTAGE));
+                efi = catimgsh(0, efi, label(" "), labelColored("(" + (int) Math.round(efs[i].p * 100) + "% chance)", TooltipStyle.COLOR_PERCENTAGE));
             }
             efi = TooltipStyle.cropTopOnly(efi);
             int baseSpacing = firstStat ? groupSpacing : lineSpacing;
@@ -587,7 +592,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         String deltaStr = (delta >= 0 ? "+" : "") + String.format("%.2f", delta) + " \u00B1 " + String.format("%.2f", error);
         BufferedImage expectedLine = TooltipStyle.cropTopOnly(catimgsh(0,
             label("Expected FEP: "), value(String.format("%.2f", expeted_fep), TooltipStyle.COLOR_FOOD_FEP_HUNGER),
-            label(" "), value("(" + deltaStr + ")", Color.WHITE)));
+            label(" "), labelColored("(" + deltaStr + ")", TooltipStyle.COLOR_PERCENTAGE)));
         // Adjust for previous icon line's text bottom offset
         int expectedSpacing = groupSpacing - prevTextBottomOffset;
         l.cmp.add(expectedLine, Coord.of(0, l.cmp.sz.y + expectedSpacing));
