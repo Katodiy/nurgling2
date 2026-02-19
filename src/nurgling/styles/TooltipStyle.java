@@ -143,6 +143,26 @@ public final class TooltipStyle {
     /** Percentage text color - gray */
     public static final Color COLOR_PERCENTAGE = new Color(128, 128, 128);
 
+    // ============ FOOD TOOLTIP SPECIFIC COLORS ============
+
+    /** Food energy value color - cyan */
+    public static final Color COLOR_FOOD_ENERGY = new Color(0x00, 0xEE, 0xFF);  // #00EEFF
+
+    /** Food hunger value color - yellow */
+    public static final Color COLOR_FOOD_HUNGER = new Color(0xFF, 0xFF, 0x82);  // #FFFF82
+
+    /** FEP Sum value color - bright green */
+    public static final Color COLOR_FOOD_FEP_SUM = new Color(0x44, 0xFF, 0x1F);  // #44FF1F
+
+    /** FEP/Hunger value color - light green */
+    public static final Color COLOR_FOOD_FEP_HUNGER = new Color(0x99, 0xFF, 0x84);  // #99FF84
+
+    /** Food type name color - light green */
+    public static final Color COLOR_FOOD_TYPE = new Color(0x99, 0xFF, 0x84);  // #99FF84
+
+    /** Vessel/drink name color - yellow */
+    public static final Color COLOR_FOOD_VESSEL = new Color(0xFF, 0xFF, 0x82);  // #FFFF82
+
     /** Tooltip background color - dark green-gray at 90% opacity */
     public static final Color COLOR_TOOLTIP_BG = new Color(37, 43, 41, 230);  // #252B29 @ 90%
 
@@ -182,4 +202,9 @@ public final class TooltipStyle {
 
     /** Font size for resource path */
     public static final int FONT_SIZE_RESOURCE = 9;
+
+    // ============ ICON SIZES (logical pixels - use UI.scale()) ============
+
+    /** Icon size for tooltips (80% of standard 16px) */
+    public static final int ICON_SIZE = 13;
 }
