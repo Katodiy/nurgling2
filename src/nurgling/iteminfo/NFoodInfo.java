@@ -489,15 +489,20 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
 
         // ===== GROUP 1: Energy + FEP Sum =====
         // Line 1: Energy + Hunger
+        Color colorEnergy = new Color(0x00, 0xEE, 0xFF);      // #00EEFF cyan
+        Color colorHunger = new Color(0xFF, 0xFF, 0x82);      // #FFFF82 yellow
+        Color colorFepSum = new Color(0x44, 0xFF, 0x1F);      // #44FF1F bright green
+        Color colorFepHunger = new Color(0x99, 0xFF, 0x84);   // #99FF84 light green
+
         BufferedImage energyLine = TooltipStyle.cropTopOnly(catimgsh(0,
-            label("Energy: "), value(Utils.odformat2(end * 100, 2) + "%", TooltipStyle.COLOR_ENERGY),
-            label("  Hunger: "), value(Utils.odformat2(glut * 100, 2) + "%", TooltipStyle.COLOR_HUNGER)));
+            label("Energy: "), value(Utils.odformat2(end * 100, 2) + "%", colorEnergy),
+            label("  Hunger: "), value(Utils.odformat2(glut * 100, 2) + "%", colorHunger)));
         l.cmp.add(energyLine, Coord.of(0, l.cmp.sz.y));
 
         // Line 2: FEP Sum + FEP/Hunger (7px after energy line)
         BufferedImage fepLine = TooltipStyle.cropTopOnly(catimgsh(0,
-            label("FEP Sum: "), value(Utils.odformat2(fepSum, 2), TooltipStyle.COLOR_FEP_SUM),
-            label("  FEP/Hunger: "), value(Utils.odformat2(fepSum / (100 * glut), 2), TooltipStyle.COLOR_FEP_HUNGER)));
+            label("FEP Sum: "), value(Utils.odformat2(fepSum, 2), colorFepSum),
+            label("  FEP/Hunger: "), value(Utils.odformat2(fepSum / (100 * glut), 2), colorFepHunger)));
         l.cmp.add(fepLine, Coord.of(0, l.cmp.sz.y + lineSpacing));
 
         // ===== GROUP 2: Stats (10px gap before, 7px between each stat) =====
@@ -508,9 +513,10 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         for (int i = 0; i < evs.length; i++) {
             Color col = Utils.blendcol(evs[i].ev.col, Color.WHITE, 0.5);
             // Render text part separately and crop it
+            // Stat name is white, value is colored, percentage is gray
             BufferedImage textPart = TooltipStyle.cropTopOnly(catimgsh(0,
                 label(" "),
-                value(evs[i].ev.nm, col),
+                label(evs[i].ev.nm),  // White stat name
                 label("  "),
                 value(Utils.odformat2(evs[i].a, 2), col),
                 label(" "),
@@ -547,10 +553,13 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         }
 
         // ===== GROUP 3: Expected FEP + Expected total (10px gap before, 7px between) =====
+        Color colorExpectedFep = new Color(0x99, 0xFF, 0x84);   // #99FF84 light green
+        Color colorExpectedTotal = new Color(0x44, 0xFF, 0x1F); // #44FF1F bright green
+
         double error = expeted_fep * 0.005;
         String deltaStr = (delta >= 0 ? "+" : "") + String.format("%.2f", delta) + " \u00B1 " + String.format("%.2f", error);
         BufferedImage expectedLine = TooltipStyle.cropTopOnly(catimgsh(0,
-            label("Expected FEP: "), value(String.format("%.2f", expeted_fep), TooltipStyle.COLOR_EXPECTED_FEP),
+            label("Expected FEP: "), value(String.format("%.2f", expeted_fep), colorExpectedFep),
             label(" "), value("(" + deltaStr + ")", TooltipStyle.COLOR_DELTA)));
         // Adjust for previous icon line's text bottom offset
         int expectedSpacing = groupSpacing - prevTextBottomOffset;
@@ -564,12 +573,15 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                 cur_fep += el.a;
             }
             BufferedImage totalLine = TooltipStyle.cropTopOnly(catimgsh(0,
-                label("Expected total: "), value(String.format("%.2f", expeted_fep + cur_fep), TooltipStyle.COLOR_EXPECTED_FEP)));
+                label("Expected total: "), value(String.format("%.2f", expeted_fep + cur_fep), colorExpectedTotal)));
             l.cmp.add(totalLine, Coord.of(0, l.cmp.sz.y + lineSpacing));
             // prevTextBottomOffset stays 0 for text-only line
         }
 
         // ===== GROUP 4: Food types with icons (10px gap before, 7px between each type) =====
+        Color colorFoodType = new Color(0x99, 0xFF, 0x84);   // #99FF84 light green
+        Color colorVesselName = new Color(0xFF, 0xFF, 0x82); // #FFFF82 yellow
+
         // Find FoodTypes ItemInfo and extract types using reflection
         if (owner instanceof GItem && NUtils.getUI() != null) {
 
@@ -602,7 +614,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                     }
                     if (foodTypeName == null) continue;
 
-                    // Get food type icon from resource image (scaled to 75%)
+                    // Get food type icon from resource image (scaled to 80%)
                     BufferedImage typeIcon = null;
                     Resource.Image img = typeRes.layer(Resource.imgc);
                     if (img != null) {
@@ -618,7 +630,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                     }
 
                     // Add food type name (text, cropped)
-                    elements.add(LineElement.text(TooltipStyle.cropTopOnly(value(foodTypeName, new Color(192, 255, 192)))));
+                    elements.add(LineElement.text(TooltipStyle.cropTopOnly(value(foodTypeName, colorFoodType))));
 
                     // Add drinks with vessel icons (if dataTables available)
                     if (NUtils.getUI().dataTables != null) {
@@ -632,7 +644,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
                                     BufferedImage vesselIcon = convolvedown(Resource.loadsimg(vesselRes), UI.scale(new Coord(ICON_SIZE, ICON_SIZE)), iconfilter);
                                     elements.add(LineElement.icon(vesselIcon));
                                 }
-                                elements.add(LineElement.text(TooltipStyle.cropTopOnly(value(drink, new Color(255, 255, 128)))));
+                                elements.add(LineElement.text(TooltipStyle.cropTopOnly(value(drink, colorVesselName))));
                             }
                         }
                     }
