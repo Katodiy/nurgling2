@@ -296,10 +296,10 @@ public class NTooltip {
             armorPenLine = TooltipStyle.cropTopOnly(renderArmorPenLine(armorPenValue));
         }
 
-        // Render Attack weight (no cropTopOnly - text is already at top, icon is centered on text)
-        BufferedImage weaponWeightLine = null;
+        // Render Attack weight - returns LineResult with text offsets for proper spacing
+        LineResult weaponWeightLineResult = null;
         if (weightIcon != null) {
-            weaponWeightLine = renderWeightLine(weightIcon);
+            weaponWeightLineResult = renderWeightLine(weightIcon);
         }
 
         // Render gilding names from ISlots
@@ -351,42 +351,52 @@ public class NTooltip {
 
         // Build item info section with 7px internal spacing
         // Order: Content | Damage+Range | Attack Weight | Wear | Grievous | Armor Pen | Hunger | Food Bonus | Gilding
-        java.util.List<BufferedImage> itemInfoLines = new java.util.ArrayList<>();
+        // Build item info lines with LineResult tracking for proper spacing with icons
+        // Each entry is either a plain BufferedImage (textTopOffset=0, textBottomOffset=0)
+        // or a LineResult with actual offsets for lines containing icons
+        java.util.List<LineResult> itemInfoResults = new java.util.ArrayList<>();
         if (contentLine != null) {
-            itemInfoLines.add(contentLine);
+            itemInfoResults.add(new LineResult(contentLine, 0, 0));
         }
         if (damageRangeLine != null) {
-            itemInfoLines.add(damageRangeLine);
+            itemInfoResults.add(new LineResult(damageRangeLine, 0, 0));
         }
-        if (weaponWeightLine != null) {
-            itemInfoLines.add(weaponWeightLine);
+        if (weaponWeightLineResult != null) {
+            itemInfoResults.add(weaponWeightLineResult);
         }
         if (wearLine != null) {
-            itemInfoLines.add(wearLine);
+            itemInfoResults.add(new LineResult(wearLine, 0, 0));
         }
         if (grievousLine != null) {
-            itemInfoLines.add(grievousLine);
+            itemInfoResults.add(new LineResult(grievousLine, 0, 0));
         }
         if (armorPenLine != null) {
-            itemInfoLines.add(armorPenLine);
+            itemInfoResults.add(new LineResult(armorPenLine, 0, 0));
         }
         if (hungerLine != null) {
-            itemInfoLines.add(hungerLine);
+            itemInfoResults.add(new LineResult(hungerLine, 0, 0));
         }
         if (foodBonusLine != null) {
-            itemInfoLines.add(foodBonusLine);
+            itemInfoResults.add(new LineResult(foodBonusLine, 0, 0));
         }
         if (gildingLine != null) {
-            itemInfoLines.add(gildingLine);
+            itemInfoResults.add(new LineResult(gildingLine, 0, 0));
         }
 
         // Combine item info lines with 7px baseline-to-text-top spacing
+        // Adjust spacing based on text offsets to ignore icons in spacing calculation
         BufferedImage itemInfo = null;
-        if (!itemInfoLines.isEmpty()) {
-            itemInfo = itemInfoLines.get(0);
-            for (int i = 1; i < itemInfoLines.size(); i++) {
-                int spacing = scaledInternalSpacing - bodyDescentVal;
-                itemInfo = ItemInfo.catimgs(spacing, itemInfo, itemInfoLines.get(i));
+        int prevTextBottomOffset = 0;
+        if (!itemInfoResults.isEmpty()) {
+            LineResult first = itemInfoResults.get(0);
+            itemInfo = first.image;
+            prevTextBottomOffset = first.textBottomOffset;
+            for (int i = 1; i < itemInfoResults.size(); i++) {
+                LineResult current = itemInfoResults.get(i);
+                // Adjust spacing: subtract previous line's bottom offset and current line's top offset
+                int spacing = scaledInternalSpacing - bodyDescentVal - prevTextBottomOffset - current.textTopOffset;
+                itemInfo = ItemInfo.catimgs(spacing, itemInfo, current.image);
+                prevTextBottomOffset = current.textBottomOffset;
             }
         }
 
@@ -745,13 +755,14 @@ public class NTooltip {
      * Crops text first to remove top padding, then composes with icon.
      * Icon is vertically centered on the visual text area (excluding descent).
      */
-    private static BufferedImage renderWeightLine(BufferedImage icon) {
+    private static LineResult renderWeightLine(BufferedImage icon) {
         BufferedImage labelImg = getBodyRegularFoundry().render("Attack weight: ", Color.WHITE).img;
         // Crop the text to remove top padding (like other lines do)
         BufferedImage croppedLabel = TooltipStyle.cropTopOnly(labelImg);
 
-        // Scale icon to match cropped text height
         int textHeight = croppedLabel.getHeight();
+
+        // Scale icon to match text height (icon can be same size as text)
         int iconSize = textHeight;
         BufferedImage scaledIcon = PUtils.convolvedown(icon, new Coord(iconSize, iconSize), CharWnd.iconfilter);
 
@@ -760,16 +771,38 @@ public class NTooltip {
         int visualTextHeight = textHeight - descent;
         int visualTextCenter = visualTextHeight / 2;
 
-        // Compose: cropped text + icon (icon centered on visual text, not full height)
-        int totalWidth = croppedLabel.getWidth() + scaledIcon.getWidth();
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, textHeight));
-        Graphics g = result.getGraphics();
-        g.drawImage(croppedLabel, 0, 0, null);
         // Center icon on visual text center
-        int iconY = visualTextCenter - scaledIcon.getHeight() / 2;
+        int iconYRelative = visualTextCenter - scaledIcon.getHeight() / 2;
+
+        // Calculate canvas height and positions
+        int canvasHeight = textHeight;
+        int textY = 0;
+        int iconY = iconYRelative;
+
+        // If icon extends above text, expand canvas
+        if (iconYRelative < 0) {
+            canvasHeight = textHeight - iconYRelative;
+            textY = -iconYRelative;
+            iconY = 0;
+        }
+        // If icon extends below text, expand canvas
+        int iconBottom = iconY + scaledIcon.getHeight();
+        if (iconBottom > canvasHeight) {
+            canvasHeight = iconBottom;
+        }
+
+        // Compose: text + icon
+        int totalWidth = croppedLabel.getWidth() + scaledIcon.getWidth();
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, canvasHeight));
+        Graphics g = result.getGraphics();
+        g.drawImage(croppedLabel, 0, textY, null);
         g.drawImage(scaledIcon, croppedLabel.getWidth(), iconY, null);
         g.dispose();
-        return result;
+
+        // Return with text offsets so spacing calculations ignore the icon
+        int textTopOffset = textY;
+        int textBottomOffset = canvasHeight - textY - textHeight;
+        return new LineResult(result, textTopOffset, textBottomOffset);
     }
 
     /**
