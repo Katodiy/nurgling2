@@ -2,6 +2,8 @@ package nurgling;
 
 import haven.*;
 import haven.res.ui.tt.q.qbuff.QBuff;
+import haven.res.ui.tt.wear.Wear;
+import haven.res.ui.tt.gast.Gast;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.styles.TooltipStyle;
 
@@ -73,11 +75,13 @@ public class NTooltip {
 
         ItemInfo.Owner owner = info.get(0).owner;
 
-        // Find Name, QBuff, NCuriosity, and Contents info
+        // Find Name, QBuff, NCuriosity, Contents, Wear, and Gast info
         String nameText = null;
         QBuff qbuff = null;
         NCuriosity curiosity = null;
         ItemInfo.Contents contents = null;
+        Wear wear = null;
+        Gast gast = null;
 
         for (ItemInfo ii : info) {
             if (ii instanceof ItemInfo.Name) {
@@ -92,6 +96,12 @@ public class NTooltip {
             if (ii instanceof ItemInfo.Contents) {
                 contents = (ItemInfo.Contents) ii;
             }
+            if (ii instanceof Wear) {
+                wear = (Wear) ii;
+            }
+            if (ii instanceof Gast) {
+                gast = (Gast) ii;
+            }
         }
 
         // If no name found, try default
@@ -105,6 +115,12 @@ public class NTooltip {
         String remainingTime = null;
         if (curiosity != null) {
             remainingTime = curiosity.getCompactRemainingTime();
+        }
+
+        // Calculate wear percentage (only if item has wear)
+        Integer wearPercent = null;
+        if (wear != null && wear.m > 0) {
+            wearPercent = (int) Math.round(((double)(wear.m - wear.d) / wear.m) * 100);
         }
 
         // Extract content info (for vessels like waterskins)
@@ -123,12 +139,12 @@ public class NTooltip {
             }
         }
 
-        // Render name line with quality and optional remaining time
+        // Render name line with quality, optional wear percentage, and optional remaining time
         LineResult nameLineResult = null;
         BufferedImage nameLine = null;
         int nameTextBottomOffset = 0;
         if (nameText != null) {
-            nameLineResult = renderNameLine(nameText, qbuff, remainingTime);
+            nameLineResult = renderNameLine(nameText, qbuff, wearPercent, remainingTime);
             nameLine = nameLineResult.image;  // Don't crop - we need accurate text position
             nameTextBottomOffset = nameLineResult.textBottomOffset;
         }
@@ -142,7 +158,23 @@ public class NTooltip {
             contentTextTopOffset = contentLineResult.textTopOffset;
         }
 
-        // Render other tips (excluding Name, QBuff, and Contents which we've handled)
+        // Render custom lines for Wear, Hunger reduction, Food event bonus
+        BufferedImage wearLine = null;
+        if (wear != null && wear.m > 0) {
+            wearLine = TooltipStyle.cropTopOnly(renderWearLine(wear));
+        }
+
+        BufferedImage hungerLine = null;
+        if (gast != null && gast.glut != 0.0) {
+            hungerLine = TooltipStyle.cropTopOnly(renderHungerLine(gast.glut));
+        }
+
+        BufferedImage foodBonusLine = null;
+        if (gast != null && gast.fev != 0.0) {
+            foodBonusLine = TooltipStyle.cropTopOnly(renderFoodBonusLine(gast.fev));
+        }
+
+        // Render other tips (excluding Name, QBuff, Contents, Wear, Gast which we've handled)
         BufferedImage otherTips = TooltipStyle.cropTopOnly(renderOtherTips(info, contents != null));
 
         // Render resource line
@@ -153,13 +185,16 @@ public class NTooltip {
         }
 
         // Calculate baseline-relative spacing (all spacing values are scaled)
-        // For 10px from baseline to next text top: gap = 10 - descent - textBottomOffset
         int nameDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_NAME);
         int bodyDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
         int scaledSectionSpacing = UI.scale(TooltipStyle.SECTION_SPACING);
+        int scaledInternalSpacing = UI.scale(TooltipStyle.INTERNAL_SPACING);  // 7px
 
-        // Combine sections with SECTION_SPACING (10px scaled) between main groups:
-        // Group structure: Name | Content | Other Tips | Resource
+        // Combine sections with proper spacing:
+        // Group structure: Name | Content | Wear | Hunger | Food Bonus | Other Tips | Resource
+        // 10px between Name and Content
+        // 7px between Content, Wear, Hunger, Food Bonus (internal spacing)
+        // 10px between Food Bonus and Other Tips, and Other Tips and Resource
 
         // Start from bottom: combine otherTips and resLine
         BufferedImage statsAndRes = null;
@@ -172,25 +207,46 @@ public class NTooltip {
             statsAndRes = resLine;
         }
 
-        // Add content line above statsAndRes
+        // Build vessel info section (content, wear, hunger, food bonus) with 7px internal spacing
+        java.util.List<BufferedImage> vesselInfoLines = new java.util.ArrayList<>();
+        if (contentLine != null) {
+            vesselInfoLines.add(contentLine);
+        }
+        if (wearLine != null) {
+            vesselInfoLines.add(wearLine);
+        }
+        if (hungerLine != null) {
+            vesselInfoLines.add(hungerLine);
+        }
+        if (foodBonusLine != null) {
+            vesselInfoLines.add(foodBonusLine);
+        }
+
+        // Combine vessel info lines with 7px baseline-to-text-top spacing
+        BufferedImage vesselInfo = null;
+        if (!vesselInfoLines.isEmpty()) {
+            vesselInfo = vesselInfoLines.get(0);
+            for (int i = 1; i < vesselInfoLines.size(); i++) {
+                int spacing = scaledInternalSpacing - bodyDescentVal;
+                vesselInfo = ItemInfo.catimgs(spacing, vesselInfo, vesselInfoLines.get(i));
+            }
+        }
+
+        // Combine vesselInfo with statsAndRes (10px spacing)
         BufferedImage contentAndBelow = null;
-        if (contentLine != null && statsAndRes != null) {
-            int contentToStatsSpacing = scaledSectionSpacing - bodyDescentVal;
-            contentAndBelow = ItemInfo.catimgs(contentToStatsSpacing, contentLine, statsAndRes);
-        } else if (contentLine != null) {
-            contentAndBelow = contentLine;
+        if (vesselInfo != null && statsAndRes != null) {
+            int vesselToStatsSpacing = scaledSectionSpacing - bodyDescentVal;
+            contentAndBelow = ItemInfo.catimgs(vesselToStatsSpacing, vesselInfo, statsAndRes);
+        } else if (vesselInfo != null) {
+            contentAndBelow = vesselInfo;
         } else {
             contentAndBelow = statsAndRes;
         }
 
         // Then combine nameLine with contentAndBelow using 10px section spacing
-        // For 10px from baseline to next text top, accounting for centered icons
         // Note: Outer padding is handled by NWItem.PaddedTip
         if (nameLine != null && contentAndBelow != null) {
             // For vessels with content line: account for text position within content canvas
-            // The content line has icon + text centered, so we need contentTextTopOffset
-            // Also need to account for the text image's internal top padding (~4px)
-            // For food/other items without content line: contentTextTopOffset is 0
             int nameToContentSpacing = scaledSectionSpacing - nameDescentVal - nameTextBottomOffset - contentTextTopOffset;
             if (contentLine != null) {
                 // Content line text images have internal padding not captured by textTopOffset
@@ -207,10 +263,10 @@ public class NTooltip {
     }
 
     /**
-     * Render the name line: Name + Quality Icon + Quality Value + Optional Remaining Time
+     * Render the name line: Name + Quality Icon + Quality Value + Wear% + Optional Remaining Time
      * Returns LineResult with text position info for proper spacing.
      */
-    private static LineResult renderNameLine(String nameText, QBuff qbuff, String remainingTime) {
+    private static LineResult renderNameLine(String nameText, QBuff qbuff, Integer wearPercent, String remainingTime) {
         BufferedImage nameImg = getNameFoundry().render(nameText, Color.WHITE).img;
         int hSpacing = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
         int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
@@ -235,7 +291,14 @@ public class NTooltip {
                 : String.format("%.1f", qbuff.q);
             qImg = getNameFoundry().render(qText, Color.WHITE).img;
             totalWidth += qImg.getWidth();
-            // Text height should be consistent
+        }
+
+        // Wear percentage (only if item has wear)
+        BufferedImage wearImg = null;
+        if (wearPercent != null) {
+            totalWidth += hSpacing;
+            wearImg = getNameFoundry().render("(" + wearPercent + "%)", TooltipStyle.COLOR_FOOD_FEP_SUM).img;
+            totalWidth += wearImg.getWidth();
         }
 
         // Remaining time for curios
@@ -274,6 +337,13 @@ public class NTooltip {
                 g.drawImage(qImg, x, textY, null);
                 x += qImg.getWidth();
             }
+        }
+
+        // Draw wear percentage
+        if (wearImg != null) {
+            x += hSpacing;
+            g.drawImage(wearImg, x, textY, null);
+            x += wearImg.getWidth();
         }
 
         // Draw remaining time
@@ -397,7 +467,76 @@ public class NTooltip {
     }
 
     /**
-     * Render other tips (excluding Name, QBuff.Table, and optionally Contents)
+     * Render the wear line: "Wear: " (white) + "X/Y" (cyan)
+     */
+    private static BufferedImage renderWearLine(Wear wear) {
+        BufferedImage labelImg = getContentFoundry().render("Wear: ", Color.WHITE).img;
+        String valueText = String.format("%,d/%,d", wear.d, wear.m);
+        BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_FOOD_ENERGY).img;
+
+        int totalWidth = labelImg.getWidth() + valueImg.getWidth();
+        int maxHeight = Math.max(labelImg.getHeight(), valueImg.getHeight());
+
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+        Graphics g = result.getGraphics();
+        int x = 0;
+
+        g.drawImage(labelImg, x, (maxHeight - labelImg.getHeight()) / 2, null);
+        x += labelImg.getWidth();
+        g.drawImage(valueImg, x, (maxHeight - valueImg.getHeight()) / 2, null);
+
+        g.dispose();
+        return result;
+    }
+
+    /**
+     * Render the hunger reduction line: "Hunger reduction: " (white) + "XX.X%" (yellow)
+     */
+    private static BufferedImage renderHungerLine(double glut) {
+        BufferedImage labelImg = getContentFoundry().render("Hunger reduction: ", Color.WHITE).img;
+        String valueText = Utils.odformat2(100 * glut, 1) + "%";
+        BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_FOOD_HUNGER).img;
+
+        int totalWidth = labelImg.getWidth() + valueImg.getWidth();
+        int maxHeight = Math.max(labelImg.getHeight(), valueImg.getHeight());
+
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+        Graphics g = result.getGraphics();
+        int x = 0;
+
+        g.drawImage(labelImg, x, (maxHeight - labelImg.getHeight()) / 2, null);
+        x += labelImg.getWidth();
+        g.drawImage(valueImg, x, (maxHeight - valueImg.getHeight()) / 2, null);
+
+        g.dispose();
+        return result;
+    }
+
+    /**
+     * Render the food event bonus line: "Food event bonus: " (white) + "X.X%" (purple)
+     */
+    private static BufferedImage renderFoodBonusLine(double fev) {
+        BufferedImage labelImg = getContentFoundry().render("Food event bonus: ", Color.WHITE).img;
+        String valueText = Utils.odformat2(100 * fev, 1) + "%";
+        BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_LP).img;
+
+        int totalWidth = labelImg.getWidth() + valueImg.getWidth();
+        int maxHeight = Math.max(labelImg.getHeight(), valueImg.getHeight());
+
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+        Graphics g = result.getGraphics();
+        int x = 0;
+
+        g.drawImage(labelImg, x, (maxHeight - labelImg.getHeight()) / 2, null);
+        x += labelImg.getWidth();
+        g.drawImage(valueImg, x, (maxHeight - valueImg.getHeight()) / 2, null);
+
+        g.dispose();
+        return result;
+    }
+
+    /**
+     * Render other tips (excluding Name, QBuff.Table, Contents, Wear, Gast which we handle ourselves)
      */
     private static BufferedImage renderOtherTips(List<ItemInfo> info, boolean skipContents) {
         if (info.isEmpty()) {
@@ -425,6 +564,14 @@ public class NTooltip {
                 }
                 // Skip Contents - we render it ourselves with custom format
                 if (skipContents && tip instanceof ItemInfo.Contents) {
+                    continue;
+                }
+                // Skip Wear - we render it ourselves with custom format
+                if (tip instanceof Wear) {
+                    continue;
+                }
+                // Skip Gast - we render hunger reduction and food event bonus ourselves
+                if (tip instanceof Gast) {
                     continue;
                 }
                 l.add(tip);
