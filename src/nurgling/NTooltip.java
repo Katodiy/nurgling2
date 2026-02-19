@@ -439,7 +439,7 @@ public class NTooltip {
             try {
                 starIcon = Resource.classres(Starred.class).layer(Resource.imgc).scaled();
                 if (starIcon != null) {
-                    totalWidth += starIcon.getWidth() + iconToTextSpacing;
+                    totalWidth += starIcon.getWidth() + hSpacing;  // 7px between star and name
                     maxHeight = Math.max(maxHeight, starIcon.getHeight());
                 }
             } catch (Exception ignored) {}
@@ -496,7 +496,7 @@ public class NTooltip {
         if (starIcon != null) {
             int iconY = (canvasHeight - starIcon.getHeight()) / 2;
             g.drawImage(starIcon, x, iconY, null);
-            x += starIcon.getWidth() + iconToTextSpacing;
+            x += starIcon.getWidth() + hSpacing;  // 7px between star and name
         }
 
         // Draw name (centered vertically)
