@@ -8,6 +8,8 @@ import nurgling.styles.TooltipStyle;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Custom tooltip builder for all items.
@@ -18,6 +20,26 @@ public class NTooltip {
     // Cached foundries
     private static Text.Foundry nameFoundry = null;
     private static Text.Foundry resourceFoundry = null;
+    private static Text.Foundry contentFoundry = null;
+
+    // Pattern for parsing liquid content names like "3.00 l of Water"
+    private static final Pattern CONTENT_PATTERN = Pattern.compile("^([\\d.]+)\\s*(l of .+)$");
+
+    /**
+     * Result of rendering a line with mixed text and icons.
+     * Tracks text position for proper baseline-relative spacing.
+     */
+    private static class LineResult {
+        final BufferedImage image;
+        final int textTopOffset;     // Pixels from image top to text top
+        final int textBottomOffset;  // Pixels from text bottom to image bottom
+
+        LineResult(BufferedImage image, int textTopOffset, int textBottomOffset) {
+            this.image = image;
+            this.textTopOffset = textTopOffset;
+            this.textBottomOffset = textBottomOffset;
+        }
+    }
 
     private static Text.Foundry getNameFoundry() {
         if (nameFoundry == null) {
@@ -33,6 +55,13 @@ public class NTooltip {
         return resourceFoundry;
     }
 
+    private static Text.Foundry getContentFoundry() {
+        if (contentFoundry == null) {
+            contentFoundry = TooltipStyle.createFoundry(true, TooltipStyle.FONT_SIZE_BODY, Color.WHITE);
+        }
+        return contentFoundry;
+    }
+
     /**
      * Build a custom tooltip for an item.
      * Renders name + quality on one line, then other info, then resource path.
@@ -44,10 +73,11 @@ public class NTooltip {
 
         ItemInfo.Owner owner = info.get(0).owner;
 
-        // Find Name, QBuff, and NCuriosity info
+        // Find Name, QBuff, NCuriosity, and Contents info
         String nameText = null;
         QBuff qbuff = null;
         NCuriosity curiosity = null;
+        ItemInfo.Contents contents = null;
 
         for (ItemInfo ii : info) {
             if (ii instanceof ItemInfo.Name) {
@@ -58,6 +88,9 @@ public class NTooltip {
             }
             if (ii instanceof NCuriosity) {
                 curiosity = (NCuriosity) ii;
+            }
+            if (ii instanceof ItemInfo.Contents) {
+                contents = (ItemInfo.Contents) ii;
             }
         }
 
@@ -74,14 +107,43 @@ public class NTooltip {
             remainingTime = curiosity.getCompactRemainingTime();
         }
 
-        // Render name line with quality and optional remaining time
-        BufferedImage nameLine = null;
-        if (nameText != null) {
-            nameLine = TooltipStyle.cropTopOnly(renderNameLine(nameText, qbuff, remainingTime));
+        // Extract content info (for vessels like waterskins)
+        String contentName = null;
+        QBuff contentQBuff = null;
+
+        // Extract content info from Contents
+        if (contents != null && contents.sub != null && !contents.sub.isEmpty()) {
+            for (ItemInfo subInfo : contents.sub) {
+                if (subInfo instanceof ItemInfo.Name) {
+                    contentName = ((ItemInfo.Name) subInfo).str.text;
+                }
+                if (subInfo instanceof QBuff) {
+                    contentQBuff = (QBuff) subInfo;
+                }
+            }
         }
 
-        // Render other tips (excluding Name and QBuff which we've handled)
-        BufferedImage otherTips = TooltipStyle.cropTopOnly(renderOtherTips(info));
+        // Render name line with quality and optional remaining time
+        LineResult nameLineResult = null;
+        BufferedImage nameLine = null;
+        int nameTextBottomOffset = 0;
+        if (nameText != null) {
+            nameLineResult = renderNameLine(nameText, qbuff, remainingTime);
+            nameLine = nameLineResult.image;  // Don't crop - we need accurate text position
+            nameTextBottomOffset = nameLineResult.textBottomOffset;
+        }
+
+        // Render content line if there's content
+        BufferedImage contentLine = null;
+        int contentTextTopOffset = 0;
+        if (contentName != null) {
+            LineResult contentLineResult = renderContentLine(contentName, contentQBuff);
+            contentLine = contentLineResult.image;  // Don't crop - need accurate text position
+            contentTextTopOffset = contentLineResult.textTopOffset;
+        }
+
+        // Render other tips (excluding Name, QBuff, and Contents which we've handled)
+        BufferedImage otherTips = TooltipStyle.cropTopOnly(renderOtherTips(info, contents != null));
 
         // Render resource line
         BufferedImage resLine = null;
@@ -91,16 +153,15 @@ public class NTooltip {
         }
 
         // Calculate baseline-relative spacing (all spacing values are scaled)
-        // Spacing = desired_baseline_to_top - descent_of_line_above
+        // For 10px from baseline to next text top: gap = 10 - descent - textBottomOffset
         int nameDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_NAME);
         int bodyDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
         int scaledSectionSpacing = UI.scale(TooltipStyle.SECTION_SPACING);
 
         // Combine sections with SECTION_SPACING (10px scaled) between main groups:
-        // Group structure: Name | LP Info group | Resource
-        // LP Info group internal spacing (7px) is handled by NCuriosity
+        // Group structure: Name | Content | Other Tips | Resource
 
-        // First combine otherTips (LP Info group) and resLine with 10px section spacing
+        // Start from bottom: combine otherTips and resLine
         BufferedImage statsAndRes = null;
         if (otherTips != null && resLine != null) {
             int statsToResSpacing = scaledSectionSpacing - bodyDescentVal;
@@ -111,15 +172,35 @@ public class NTooltip {
             statsAndRes = resLine;
         }
 
-        // Then combine nameLine with statsAndRes using 10px section spacing
+        // Add content line above statsAndRes
+        BufferedImage contentAndBelow = null;
+        if (contentLine != null && statsAndRes != null) {
+            int contentToStatsSpacing = scaledSectionSpacing - bodyDescentVal;
+            contentAndBelow = ItemInfo.catimgs(contentToStatsSpacing, contentLine, statsAndRes);
+        } else if (contentLine != null) {
+            contentAndBelow = contentLine;
+        } else {
+            contentAndBelow = statsAndRes;
+        }
+
+        // Then combine nameLine with contentAndBelow using 10px section spacing
+        // For 10px from baseline to next text top, accounting for centered icons
         // Note: Outer padding is handled by NWItem.PaddedTip
-        if (nameLine != null && statsAndRes != null) {
-            int nameToStatsSpacing = scaledSectionSpacing - nameDescentVal;
-            return ItemInfo.catimgs(nameToStatsSpacing, nameLine, statsAndRes);
+        if (nameLine != null && contentAndBelow != null) {
+            // For vessels with content line: account for text position within content canvas
+            // The content line has icon + text centered, so we need contentTextTopOffset
+            // Also need to account for the text image's internal top padding (~4px)
+            // For food/other items without content line: contentTextTopOffset is 0
+            int nameToContentSpacing = scaledSectionSpacing - nameDescentVal - nameTextBottomOffset - contentTextTopOffset;
+            if (contentLine != null) {
+                // Content line text images have internal padding not captured by textTopOffset
+                nameToContentSpacing -= UI.scale(4);
+            }
+            return ItemInfo.catimgs(nameToContentSpacing, nameLine, contentAndBelow);
         } else if (nameLine != null) {
             return nameLine;
-        } else if (statsAndRes != null) {
-            return statsAndRes;
+        } else if (contentAndBelow != null) {
+            return contentAndBelow;
         }
 
         return null;
@@ -127,14 +208,16 @@ public class NTooltip {
 
     /**
      * Render the name line: Name + Quality Icon + Quality Value + Optional Remaining Time
+     * Returns LineResult with text position info for proper spacing.
      */
-    private static BufferedImage renderNameLine(String nameText, QBuff qbuff, String remainingTime) {
+    private static LineResult renderNameLine(String nameText, QBuff qbuff, String remainingTime) {
         BufferedImage nameImg = getNameFoundry().render(nameText, Color.WHITE).img;
         int hSpacing = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
         int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
 
         int totalWidth = nameImg.getWidth();
-        int maxHeight = nameImg.getHeight();
+        int textHeight = nameImg.getHeight();
+        int maxHeight = textHeight;
 
         // Quality icon and value
         BufferedImage qIcon = null;
@@ -152,7 +235,7 @@ public class NTooltip {
                 : String.format("%.1f", qbuff.q);
             qImg = getNameFoundry().render(qText, Color.WHITE).img;
             totalWidth += qImg.getWidth();
-            maxHeight = Math.max(maxHeight, qImg.getHeight());
+            // Text height should be consistent
         }
 
         // Remaining time for curios
@@ -161,27 +244,34 @@ public class NTooltip {
             totalWidth += hSpacing;
             timeImg = getNameFoundry().render("(" + remainingTime + ")", TooltipStyle.COLOR_RESOURCE_PATH).img;
             totalWidth += timeImg.getWidth();
-            maxHeight = Math.max(maxHeight, timeImg.getHeight());
         }
 
+        // Canvas must fit both text and icon, but spacing ignores icon size
+        int canvasHeight = Math.max(textHeight, qIcon != null ? qIcon.getHeight() : 0);
+
+        // Center text and icon in canvas - their centers will align
+        int textY = (canvasHeight - textHeight) / 2;
+
         // Compose the line
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, canvasHeight));
         Graphics g = result.getGraphics();
         int x = 0;
 
-        // Draw name
-        g.drawImage(nameImg, x, (maxHeight - nameImg.getHeight()) / 2, null);
+        // Draw name (centered vertically)
+        g.drawImage(nameImg, x, textY, null);
         x += nameImg.getWidth();
 
         // Draw quality icon and value
         if (qbuff != null && qbuff.q > 0) {
             x += hSpacing;
             if (qIcon != null) {
-                g.drawImage(qIcon, x, (maxHeight - qIcon.getHeight()) / 2, null);
+                // Icon centered vertically (same center as text)
+                int iconY = (canvasHeight - qIcon.getHeight()) / 2;
+                g.drawImage(qIcon, x, iconY, null);
                 x += qIcon.getWidth() + iconToTextSpacing;
             }
             if (qImg != null) {
-                g.drawImage(qImg, x, (maxHeight - qImg.getHeight()) / 2, null);
+                g.drawImage(qImg, x, textY, null);
                 x += qImg.getWidth();
             }
         }
@@ -189,17 +279,127 @@ public class NTooltip {
         // Draw remaining time
         if (timeImg != null) {
             x += hSpacing;
-            g.drawImage(timeImg, x, (maxHeight - timeImg.getHeight()) / 2, null);
+            g.drawImage(timeImg, x, textY, null);
         }
 
+        // Track text position for spacing calculations
+        int textTopOffset = textY;
+        int textBottomOffset = canvasHeight - textY - textHeight;
+
         g.dispose();
-        return result;
+        return new LineResult(result, textTopOffset, textBottomOffset);
     }
 
     /**
-     * Render other tips (excluding Name and QBuff.Table)
+     * Render the content line for vessels: "3.00 l of Water [icon] 81"
+     * Amount is colored cyan, rest is white.
+     * Returns LineResult with text position info for proper spacing.
      */
-    private static BufferedImage renderOtherTips(List<ItemInfo> info) {
+    private static LineResult renderContentLine(String contentName, QBuff contentQBuff) {
+        int hSpacing = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
+        int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
+
+        // Parse the content name to separate amount from the rest
+        // Format: "3.00 l of Water" -> amount="3.00", rest="l of Water"
+        String amount = null;
+        String rest = null;
+        Matcher matcher = CONTENT_PATTERN.matcher(contentName);
+        if (matcher.matches()) {
+            amount = matcher.group(1);
+            rest = matcher.group(2);
+        } else {
+            // Fallback: just use the whole name as white text
+            rest = contentName;
+        }
+
+        // Build the content line - track text height separately from icon height
+        int totalWidth = 0;
+        int textHeight = 0;
+        int maxHeight = 0;
+
+        // Amount (cyan colored)
+        BufferedImage amountImg = null;
+        if (amount != null) {
+            amountImg = getContentFoundry().render(amount + " ", TooltipStyle.COLOR_FOOD_ENERGY).img;
+            totalWidth += amountImg.getWidth();
+            textHeight = Math.max(textHeight, amountImg.getHeight());
+            maxHeight = Math.max(maxHeight, amountImg.getHeight());
+        }
+
+        // Rest of the name (white)
+        BufferedImage restImg = getContentFoundry().render(rest, Color.WHITE).img;
+        totalWidth += restImg.getWidth();
+        textHeight = Math.max(textHeight, restImg.getHeight());
+        maxHeight = Math.max(maxHeight, restImg.getHeight());
+
+        // Quality icon and value
+        BufferedImage qIcon = null;
+        BufferedImage qImg = null;
+        if (contentQBuff != null && contentQBuff.q > 0) {
+            totalWidth += hSpacing;
+            qIcon = contentQBuff.icon;
+            if (qIcon != null) {
+                totalWidth += qIcon.getWidth() + iconToTextSpacing;
+                maxHeight = Math.max(maxHeight, qIcon.getHeight());
+            }
+            // Show exact quality with 1 decimal place if not a whole number
+            String qText = (contentQBuff.q == Math.floor(contentQBuff.q))
+                ? String.valueOf((int) contentQBuff.q)
+                : String.format("%.1f", contentQBuff.q);
+            qImg = getContentFoundry().render(qText, Color.WHITE).img;
+            totalWidth += qImg.getWidth();
+            // qImg is text, add to textHeight
+            textHeight = Math.max(textHeight, qImg.getHeight());
+            maxHeight = Math.max(maxHeight, qImg.getHeight());
+        }
+
+        // Canvas must fit both text and icon, but spacing ignores icon size
+        int canvasHeight = Math.max(textHeight, qIcon != null ? qIcon.getHeight() : 0);
+
+        // Center text and icon in canvas - their centers will align
+        int textY = (canvasHeight - textHeight) / 2;
+
+        // Compose the line
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, canvasHeight));
+        Graphics g = result.getGraphics();
+        int x = 0;
+
+        // Draw amount (cyan) - centered vertically
+        if (amountImg != null) {
+            g.drawImage(amountImg, x, textY, null);
+            x += amountImg.getWidth();
+        }
+
+        // Draw rest of name (white) - centered vertically
+        g.drawImage(restImg, x, textY, null);
+        x += restImg.getWidth();
+
+        // Draw quality icon and value
+        if (contentQBuff != null && contentQBuff.q > 0) {
+            x += hSpacing;
+            if (qIcon != null) {
+                // Icon centered vertically (same center as text)
+                int iconY = (canvasHeight - qIcon.getHeight()) / 2;
+                g.drawImage(qIcon, x, iconY, null);
+                x += qIcon.getWidth() + iconToTextSpacing;
+            }
+            if (qImg != null) {
+                g.drawImage(qImg, x, textY, null);
+            }
+        }
+
+        // Track text position for spacing calculations
+        int textTopOffset = textY;
+        int textBottomOffset = canvasHeight - textY - textHeight;
+
+        g.dispose();
+        return new LineResult(result, textTopOffset, textBottomOffset);
+    }
+
+    /**
+     * Render other tips (excluding Name, QBuff.Table, and optionally Contents)
+     */
+    private static BufferedImage renderOtherTips(List<ItemInfo> info, boolean skipContents) {
         if (info.isEmpty()) {
             return null;
         }
@@ -221,6 +421,10 @@ public class NTooltip {
                 }
                 // Skip FoodTypes - NFoodInfo renders food types with icons
                 if (tip.getClass().getName().contains("FoodTypes")) {
+                    continue;
+                }
+                // Skip Contents - we render it ourselves with custom format
+                if (skipContents && tip instanceof ItemInfo.Contents) {
                     continue;
                 }
                 l.add(tip);
