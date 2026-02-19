@@ -45,6 +45,9 @@ public class PortalTraversalTracker {
 
     private static final long CHECK_INTERVAL_MS = 100;
 
+    // Track recording state to detect OFF -> ON transitions
+    private boolean wasRecordingEnabled = false;
+
     // Layer mappings based on portal exit type
     // Maps portal exit name patterns to the layer the destination chunk should be assigned
     // The EXIT portal (what you see after traversing) determines the layer
@@ -102,9 +105,24 @@ public class PortalTraversalTracker {
      * Safe to call frequently - internally throttled.
      */
     public void tick() {
-        // Skip if ChunkNav overlay is disabled
+        // Check if ChunkNav overlay is enabled
         Object val = NConfig.get(NConfig.Key.chunkNavOverlay);
-        if (!(val instanceof Boolean) || !(Boolean) val) {
+        boolean recordingEnabled = (val instanceof Boolean) && (Boolean) val;
+
+        // Detect recording state change: OFF -> ON
+        // When recording is turned back on, reset state to prevent detecting stale grid changes
+        // that happened while recording was off. This fixes the bug where exiting a building,
+        // turning off recording, walking away, then turning recording back on would cause
+        // the exit portal to be recorded at the wrong location.
+        if (recordingEnabled && !wasRecordingEnabled) {
+            reset();
+            // Set lastGridId to current grid so we start fresh from current state
+            lastGridId = graph.getPlayerChunkId();
+        }
+        wasRecordingEnabled = recordingEnabled;
+
+        // Skip if ChunkNav overlay is disabled
+        if (!recordingEnabled) {
             return;
         }
 
@@ -151,25 +169,41 @@ public class PortalTraversalTracker {
                     cachedLastActionsGobLocalCoord = portalCoord;
                 }
 
-                // For building exteriors, use the GOB's actual grid (where the building center is).
-                // Previously we used the player's grid, but this created "phantom" portals on
-                // adjacent chunks when the player clicked a building from across a chunk boundary.
+                // Always use the PORTAL's actual grid, not the player's grid.
+                // Player might be standing in grid A while clicking a portal in grid B.
+                //
+                // For building exteriors, calculate the DOOR position to determine grid.
+                // Buildings can span two grids (e.g., stone mansion center at grid A, door at grid B).
+                // We use getDoorGridInfo() which returns both gridId AND localCoord from
+                // the same door position, ensuring they always refer to the same grid.
+                //
+                // For other portals (ladders, mineholes, cellars, regular doors),
+                // use the portal gob's actual position to determine its grid.
                 if (ChunkPortal.isBuildingExterior(gobName)) {
-                    long gobGridId = getGobGridId(lastActions.gob);
-                    if (gobGridId != -1) {
-                        cachedLastActionsGobGridId = gobGridId;
-                        if (gobGridId != currentGridId) {
-                            Coord gobLocalCoord = getGobLocalCoord(lastActions.gob);
-                            if (gobLocalCoord != null) {
-                                cachedLastActionsGobLocalCoord = gobLocalCoord;
-                            }
+                    double offset = getBuildingDoorOffset(gobName);
+                    if (offset > 0) {
+                        DoorGridInfo doorInfo = getDoorGridInfo(lastActions.gob, player, offset);
+                        if (doorInfo != null) {
+                            // Both gridId and localCoord come from the door position
+                            cachedLastActionsGobGridId = doorInfo.gridId;
+                            cachedLastActionsGobLocalCoord = doorInfo.localCoord;
+                        } else {
+                            // Fallback: use building center (shouldn't happen normally)
+                            long gobGridId = getGobGridId(lastActions.gob);
+                            cachedLastActionsGobGridId = (gobGridId != -1) ? gobGridId : currentGridId;
                         }
                     } else {
-                        cachedLastActionsGobGridId = currentGridId; // Fallback
+                        // Interior door (no offset) - use gob position directly
+                        long gobGridId = getGobGridId(lastActions.gob);
+                        cachedLastActionsGobGridId = (gobGridId != -1) ? gobGridId : currentGridId;
                     }
                 } else {
-                    // Non-building portals: use player's grid
-                    cachedLastActionsGobGridId = currentGridId;
+                    // Non-building portals (ladders, mineholes, cellars, doors):
+                    // Use the portal's actual grid, not the player's grid.
+                    // This handles the case where player clicks a portal near grid boundary
+                    // while standing in an adjacent grid.
+                    long gobGridId = getGobGridId(lastActions.gob);
+                    cachedLastActionsGobGridId = (gobGridId != -1) ? gobGridId : currentGridId;
                 }
             }
         }
@@ -435,13 +469,30 @@ public class PortalTraversalTracker {
     }
 
     /**
-     * Get the "door position" for a building gob by offsetting from building center toward player.
-     * This gives a stable position for the door even if player stands at slightly different spots.
-     * @param buildingGob The building gob (e.g., stonemansion)
-     * @param player The player gob
-     * @param offsetTiles How many tiles to offset toward player (e.g., 5 for stonemansion)
+     * Result class for door position lookups - contains both grid ID and local coord.
+     * This ensures both values refer to the same grid (fixes boundary bug).
      */
-    private Coord getDoorLocalCoord(Gob buildingGob, Gob player, double offsetTiles) {
+    private static class DoorGridInfo {
+        final long gridId;
+        final Coord localCoord;
+
+        DoorGridInfo(long gridId, Coord localCoord) {
+            this.gridId = gridId;
+            this.localCoord = localCoord;
+        }
+    }
+
+    /**
+     * Get the grid ID and local coordinate for a building's door position.
+     * Calculates the door position by offsetting from building center toward player.
+     * Returns null if calculation fails (caller should use fallback).
+     *
+     * This is the critical fix for the boundary bug: when a building spans two grids,
+     * we need to use the DOOR position (not building center) to determine which grid
+     * the portal belongs to. Both gridId and localCoord are derived from the same
+     * door world position to ensure consistency.
+     */
+    private DoorGridInfo getDoorGridInfo(Gob buildingGob, Gob player, double offsetTiles) {
         try {
             MCache mcache = NUtils.getGameUI().map.glob.map;
 
@@ -453,23 +504,40 @@ public class PortalTraversalTracker {
             Coord2d direction = playerPos.sub(buildingPos);
             double dist = direction.dist(Coord2d.z);
             if (dist < 1.0) {
-                // Player is at building center, just use building pos
-                return getGobLocalCoord(buildingGob);
+                // Player is at building center - can't determine door direction
+                return null;
             }
 
-            // Normalize and scale by offset
+            // Normalize and scale by offset to get door position
             Coord2d normalized = new Coord2d(direction.x / dist, direction.y / dist);
-            Coord2d doorPos = buildingPos.add(normalized.mul(offsetTiles * MCache.tilesz.x));
+            Coord2d doorWorldPos = buildingPos.add(normalized.mul(offsetTiles * MCache.tilesz.x));
 
-            // Convert to tile coord
-            Coord tileCoord = doorPos.floor(MCache.tilesz);
+            // Convert to tile coord and find its grid
+            Coord tileCoord = doorWorldPos.floor(MCache.tilesz);
             MCache.Grid grid = mcache.getgridt(tileCoord);
             if (grid != null) {
-                return tileCoord.sub(grid.ul);
+                Coord localCoord = tileCoord.sub(grid.ul);
+                return new DoorGridInfo(grid.id, localCoord);
             }
         } catch (Exception e) {
-            // Fallback to building center
+            // Fallback
         }
+        return null;
+    }
+
+    /**
+     * Get the "door position" for a building gob by offsetting from building center toward player.
+     * This gives a stable position for the door even if player stands at slightly different spots.
+     * @param buildingGob The building gob (e.g., stonemansion)
+     * @param player The player gob
+     * @param offsetTiles How many tiles to offset toward player (e.g., 5 for stonemansion)
+     */
+    private Coord getDoorLocalCoord(Gob buildingGob, Gob player, double offsetTiles) {
+        DoorGridInfo info = getDoorGridInfo(buildingGob, player, offsetTiles);
+        if (info != null) {
+            return info.localCoord;
+        }
+        // Fallback to building center
         return getGobLocalCoord(buildingGob);
     }
 

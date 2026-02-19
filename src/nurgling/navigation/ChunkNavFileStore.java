@@ -147,6 +147,31 @@ public class ChunkNavFileStore {
     }
 
     /**
+     * Delete all chunk files from disk.
+     * @return The number of files deleted
+     */
+    public int deleteAllChunkFiles() {
+        if (!Files.exists(chunkDirectory)) {
+            return 0;
+        }
+
+        int deleted = 0;
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(chunkDirectory, "*" + CHUNK_EXTENSION)) {
+            for (Path file : stream) {
+                try {
+                    Files.delete(file);
+                    deleted++;
+                } catch (IOException e) {
+                    System.err.println("ChunkNav: Failed to delete file " + file + ": " + e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("ChunkNav: Failed to list chunk directory for deletion: " + e.getMessage());
+        }
+        return deleted;
+    }
+
+    /**
      * Delete a corrupted file and log.
      */
     private void deleteCorruptedFile(Path file, long gridId) {
