@@ -400,13 +400,30 @@ public class NTooltip {
             }
         }
 
-        // Combine itemInfo with statsAndRes (10px spacing)
-        BufferedImage contentAndBelow = null;
-        if (itemInfo != null && statsAndRes != null) {
-            int itemToStatsSpacing = scaledSectionSpacing - bodyDescentVal;
-            contentAndBelow = ItemInfo.catimgs(itemToStatsSpacing, itemInfo, statsAndRes);
+        // Render curio stats separately (NCuriosity is skipped in renderOtherTips)
+        BufferedImage curioStats = null;
+        if (curiosity != null) {
+            curioStats = TooltipStyle.cropTopOnly(curiosity.tipimg());
+        }
+
+        // Combine itemInfo with curioStats (10px section spacing)
+        BufferedImage itemInfoAndCurio = null;
+        if (itemInfo != null && curioStats != null) {
+            int itemToCurioSpacing = scaledSectionSpacing - bodyDescentVal;
+            itemInfoAndCurio = ItemInfo.catimgs(itemToCurioSpacing, itemInfo, curioStats);
         } else if (itemInfo != null) {
-            contentAndBelow = itemInfo;
+            itemInfoAndCurio = itemInfo;
+        } else if (curioStats != null) {
+            itemInfoAndCurio = curioStats;
+        }
+
+        // Combine itemInfoAndCurio with statsAndRes (10px spacing)
+        BufferedImage contentAndBelow = null;
+        if (itemInfoAndCurio != null && statsAndRes != null) {
+            int itemToStatsSpacing = scaledSectionSpacing - bodyDescentVal;
+            contentAndBelow = ItemInfo.catimgs(itemToStatsSpacing, itemInfoAndCurio, statsAndRes);
+        } else if (itemInfoAndCurio != null) {
+            contentAndBelow = itemInfoAndCurio;
         } else {
             contentAndBelow = statsAndRes;
         }
@@ -878,6 +895,10 @@ public class NTooltip {
                 }
                 // Skip ISlots - we render gilding names ourselves
                 if (tip instanceof ISlots) {
+                    continue;
+                }
+                // Skip NCuriosity - we render curio stats ourselves with section spacing
+                if (tip instanceof NCuriosity) {
                     continue;
                 }
                 // Skip weapon stat classes (Damage, Range, Grievous, Armpen) - we render them ourselves
