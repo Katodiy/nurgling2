@@ -2,13 +2,16 @@ package nurgling;
 
 import haven.*;
 import haven.res.ui.tt.q.qbuff.QBuff;
+import haven.res.ui.tt.q.starred.Starred;
 import haven.res.ui.tt.wear.Wear;
 import haven.res.ui.tt.gast.Gast;
+import haven.res.ui.tt.slots.ISlots;
 import nurgling.iteminfo.NCuriosity;
 import nurgling.styles.TooltipStyle;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,9 +26,73 @@ public class NTooltip {
     private static Text.Foundry nameFoundry = null;
     private static Text.Foundry resourceFoundry = null;
     private static Text.Foundry contentFoundry = null;
+    private static Text.Foundry bodyRegularFoundry = null;
 
     // Pattern for parsing liquid content names like "3.00 l of Water"
     private static final Pattern CONTENT_PATTERN = Pattern.compile("^([\\d.]+)\\s*(l of .+)$");
+
+    // Weapon stat class names (dynamically loaded from .res files)
+    private static final String[] WEAPON_STAT_CLASSES = {"Damage", "Range", "Grievous", "Armpen", "Weight"};
+
+    /**
+     * Get an integer field value from a dynamically loaded class via reflection.
+     */
+    private static String getIntField(Object obj, String fieldName) {
+        try {
+            Field f = obj.getClass().getField(fieldName);
+            int value = f.getInt(obj);
+            return String.valueOf(value);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get a percentage field value from a dynamically loaded class via reflection.
+     */
+    private static String getPercentField(Object obj, String fieldName) {
+        try {
+            Field f = obj.getClass().getField(fieldName);
+            double value = f.getDouble(obj);
+            return String.format("%.1f%%", value * 100);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get the icon from a Weight object's attr Resource.
+     */
+    private static BufferedImage getWeightAttrIcon(Object obj) {
+        try {
+            Field f = obj.getClass().getDeclaredField("attr");
+            f.setAccessible(true);
+            Object attr = f.get(obj);
+            if (attr instanceof Resource) {
+                Resource res = (Resource) attr;
+                Resource.Image imgLayer = res.layer(Resource.imgc);
+                if (imgLayer != null) {
+                    return imgLayer.img;
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return null;
+    }
+
+    /**
+     * Check if an ItemInfo is a weapon stat class we handle ourselves.
+     */
+    private static boolean isWeaponStat(ItemInfo ii) {
+        String className = ii.getClass().getSimpleName();
+        for (String name : WEAPON_STAT_CLASSES) {
+            if (className.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Result of rendering a line with mixed text and icons.
@@ -64,6 +131,13 @@ public class NTooltip {
         return contentFoundry;
     }
 
+    private static Text.Foundry getBodyRegularFoundry() {
+        if (bodyRegularFoundry == null) {
+            bodyRegularFoundry = TooltipStyle.createFoundry(false, TooltipStyle.FONT_SIZE_BODY, Color.WHITE);
+        }
+        return bodyRegularFoundry;
+    }
+
     /**
      * Build a custom tooltip for an item.
      * Renders name + quality on one line, then other info, then resource path.
@@ -75,15 +149,26 @@ public class NTooltip {
 
         ItemInfo.Owner owner = info.get(0).owner;
 
-        // Find Name, QBuff, NCuriosity, Contents, Wear, and Gast info
+        // Find Name, QBuff, NCuriosity, Contents, Wear, Gast, ISlots, Starred, and weapon stats
         String nameText = null;
         QBuff qbuff = null;
         NCuriosity curiosity = null;
         ItemInfo.Contents contents = null;
         Wear wear = null;
         Gast gast = null;
+        ISlots islots = null;
+        boolean starred = false;
+
+        // Weapon stats
+        String damageValue = null;
+        String rangeValue = null;
+        String grievousValue = null;
+        String armorPenValue = null;
+        BufferedImage weightIcon = null;
 
         for (ItemInfo ii : info) {
+            String className = ii.getClass().getSimpleName();
+
             if (ii instanceof ItemInfo.Name) {
                 nameText = ((ItemInfo.Name) ii).str.text;
             }
@@ -101,6 +186,27 @@ public class NTooltip {
             }
             if (ii instanceof Gast) {
                 gast = (Gast) ii;
+            }
+            if (ii instanceof ISlots) {
+                islots = (ISlots) ii;
+            }
+            if (ii instanceof Starred) {
+                starred = true;
+            }
+
+            // Extract weapon stats by class name (dynamically loaded from .res files)
+            if (className.equals("Damage")) {
+                damageValue = getIntField(ii, "dmg");
+            } else if (className.equals("Range")) {
+                rangeValue = getPercentField(ii, "mod");  // field is "mod"
+            } else if (className.equals("Grievous")) {
+                grievousValue = getPercentField(ii, "deg");  // field is "deg"
+            } else if (className.equals("Armpen")) {
+                armorPenValue = getPercentField(ii, "deg");  // field is "deg"
+            } else if (className.equals("Weight")) {
+                // Weight stores an attr Resource (e.g., "gfx/hud/chr/melee")
+                // Extract the icon from the resource
+                weightIcon = getWeightAttrIcon(ii);
             }
         }
 
@@ -139,12 +245,12 @@ public class NTooltip {
             }
         }
 
-        // Render name line with quality, optional wear percentage, and optional remaining time
+        // Render name line with star icon (if starred), quality, optional wear percentage, and optional remaining time
         LineResult nameLineResult = null;
         BufferedImage nameLine = null;
         int nameTextBottomOffset = 0;
         if (nameText != null) {
-            nameLineResult = renderNameLine(nameText, qbuff, wearPercent, remainingTime);
+            nameLineResult = renderNameLine(nameText, qbuff, wearPercent, remainingTime, starred);
             nameLine = nameLineResult.image;  // Don't crop - we need accurate text position
             nameTextBottomOffset = nameLineResult.textBottomOffset;
         }
@@ -172,6 +278,42 @@ public class NTooltip {
         BufferedImage foodBonusLine = null;
         if (gast != null && gast.fev != 0.0) {
             foodBonusLine = TooltipStyle.cropTopOnly(renderFoodBonusLine(gast.fev));
+        }
+
+        // Render weapon stats
+        BufferedImage damageRangeLine = null;
+        if (damageValue != null || rangeValue != null) {
+            damageRangeLine = TooltipStyle.cropTopOnly(renderDamageRangeLine(damageValue, rangeValue));
+        }
+
+        BufferedImage grievousLine = null;
+        if (grievousValue != null) {
+            grievousLine = TooltipStyle.cropTopOnly(renderGrievousLine(grievousValue));
+        }
+
+        BufferedImage armorPenLine = null;
+        if (armorPenValue != null) {
+            armorPenLine = TooltipStyle.cropTopOnly(renderArmorPenLine(armorPenValue));
+        }
+
+        // Render Attack weight (no cropTopOnly - text is already at top, icon is centered on text)
+        BufferedImage weaponWeightLine = null;
+        if (weightIcon != null) {
+            weaponWeightLine = renderWeightLine(weightIcon);
+        }
+
+        // Render gilding names from ISlots
+        BufferedImage gildingLine = null;
+        if (islots != null && !islots.s.isEmpty()) {
+            java.util.List<String> gildingNames = new java.util.ArrayList<>();
+            for (ISlots.SItem si : islots.s) {
+                if (si.name != null && !si.name.isEmpty()) {
+                    gildingNames.add(si.name);
+                }
+            }
+            if (!gildingNames.isEmpty()) {
+                gildingLine = TooltipStyle.cropTopOnly(renderGildingLine(gildingNames));
+            }
         }
 
         // Render other tips (excluding Name, QBuff, Contents, Wear, Gast which we've handled)
@@ -207,38 +349,54 @@ public class NTooltip {
             statsAndRes = resLine;
         }
 
-        // Build vessel info section (content, wear, hunger, food bonus) with 7px internal spacing
-        java.util.List<BufferedImage> vesselInfoLines = new java.util.ArrayList<>();
+        // Build item info section with 7px internal spacing
+        // Order: Content | Damage+Range | Attack Weight | Wear | Grievous | Armor Pen | Hunger | Food Bonus | Gilding
+        java.util.List<BufferedImage> itemInfoLines = new java.util.ArrayList<>();
         if (contentLine != null) {
-            vesselInfoLines.add(contentLine);
+            itemInfoLines.add(contentLine);
+        }
+        if (damageRangeLine != null) {
+            itemInfoLines.add(damageRangeLine);
+        }
+        if (weaponWeightLine != null) {
+            itemInfoLines.add(weaponWeightLine);
         }
         if (wearLine != null) {
-            vesselInfoLines.add(wearLine);
+            itemInfoLines.add(wearLine);
+        }
+        if (grievousLine != null) {
+            itemInfoLines.add(grievousLine);
+        }
+        if (armorPenLine != null) {
+            itemInfoLines.add(armorPenLine);
         }
         if (hungerLine != null) {
-            vesselInfoLines.add(hungerLine);
+            itemInfoLines.add(hungerLine);
         }
         if (foodBonusLine != null) {
-            vesselInfoLines.add(foodBonusLine);
+            itemInfoLines.add(foodBonusLine);
+        }
+        if (gildingLine != null) {
+            itemInfoLines.add(gildingLine);
         }
 
-        // Combine vessel info lines with 7px baseline-to-text-top spacing
-        BufferedImage vesselInfo = null;
-        if (!vesselInfoLines.isEmpty()) {
-            vesselInfo = vesselInfoLines.get(0);
-            for (int i = 1; i < vesselInfoLines.size(); i++) {
+        // Combine item info lines with 7px baseline-to-text-top spacing
+        BufferedImage itemInfo = null;
+        if (!itemInfoLines.isEmpty()) {
+            itemInfo = itemInfoLines.get(0);
+            for (int i = 1; i < itemInfoLines.size(); i++) {
                 int spacing = scaledInternalSpacing - bodyDescentVal;
-                vesselInfo = ItemInfo.catimgs(spacing, vesselInfo, vesselInfoLines.get(i));
+                itemInfo = ItemInfo.catimgs(spacing, itemInfo, itemInfoLines.get(i));
             }
         }
 
-        // Combine vesselInfo with statsAndRes (10px spacing)
+        // Combine itemInfo with statsAndRes (10px spacing)
         BufferedImage contentAndBelow = null;
-        if (vesselInfo != null && statsAndRes != null) {
-            int vesselToStatsSpacing = scaledSectionSpacing - bodyDescentVal;
-            contentAndBelow = ItemInfo.catimgs(vesselToStatsSpacing, vesselInfo, statsAndRes);
-        } else if (vesselInfo != null) {
-            contentAndBelow = vesselInfo;
+        if (itemInfo != null && statsAndRes != null) {
+            int itemToStatsSpacing = scaledSectionSpacing - bodyDescentVal;
+            contentAndBelow = ItemInfo.catimgs(itemToStatsSpacing, itemInfo, statsAndRes);
+        } else if (itemInfo != null) {
+            contentAndBelow = itemInfo;
         } else {
             contentAndBelow = statsAndRes;
         }
@@ -263,17 +421,31 @@ public class NTooltip {
     }
 
     /**
-     * Render the name line: Name + Quality Icon + Quality Value + Wear% + Optional Remaining Time
+     * Render the name line: [Star Icon] + Name + Quality Icon + Quality Value + Wear% + Optional Remaining Time
      * Returns LineResult with text position info for proper spacing.
      */
-    private static LineResult renderNameLine(String nameText, QBuff qbuff, Integer wearPercent, String remainingTime) {
+    private static LineResult renderNameLine(String nameText, QBuff qbuff, Integer wearPercent, String remainingTime, boolean starred) {
         BufferedImage nameImg = getNameFoundry().render(nameText, Color.WHITE).img;
         int hSpacing = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
         int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
 
-        int totalWidth = nameImg.getWidth();
+        int totalWidth = 0;
         int textHeight = nameImg.getHeight();
         int maxHeight = textHeight;
+
+        // Star icon (if starred)
+        BufferedImage starIcon = null;
+        if (starred) {
+            try {
+                starIcon = Resource.classres(Starred.class).layer(Resource.imgc).scaled();
+                if (starIcon != null) {
+                    totalWidth += starIcon.getWidth() + iconToTextSpacing;
+                    maxHeight = Math.max(maxHeight, starIcon.getHeight());
+                }
+            } catch (Exception ignored) {}
+        }
+
+        totalWidth += nameImg.getWidth();
 
         // Quality icon and value
         BufferedImage qIcon = null;
@@ -309,16 +481,23 @@ public class NTooltip {
             totalWidth += timeImg.getWidth();
         }
 
-        // Canvas must fit both text and icon, but spacing ignores icon size
-        int canvasHeight = Math.max(textHeight, qIcon != null ? qIcon.getHeight() : 0);
+        // Canvas must fit both text and icons
+        int canvasHeight = maxHeight;
 
-        // Center text and icon in canvas - their centers will align
+        // Center text and icons in canvas
         int textY = (canvasHeight - textHeight) / 2;
 
         // Compose the line
         BufferedImage result = TexI.mkbuf(new Coord(totalWidth, canvasHeight));
         Graphics g = result.getGraphics();
         int x = 0;
+
+        // Draw star icon (if starred)
+        if (starIcon != null) {
+            int iconY = (canvasHeight - starIcon.getHeight()) / 2;
+            g.drawImage(starIcon, x, iconY, null);
+            x += starIcon.getWidth() + iconToTextSpacing;
+        }
 
         // Draw name (centered vertically)
         g.drawImage(nameImg, x, textY, null);
@@ -467,76 +646,157 @@ public class NTooltip {
     }
 
     /**
-     * Render the wear line: "Wear: " (white) + "X/Y" (cyan)
+     * Render the wear line: "Wear: " (regular white) + "X/Y" (semibold cyan)
      */
     private static BufferedImage renderWearLine(Wear wear) {
-        BufferedImage labelImg = getContentFoundry().render("Wear: ", Color.WHITE).img;
+        BufferedImage labelImg = getBodyRegularFoundry().render("Wear: ", Color.WHITE).img;
         String valueText = String.format("%,d/%,d", wear.d, wear.m);
         BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_FOOD_ENERGY).img;
-
-        int totalWidth = labelImg.getWidth() + valueImg.getWidth();
-        int maxHeight = Math.max(labelImg.getHeight(), valueImg.getHeight());
-
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
-        Graphics g = result.getGraphics();
-        int x = 0;
-
-        g.drawImage(labelImg, x, (maxHeight - labelImg.getHeight()) / 2, null);
-        x += labelImg.getWidth();
-        g.drawImage(valueImg, x, (maxHeight - valueImg.getHeight()) / 2, null);
-
-        g.dispose();
-        return result;
+        return composePair(labelImg, valueImg);
     }
 
     /**
-     * Render the hunger reduction line: "Hunger reduction: " (white) + "XX.X%" (yellow)
+     * Render the hunger reduction line: "Hunger reduction: " (regular white) + "XX.X%" (semibold yellow)
      */
     private static BufferedImage renderHungerLine(double glut) {
-        BufferedImage labelImg = getContentFoundry().render("Hunger reduction: ", Color.WHITE).img;
+        BufferedImage labelImg = getBodyRegularFoundry().render("Hunger reduction: ", Color.WHITE).img;
         String valueText = Utils.odformat2(100 * glut, 1) + "%";
         BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_FOOD_HUNGER).img;
-
-        int totalWidth = labelImg.getWidth() + valueImg.getWidth();
-        int maxHeight = Math.max(labelImg.getHeight(), valueImg.getHeight());
-
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
-        Graphics g = result.getGraphics();
-        int x = 0;
-
-        g.drawImage(labelImg, x, (maxHeight - labelImg.getHeight()) / 2, null);
-        x += labelImg.getWidth();
-        g.drawImage(valueImg, x, (maxHeight - valueImg.getHeight()) / 2, null);
-
-        g.dispose();
-        return result;
+        return composePair(labelImg, valueImg);
     }
 
     /**
-     * Render the food event bonus line: "Food event bonus: " (white) + "X.X%" (purple)
+     * Render the food event bonus line: "Food event bonus: " (regular white) + "X.X%" (semibold purple)
      */
     private static BufferedImage renderFoodBonusLine(double fev) {
-        BufferedImage labelImg = getContentFoundry().render("Food event bonus: ", Color.WHITE).img;
+        BufferedImage labelImg = getBodyRegularFoundry().render("Food event bonus: ", Color.WHITE).img;
         String valueText = Utils.odformat2(100 * fev, 1) + "%";
         BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_LP).img;
+        return composePair(labelImg, valueImg);
+    }
 
-        int totalWidth = labelImg.getWidth() + valueImg.getWidth();
-        int maxHeight = Math.max(labelImg.getHeight(), valueImg.getHeight());
+    /**
+     * Render the Damage + Range line: "Damage: " (regular) + "X" (semibold purple) + "Range: " (regular) + "X%" (semibold cyan)
+     */
+    private static BufferedImage renderDamageRangeLine(String damageValue, String rangeValue) {
+        int hSpacing = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
+        java.util.List<BufferedImage> parts = new java.util.ArrayList<>();
+
+        if (damageValue != null) {
+            BufferedImage labelImg = getBodyRegularFoundry().render("Damage: ", Color.WHITE).img;
+            BufferedImage valueImg = getContentFoundry().render(damageValue, TooltipStyle.COLOR_LP).img;  // #D2B2FF
+            parts.add(composePair(labelImg, valueImg));
+        }
+
+        if (rangeValue != null) {
+            BufferedImage labelImg = getBodyRegularFoundry().render("Range: ", Color.WHITE).img;
+            BufferedImage valueImg = getContentFoundry().render(rangeValue, TooltipStyle.COLOR_FOOD_ENERGY).img;  // #00EEFF
+            parts.add(composePair(labelImg, valueImg));
+        }
+
+        if (parts.isEmpty()) {
+            return null;
+        }
+
+        // Combine with horizontal spacing
+        int totalWidth = 0;
+        int maxHeight = 0;
+        for (BufferedImage img : parts) {
+            totalWidth += img.getWidth();
+            maxHeight = Math.max(maxHeight, img.getHeight());
+        }
+        totalWidth += hSpacing * (parts.size() - 1);
 
         BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
         Graphics g = result.getGraphics();
         int x = 0;
-
-        g.drawImage(labelImg, x, (maxHeight - labelImg.getHeight()) / 2, null);
-        x += labelImg.getWidth();
-        g.drawImage(valueImg, x, (maxHeight - valueImg.getHeight()) / 2, null);
-
+        for (int i = 0; i < parts.size(); i++) {
+            BufferedImage img = parts.get(i);
+            g.drawImage(img, x, (maxHeight - img.getHeight()) / 2, null);
+            x += img.getWidth();
+            if (i < parts.size() - 1) {
+                x += hSpacing;
+            }
+        }
         g.dispose();
         return result;
     }
 
     /**
-     * Render other tips (excluding Name, QBuff.Table, Contents, Wear, Gast which we handle ourselves)
+     * Render the Grievous damage line: "Grievous damage: " (regular) + "X%" (semibold yellow)
+     */
+    private static BufferedImage renderGrievousLine(String value) {
+        BufferedImage labelImg = getBodyRegularFoundry().render("Grievous damage: ", Color.WHITE).img;
+        BufferedImage valueImg = getContentFoundry().render(value, TooltipStyle.COLOR_FOOD_HUNGER).img;  // #FFFF82
+        return composePair(labelImg, valueImg);
+    }
+
+    /**
+     * Render the Armor penetration line: "Armor penetration: " (regular) + "X%" (semibold pink)
+     */
+    private static BufferedImage renderArmorPenLine(String value) {
+        BufferedImage labelImg = getBodyRegularFoundry().render("Armor penetration: ", Color.WHITE).img;
+        BufferedImage valueImg = getContentFoundry().render(value, TooltipStyle.COLOR_MENTAL_WEIGHT).img;  // #FF94E8
+        return composePair(labelImg, valueImg);
+    }
+
+    /**
+     * Render the Attack weight line: "Attack weight: " (regular) + icon
+     * Crops text first to remove top padding, then composes with icon.
+     * Icon is vertically centered on the visual text area (excluding descent).
+     */
+    private static BufferedImage renderWeightLine(BufferedImage icon) {
+        BufferedImage labelImg = getBodyRegularFoundry().render("Attack weight: ", Color.WHITE).img;
+        // Crop the text to remove top padding (like other lines do)
+        BufferedImage croppedLabel = TooltipStyle.cropTopOnly(labelImg);
+
+        // Scale icon to match cropped text height
+        int textHeight = croppedLabel.getHeight();
+        int iconSize = textHeight;
+        BufferedImage scaledIcon = PUtils.convolvedown(icon, new Coord(iconSize, iconSize), CharWnd.iconfilter);
+
+        // Get font descent to find visual text center (excluding descent area)
+        int descent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
+        int visualTextHeight = textHeight - descent;
+        int visualTextCenter = visualTextHeight / 2;
+
+        // Compose: cropped text + icon (icon centered on visual text, not full height)
+        int totalWidth = croppedLabel.getWidth() + scaledIcon.getWidth();
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, textHeight));
+        Graphics g = result.getGraphics();
+        g.drawImage(croppedLabel, 0, 0, null);
+        // Center icon on visual text center
+        int iconY = visualTextCenter - scaledIcon.getHeight() / 2;
+        g.drawImage(scaledIcon, croppedLabel.getWidth(), iconY, null);
+        g.dispose();
+        return result;
+    }
+
+    /**
+     * Render the gilding names line: comma-separated gilding names
+     */
+    private static BufferedImage renderGildingLine(java.util.List<String> gildingNames) {
+        String gildingsText = String.join(", ", gildingNames);
+        return getContentFoundry().render(gildingsText, Color.WHITE).img;
+    }
+
+    /**
+     * Helper to compose a label + value pair
+     */
+    private static BufferedImage composePair(BufferedImage labelImg, BufferedImage valueImg) {
+        int totalWidth = labelImg.getWidth() + valueImg.getWidth();
+        int maxHeight = Math.max(labelImg.getHeight(), valueImg.getHeight());
+
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+        Graphics g = result.getGraphics();
+        g.drawImage(labelImg, 0, (maxHeight - labelImg.getHeight()) / 2, null);
+        g.drawImage(valueImg, labelImg.getWidth(), (maxHeight - valueImg.getHeight()) / 2, null);
+        g.dispose();
+        return result;
+    }
+
+    /**
+     * Render other tips (excluding Name, QBuff.Table, Contents, Wear, Gast, ISlots, weapon stats which we handle ourselves)
      */
     private static BufferedImage renderOtherTips(List<ItemInfo> info, boolean skipContents) {
         if (info.isEmpty()) {
@@ -572,6 +832,14 @@ public class NTooltip {
                 }
                 // Skip Gast - we render hunger reduction and food event bonus ourselves
                 if (tip instanceof Gast) {
+                    continue;
+                }
+                // Skip ISlots - we render gilding names ourselves
+                if (tip instanceof ISlots) {
+                    continue;
+                }
+                // Skip weapon stat classes (Damage, Range, Grievous, Armpen) - we render them ourselves
+                if (isWeaponStat(ii)) {
                     continue;
                 }
                 l.add(tip);
