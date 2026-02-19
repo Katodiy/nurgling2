@@ -146,7 +146,11 @@ public class NTooltip {
                 totalWidth += qIcon.getWidth() + iconToTextSpacing;
                 maxHeight = Math.max(maxHeight, qIcon.getHeight());
             }
-            qImg = getNameFoundry().render(String.valueOf((int) qbuff.q), Color.WHITE).img;
+            // Show exact quality with 1 decimal place if not a whole number
+            String qText = (qbuff.q == Math.floor(qbuff.q))
+                ? String.valueOf((int) qbuff.q)
+                : String.format("%.1f", qbuff.q);
+            qImg = getNameFoundry().render(qText, Color.WHITE).img;
             totalWidth += qImg.getWidth();
             maxHeight = Math.max(maxHeight, qImg.getHeight());
         }
