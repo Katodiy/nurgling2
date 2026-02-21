@@ -629,20 +629,27 @@ public class NTooltip {
         }
 
         // Render tool stats section with right-aligned values (mining attributes)
-        BufferedImage toolStatsSection = null;
+        LineResult toolStatsSectionResult = null;
         if (!toolStats.isEmpty()) {
-            toolStatsSection = TooltipStyle.cropTopOnly(renderToolStatsSection(toolStats));
+            toolStatsSectionResult = renderToolStatsSection(toolStats);
         }
 
         // Combine itemInfo with toolStatsSection (10px section spacing)
+        // Use text offsets to ensure baseline-relative spacing
         BufferedImage itemInfoAndToolStats = null;
-        if (itemInfo != null && toolStatsSection != null) {
-            int itemToToolSpacing = scaledSectionSpacing - bodyDescentVal;
-            itemInfoAndToolStats = ItemInfo.catimgs(itemToToolSpacing, itemInfo, toolStatsSection);
+        int toolStatsBottomOffset = 0;
+        if (itemInfo != null && toolStatsSectionResult != null) {
+            // Adjust spacing: 10px baseline-to-text-top, accounting for tool stats top offset
+            int itemToToolSpacing = scaledSectionSpacing - bodyDescentVal - prevTextBottomOffset - toolStatsSectionResult.textTopOffset;
+            itemInfoAndToolStats = ItemInfo.catimgs(itemToToolSpacing, itemInfo, toolStatsSectionResult.image);
+            toolStatsBottomOffset = toolStatsSectionResult.textBottomOffset;
         } else if (itemInfo != null) {
             itemInfoAndToolStats = itemInfo;
-        } else if (toolStatsSection != null) {
-            itemInfoAndToolStats = toolStatsSection;
+            // prevTextBottomOffset already set from itemInfo loop
+            toolStatsBottomOffset = prevTextBottomOffset;
+        } else if (toolStatsSectionResult != null) {
+            itemInfoAndToolStats = toolStatsSectionResult.image;
+            toolStatsBottomOffset = toolStatsSectionResult.textBottomOffset;
         }
 
         // Render curio stats separately (NCuriosity is skipped in renderOtherTips)
@@ -652,9 +659,10 @@ public class NTooltip {
         }
 
         // Combine itemInfoAndToolStats with curioStats (10px section spacing)
+        // Account for tool stats bottom offset for proper baseline spacing
         BufferedImage itemInfoAndCurio = null;
         if (itemInfoAndToolStats != null && curioStats != null) {
-            int itemToCurioSpacing = scaledSectionSpacing - bodyDescentVal;
+            int itemToCurioSpacing = scaledSectionSpacing - bodyDescentVal - toolStatsBottomOffset;
             itemInfoAndCurio = ItemInfo.catimgs(itemToCurioSpacing, itemInfoAndToolStats, curioStats);
         } else if (itemInfoAndToolStats != null) {
             itemInfoAndCurio = itemInfoAndToolStats;
@@ -1032,9 +1040,9 @@ public class NTooltip {
 
     /**
      * Render all tool stats as a section with right-aligned values.
-     * Returns a single BufferedImage containing all tool stat lines.
+     * Returns a LineResult with proper text offsets for baseline-relative spacing.
      */
-    private static BufferedImage renderToolStatsSection(java.util.List<ToolStatData> toolStats) {
+    private static LineResult renderToolStatsSection(java.util.List<ToolStatData> toolStats) {
         if (toolStats == null || toolStats.isEmpty()) {
             return null;
         }
@@ -1081,8 +1089,8 @@ public class NTooltip {
         int visualTextHeight = textHeight - descent;
         int visualTextCenter = visualTextHeight / 2;
 
-        // Second pass: render each line with right-aligned values
-        java.util.List<BufferedImage> lines = new java.util.ArrayList<>();
+        // Second pass: render each line as LineResult with text offsets
+        java.util.List<LineResult> lineResults = new java.util.ArrayList<>();
         for (int i = 0; i < toolStats.size(); i++) {
             BufferedImage scaledIcon = scaledIcons.get(i);
             BufferedImage labelImg = labels.get(i);
@@ -1125,21 +1133,34 @@ public class NTooltip {
             g.drawImage(valueImg, valueX, textY + (textHeight - valueImg.getHeight()) / 2, null);
 
             g.dispose();
-            lines.add(line);
+
+            // Track text offsets for proper spacing
+            int textTopOffset = textY;
+            int textBottomOffset = canvasHeight - textY - textHeight;
+            lineResults.add(new LineResult(line, textTopOffset, textBottomOffset));
         }
 
-        // Combine lines with internal spacing (7px baseline)
-        if (lines.isEmpty()) {
+        // Combine lines with internal spacing (7px baseline-to-text-top)
+        if (lineResults.isEmpty()) {
             return null;
         }
 
-        BufferedImage result = lines.get(0);
-        for (int i = 1; i < lines.size(); i++) {
-            int spacing = scaledInternalSpacing - bodyDescentVal;
-            result = ItemInfo.catimgs(spacing, result, lines.get(i));
+        // Combine all lines, tracking cumulative text offsets
+        LineResult first = lineResults.get(0);
+        BufferedImage result = first.image;
+        int firstTextTopOffset = first.textTopOffset;
+        int prevTextBottomOffset = first.textBottomOffset;
+
+        for (int i = 1; i < lineResults.size(); i++) {
+            LineResult current = lineResults.get(i);
+            // Adjust spacing: subtract previous line's bottom offset and current line's top offset
+            int spacing = scaledInternalSpacing - bodyDescentVal - prevTextBottomOffset - current.textTopOffset;
+            result = ItemInfo.catimgs(spacing, result, current.image);
+            prevTextBottomOffset = current.textBottomOffset;
         }
 
-        return result;
+        // Return with first line's top offset and last line's bottom offset
+        return new LineResult(result, firstTextTopOffset, prevTextBottomOffset);
     }
 
     /**
