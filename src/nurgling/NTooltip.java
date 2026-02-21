@@ -32,7 +32,10 @@ public class NTooltip {
     private static final Pattern CONTENT_PATTERN = Pattern.compile("^([\\d.]+)\\s*(l of .+)$");
 
     // Weapon stat class names (dynamically loaded from .res files)
-    private static final String[] WEAPON_STAT_CLASSES = {"Damage", "Range", "Grievous", "Armpen", "Weight"};
+    private static final String[] WEAPON_STAT_CLASSES = {"Damage", "Range", "Grievous", "Armpen", "Weight", "Coolmod"};
+
+    // Tool stat class (for mining stats like Cave-in Damage, Mining Speed, etc.)
+    private static final String TOOL_CLASS = "Tool";
 
     /**
      * Get an integer field value from a dynamically loaded class via reflection.
@@ -49,12 +52,20 @@ public class NTooltip {
 
     /**
      * Get a percentage field value from a dynamically loaded class via reflection.
+     * Shows whole numbers without decimal (e.g., "120%") and decimals only when needed (e.g., "15.0%").
      */
     private static String getPercentField(Object obj, String fieldName) {
         try {
             Field f = obj.getClass().getField(fieldName);
             double value = f.getDouble(obj);
-            return String.format("%.1f%%", value * 100);
+            double percent = value * 100;
+            // Round to 1 decimal place to avoid floating point precision issues
+            double rounded = Math.round(percent * 10) / 10.0;
+            // Show whole number if no fractional part
+            if (rounded == Math.floor(rounded)) {
+                return String.format("%.0f%%", rounded);
+            }
+            return String.format("%.1f%%", rounded);
         } catch (Exception e) {
             return null;
         }
@@ -92,6 +103,204 @@ public class NTooltip {
             }
         }
         return false;
+    }
+
+    /**
+     * Data extracted from an AttrMod Entry.
+     * Represents a single mining stat like Cave-in Damage, Mining Speed, etc.
+     */
+    private static class ToolStatData {
+        final BufferedImage icon;
+        final String name;
+        final double modValue;
+        final boolean isPercent;  // true for percentage values (normattr), false for integer values (intattr)
+        final boolean isTransfer; // true for Transfer entries that show "+AttributeName"
+        final String transferValue; // The transfer value text (e.g., "+Strength")
+
+        ToolStatData(BufferedImage icon, String name, double modValue, boolean isPercent) {
+            this.icon = icon;
+            this.name = name;
+            this.modValue = modValue;
+            this.isPercent = isPercent;
+            this.isTransfer = false;
+            this.transferValue = null;
+        }
+
+        ToolStatData(BufferedImage icon, String name, String transferValue) {
+            this.icon = icon;
+            this.name = name;
+            this.modValue = 0;
+            this.isPercent = false;
+            this.isTransfer = true;
+            this.transferValue = transferValue;
+        }
+
+        /**
+         * Format the value as a string (e.g., "+2" for integer, "+15%" for percentage, "+Strength" for transfer)
+         */
+        String getFormattedValue() {
+            if (isTransfer) {
+                return transferValue != null ? transferValue : "";
+            }
+            String sign = modValue >= 0 ? "+" : "";
+            if (isPercent) {
+                // Format as percentage (normattr style)
+                double percent = modValue * 100;
+                if (percent == Math.floor(percent)) {
+                    return String.format("%s%.0f%%", sign, percent);
+                }
+                return String.format("%s%.1f%%", sign, percent);
+            } else {
+                // Format as integer (intattr style)
+                return String.format("%s%d", sign, (int) modValue);
+            }
+        }
+    }
+
+    /**
+     * Parse RichText formatted value to extract plain text.
+     * Format: $col[r,g,b]{text} -> returns "text"
+     * Also handles multiple formats or plain text.
+     */
+    private static String parseRichTextValue(String richText) {
+        if (richText == null || richText.isEmpty()) {
+            return "";
+        }
+        // Pattern to match $col[...]{text}
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\$col\\[[^\\]]*\\]\\{([^}]*)\\}");
+        java.util.regex.Matcher matcher = pattern.matcher(richText);
+        StringBuilder result = new StringBuilder();
+        while (matcher.find()) {
+            result.append(matcher.group(1));
+        }
+        // If no matches, return original text (might be plain text)
+        return result.length() > 0 ? result.toString() : richText;
+    }
+
+    /**
+     * Check if an attribute class is a percentage type by checking the class hierarchy.
+     * Percentage types: normattr, inormattr, pmattr
+     * Integer types: intattr
+     */
+    private static boolean isPercentageAttribute(Class<?> clazz) {
+        // Walk up the class hierarchy looking for known attribute type names
+        // Check both simple name and full name patterns since classes might be dynamically loaded
+        Class<?> current = clazz;
+        while (current != null && current != Object.class) {
+            String simpleName = current.getSimpleName();
+            String fullName = current.getName();
+
+            // Check for percentage attribute types (check both simple and full names)
+            if (simpleName.equals("normattr") || simpleName.equals("inormattr") || simpleName.equals("pmattr") ||
+                fullName.contains("normattr") || fullName.contains("inormattr") || fullName.contains("pmattr")) {
+                return true;
+            }
+            // Check for integer attribute type (explicitly not percentage)
+            if (simpleName.equals("intattr") || fullName.contains("intattr")) {
+                return false;
+            }
+            current = current.getSuperclass();
+        }
+        // Default to percentage if unknown (safer for display)
+        return true;
+    }
+
+    /**
+     * Extract tool stats from a Tool instance.
+     * Tool has: sub (List of AttrMod), each AttrMod has tab (Collection of Entry).
+     * Each Entry (Mod) has attr.name(), attr.icon(), and mod (double value).
+     */
+    private static java.util.List<ToolStatData> extractToolStats(Object toolObj) {
+        java.util.List<ToolStatData> stats = new java.util.ArrayList<>();
+        try {
+            // Get the 'sub' field (List of ItemInfo, containing AttrMod objects)
+            Field subField = toolObj.getClass().getDeclaredField("sub");
+            subField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.List<?> subList = (java.util.List<?>) subField.get(toolObj);
+
+            if (subList == null) return stats;
+
+            for (Object subItem : subList) {
+                // Check if this is an AttrMod
+                if (!subItem.getClass().getSimpleName().equals("AttrMod")) {
+                    continue;
+                }
+
+                // Get the 'tab' field (Collection of Entry)
+                Field tabField = subItem.getClass().getDeclaredField("tab");
+                tabField.setAccessible(true);
+                @SuppressWarnings("unchecked")
+                java.util.Collection<?> tabCollection = (java.util.Collection<?>) tabField.get(subItem);
+
+                if (tabCollection == null) continue;
+
+                for (Object entry : tabCollection) {
+                    try {
+                        // Get the 'attr' field from Entry
+                        Field attrField = entry.getClass().getField("attr");
+                        Object attr = attrField.get(entry);
+
+                        // Call attr.name()
+                        java.lang.reflect.Method nameMethod = attr.getClass().getMethod("name");
+                        String name = (String) nameMethod.invoke(attr);
+
+                        // Call attr.icon()
+                        java.lang.reflect.Method iconMethod = attr.getClass().getMethod("icon");
+                        BufferedImage icon = (BufferedImage) iconMethod.invoke(attr);
+
+                        // Get the 'mod' field from Mod (Entry subclass)
+                        // If no mod field, check for Transfer entry type
+                        double modValue = 0;
+                        boolean hasMod = false;
+                        boolean isTransfer = false;
+                        String transferValue = null;
+                        try {
+                            Field modField = entry.getClass().getField("mod");
+                            modValue = modField.getDouble(entry);
+                            hasMod = true;
+                        } catch (NoSuchFieldException e) {
+                            // Not a Mod - might be a Transfer entry type
+                            // Try to call fmtvalue() and parse the result
+                            try {
+                                java.lang.reflect.Method fmtMethod = entry.getClass().getMethod("fmtvalue");
+                                String fmtValue = (String) fmtMethod.invoke(entry);
+
+                                // Check if this is a Transfer entry (class name contains "Transfer")
+                                if (entry.getClass().getName().contains("Transfer")) {
+                                    isTransfer = true;
+                                    // Parse the fmtvalue to extract the text (strip RichText formatting)
+                                    // Format: $col[r,g,b]{text} -> extract "text"
+                                    transferValue = parseRichTextValue(fmtValue);
+                                } else {
+                                    // Unknown entry type, skip
+                                    continue;
+                                }
+                            } catch (Exception ex) {
+                                continue;
+                            }
+                        }
+
+                        // Check if this is a percentage attribute (normattr) or integer (intattr)
+                        // by checking the class hierarchy for known attribute type names
+                        boolean isPercent = isPercentageAttribute(attr.getClass());
+
+                        if (name != null && icon != null) {
+                            if (isTransfer) {
+                                stats.add(new ToolStatData(icon, name, transferValue));
+                            } else {
+                                stats.add(new ToolStatData(icon, name, modValue, isPercent));
+                            }
+                        }
+                    } catch (Exception e) {
+                        // Skip entries we can't extract
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Error extracting tool stats
+        }
+        return stats;
     }
 
     /**
@@ -164,7 +373,11 @@ public class NTooltip {
         String rangeValue = null;
         String grievousValue = null;
         String armorPenValue = null;
+        String coolmodValue = null;
         BufferedImage weightIcon = null;
+
+        // Tool stats (mining attributes like Cave-in Damage, Mining Speed, etc.)
+        java.util.List<ToolStatData> toolStats = new java.util.ArrayList<>();
 
         for (ItemInfo ii : info) {
             String className = ii.getClass().getSimpleName();
@@ -203,10 +416,16 @@ public class NTooltip {
                 grievousValue = getPercentField(ii, "deg");  // field is "deg"
             } else if (className.equals("Armpen")) {
                 armorPenValue = getPercentField(ii, "deg");  // field is "deg"
+            } else if (className.equals("Coolmod")) {
+                coolmodValue = getPercentField(ii, "mod");  // Attack cooldown modifier
             } else if (className.equals("Weight")) {
                 // Weight stores an attr Resource (e.g., "gfx/hud/chr/melee")
                 // Extract the icon from the resource
                 weightIcon = getWeightAttrIcon(ii);
+            } else if (className.equals(TOOL_CLASS)) {
+                // Tool stores mining attributes (Cave-in Damage, Mining Speed, etc.)
+                // Extract all stats from this Tool's sub list of AttrMod objects
+                toolStats.addAll(extractToolStats(ii));
             }
         }
 
@@ -296,6 +515,11 @@ public class NTooltip {
             armorPenLine = TooltipStyle.cropTopOnly(renderArmorPenLine(armorPenValue));
         }
 
+        BufferedImage coolmodLine = null;
+        if (coolmodValue != null) {
+            coolmodLine = TooltipStyle.cropTopOnly(renderCoolmodLine(coolmodValue));
+        }
+
         // Render Attack weight - returns LineResult with text offsets for proper spacing
         LineResult weaponWeightLineResult = null;
         if (weightIcon != null) {
@@ -372,6 +596,13 @@ public class NTooltip {
         }
         if (armorPenLine != null) {
             itemInfoResults.add(new LineResult(armorPenLine, 0, 0));
+        }
+        if (coolmodLine != null) {
+            itemInfoResults.add(new LineResult(coolmodLine, 0, 0));
+        }
+        // Add tool stats (mining attributes like Cave-in Damage, Mining Speed, etc.)
+        for (ToolStatData tool : toolStats) {
+            itemInfoResults.add(renderToolStatLine(tool));
         }
         if (hungerLine != null) {
             itemInfoResults.add(new LineResult(hungerLine, 0, 0));
@@ -777,6 +1008,81 @@ public class NTooltip {
     }
 
     /**
+     * Render the Attack cooldown line: "Attack cooldown: " (regular) + "X%" (semibold cyan)
+     */
+    private static BufferedImage renderCoolmodLine(String value) {
+        BufferedImage labelImg = getBodyRegularFoundry().render("Attack cooldown: ", Color.WHITE).img;
+        BufferedImage valueImg = getContentFoundry().render(value, TooltipStyle.COLOR_FOOD_ENERGY).img;  // #00EEFF
+        return composePair(labelImg, valueImg);
+    }
+
+    /**
+     * Render a tool stat line: icon + "Name " (regular) + formatted value (semibold green #99FF84)
+     * Returns LineResult with text offsets for proper spacing.
+     */
+    private static LineResult renderToolStatLine(ToolStatData tool) {
+        // Format value ourselves to control color (#99FF84)
+        BufferedImage labelImg = getBodyRegularFoundry().render(tool.name + " ", Color.WHITE).img;
+        BufferedImage valueImg = getContentFoundry().render(tool.getFormattedValue(), TooltipStyle.COLOR_STUDY_TIME).img;  // #99FF84
+
+        // Crop text images
+        BufferedImage croppedLabel = TooltipStyle.cropTopOnly(labelImg);
+        BufferedImage croppedValue = TooltipStyle.cropTopOnly(valueImg);
+
+        int textHeight = Math.max(croppedLabel.getHeight(), croppedValue.getHeight());
+
+        // Scale icon to match text height
+        int iconSize = textHeight;
+        BufferedImage scaledIcon = PUtils.convolvedown(tool.icon, new Coord(iconSize, iconSize), CharWnd.iconfilter);
+
+        // Get font descent for visual text centering
+        int descent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
+        int visualTextHeight = textHeight - descent;
+        int visualTextCenter = visualTextHeight / 2;
+
+        // Center icon on visual text center
+        int iconYRelative = visualTextCenter - scaledIcon.getHeight() / 2;
+
+        // Calculate canvas height and positions
+        int canvasHeight = textHeight;
+        int textY = 0;
+        int iconY = iconYRelative;
+
+        // If icon extends above text, expand canvas
+        if (iconYRelative < 0) {
+            canvasHeight = textHeight - iconYRelative;
+            textY = -iconYRelative;
+            iconY = 0;
+        }
+        // If icon extends below text, expand canvas
+        int iconBottom = iconY + scaledIcon.getHeight();
+        if (iconBottom > canvasHeight) {
+            canvasHeight = iconBottom;
+        }
+
+        // Spacing between icon and text
+        int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
+
+        // Compose: icon + label + value
+        int totalWidth = scaledIcon.getWidth() + iconToTextSpacing + croppedLabel.getWidth() + croppedValue.getWidth();
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, canvasHeight));
+        Graphics g = result.getGraphics();
+
+        int x = 0;
+        g.drawImage(scaledIcon, x, iconY, null);
+        x += scaledIcon.getWidth() + iconToTextSpacing;
+        g.drawImage(croppedLabel, x, textY + (textHeight - croppedLabel.getHeight()) / 2, null);
+        x += croppedLabel.getWidth();
+        g.drawImage(croppedValue, x, textY + (textHeight - croppedValue.getHeight()) / 2, null);
+        g.dispose();
+
+        // Return with text offsets
+        int textTopOffset = textY;
+        int textBottomOffset = canvasHeight - textY - textHeight;
+        return new LineResult(result, textTopOffset, textBottomOffset);
+    }
+
+    /**
      * Render the Attack weight line: "Attack weight: " (regular) + icon
      * Crops text first to remove top padding, then composes with icon.
      * Icon is vertically centered on the visual text area (excluding descent).
@@ -901,8 +1207,22 @@ public class NTooltip {
                 if (tip instanceof NCuriosity) {
                     continue;
                 }
-                // Skip weapon stat classes (Damage, Range, Grievous, Armpen) - we render them ourselves
+                // Skip weapon stat classes (Damage, Range, Grievous, Armpen, Coolmod) - we render them ourselves
                 if (isWeaponStat(ii)) {
+                    continue;
+                }
+                // Skip Quality class - it renders duplicate resource path
+                if (tip.getClass().getSimpleName().equals("Quality")) {
+                    continue;
+                }
+                // Skip NSearchingHighlight and NQuestItem - nurgling classes (overlay only, no tooltip)
+                if (tip.getClass().getSimpleName().equals("NSearchingHighlight") ||
+                    tip.getClass().getSimpleName().equals("NQuestItem")) {
+                    continue;
+                }
+                // Skip Tool class - it renders "When used:" header and resource path
+                // TODO: Render mining stats ourselves without the header
+                if (tip.getClass().getSimpleName().equals("Tool")) {
                     continue;
                 }
                 l.add(tip);
