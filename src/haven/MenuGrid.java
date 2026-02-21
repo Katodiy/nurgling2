@@ -38,6 +38,7 @@ import haven.ItemInfo.AttrCache;
 import haven.res.ui.pag.toggle.Toggle;
 import nurgling.NConfig;
 import nurgling.NInventory;
+import nurgling.NRecipeTooltip;
 import nurgling.NUtils;
 
 public class MenuGrid extends Widget implements KeyBinding.Bindable {
@@ -305,24 +306,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	public Resource getres() {return(res);}
 
 	public BufferedImage rendertt(boolean withpg) {
-	    String tt = name();
-	    KeyMatch key = bind.key();
-	    int pos = -1;
-	    char vkey = bindchr(key);
-	    if((vkey != 0) && (key.modmatch == 0))
-		pos = tt.toUpperCase().indexOf(Character.toUpperCase(vkey));
-	    if(pos >= 0)
-		tt = tt.substring(0, pos) + "$b{$col[255,128,0]{" + tt.charAt(pos) + "}}" + tt.substring(pos + 1);
-	    else if(key != KeyMatch.nil)
-		tt += " [$b{$col[255,128,0]{" + key.name() + "}}]";
-	    BufferedImage ret = ttfnd.render(tt, UI.scale(300)).img;
-	    if(withpg) {
-		List<ItemInfo> info = info();
-		info.removeIf(el -> el instanceof ItemInfo.Name);
-		if(!info.isEmpty())
-		    ret = ItemInfo.catimgs(0, ret, ItemInfo.longtip(info));
-	    }
-	    return(ret);
+	    return NRecipeTooltip.build(name(), bind.key(), withpg ? info() : null);
 	}
 
 	public static class FactMaker extends Resource.PublishedCode.Instancer.Chain<Factory> {
