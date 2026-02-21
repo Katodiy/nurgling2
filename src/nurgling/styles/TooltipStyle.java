@@ -177,6 +177,9 @@ public final class TooltipStyle {
     /** Spacing within LP Info group (LP line, Study time, Mental weight) */
     public static final int INTERNAL_SPACING = 7;
 
+    /** Spacing within gilding sections (header to stats) */
+    public static final int GILDING_INTERNAL_SPACING = 6;
+
     /** Horizontal spacing between elements on the same line */
     public static final int HORIZONTAL_SPACING = 7;
 
