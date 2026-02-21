@@ -525,6 +525,10 @@ public class NTooltip {
         String coolmodValue = null;
         BufferedImage weightIcon = null;
 
+        // Armor class stats (hard/soft)
+        Integer armorHard = null;
+        Integer armorSoft = null;
+
         // Tool stats (mining attributes like Cave-in Damage, Mining Speed, etc.)
         java.util.List<ToolStatData> toolStats = new java.util.ArrayList<>();
 
@@ -533,6 +537,7 @@ public class NTooltip {
         for (ItemInfo ii : info) {
             String className = ii.getClass().getSimpleName();
             String fullName = ii.getClass().getName();
+
 
             // Capture base AttrMod (non-gilding stats)
             if (className.equals("AttrMod") && fullName.contains("attrmod")) {
@@ -587,6 +592,12 @@ public class NTooltip {
                 // Tool stores mining attributes (Cave-in Damage, Mining Speed, etc.)
                 // Extract all stats from this Tool's sub list of AttrMod objects
                 toolStats.addAll(extractToolStats(ii));
+            } else if (className.equals("Armor")) {
+                // Armor class has "hard" and "soft" fields
+                String hardStr = getIntField(ii, "hard");
+                String softStr = getIntField(ii, "soft");
+                if (hardStr != null) armorHard = Integer.parseInt(hardStr);
+                if (softStr != null) armorSoft = Integer.parseInt(softStr);
             }
         }
 
@@ -660,10 +671,15 @@ public class NTooltip {
             contentTextTopOffset = contentLineResult.textTopOffset;
         }
 
-        // Render custom lines for Wear, Hunger reduction, Food event bonus
+        // Render custom lines for Wear, Armor class, Hunger reduction, Food event bonus
         BufferedImage wearLine = null;
         if (wear != null && wear.m > 0) {
             wearLine = TooltipStyle.cropTopOnly(renderWearLine(wear));
+        }
+
+        BufferedImage armorClassLine = null;
+        if (armorHard != null && armorSoft != null) {
+            armorClassLine = TooltipStyle.cropTopOnly(renderArmorClassLine(armorHard, armorSoft));
         }
 
         BufferedImage hungerLine = null;
@@ -775,6 +791,7 @@ public class NTooltip {
         if (wearLine != null) {
             itemInfoResults.add(new LineResult(wearLine, 0, 0));
         }
+        // armorClassLine is handled separately below with 10px section spacing after it
         if (grievousLine != null) {
             itemInfoResults.add(new LineResult(grievousLine, 0, 0));
         }
@@ -812,10 +829,23 @@ public class NTooltip {
             }
         }
 
-        // Add base stats with internal spacing (7px) if itemInfo exists, otherwise start fresh
+        // Add armor class with internal spacing (7px) to itemInfo, then use section spacing (10px) after it
+        if (armorClassLine != null) {
+            if (itemInfo != null) {
+                int armorClassSpacing = scaledInternalSpacing - bodyDescentVal - prevTextBottomOffset;
+                itemInfo = ItemInfo.catimgs(armorClassSpacing, itemInfo, armorClassLine);
+            } else {
+                itemInfo = armorClassLine;
+            }
+            prevTextBottomOffset = 0;  // Reset for section spacing after armor class
+        }
+
+        // Add base stats with SECTION spacing (10px) after armor class, or internal spacing (7px) otherwise
         if (baseStatsResult != null) {
             if (itemInfo != null) {
-                int baseStatsSpacing = scaledInternalSpacing - bodyDescentVal - prevTextBottomOffset - baseStatsResult.textTopOffset;
+                // Use section spacing (10px) if armor class was added, otherwise internal spacing (7px)
+                int spacingBase = (armorClassLine != null) ? scaledSectionSpacing : scaledInternalSpacing;
+                int baseStatsSpacing = spacingBase - bodyDescentVal - prevTextBottomOffset - baseStatsResult.textTopOffset;
                 itemInfo = ItemInfo.catimgs(baseStatsSpacing, itemInfo, baseStatsResult.image);
                 prevTextBottomOffset = baseStatsResult.textBottomOffset;
             } else {
@@ -896,10 +926,11 @@ public class NTooltip {
             curioBottomOffset = 0;
         }
 
-        // Combine itemInfoAndCurio with statsAndRes (10px spacing)
+        // Combine itemInfoAndCurio with statsAndRes (10px spacing to resource line)
         BufferedImage contentAndBelow = null;
         if (itemInfoAndCurio != null && statsAndRes != null) {
-            int itemToStatsSpacing = scaledSectionSpacing - bodyDescentVal - curioBottomOffset;
+            // Use full section spacing (10px) for clean visual spacing to resource line
+            int itemToStatsSpacing = scaledSectionSpacing;
             contentAndBelow = ItemInfo.catimgs(itemToStatsSpacing, itemInfoAndCurio, statsAndRes);
         } else if (itemInfoAndCurio != null) {
             contentAndBelow = itemInfoAndCurio;
@@ -1182,6 +1213,16 @@ public class NTooltip {
         BufferedImage labelImg = getBodyRegularFoundry().render("Wear: ", Color.WHITE).img;
         String valueText = String.format("%,d/%,d", wear.d, wear.m);
         BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_FOOD_ENERGY).img;
+        return composePair(labelImg, valueImg);
+    }
+
+    /**
+     * Render the armor class line: "Armor class: " (regular white) + "X/Y" (semibold pink #FF94E8)
+     */
+    private static BufferedImage renderArmorClassLine(int hard, int soft) {
+        BufferedImage labelImg = getBodyRegularFoundry().render("Armor class: ", Color.WHITE).img;
+        String valueText = String.format("%d/%d", hard, soft);
+        BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_MENTAL_WEIGHT).img;
         return composePair(labelImg, valueImg);
     }
 
@@ -2433,6 +2474,10 @@ public class NTooltip {
                 }
                 // Skip DynTex - it may render gilding slots visually and causes extra space
                 if (tipClassName.equals("DynTex")) {
+                    continue;
+                }
+                // Skip Armor - we render armor class ourselves
+                if (tipClassName.equals("Armor")) {
                     continue;
                 }
                 // Skip AttrMod at item level - we render base stats ourselves
