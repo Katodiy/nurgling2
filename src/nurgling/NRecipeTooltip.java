@@ -425,6 +425,7 @@ public class NRecipeTooltip {
     /**
      * Render text with word wrapping at specified max width.
      * Uses Open Sans 9px regular font with baseline-to-top spacing between lines.
+     * Handles multiple paragraphs with 17px spacing between them.
      */
     private static BufferedImage renderWrappedText(String text, int maxWidth) {
         if (text == null || text.isEmpty()) return null;
@@ -438,46 +439,62 @@ public class NRecipeTooltip {
         FontMetrics fm = g2d.getFontMetrics(font);
         g2d.dispose();
 
-        // Split text into words
-        String[] words = text.split("\\s+");
-        List<String> lines = new ArrayList<>();
-        StringBuilder currentLine = new StringBuilder();
+        // Split text into paragraphs (separated by blank lines - 2+ newlines with possible whitespace)
+        // This handles \n\n, \r\n\r\n, and variations with spaces
+        String[] paragraphs = text.split("\\n\\s*\\n");
+        List<BufferedImage> paragraphImages = new ArrayList<>();
 
-        for (String word : words) {
-            if (currentLine.length() == 0) {
-                currentLine.append(word);
-            } else {
-                String testLine = currentLine + " " + word;
-                int testWidth = fm.stringWidth(testLine);
-                if (testWidth <= maxWidth) {
-                    currentLine.append(" ").append(word);
+        for (String paragraph : paragraphs) {
+            if (paragraph.trim().isEmpty()) continue;
+
+            // Split paragraph into words and wrap
+            String[] words = paragraph.trim().split("\\s+");
+            List<String> lines = new ArrayList<>();
+            StringBuilder currentLine = new StringBuilder();
+
+            for (String word : words) {
+                if (currentLine.length() == 0) {
+                    currentLine.append(word);
                 } else {
-                    // Line is full, start new line
-                    lines.add(currentLine.toString());
-                    currentLine = new StringBuilder(word);
+                    String testLine = currentLine + " " + word;
+                    int testWidth = fm.stringWidth(testLine);
+                    if (testWidth <= maxWidth) {
+                        currentLine.append(" ").append(word);
+                    } else {
+                        // Line is full, start new line
+                        lines.add(currentLine.toString());
+                        currentLine = new StringBuilder(word);
+                    }
                 }
             }
+            // Add last line
+            if (currentLine.length() > 0) {
+                lines.add(currentLine.toString());
+            }
+
+            if (lines.isEmpty()) continue;
+
+            // Render each line and crop top
+            List<BufferedImage> lineImages = new ArrayList<>();
+            for (String line : lines) {
+                BufferedImage lineImg = fnd.render(line, Color.WHITE).img;
+                lineImages.add(TooltipStyle.cropTopOnly(lineImg));
+            }
+
+            // Use baseline-to-top spacing within paragraph
+            int descent = TooltipStyle.getFontDescent(9);
+            int lineSpacing = UI.scale(2) - descent;
+            if (lineSpacing < 0) lineSpacing = 0;
+
+            BufferedImage paragraphImg = ItemInfo.catimgs(lineSpacing, lineImages.toArray(new BufferedImage[0]));
+            paragraphImages.add(paragraphImg);
         }
-        // Add last line
-        if (currentLine.length() > 0) {
-            lines.add(currentLine.toString());
-        }
 
-        if (lines.isEmpty()) return null;
+        if (paragraphImages.isEmpty()) return null;
+        if (paragraphImages.size() == 1) return paragraphImages.get(0);
 
-        // Render each line and crop top
-        List<BufferedImage> lineImages = new ArrayList<>();
-        for (String line : lines) {
-            BufferedImage lineImg = fnd.render(line, Color.WHITE).img;
-            lineImages.add(TooltipStyle.cropTopOnly(lineImg));
-        }
-
-        // Use baseline-to-top spacing: desired line spacing minus font descent
-        // For 9px font, use natural line height (ascent + descent + leading)
-        int descent = TooltipStyle.getFontDescent(9);
-        int lineSpacing = UI.scale(2) - descent;  // Small gap from baseline to next line top
-        if (lineSpacing < 0) lineSpacing = 0;
-
-        return ItemInfo.catimgs(lineSpacing, lineImages.toArray(new BufferedImage[0]));
+        // Combine paragraphs with 17px spacing between them
+        int paragraphSpacing = UI.scale(17);
+        return ItemInfo.catimgs(paragraphSpacing, paragraphImages.toArray(new BufferedImage[0]));
     }
 }
