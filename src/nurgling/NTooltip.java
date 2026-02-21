@@ -600,10 +600,7 @@ public class NTooltip {
         if (coolmodLine != null) {
             itemInfoResults.add(new LineResult(coolmodLine, 0, 0));
         }
-        // Add tool stats (mining attributes like Cave-in Damage, Mining Speed, etc.)
-        for (ToolStatData tool : toolStats) {
-            itemInfoResults.add(renderToolStatLine(tool));
-        }
+        // Tool stats are rendered separately with section spacing (see below)
         if (hungerLine != null) {
             itemInfoResults.add(new LineResult(hungerLine, 0, 0));
         }
@@ -631,19 +628,36 @@ public class NTooltip {
             }
         }
 
+        // Render tool stats section with right-aligned values (mining attributes)
+        BufferedImage toolStatsSection = null;
+        if (!toolStats.isEmpty()) {
+            toolStatsSection = TooltipStyle.cropTopOnly(renderToolStatsSection(toolStats));
+        }
+
+        // Combine itemInfo with toolStatsSection (10px section spacing)
+        BufferedImage itemInfoAndToolStats = null;
+        if (itemInfo != null && toolStatsSection != null) {
+            int itemToToolSpacing = scaledSectionSpacing - bodyDescentVal;
+            itemInfoAndToolStats = ItemInfo.catimgs(itemToToolSpacing, itemInfo, toolStatsSection);
+        } else if (itemInfo != null) {
+            itemInfoAndToolStats = itemInfo;
+        } else if (toolStatsSection != null) {
+            itemInfoAndToolStats = toolStatsSection;
+        }
+
         // Render curio stats separately (NCuriosity is skipped in renderOtherTips)
         BufferedImage curioStats = null;
         if (curiosity != null) {
             curioStats = TooltipStyle.cropTopOnly(curiosity.tipimg());
         }
 
-        // Combine itemInfo with curioStats (10px section spacing)
+        // Combine itemInfoAndToolStats with curioStats (10px section spacing)
         BufferedImage itemInfoAndCurio = null;
-        if (itemInfo != null && curioStats != null) {
+        if (itemInfoAndToolStats != null && curioStats != null) {
             int itemToCurioSpacing = scaledSectionSpacing - bodyDescentVal;
-            itemInfoAndCurio = ItemInfo.catimgs(itemToCurioSpacing, itemInfo, curioStats);
-        } else if (itemInfo != null) {
-            itemInfoAndCurio = itemInfo;
+            itemInfoAndCurio = ItemInfo.catimgs(itemToCurioSpacing, itemInfoAndToolStats, curioStats);
+        } else if (itemInfoAndToolStats != null) {
+            itemInfoAndCurio = itemInfoAndToolStats;
         } else if (curioStats != null) {
             itemInfoAndCurio = curioStats;
         }
@@ -1017,8 +1031,121 @@ public class NTooltip {
     }
 
     /**
+     * Render all tool stats as a section with right-aligned values.
+     * Returns a single BufferedImage containing all tool stat lines.
+     */
+    private static BufferedImage renderToolStatsSection(java.util.List<ToolStatData> toolStats) {
+        if (toolStats == null || toolStats.isEmpty()) {
+            return null;
+        }
+
+        int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
+        int scaledInternalSpacing = UI.scale(TooltipStyle.INTERNAL_SPACING);
+        int bodyDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
+
+        // First pass: calculate max widths for alignment
+        java.util.List<BufferedImage> icons = new java.util.ArrayList<>();
+        java.util.List<BufferedImage> labels = new java.util.ArrayList<>();
+        java.util.List<BufferedImage> values = new java.util.ArrayList<>();
+        int maxLabelWidth = 0;
+        int maxValueWidth = 0;
+        int textHeight = 0;
+
+        for (ToolStatData tool : toolStats) {
+            // Render label (Regular) and value (Semibold)
+            BufferedImage labelImg = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render(tool.name, Color.WHITE).img);
+            BufferedImage valueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(tool.getFormattedValue(), TooltipStyle.COLOR_STUDY_TIME).img);
+
+            labels.add(labelImg);
+            values.add(valueImg);
+            icons.add(tool.icon);
+
+            maxLabelWidth = Math.max(maxLabelWidth, labelImg.getWidth());
+            maxValueWidth = Math.max(maxValueWidth, valueImg.getWidth());
+            textHeight = Math.max(textHeight, Math.max(labelImg.getHeight(), valueImg.getHeight()));
+        }
+
+        // Scale icons to match text height
+        int iconSize = textHeight;
+        java.util.List<BufferedImage> scaledIcons = new java.util.ArrayList<>();
+        for (BufferedImage icon : icons) {
+            scaledIcons.add(PUtils.convolvedown(icon, new Coord(iconSize, iconSize), CharWnd.iconfilter));
+        }
+
+        // Calculate total width: icon + spacing + maxLabelWidth + spacing + maxValueWidth
+        int gapBetweenLabelAndValue = UI.scale(7);  // Gap between label and value
+        int totalWidth = iconSize + iconToTextSpacing + maxLabelWidth + gapBetweenLabelAndValue + maxValueWidth;
+
+        // Get font descent for visual text centering
+        int descent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
+        int visualTextHeight = textHeight - descent;
+        int visualTextCenter = visualTextHeight / 2;
+
+        // Second pass: render each line with right-aligned values
+        java.util.List<BufferedImage> lines = new java.util.ArrayList<>();
+        for (int i = 0; i < toolStats.size(); i++) {
+            BufferedImage scaledIcon = scaledIcons.get(i);
+            BufferedImage labelImg = labels.get(i);
+            BufferedImage valueImg = values.get(i);
+
+            // Calculate icon Y position (centered on visual text)
+            int iconYRelative = visualTextCenter - scaledIcon.getHeight() / 2;
+
+            // Calculate canvas height and positions
+            int canvasHeight = textHeight;
+            int textY = 0;
+            int iconY = iconYRelative;
+
+            // If icon extends above text, expand canvas
+            if (iconYRelative < 0) {
+                canvasHeight = textHeight - iconYRelative;
+                textY = -iconYRelative;
+                iconY = 0;
+            }
+            // If icon extends below text, expand canvas
+            int iconBottom = iconY + scaledIcon.getHeight();
+            if (iconBottom > canvasHeight) {
+                canvasHeight = iconBottom;
+            }
+
+            // Create line image
+            BufferedImage line = TexI.mkbuf(new Coord(totalWidth, canvasHeight));
+            Graphics g = line.getGraphics();
+
+            int x = 0;
+            // Draw icon
+            g.drawImage(scaledIcon, x, iconY, null);
+            x += scaledIcon.getWidth() + iconToTextSpacing;
+
+            // Draw label (left-aligned within label area)
+            g.drawImage(labelImg, x, textY + (textHeight - labelImg.getHeight()) / 2, null);
+
+            // Draw value (right-aligned)
+            int valueX = totalWidth - valueImg.getWidth();
+            g.drawImage(valueImg, valueX, textY + (textHeight - valueImg.getHeight()) / 2, null);
+
+            g.dispose();
+            lines.add(line);
+        }
+
+        // Combine lines with internal spacing (7px baseline)
+        if (lines.isEmpty()) {
+            return null;
+        }
+
+        BufferedImage result = lines.get(0);
+        for (int i = 1; i < lines.size(); i++) {
+            int spacing = scaledInternalSpacing - bodyDescentVal;
+            result = ItemInfo.catimgs(spacing, result, lines.get(i));
+        }
+
+        return result;
+    }
+
+    /**
      * Render a tool stat line: icon + "Name " (regular) + formatted value (semibold green #99FF84)
      * Returns LineResult with text offsets for proper spacing.
+     * @deprecated Use renderToolStatsSection instead for right-aligned values
      */
     private static LineResult renderToolStatLine(ToolStatData tool) {
         // Format value ourselves to control color (#99FF84)
