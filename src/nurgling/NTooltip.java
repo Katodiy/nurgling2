@@ -1864,7 +1864,9 @@ public class NTooltip {
             for (GildingStatData stat : stats) {
                 BufferedImage statIcon = stat.icon;
                 BufferedImage statNameImg = TooltipStyle.cropTopOnly(getGildingStatNameFoundry().render(stat.name, Color.WHITE).img);  // 9px
-                BufferedImage statValueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, TooltipStyle.COLOR_STUDY_TIME).img);  // 11px semibold
+                // Use red for negative values, green for positive
+                Color statValueColor = stat.formattedValue.startsWith("-") ? TooltipStyle.COLOR_NEGATIVE_STAT : TooltipStyle.COLOR_STUDY_TIME;
+                BufferedImage statValueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, statValueColor).img);  // 11px semibold
 
                 // Text height is max of name and value
                 int statTextHeight = Math.max(statNameImg.getHeight(), statValueImg.getHeight());
@@ -2123,7 +2125,9 @@ public class NTooltip {
             BufferedImage statIcon = stat.icon;
             BufferedImage scaledStatIcon = PUtils.convolvedown(statIcon, new Coord(iconSize, iconSize), CharWnd.iconfilter);
             BufferedImage statNameImg = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render(stat.name, Color.WHITE).img);
-            BufferedImage statValueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, TooltipStyle.COLOR_STUDY_TIME).img);
+            // Use red for negative values, green for positive
+            Color statValueColor = stat.formattedValue.startsWith("-") ? TooltipStyle.COLOR_NEGATIVE_STAT : TooltipStyle.COLOR_STUDY_TIME;
+            BufferedImage statValueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, statValueColor).img);
 
             int lineHeight = Math.max(Math.max(scaledStatIcon.getHeight(), statNameImg.getHeight()), statValueImg.getHeight());
 
@@ -2246,7 +2250,9 @@ public class NTooltip {
             for (GildingStatData stat : stats) {
                 BufferedImage statIcon = stat.icon;
                 BufferedImage statNameImg = TooltipStyle.cropTopOnly(getGildingStatNameFoundry().render(stat.name, Color.WHITE).img);  // 9px
-                BufferedImage statValueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, TooltipStyle.COLOR_STUDY_TIME).img);  // 11px semibold
+                // Use red for negative values, green for positive
+                Color statValueColor = stat.formattedValue.startsWith("-") ? TooltipStyle.COLOR_NEGATIVE_STAT : TooltipStyle.COLOR_STUDY_TIME;
+                BufferedImage statValueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, statValueColor).img);  // 11px semibold
 
                 // Text height is max of name and value
                 int statTextHeight = Math.max(statNameImg.getHeight(), statValueImg.getHeight());

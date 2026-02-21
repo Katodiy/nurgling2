@@ -111,6 +111,9 @@ public final class TooltipStyle {
     /** Study time value color - green */
     public static final Color COLOR_STUDY_TIME = new Color(153, 255, 132);  // #99FF84
 
+    /** Negative stat value color - red */
+    public static final Color COLOR_NEGATIVE_STAT = new Color(255, 100, 100);  // #FF6464
+
     /** Mental weight value color - pink */
     public static final Color COLOR_MENTAL_WEIGHT = new Color(255, 148, 232);  // #FF94E8
 
