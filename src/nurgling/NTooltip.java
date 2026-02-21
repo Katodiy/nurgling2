@@ -883,19 +883,23 @@ public class NTooltip {
 
         // Combine itemInfoAndGilding with curioStats (10px section spacing)
         BufferedImage itemInfoAndCurio = null;
+        int curioBottomOffset = gildingBottomOffset;  // Track current bottom offset
         if (itemInfoAndGilding != null && curioStats != null) {
             int itemToCurioSpacing = scaledSectionSpacing - bodyDescentVal - gildingBottomOffset;
             itemInfoAndCurio = ItemInfo.catimgs(itemToCurioSpacing, itemInfoAndGilding, curioStats);
+            curioBottomOffset = 0;  // Curio stats have no special bottom offset
         } else if (itemInfoAndGilding != null) {
             itemInfoAndCurio = itemInfoAndGilding;
+            // curioBottomOffset stays as gildingBottomOffset
         } else if (curioStats != null) {
             itemInfoAndCurio = curioStats;
+            curioBottomOffset = 0;
         }
 
         // Combine itemInfoAndCurio with statsAndRes (10px spacing)
         BufferedImage contentAndBelow = null;
         if (itemInfoAndCurio != null && statsAndRes != null) {
-            int itemToStatsSpacing = scaledSectionSpacing - bodyDescentVal;
+            int itemToStatsSpacing = scaledSectionSpacing - bodyDescentVal - curioBottomOffset;
             contentAndBelow = ItemInfo.catimgs(itemToStatsSpacing, itemInfoAndCurio, statsAndRes);
         } else if (itemInfoAndCurio != null) {
             contentAndBelow = itemInfoAndCurio;
@@ -1944,9 +1948,11 @@ public class NTooltip {
         int lastTextBottom = sectionResults.get(0).textBottomOffset;
 
         for (int i = 1; i < sectionResults.size(); i++) {
-            int spacing = scaledSectionSpacing - bodyDescentVal;
-            result = ItemInfo.catimgs(spacing, result, sectionResults.get(i).image);
-            lastTextBottom = sectionResults.get(i).textBottomOffset;
+            LineResult current = sectionResults.get(i);
+            // Account for previous section's bottom offset and current section's top offset
+            int spacing = scaledSectionSpacing - bodyDescentVal - lastTextBottom - current.textTopOffset;
+            result = ItemInfo.catimgs(spacing, result, current.image);
+            lastTextBottom = current.textBottomOffset;
         }
 
         return new LineResult(result, firstTextTop, lastTextBottom);
@@ -2329,9 +2335,11 @@ public class NTooltip {
         int lastTextBottom = sectionResults.get(0).textBottomOffset;
 
         for (int i = 1; i < sectionResults.size(); i++) {
-            int spacing = scaledSectionSpacing - bodyDescentVal;
-            result = ItemInfo.catimgs(spacing, result, sectionResults.get(i).image);
-            lastTextBottom = sectionResults.get(i).textBottomOffset;
+            LineResult current = sectionResults.get(i);
+            // Account for previous section's bottom offset and current section's top offset
+            int spacing = scaledSectionSpacing - bodyDescentVal - lastTextBottom - current.textTopOffset;
+            result = ItemInfo.catimgs(spacing, result, current.image);
+            lastTextBottom = current.textBottomOffset;
         }
 
         return new LineResult(result, firstTextTop, lastTextBottom);
@@ -2421,6 +2429,10 @@ public class NTooltip {
                 // Skip Tool class - it renders "When used:" header and resource path
                 // TODO: Render mining stats ourselves without the header
                 if (tip.getClass().getSimpleName().equals("Tool")) {
+                    continue;
+                }
+                // Skip DynTex - it may render gilding slots visually and causes extra space
+                if (tipClassName.equals("DynTex")) {
                     continue;
                 }
                 // Skip AttrMod at item level - we render base stats ourselves
