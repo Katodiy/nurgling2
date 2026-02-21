@@ -71,9 +71,10 @@ public class NRecipeTooltip {
         BufferedImage ret = nameImg;
 
         if (info != null && !info.isEmpty()) {
-            // Extract Inputs, Skills, and Pagina
+            // Extract Inputs, Skills, Cost, and Pagina
             Object inputsInfo = null;
             Object skillsInfo = null;
+            Object costInfo = null;
             String paginaStr = null;
 
             for (ItemInfo ii : info) {
@@ -82,6 +83,8 @@ public class NRecipeTooltip {
                     inputsInfo = ii;
                 } else if (className.equals("Skills")) {
                     skillsInfo = ii;
+                } else if (className.equals("Cost")) {
+                    costInfo = ii;
                 } else if (ii instanceof ItemInfo.Pagina) {
                     paginaStr = ((ItemInfo.Pagina) ii).str;
                 }
@@ -99,6 +102,12 @@ public class NRecipeTooltip {
                 skillsLine = TooltipStyle.cropTopOnly(renderSkillsLine(skillsInfo));
             }
 
+            // Render Cost line (for skills)
+            BufferedImage costLine = null;
+            if (costInfo != null) {
+                costLine = TooltipStyle.cropTopOnly(renderCostLine(costInfo));
+            }
+
             // Render description (Pagina) with word wrap at 200px
             BufferedImage descImg = null;
             if (paginaStr != null && !paginaStr.isEmpty()) {
@@ -106,24 +115,36 @@ public class NRecipeTooltip {
             }
 
             // Combine with baseline-to-top spacings:
-            // Name to ingredients: 7px (from name baseline to ingredients top)
-            // Ingredients to skills: 10px (from ingredients text baseline to skills top)
-            // Skills to description: 10px (from skills text baseline to description top)
+            // Name to ingredients/cost: 7px (from name baseline to next line top)
+            // Between body lines: 10-12px
+            // To description: 10px
 
             // Get font descents for baseline-relative spacing
             int nameDescent = TooltipStyle.getFontDescent(12);
             int bodyDescent = TooltipStyle.getFontDescent(11);
 
+            // Track if we've added any content after name (for proper spacing)
+            boolean hasBodyContent = false;
+
             if (inputsLine != null) {
                 int spacing = UI.scale(7) - nameDescent;
                 ret = ItemInfo.catimgs(spacing, ret, inputsLine);
+                hasBodyContent = true;
             }
             if (skillsLine != null) {
-                int spacing = UI.scale(12) - bodyDescent;
+                int spacing = hasBodyContent ? (UI.scale(12) - bodyDescent) : (UI.scale(7) - nameDescent);
                 ret = ItemInfo.catimgs(spacing, ret, skillsLine);
+                hasBodyContent = true;
+            }
+            if (costLine != null) {
+                // Cost is always 7px from name (baseline-to-top), uses 12px font
+                int costDescent = TooltipStyle.getFontDescent(12);
+                int spacing = hasBodyContent ? (UI.scale(10) - bodyDescent) : (UI.scale(7) - nameDescent);
+                ret = ItemInfo.catimgs(spacing, ret, costLine);
+                hasBodyContent = true;
             }
             if (descImg != null) {
-                int spacing = UI.scale(10) - bodyDescent;
+                int spacing = hasBodyContent ? (UI.scale(10) - bodyDescent) : (UI.scale(7) - nameDescent);
                 ret = ItemInfo.catimgs(spacing, ret, descImg);
             }
         }
@@ -267,6 +288,30 @@ public class NRecipeTooltip {
 
             // Compose with specific gaps: 3px after "Skills:", 3px between icon and name
             return composeSkillsLine(allParts, gap3);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // Cost color #FFFF82
+    private static final Color COLOR_COST = new Color(0xFF, 0xFF, 0x82);
+
+    /**
+     * Render cost line: value + " EXP" in yellow, 12px semibold.
+     */
+    private static BufferedImage renderCostLine(Object costInfo) {
+        try {
+            Field encField = costInfo.getClass().getDeclaredField("enc");
+            encField.setAccessible(true);
+            int cost = encField.getInt(costInfo);
+
+            if (cost <= 0) return null;
+
+            // Render cost value with color #FFFF82, 12px semibold + " EXP"
+            Text.Foundry costFoundry = TooltipStyle.createFoundry(true, 12, COLOR_COST);
+            BufferedImage costImg = costFoundry.render(Utils.thformat(cost) + " EXP", COLOR_COST).img;
+
+            return costImg;
         } catch (Exception e) {
             return null;
         }
