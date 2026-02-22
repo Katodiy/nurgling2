@@ -1616,70 +1616,39 @@ public class NTooltip {
      * Returns LineResult with text position info for proper spacing.
      */
     private static LineResult renderGildingChanceLine(double pmin, double pmax, Resource[] attrs) {
-        int hSpacing = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
-
         // Build the text: "Gilding chance X% to Y%"
         int pminPercent = (int) Math.round(100 * pmin);
         int pmaxPercent = (int) Math.round(100 * pmax);
 
-        // Render parts
-        BufferedImage labelImg = getBodyRegularFoundry().render("Gilding chance ", Color.WHITE).img;
-        BufferedImage pminImg = getContentFoundry().render(pminPercent + "%", new Color(192, 192, 255)).img;  // Cyan-ish
-        BufferedImage toImg = getBodyRegularFoundry().render(" to ", Color.WHITE).img;
-        BufferedImage pmaxImg = getContentFoundry().render(pmaxPercent + "%", new Color(192, 192, 255)).img;  // Cyan-ish
+        // Render and crop text parts
+        BufferedImage croppedLabel = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render("Gilding chance ", Color.WHITE).img);
+        BufferedImage croppedPmin = TooltipStyle.cropTopOnly(getContentFoundry().render(pminPercent + "%", new Color(192, 192, 255)).img);
+        BufferedImage croppedTo = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render(" to ", Color.WHITE).img);
+        BufferedImage croppedPmax = TooltipStyle.cropTopOnly(getContentFoundry().render(pmaxPercent + "%", new Color(192, 192, 255)).img);
 
-        // Crop text images
-        BufferedImage croppedLabel = TooltipStyle.cropTopOnly(labelImg);
-        BufferedImage croppedPmin = TooltipStyle.cropTopOnly(pminImg);
-        BufferedImage croppedTo = TooltipStyle.cropTopOnly(toImg);
-        BufferedImage croppedPmax = TooltipStyle.cropTopOnly(pmaxImg);
+        // Build element list: all text parts, then icons
+        java.util.List<TooltipStyle.LineElement> elements = new java.util.ArrayList<>();
+        elements.add(TooltipStyle.LineElement.text(croppedLabel));
+        elements.add(TooltipStyle.LineElement.text(croppedPmin));
+        elements.add(TooltipStyle.LineElement.text(croppedTo));
+        elements.add(TooltipStyle.LineElement.text(croppedPmax));
 
-        int textHeight = Math.max(Math.max(croppedLabel.getHeight(), croppedPmin.getHeight()),
-                                  Math.max(croppedTo.getHeight(), croppedPmax.getHeight()));
-
-        // Calculate total width (text parts + icons)
-        int totalWidth = croppedLabel.getWidth() + croppedPmin.getWidth() + croppedTo.getWidth() + croppedPmax.getWidth();
-
-        // Add attribute icons at the end
-        java.util.List<BufferedImage> scaledIcons = new java.util.ArrayList<>();
+        // Add attribute icons at the end (scaled to ICON_SIZE)
         if (attrs != null && attrs.length > 0) {
-            totalWidth += hSpacing;
             for (Resource attr : attrs) {
                 try {
                     BufferedImage icon = attr.layer(Resource.imgc).img;
-                    BufferedImage scaledIcon = PUtils.convolvedown(icon, new Coord(textHeight, textHeight), CharWnd.iconfilter);
-                    scaledIcons.add(scaledIcon);
-                    totalWidth += scaledIcon.getWidth() + UI.scale(2);  // 2px between icons
+                    BufferedImage scaledIcon = PUtils.convolvedown(icon,
+                        new Coord(UI.scale(TooltipStyle.ICON_SIZE), UI.scale(TooltipStyle.ICON_SIZE)),
+                        CharWnd.iconfilter);
+                    elements.add(TooltipStyle.LineElement.icon(scaledIcon));
                 } catch (Exception ignored) {}
             }
         }
 
-        // Create line image
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, textHeight));
-        Graphics g = result.getGraphics();
-
-        int x = 0;
-        // Draw text parts
-        g.drawImage(croppedLabel, x, (textHeight - croppedLabel.getHeight()) / 2, null);
-        x += croppedLabel.getWidth();
-        g.drawImage(croppedPmin, x, (textHeight - croppedPmin.getHeight()) / 2, null);
-        x += croppedPmin.getWidth();
-        g.drawImage(croppedTo, x, (textHeight - croppedTo.getHeight()) / 2, null);
-        x += croppedTo.getWidth();
-        g.drawImage(croppedPmax, x, (textHeight - croppedPmax.getHeight()) / 2, null);
-        x += croppedPmax.getWidth();
-
-        // Draw attribute icons
-        if (!scaledIcons.isEmpty()) {
-            x += hSpacing;
-            for (BufferedImage icon : scaledIcons) {
-                g.drawImage(icon, x, (textHeight - icon.getHeight()) / 2, null);
-                x += icon.getWidth() + UI.scale(2);
-            }
-        }
-
-        g.dispose();
-        return new LineResult(result, 0, 0);
+        // Compose with proper icon-text alignment (2px gap between elements)
+        TooltipStyle.IconLineResult result = TooltipStyle.composeElements(UI.scale(2), elements);
+        return new LineResult(result.image, result.textTopOffset, result.textBottomOffset);
     }
 
     /**
@@ -1762,7 +1731,7 @@ public class NTooltip {
             java.util.List<GildingStatData> stats = allGildingStats.get(sectionIndex);
             java.util.List<LineResult> sectionLines = new java.util.ArrayList<>();
 
-            // Render header line: icon + name
+            // Render header line: icon + name with proper icon-text alignment
             BufferedImage headerIcon = null;
             try {
                 if (spr instanceof GSprite.ImageSprite) {
@@ -1773,92 +1742,59 @@ public class NTooltip {
             } catch (Exception ignored) {}
 
             BufferedImage headerNameImg = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render(name, Color.WHITE).img);
-            int headerHeight = Math.max(headerNameImg.getHeight(), iconSize);
 
-            BufferedImage scaledHeaderIcon = null;
+            // Compose header using proper icon-text alignment
+            TooltipStyle.IconLineResult headerResult;
             if (headerIcon != null) {
-                scaledHeaderIcon = PUtils.convolvedown(headerIcon, new Coord(iconSize, iconSize), CharWnd.iconfilter);
+                BufferedImage scaledHeaderIcon = PUtils.convolvedown(headerIcon,
+                    new Coord(UI.scale(TooltipStyle.ICON_SIZE), UI.scale(TooltipStyle.ICON_SIZE)),
+                    CharWnd.iconfilter);
+                headerResult = TooltipStyle.composeIconText(scaledHeaderIcon, headerNameImg, iconToTextSpacing);
+            } else {
+                // No icon - just text
+                java.util.List<TooltipStyle.LineElement> elements = new java.util.ArrayList<>();
+                elements.add(TooltipStyle.LineElement.text(headerNameImg));
+                headerResult = TooltipStyle.composeElements(0, elements);
             }
 
-            int headerWidth = (scaledHeaderIcon != null ? scaledHeaderIcon.getWidth() + iconToTextSpacing : 0) + headerNameImg.getWidth();
-            headerWidth = Math.max(headerWidth, statLineWidth);  // Ensure consistent width
+            sectionLines.add(new LineResult(headerResult.image, headerResult.textTopOffset, headerResult.textBottomOffset));
 
-            // Calculate header text position (vertically centered)
-            int headerTextY = (headerHeight - headerNameImg.getHeight()) / 2;
-            int headerTextTopOffset = headerTextY;
-            int headerTextBottomOffset = headerHeight - headerTextY - headerNameImg.getHeight();
-
-            BufferedImage headerLine = TexI.mkbuf(new Coord(headerWidth, headerHeight));
-            Graphics hg = headerLine.getGraphics();
-            int hx = 0;
-            if (scaledHeaderIcon != null) {
-                hg.drawImage(scaledHeaderIcon, hx, (headerHeight - scaledHeaderIcon.getHeight()) / 2, null);
-                hx += scaledHeaderIcon.getWidth() + iconToTextSpacing;
-            }
-            hg.drawImage(headerNameImg, hx, headerTextY, null);
-            hg.dispose();
-
-            sectionLines.add(new LineResult(headerLine, headerTextTopOffset, headerTextBottomOffset));
-
-            // Render stat lines (indented): 9px for stat name, 11px semibold for value
-            // Use proper text offset tracking like tool stats does
+            // Render stat lines (indented): icon + name + right-aligned value with proper alignment
             for (GildingStatData stat : stats) {
-                BufferedImage statIcon = stat.icon;
-                BufferedImage statNameImg = TooltipStyle.cropTopOnly(getGildingStatNameFoundry().render(stat.name, Color.WHITE).img);  // 9px
-                // Use red for negative values, green for positive
+                // Scale icon to standard size
+                BufferedImage scaledStatIcon = PUtils.convolvedown(stat.icon,
+                    new Coord(UI.scale(TooltipStyle.ICON_SIZE), UI.scale(TooltipStyle.ICON_SIZE)),
+                    CharWnd.iconfilter);
+
+                // Render name and value (9px for name, 11px semibold for value)
+                BufferedImage statNameImg = TooltipStyle.cropTopOnly(getGildingStatNameFoundry().render(stat.name, Color.WHITE).img);
                 Color statValueColor = stat.formattedValue.startsWith("-") ? TooltipStyle.COLOR_NEGATIVE_STAT : TooltipStyle.COLOR_STUDY_TIME;
-                BufferedImage statValueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, statValueColor).img);  // 11px semibold
+                BufferedImage statValueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, statValueColor).img);
 
-                // Text height is max of name and value
-                int statTextHeight = Math.max(statNameImg.getHeight(), statValueImg.getHeight());
+                // Create tabular text part: name (left) + gap + value (right-aligned)
+                int textPartWidth = maxStatNameWidth + gapBetweenNameAndValue + maxStatValueWidth;
+                int textPartHeight = Math.max(statNameImg.getHeight(), statValueImg.getHeight());
+                BufferedImage textPart = TexI.mkbuf(new Coord(textPartWidth, textPartHeight));
+                Graphics g = textPart.getGraphics();
+                g.drawImage(statNameImg, 0, (textPartHeight - statNameImg.getHeight()) / 2, null);
+                int valueX = maxStatNameWidth + gapBetweenNameAndValue + (maxStatValueWidth - statValueImg.getWidth());
+                g.drawImage(statValueImg, valueX, (textPartHeight - statValueImg.getHeight()) / 2, null);
+                g.dispose();
 
-                // Scale icon to match text height
-                BufferedImage scaledStatIcon = PUtils.convolvedown(statIcon, new Coord(statTextHeight, statTextHeight), CharWnd.iconfilter);
+                // Crop the composed text part
+                textPart = TooltipStyle.cropTopOnly(textPart);
 
-                // Calculate visual text center (excluding descent) for icon positioning
-                int statDescent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);  // Use 11px descent since value is 11px
-                int visualTextHeight = statTextHeight - statDescent;
-                int visualTextCenter = visualTextHeight / 2;
+                // Compose icon + text with proper alignment
+                TooltipStyle.IconLineResult iconTextResult = TooltipStyle.composeIconText(scaledStatIcon, textPart, iconToTextSpacing);
 
-                // Center icon on visual text center
-                int iconYRelative = visualTextCenter - scaledStatIcon.getHeight() / 2;
-
-                // Calculate canvas dimensions
-                int canvasHeight = statTextHeight;
-                int textY = 0;
-                int iconY = iconYRelative;
-
-                // If icon extends above text, expand canvas
-                if (iconYRelative < 0) {
-                    canvasHeight = statTextHeight - iconYRelative;
-                    textY = -iconYRelative;
-                    iconY = 0;
-                }
-                // If icon extends below text, expand canvas
-                int iconBottom = iconY + scaledStatIcon.getHeight();
-                if (iconBottom > canvasHeight) {
-                    canvasHeight = iconBottom;
-                }
-
-                BufferedImage statLine = TexI.mkbuf(new Coord(statLineWidth, canvasHeight));
+                // Add indent by creating a larger canvas
+                int totalWidth = indent + iconTextResult.image.getWidth();
+                BufferedImage statLine = TexI.mkbuf(new Coord(totalWidth, iconTextResult.image.getHeight()));
                 Graphics sg = statLine.getGraphics();
-
-                int sx = indent;
-                sg.drawImage(scaledStatIcon, sx, iconY, null);
-                sx += scaledStatIcon.getWidth() + iconToTextSpacing;
-
-                // Draw text at textY, vertically centered within text area
-                sg.drawImage(statNameImg, sx, textY + (statTextHeight - statNameImg.getHeight()) / 2, null);
-
-                int valueX = statLineWidth - statValueImg.getWidth();
-                sg.drawImage(statValueImg, valueX, textY + (statTextHeight - statValueImg.getHeight()) / 2, null);
-
+                sg.drawImage(iconTextResult.image, indent, 0, null);
                 sg.dispose();
 
-                // Track text offsets for baseline-relative spacing
-                int textTopOffset = textY;
-                int textBottomOffset = canvasHeight - textY - statTextHeight;
-                sectionLines.add(new LineResult(statLine, textTopOffset, textBottomOffset));
+                sectionLines.add(new LineResult(statLine, iconTextResult.textTopOffset, iconTextResult.textBottomOffset));
             }
 
             // Combine section lines with 7px internal spacing (baseline to text top)
@@ -1897,72 +1833,104 @@ public class NTooltip {
 
     /**
      * Render base stats section (non-gilding stats): icon + name + right-aligned value.
+     * Uses proper icon-text alignment where icon center aligns with visual text center.
      */
     private static LineResult renderBaseStatsSection(java.util.List<GildingStatData> stats) {
         if (stats == null || stats.isEmpty()) {
             return null;
         }
 
-        int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
         int scaledInternalSpacing = UI.scale(TooltipStyle.INTERNAL_SPACING);
         int bodyDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
 
-        // First pass: calculate max widths
+        // First pass: calculate max widths for tabular alignment
         int maxStatNameWidth = 0;
         int maxStatValueWidth = 0;
-        int textHeight = 0;
 
         for (GildingStatData stat : stats) {
             BufferedImage nameImg = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render(stat.name, Color.WHITE).img);
             BufferedImage valueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, TooltipStyle.COLOR_STUDY_TIME).img);
             maxStatNameWidth = Math.max(maxStatNameWidth, nameImg.getWidth());
             maxStatValueWidth = Math.max(maxStatValueWidth, valueImg.getWidth());
-            textHeight = Math.max(textHeight, Math.max(nameImg.getHeight(), valueImg.getHeight()));
         }
 
-        int iconSize = textHeight;
-        int gapBetweenNameAndValue = UI.scale(7);
-        int rightPadding = UI.scale(25);
-        int statLineWidth = iconSize + iconToTextSpacing + maxStatNameWidth + gapBetweenNameAndValue + maxStatValueWidth + rightPadding;
-
-        // Render stat lines
+        // Second pass: render each stat line with proper icon-text alignment
         java.util.List<LineResult> statLines = new java.util.ArrayList<>();
+        int iconSize = UI.scale(TooltipStyle.ICON_SIZE);
+        int gapBetweenNameAndValue = UI.scale(7);
 
         for (GildingStatData stat : stats) {
-            BufferedImage statIcon = stat.icon;
-            BufferedImage scaledStatIcon = PUtils.convolvedown(statIcon, new Coord(iconSize, iconSize), CharWnd.iconfilter);
+            // Scale icon to standard size
+            BufferedImage scaledIcon = PUtils.convolvedown(stat.icon, new Coord(iconSize, iconSize), CharWnd.iconfilter);
+
+            // Render name and value
             BufferedImage statNameImg = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render(stat.name, Color.WHITE).img);
-            // Use red for negative values, green for positive
             Color statValueColor = stat.formattedValue.startsWith("-") ? TooltipStyle.COLOR_NEGATIVE_STAT : TooltipStyle.COLOR_STUDY_TIME;
             BufferedImage statValueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, statValueColor).img);
 
-            int lineHeight = Math.max(Math.max(scaledStatIcon.getHeight(), statNameImg.getHeight()), statValueImg.getHeight());
+            // Create tabular text part: name (left) + gap + value (right-aligned in its column)
+            int textPartWidth = maxStatNameWidth + gapBetweenNameAndValue + maxStatValueWidth;
+            int textPartHeight = Math.max(statNameImg.getHeight(), statValueImg.getHeight());
+            BufferedImage textPart = TexI.mkbuf(new Coord(textPartWidth, textPartHeight));
+            Graphics g = textPart.getGraphics();
+            g.drawImage(statNameImg, 0, (textPartHeight - statNameImg.getHeight()) / 2, null);
+            int valueX = maxStatNameWidth + gapBetweenNameAndValue + (maxStatValueWidth - statValueImg.getWidth());
+            g.drawImage(statValueImg, valueX, (textPartHeight - statValueImg.getHeight()) / 2, null);
+            g.dispose();
 
-            BufferedImage statLine = TexI.mkbuf(new Coord(statLineWidth, lineHeight));
-            Graphics sg = statLine.getGraphics();
+            // Crop the composed text part
+            textPart = TooltipStyle.cropTopOnly(textPart);
 
-            int sx = 0;
-            sg.drawImage(scaledStatIcon, sx, (lineHeight - scaledStatIcon.getHeight()) / 2, null);
-            sx += scaledStatIcon.getWidth() + iconToTextSpacing;
-
-            sg.drawImage(statNameImg, sx, (lineHeight - statNameImg.getHeight()) / 2, null);
-
-            int valueX = statLineWidth - statValueImg.getWidth();
-            sg.drawImage(statValueImg, valueX, (lineHeight - statValueImg.getHeight()) / 2, null);
-            sg.dispose();
-
-            statLines.add(new LineResult(statLine, 0, 0));
+            // Compose icon + text with proper alignment (icon center = text visual center)
+            TooltipStyle.IconLineResult lineResult = TooltipStyle.composeIconText(scaledIcon, textPart, UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING));
+            statLines.add(new LineResult(lineResult.image, lineResult.textTopOffset, lineResult.textBottomOffset));
         }
 
-        // Combine stat lines with internal spacing
-        int baselineSpacing = scaledInternalSpacing - bodyDescentVal;
-        java.util.List<BufferedImage> lineImages = new java.util.ArrayList<>();
-        for (LineResult lr : statLines) {
-            lineImages.add(lr.image);
+        // Combine all stat lines with baseline-relative spacing
+        if (statLines.isEmpty()) {
+            return null;
         }
-        BufferedImage combined = ItemInfo.catimgs(baselineSpacing, lineImages.toArray(new BufferedImage[0]));
 
-        return new LineResult(combined, 0, bodyDescentVal);
+        // Build combined image with proper spacing
+        int totalHeight = 0;
+        int maxWidth = 0;
+        int prevTextBottomOffset = 0;
+
+        // Calculate total height accounting for text offsets
+        for (int i = 0; i < statLines.size(); i++) {
+            LineResult line = statLines.get(i);
+            maxWidth = Math.max(maxWidth, line.image.getWidth());
+
+            if (i == 0) {
+                totalHeight += line.image.getHeight();
+            } else {
+                // Add spacing, adjusted for text offsets
+                int adjustedSpacing = scaledInternalSpacing - line.textTopOffset - prevTextBottomOffset;
+                totalHeight += adjustedSpacing + line.image.getHeight();
+            }
+            prevTextBottomOffset = line.textBottomOffset;
+        }
+
+        // Compose final image
+        BufferedImage combined = TexI.mkbuf(new Coord(maxWidth, totalHeight));
+        Graphics cg = combined.getGraphics();
+        int y = 0;
+        prevTextBottomOffset = 0;
+
+        for (int i = 0; i < statLines.size(); i++) {
+            LineResult line = statLines.get(i);
+            if (i > 0) {
+                int adjustedSpacing = scaledInternalSpacing - line.textTopOffset - prevTextBottomOffset;
+                y += adjustedSpacing;
+            }
+            cg.drawImage(line.image, 0, y, null);
+            y += line.image.getHeight();
+            prevTextBottomOffset = line.textBottomOffset;
+        }
+        cg.dispose();
+
+        // Return with first line's top offset and last line's bottom offset
+        return new LineResult(combined, statLines.get(0).textTopOffset, prevTextBottomOffset);
     }
 
 

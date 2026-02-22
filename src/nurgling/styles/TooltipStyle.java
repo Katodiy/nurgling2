@@ -261,4 +261,142 @@ public final class TooltipStyle {
         g.dispose();
         return result;
     }
+
+    // ============ ICON-TEXT ALIGNMENT UTILITIES ============
+
+    /**
+     * Element for composing lines with mixed text and icons.
+     * Distinguishes between text (which defines line height) and icons (which are centered).
+     */
+    public static class LineElement {
+        public final BufferedImage image;
+        public final boolean isIcon;
+
+        private LineElement(BufferedImage image, boolean isIcon) {
+            this.image = image;
+            this.isIcon = isIcon;
+        }
+
+        public static LineElement text(BufferedImage img) {
+            return new LineElement(img, false);
+        }
+
+        public static LineElement icon(BufferedImage img) {
+            return new LineElement(img, true);
+        }
+    }
+
+    /**
+     * Result of composing elements - contains image and text positioning info for baseline-relative spacing.
+     */
+    public static class IconLineResult {
+        public final BufferedImage image;
+        public final int textTopOffset;     // Pixels from image top to text top
+        public final int textBottomOffset;  // Pixels from text bottom to image bottom
+
+        public IconLineResult(BufferedImage image, int textTopOffset, int textBottomOffset) {
+            this.image = image;
+            this.textTopOffset = textTopOffset;
+            this.textBottomOffset = textBottomOffset;
+        }
+    }
+
+    /**
+     * Compose multiple elements (text and icons) horizontally with proper center-to-center alignment.
+     * TEXT elements define the line height - icons are centered to the visual center of text.
+     *
+     * The key insight: text images include descent below the baseline, so the visual text center
+     * is NOT at height/2. We shift text DOWN by descent/2 so its visual center aligns with icon center.
+     *
+     * @param gap Spacing between elements (in pixels, already scaled)
+     * @param elements List of text and icon elements
+     * @return IconLineResult with composed image and text positioning info
+     */
+    public static IconLineResult composeElements(int gap, java.util.List<LineElement> elements) {
+        if (elements.isEmpty()) {
+            return new IconLineResult(haven.TexI.mkbuf(new haven.Coord(1, 1)), 0, 0);
+        }
+
+        // Get font descent - text images include descent below baseline
+        // We need to account for this when centering to align visual text center with icon center
+        int descent = getFontDescent(FONT_SIZE_BODY);
+
+        // First pass: find max text height (only from non-icon elements)
+        int maxTextHeight = 0;
+        for (LineElement elem : elements) {
+            if (!elem.isIcon) {
+                maxTextHeight = Math.max(maxTextHeight, elem.image.getHeight());
+            }
+        }
+
+        // If no text elements, fall back to max of all heights
+        if (maxTextHeight == 0) {
+            for (LineElement elem : elements) {
+                maxTextHeight = Math.max(maxTextHeight, elem.image.getHeight());
+            }
+        }
+
+        // Find max icon height to determine total line height
+        int maxIconHeight = 0;
+        for (LineElement elem : elements) {
+            if (elem.isIcon) {
+                maxIconHeight = Math.max(maxIconHeight, elem.image.getHeight());
+            }
+        }
+
+        // Total height: text height + any icon extension above/below
+        int iconExtension = Math.max(0, (maxIconHeight - maxTextHeight) / 2);
+        int totalHeight = maxTextHeight + iconExtension * 2;
+
+        // Calculate actual text Y position (accounting for descent shift for visual alignment)
+        // Text is centered then shifted down by descent/2
+        int textTopOffset = (totalHeight - maxTextHeight) / 2 + descent / 2;
+        // Text bottom offset is NOT the same due to descent shift
+        int textBottomOffset = totalHeight - textTopOffset - maxTextHeight;
+
+        // Calculate total width
+        int totalWidth = 0;
+        for (int i = 0; i < elements.size(); i++) {
+            totalWidth += elements.get(i).image.getWidth();
+            if (i > 0) totalWidth += gap;
+        }
+
+        // Create result image
+        BufferedImage result = haven.TexI.mkbuf(new haven.Coord(totalWidth, totalHeight));
+        java.awt.Graphics g = result.getGraphics();
+
+        int x = 0;
+        for (int i = 0; i < elements.size(); i++) {
+            LineElement elem = elements.get(i);
+            int y;
+            if (elem.isIcon) {
+                // Center icon vertically (simple centering)
+                y = (totalHeight - elem.image.getHeight()) / 2;
+            } else {
+                // Center text, but adjust for descent so visual text center aligns with icon center
+                // Text visual center is at (height - descent) / 2 from top, not height / 2
+                // So we shift text DOWN by descent / 2 to compensate
+                y = (totalHeight - elem.image.getHeight()) / 2 + descent / 2;
+            }
+
+            g.drawImage(elem.image, x, y, null);
+            x += elem.image.getWidth();
+            if (i < elements.size() - 1) x += gap;
+        }
+
+        g.dispose();
+
+        return new IconLineResult(result, textTopOffset, textBottomOffset);
+    }
+
+    /**
+     * Convenience method to compose a single icon with text.
+     * Icon is centered to the visual center of the text (accounts for font descent).
+     */
+    public static IconLineResult composeIconText(BufferedImage icon, BufferedImage text, int gap) {
+        java.util.List<LineElement> elements = new java.util.ArrayList<>();
+        elements.add(LineElement.icon(icon));
+        elements.add(LineElement.text(text));
+        return composeElements(gap, elements);
+    }
 }
