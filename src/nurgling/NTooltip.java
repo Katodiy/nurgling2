@@ -898,10 +898,9 @@ public class NTooltip {
         }
 
         // Add gilding chance with SECTION spacing (10px) to separate from base stats
-        // Note: Don't subtract bodyDescentVal here since prevTextBottomOffset already accounts for baseline
         if (gildingChanceLineResult != null) {
             if (itemInfo != null) {
-                int gildingChanceSpacing = scaledSectionSpacing - prevTextBottomOffset - gildingChanceLineResult.textTopOffset;
+                int gildingChanceSpacing = scaledSectionSpacing - bodyDescentVal - prevTextBottomOffset - gildingChanceLineResult.textTopOffset;
                 itemInfo = ItemInfo.catimgs(gildingChanceSpacing, itemInfo, gildingChanceLineResult.image);
                 prevTextBottomOffset = gildingChanceLineResult.textBottomOffset;
             } else {
