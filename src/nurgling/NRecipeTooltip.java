@@ -370,7 +370,7 @@ public class NRecipeTooltip {
     /**
      * Render text with word wrapping at specified max width.
      * Uses Open Sans 9px regular font with baseline-to-top spacing between lines.
-     * Handles multiple paragraphs with 17px spacing between them.
+     * Handles multiple paragraphs with 10px spacing between them.
      */
     private static BufferedImage renderWrappedText(String text, int maxWidth) {
         if (text == null || text.isEmpty()) return null;
@@ -438,8 +438,8 @@ public class NRecipeTooltip {
         if (paragraphImages.isEmpty()) return null;
         if (paragraphImages.size() == 1) return paragraphImages.get(0);
 
-        // Combine paragraphs with 17px spacing between them
-        int paragraphSpacing = UI.scale(17);
+        // Combine paragraphs with 10px spacing between them
+        int paragraphSpacing = UI.scale(10);
         return ItemInfo.catimgs(paragraphSpacing, paragraphImages.toArray(new BufferedImage[0]));
     }
 }
