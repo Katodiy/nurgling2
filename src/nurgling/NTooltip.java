@@ -856,10 +856,12 @@ public class NTooltip {
         // Adjust spacing based on text offsets to ignore icons in spacing calculation
         BufferedImage itemInfo = null;
         int prevTextBottomOffset = 0;
+        int itemInfoTopOffset = 0;  // Track top offset of first element in itemInfo
         if (!itemInfoResults.isEmpty()) {
             LineResult first = itemInfoResults.get(0);
             itemInfo = first.image;
             prevTextBottomOffset = first.textBottomOffset;
+            itemInfoTopOffset = first.textTopOffset;  // Remember first element's top offset
             for (int i = 1; i < itemInfoResults.size(); i++) {
                 LineResult current = itemInfoResults.get(i);
                 // Adjust spacing: subtract previous line's bottom offset and current line's top offset
@@ -891,6 +893,7 @@ public class NTooltip {
             } else {
                 itemInfo = baseStatsResult.image;
                 prevTextBottomOffset = baseStatsResult.textBottomOffset;
+                itemInfoTopOffset = baseStatsResult.textTopOffset;  // Base stats is now first
             }
         }
 
@@ -904,6 +907,7 @@ public class NTooltip {
             } else {
                 itemInfo = gildingChanceLineResult.image;
                 prevTextBottomOffset = gildingChanceLineResult.textBottomOffset;
+                itemInfoTopOffset = gildingChanceLineResult.textTopOffset;  // Gilding chance is now first
             }
         }
 
@@ -917,32 +921,40 @@ public class NTooltip {
         // Use text offsets to ensure baseline-relative spacing
         BufferedImage itemInfoAndToolStats = null;
         int toolStatsBottomOffset = 0;
+        int itemInfoAndToolStatsTopOffset = 0;
         if (itemInfo != null && toolStatsSectionResult != null) {
             // Adjust spacing: 10px baseline-to-text-top, accounting for tool stats top offset
             int itemToToolSpacing = scaledSectionSpacing - bodyDescentVal - prevTextBottomOffset - toolStatsSectionResult.textTopOffset;
             itemInfoAndToolStats = ItemInfo.catimgs(itemToToolSpacing, itemInfo, toolStatsSectionResult.image);
             toolStatsBottomOffset = toolStatsSectionResult.textBottomOffset;
+            itemInfoAndToolStatsTopOffset = itemInfoTopOffset;  // itemInfo is at top
         } else if (itemInfo != null) {
             itemInfoAndToolStats = itemInfo;
             // prevTextBottomOffset already set from itemInfo loop
             toolStatsBottomOffset = prevTextBottomOffset;
+            itemInfoAndToolStatsTopOffset = itemInfoTopOffset;  // itemInfo is at top
         } else if (toolStatsSectionResult != null) {
             itemInfoAndToolStats = toolStatsSectionResult.image;
             toolStatsBottomOffset = toolStatsSectionResult.textBottomOffset;
+            itemInfoAndToolStatsTopOffset = toolStatsSectionResult.textTopOffset;  // toolStats is at top
         }
 
         // Combine itemInfoAndToolStats with gildingSections (10px section spacing)
         BufferedImage itemInfoAndGilding = null;
         int gildingBottomOffset = toolStatsBottomOffset;
+        int itemInfoAndGildingTopOffset = 0;
         if (itemInfoAndToolStats != null && gildingSectionsResult != null) {
             int itemToGildingSpacing = scaledSectionSpacing - bodyDescentVal - toolStatsBottomOffset - gildingSectionsResult.textTopOffset;
             itemInfoAndGilding = ItemInfo.catimgs(itemToGildingSpacing, itemInfoAndToolStats, gildingSectionsResult.image);
             gildingBottomOffset = gildingSectionsResult.textBottomOffset;
+            itemInfoAndGildingTopOffset = itemInfoAndToolStatsTopOffset;  // itemInfoAndToolStats is at top
         } else if (itemInfoAndToolStats != null) {
             itemInfoAndGilding = itemInfoAndToolStats;
+            itemInfoAndGildingTopOffset = itemInfoAndToolStatsTopOffset;  // itemInfoAndToolStats is at top
         } else if (gildingSectionsResult != null) {
             itemInfoAndGilding = gildingSectionsResult.image;
             gildingBottomOffset = gildingSectionsResult.textBottomOffset;
+            itemInfoAndGildingTopOffset = gildingSectionsResult.textTopOffset;  // gildingSections is at top
         }
 
         // Render curio stats separately (NCuriosity is skipped in renderOtherTips)
@@ -954,36 +966,46 @@ public class NTooltip {
         // Combine itemInfoAndGilding with curioStats (10px section spacing)
         BufferedImage itemInfoAndCurio = null;
         int curioBottomOffset = gildingBottomOffset;  // Track current bottom offset
+        int itemInfoAndCurioTopOffset = 0;
         if (itemInfoAndGilding != null && curioStats != null) {
             int itemToCurioSpacing = scaledSectionSpacing - bodyDescentVal - gildingBottomOffset;
             itemInfoAndCurio = ItemInfo.catimgs(itemToCurioSpacing, itemInfoAndGilding, curioStats);
             curioBottomOffset = 0;  // Curio stats have no special bottom offset
+            itemInfoAndCurioTopOffset = itemInfoAndGildingTopOffset;  // itemInfoAndGilding is at top
         } else if (itemInfoAndGilding != null) {
             itemInfoAndCurio = itemInfoAndGilding;
             // curioBottomOffset stays as gildingBottomOffset
+            itemInfoAndCurioTopOffset = itemInfoAndGildingTopOffset;  // itemInfoAndGilding is at top
         } else if (curioStats != null) {
             itemInfoAndCurio = curioStats;
             curioBottomOffset = 0;
+            itemInfoAndCurioTopOffset = 0;  // curioStats is cropped (cropTopOnly)
         }
 
         // Combine itemInfoAndCurio with statsAndRes (10px spacing to resource line)
         BufferedImage contentAndBelow = null;
+        int contentAndBelowTopOffset = 0;
         if (itemInfoAndCurio != null && statsAndRes != null) {
             // Use baseline-adjusted section spacing for proper 10px visual spacing
             // itemInfoAndCurio ends with descent whitespace, statsAndRes starts with cropped top
             int itemToStatsSpacing = scaledSectionSpacing - bodyDescentVal;
             contentAndBelow = ItemInfo.catimgs(itemToStatsSpacing, itemInfoAndCurio, statsAndRes);
+            contentAndBelowTopOffset = itemInfoAndCurioTopOffset;  // itemInfoAndCurio is at top
         } else if (itemInfoAndCurio != null) {
             contentAndBelow = itemInfoAndCurio;
+            contentAndBelowTopOffset = itemInfoAndCurioTopOffset;  // itemInfoAndCurio is at top
         } else {
             contentAndBelow = statsAndRes;
+            contentAndBelowTopOffset = 0;  // statsAndRes is cropped
         }
 
         // Then combine nameLine with contentAndBelow using 10px section spacing
         // Note: Outer padding is handled by NWItem.PaddedTip
         if (nameLine != null && contentAndBelow != null) {
-            // For vessels with content line: account for text position within content canvas
-            int nameToContentSpacing = scaledSectionSpacing - nameDescentVal - nameTextBottomOffset - contentTextTopOffset;
+            // Account for text position within content canvas to achieve baseline-relative spacing
+            // Use contentTextTopOffset for vessels with content line, otherwise use tracked top offset
+            int topOffset = (contentLine != null) ? contentTextTopOffset : contentAndBelowTopOffset;
+            int nameToContentSpacing = scaledSectionSpacing - nameDescentVal - nameTextBottomOffset - topOffset;
             if (contentLine != null) {
                 // Content line text images have internal padding not captured by textTopOffset
                 nameToContentSpacing -= UI.scale(4);
