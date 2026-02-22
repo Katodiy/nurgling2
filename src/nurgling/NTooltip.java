@@ -969,8 +969,9 @@ public class NTooltip {
         // Combine itemInfoAndCurio with statsAndRes (10px spacing to resource line)
         BufferedImage contentAndBelow = null;
         if (itemInfoAndCurio != null && statsAndRes != null) {
-            // Use full section spacing (10px) for clean visual spacing to resource line
-            int itemToStatsSpacing = scaledSectionSpacing;
+            // Use baseline-adjusted section spacing for proper 10px visual spacing
+            // itemInfoAndCurio ends with descent whitespace, statsAndRes starts with cropped top
+            int itemToStatsSpacing = scaledSectionSpacing - bodyDescentVal;
             contentAndBelow = ItemInfo.catimgs(itemToStatsSpacing, itemInfoAndCurio, statsAndRes);
         } else if (itemInfoAndCurio != null) {
             contentAndBelow = itemInfoAndCurio;
