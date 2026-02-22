@@ -530,10 +530,16 @@ public class NTooltip {
 
         Object islotsObj = null;  // Can be ISlots or slots_alt.ISlots
         Object baseAttrMod = null;  // Base item stats (non-gildable)
+        String adHocText = null;  // AdHoc text (e.g., "Memories of pain")
         for (ItemInfo ii : info) {
             String className = ii.getClass().getSimpleName();
             String fullName = ii.getClass().getName();
 
+            // Capture AdHoc text (e.g., "Memories of pain")
+            if (ii instanceof ItemInfo.AdHoc) {
+                ItemInfo.AdHoc adHoc = (ItemInfo.AdHoc) ii;
+                adHocText = adHoc.str.text;
+            }
 
             // Capture base AttrMod (non-gilding stats)
             if (className.equals("AttrMod") && fullName.contains("attrmod")) {
@@ -783,6 +789,12 @@ public class NTooltip {
         // Render other tips (excluding Name, QBuff, Contents, Wear, Gast which we've handled)
         BufferedImage otherTips = TooltipStyle.cropTopOnly(renderOtherTips(info, contents != null));
 
+        // Render AdHoc line (e.g., "Memories of pain") - same style as resource
+        BufferedImage adHocLine = null;
+        if (adHocText != null && !adHocText.isEmpty()) {
+            adHocLine = TooltipStyle.cropTopOnly(getResourceFoundry().render(adHocText, TooltipStyle.COLOR_RESOURCE_PATH).img);
+        }
+
         // Render resource line
         BufferedImage resLine = null;
         if (owner instanceof GItem) {
@@ -802,15 +814,28 @@ public class NTooltip {
         // 7px between Content, Wear, Hunger, Food Bonus (internal spacing)
         // 10px between Food Bonus and Other Tips, and Other Tips and Resource
 
-        // Start from bottom: combine otherTips and resLine
+        // Start from bottom: combine adHocLine and resLine (7px spacing)
+        // Then combine otherTips with adHocLine+resLine (10px spacing to adHoc, or 10px to res if no adHoc)
+        int resDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_RESOURCE);  // 9px font
+        BufferedImage adHocAndRes = null;
+        if (adHocLine != null && resLine != null) {
+            int adHocToResSpacing = scaledInternalSpacing - resDescentVal;  // 7px
+            adHocAndRes = ItemInfo.catimgs(adHocToResSpacing, adHocLine, resLine);
+        } else if (adHocLine != null) {
+            adHocAndRes = adHocLine;
+        } else if (resLine != null) {
+            adHocAndRes = resLine;
+        }
+
         BufferedImage statsAndRes = null;
-        if (otherTips != null && resLine != null) {
-            int statsToResSpacing = scaledSectionSpacing - bodyDescentVal;
-            statsAndRes = ItemInfo.catimgs(statsToResSpacing, otherTips, resLine);
+        if (otherTips != null && adHocAndRes != null) {
+            // 10px from otherTips (body text) baseline to adHocLine/resLine top
+            int statsToAdHocSpacing = scaledSectionSpacing - bodyDescentVal;
+            statsAndRes = ItemInfo.catimgs(statsToAdHocSpacing, otherTips, adHocAndRes);
         } else if (otherTips != null) {
             statsAndRes = otherTips;
-        } else if (resLine != null) {
-            statsAndRes = resLine;
+        } else if (adHocAndRes != null) {
+            statsAndRes = adHocAndRes;
         }
 
         // Build item info section with 7px internal spacing
@@ -2038,6 +2063,10 @@ public class NTooltip {
                 }
                 // Skip AttrMod at item level - we render base stats ourselves
                 if (tipClassName.equals("AttrMod") && tipFullName.contains("attrmod")) {
+                    continue;
+                }
+                // Skip AdHoc - we render it ourselves above the resource line
+                if (tip instanceof ItemInfo.AdHoc) {
                     continue;
                 }
                 l.add(tip);
