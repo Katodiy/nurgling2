@@ -390,13 +390,11 @@ public class NTooltip {
                         // Get the 'mod' field from Mod (Entry subclass)
                         // If no mod field, check for Transfer entry type
                         double modValue = 0;
-                        boolean hasMod = false;
                         boolean isTransfer = false;
                         String transferValue = null;
                         try {
                             Field modField = entry.getClass().getField("mod");
                             modValue = modField.getDouble(entry);
-                            hasMod = true;
                         } catch (NoSuchFieldException e) {
                             // Not a Mod - might be a Transfer entry type
                             // Try to call fmtvalue() and parse the result
@@ -989,12 +987,10 @@ public class NTooltip {
 
         // Combine itemInfoAndGilding with curioStats (10px section spacing)
         BufferedImage itemInfoAndCurio = null;
-        int curioBottomOffset = gildingBottomOffset;  // Track current bottom offset
         int itemInfoAndCurioTopOffset = 0;
         if (itemInfoAndGilding != null && curioStats != null) {
             int itemToCurioSpacing = scaledSectionSpacing - bodyDescentVal - gildingBottomOffset;
             itemInfoAndCurio = ItemInfo.catimgs(itemToCurioSpacing, itemInfoAndGilding, curioStats);
-            curioBottomOffset = 0;  // Curio stats have no special bottom offset
             itemInfoAndCurioTopOffset = itemInfoAndGildingTopOffset;  // itemInfoAndGilding is at top
         } else if (itemInfoAndGilding != null) {
             itemInfoAndCurio = itemInfoAndGilding;
@@ -1002,7 +998,6 @@ public class NTooltip {
             itemInfoAndCurioTopOffset = itemInfoAndGildingTopOffset;  // itemInfoAndGilding is at top
         } else if (curioStats != null) {
             itemInfoAndCurio = curioStats;
-            curioBottomOffset = 0;
             itemInfoAndCurioTopOffset = 0;  // curioStats is cropped (cropTopOnly)
         }
 
@@ -1180,11 +1175,10 @@ public class NTooltip {
         }
 
         // Track text position for spacing calculations
-        int textTopOffset = textY;
         int textBottomOffset = canvasHeight - textY - textHeight;
 
         g.dispose();
-        return new LineResult(result, textTopOffset, textBottomOffset);
+        return new LineResult(result, textY, textBottomOffset);
     }
 
     /**
@@ -1212,7 +1206,6 @@ public class NTooltip {
         // Build the content line - track text height separately from icon height
         int totalWidth = 0;
         int textHeight = 0;
-        int maxHeight = 0;
 
         // Amount (cyan colored)
         BufferedImage amountImg = null;
@@ -1220,14 +1213,12 @@ public class NTooltip {
             amountImg = getContentFoundry().render(amount + " ", TooltipStyle.COLOR_FOOD_ENERGY).img;
             totalWidth += amountImg.getWidth();
             textHeight = Math.max(textHeight, amountImg.getHeight());
-            maxHeight = Math.max(maxHeight, amountImg.getHeight());
         }
 
         // Rest of the name (white)
         BufferedImage restImg = getContentFoundry().render(rest, Color.WHITE).img;
         totalWidth += restImg.getWidth();
         textHeight = Math.max(textHeight, restImg.getHeight());
-        maxHeight = Math.max(maxHeight, restImg.getHeight());
 
         // Quality icon and value
         BufferedImage qIcon = null;
@@ -1237,7 +1228,6 @@ public class NTooltip {
             qIcon = contentQBuff.icon;
             if (qIcon != null) {
                 totalWidth += qIcon.getWidth() + iconToTextSpacing;
-                maxHeight = Math.max(maxHeight, qIcon.getHeight());
             }
             // Show exact quality with 1 decimal place if not a whole number
             String qText = (contentQBuff.q == Math.floor(contentQBuff.q))
@@ -1247,7 +1237,6 @@ public class NTooltip {
             totalWidth += qImg.getWidth();
             // qImg is text, add to textHeight
             textHeight = Math.max(textHeight, qImg.getHeight());
-            maxHeight = Math.max(maxHeight, qImg.getHeight());
         }
 
         // Canvas must fit both text and icon, but spacing ignores icon size
@@ -1286,11 +1275,10 @@ public class NTooltip {
         }
 
         // Track text position for spacing calculations
-        int textTopOffset = textY;
         int textBottomOffset = canvasHeight - textY - textHeight;
 
         g.dispose();
-        return new LineResult(result, textTopOffset, textBottomOffset);
+        return new LineResult(result, textY, textBottomOffset);
     }
 
     /**
@@ -1533,73 +1521,6 @@ public class NTooltip {
     }
 
     /**
-     * Render a tool stat line: icon + "Name " (regular) + formatted value (semibold green #99FF84)
-     * Returns LineResult with text offsets for proper spacing.
-     * @deprecated Use renderToolStatsSection instead for right-aligned values
-     */
-    private static LineResult renderToolStatLine(ToolStatData tool) {
-        // Format value ourselves to control color (#99FF84)
-        BufferedImage labelImg = getBodyRegularFoundry().render(tool.name + " ", Color.WHITE).img;
-        BufferedImage valueImg = getContentFoundry().render(tool.getFormattedValue(), TooltipStyle.COLOR_STUDY_TIME).img;  // #99FF84
-
-        // Crop text images
-        BufferedImage croppedLabel = TooltipStyle.cropTopOnly(labelImg);
-        BufferedImage croppedValue = TooltipStyle.cropTopOnly(valueImg);
-
-        int textHeight = Math.max(croppedLabel.getHeight(), croppedValue.getHeight());
-
-        // Scale icon to match text height
-        int iconSize = textHeight;
-        BufferedImage scaledIcon = PUtils.convolvedown(tool.icon, new Coord(iconSize, iconSize), CharWnd.iconfilter);
-
-        // Get font descent for visual text centering
-        int descent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
-        int visualTextHeight = textHeight - descent;
-        int visualTextCenter = visualTextHeight / 2;
-
-        // Center icon on visual text center
-        int iconYRelative = visualTextCenter - scaledIcon.getHeight() / 2;
-
-        // Calculate canvas height and positions
-        int canvasHeight = textHeight;
-        int textY = 0;
-        int iconY = iconYRelative;
-
-        // If icon extends above text, expand canvas
-        if (iconYRelative < 0) {
-            canvasHeight = textHeight - iconYRelative;
-            textY = -iconYRelative;
-            iconY = 0;
-        }
-        // If icon extends below text, expand canvas
-        int iconBottom = iconY + scaledIcon.getHeight();
-        if (iconBottom > canvasHeight) {
-            canvasHeight = iconBottom;
-        }
-
-        // Spacing between icon and text
-        int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
-
-        // Compose: icon + label + value
-        int totalWidth = scaledIcon.getWidth() + iconToTextSpacing + croppedLabel.getWidth() + croppedValue.getWidth();
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, canvasHeight));
-        Graphics g = result.getGraphics();
-
-        int x = 0;
-        g.drawImage(scaledIcon, x, iconY, null);
-        x += scaledIcon.getWidth() + iconToTextSpacing;
-        g.drawImage(croppedLabel, x, textY + (textHeight - croppedLabel.getHeight()) / 2, null);
-        x += croppedLabel.getWidth();
-        g.drawImage(croppedValue, x, textY + (textHeight - croppedValue.getHeight()) / 2, null);
-        g.dispose();
-
-        // Return with text offsets
-        int textTopOffset = textY;
-        int textBottomOffset = canvasHeight - textY - textHeight;
-        return new LineResult(result, textTopOffset, textBottomOffset);
-    }
-
-    /**
      * Render the Attack weight line: "Attack weight: " (regular) + icon
      * Crops text first to remove top padding, then composes with icon.
      * Icon is vertically centered on the visual text area (excluding descent).
@@ -1612,8 +1533,7 @@ public class NTooltip {
         int textHeight = croppedLabel.getHeight();
 
         // Scale icon to match text height (icon can be same size as text)
-        int iconSize = textHeight;
-        BufferedImage scaledIcon = PUtils.convolvedown(icon, new Coord(iconSize, iconSize), CharWnd.iconfilter);
+        BufferedImage scaledIcon = PUtils.convolvedown(icon, new Coord(textHeight, textHeight), CharWnd.iconfilter);
 
         // Get font descent to find visual text center (excluding descent area)
         int descent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
@@ -1733,7 +1653,6 @@ public class NTooltip {
         int scaledSectionSpacing = UI.scale(TooltipStyle.SECTION_SPACING);  // 10px between gilding groups
         int scaledInternalSpacing = UI.scale(TooltipStyle.GILDING_INTERNAL_SPACING);  // 6px between stat lines
         int bodyDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);  // 11px descent
-        int statNameDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_RESOURCE);  // 9px descent for stat names
         int indent = UI.scale(20);  // Indent for stat lines
 
         // First pass: calculate max widths across all gildings for alignment
@@ -1755,16 +1674,8 @@ public class NTooltip {
             }
         }
 
-        // Calculate header text height
-        BufferedImage testHeader = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render("Test", Color.WHITE).img);
-        int headerTextHeight = testHeader.getHeight();
-
-        // Icon size matches text height
-        int iconSize = textHeight > 0 ? textHeight : headerTextHeight;
-
         // Calculate total width for stat lines
         int gapBetweenNameAndValue = UI.scale(7);
-        int statLineWidth = indent + iconSize + iconToTextSpacing + maxStatNameWidth + gapBetweenNameAndValue + maxStatValueWidth;
 
         // Second pass: render each gilding section
         java.util.List<LineResult> sectionResults = new java.util.ArrayList<>();
@@ -1888,7 +1799,6 @@ public class NTooltip {
         }
 
         int scaledInternalSpacing = UI.scale(TooltipStyle.INTERNAL_SPACING);
-        int bodyDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
 
         // First pass: calculate max widths for tabular alignment
         int maxStatNameWidth = 0;

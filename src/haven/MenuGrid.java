@@ -306,7 +306,7 @@ public class MenuGrid extends Widget implements KeyBinding.Bindable {
 	public Resource getres() {return(res);}
 
 	public BufferedImage rendertt(boolean withpg) {
-	    return NRecipeTooltip.build(name(), bind.key(), withpg ? info() : null);
+	    return NRecipeTooltip.build(name(), withpg ? info() : null);
 	}
 
 	public static class FactMaker extends Resource.PublishedCode.Instancer.Chain<Factory> {

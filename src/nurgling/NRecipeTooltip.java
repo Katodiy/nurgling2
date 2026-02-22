@@ -61,14 +61,12 @@ public class NRecipeTooltip {
      * Build a recipe tooltip from the given name, key binding, and item info list.
      *
      * @param name Recipe name
-     * @param key  Key binding (unused, kept for API compatibility)
      * @param info List of ItemInfo from the pagina
      * @return Rendered tooltip image
      */
-    public static BufferedImage build(String name, KeyMatch key, List<ItemInfo> info) {
+    public static BufferedImage build(String name, List<ItemInfo> info) {
         // Render name - all white, semibold 12px
-        BufferedImage nameImg = TooltipStyle.cropTopOnly(renderName(name));
-        BufferedImage ret = nameImg;
+        BufferedImage ret = TooltipStyle.cropTopOnly(renderName(name));
 
         if (info != null && !info.isEmpty()) {
             // Extract Inputs, Skills, Cost, and Pagina
@@ -138,7 +136,6 @@ public class NRecipeTooltip {
             }
             if (costLine != null) {
                 // Cost is always 7px from name (baseline-to-top), uses 12px font
-                int costDescent = TooltipStyle.getFontDescent(12);
                 int spacing = hasBodyContent ? (UI.scale(10) - bodyDescent) : (UI.scale(7) - nameDescent);
                 ret = ItemInfo.catimgs(spacing, ret, costLine);
                 hasBodyContent = true;
@@ -309,9 +306,8 @@ public class NRecipeTooltip {
 
             // Render cost value with color #FFFF82, 12px semibold + " EXP"
             Text.Foundry costFoundry = TooltipStyle.createFoundry(true, 12, COLOR_COST);
-            BufferedImage costImg = costFoundry.render(Utils.thformat(cost) + " EXP", COLOR_COST).img;
 
-            return costImg;
+            return costFoundry.render(Utils.thformat(cost) + " EXP", COLOR_COST).img;
         } catch (Exception e) {
             return null;
         }
