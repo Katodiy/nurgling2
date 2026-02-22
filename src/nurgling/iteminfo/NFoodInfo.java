@@ -495,7 +495,13 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         BufferedImage energyLine = TooltipStyle.cropTopOnly(catimgsh(0,
             label("Energy: "), value(Utils.odformat2(end * 100, 2) + "%", TooltipStyle.COLOR_FOOD_ENERGY),
             label("  Hunger: "), value(Utils.odformat2(glut * 100, 2) + "%", TooltipStyle.COLOR_FOOD_HUNGER)));
-        l.cmp.add(energyLine, Coord.of(0, l.cmp.sz.y));
+
+        // If there's already content in the layout (e.g., curio info), add section spacing before food info
+        int yPos = l.cmp.sz.y;
+        if (yPos > 0) {
+            yPos += groupSpacing;  // Add 10px section spacing between curio and food info
+        }
+        l.cmp.add(energyLine, Coord.of(0, yPos));
 
         // Line 2: FEP Sum + FEP/Hunger (7px after energy line)
         BufferedImage fepLine = TooltipStyle.cropTopOnly(catimgsh(0,

@@ -344,9 +344,11 @@ public final class TooltipStyle {
             }
         }
 
-        // Total height: text height + any icon extension above/below
-        int iconExtension = Math.max(0, (maxIconHeight - maxTextHeight) / 2);
-        int totalHeight = maxTextHeight + iconExtension * 2;
+        // Total height must accommodate:
+        // 1. Icons: need maxIconHeight space
+        // 2. Text with descent shift: text is shifted down by descent/2, so needs maxTextHeight + descent
+        // Take the maximum of these two requirements
+        int totalHeight = Math.max(maxIconHeight, maxTextHeight + descent);
 
         // Calculate actual text Y position (accounting for descent shift for visual alignment)
         // Text is centered then shifted down by descent/2
