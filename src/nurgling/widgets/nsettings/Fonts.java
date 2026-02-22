@@ -13,7 +13,7 @@ import java.util.List;
 
 public class Fonts extends Panel {
     private static final List<String> FONT_FAMILIES = Arrays.asList(
-            "Inter", "Roboto", "Sans", "Serif", "Fractur"
+            "Inter", "Roboto", "Open Sans", "Sans", "Serif", "Fractur"
     );
 
     public enum FontType {

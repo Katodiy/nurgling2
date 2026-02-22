@@ -33,6 +33,7 @@ import java.awt.Cursor;
 import java.awt.Toolkit;
 import haven.JOGLPanel.SyncMode;
 import nurgling.*;
+import nurgling.styles.TooltipStyle;
 
 public interface GLPanel extends UIPanel, UI.Context {
     public GLEnvironment env();
@@ -200,10 +201,10 @@ public interface GLPanel extends UIPanel, UI.Context {
 		if(pos.y < 0)
 		    pos.y = 0;
 		Coord br = pos.add(sz);
-		Coord m = UI.scale(2, 2);
-		g.chcolor(244, 247, 21, 192);
+		Coord m = UI.scale(TooltipStyle.GLPANEL_MARGIN, TooltipStyle.GLPANEL_MARGIN);
+		g.chcolor(TooltipStyle.COLOR_TOOLTIP_BORDER);
 		g.rect2(pos.sub(m).sub(1, 1), br.add(m).add(1, 1));
-		g.chcolor(35, 35, 35, 192);
+		g.chcolor(TooltipStyle.COLOR_TOOLTIP_BG);
 		g.frect2(pos.sub(m), br.add(m));
 		g.chcolor();
 		g.image(tex, pos);

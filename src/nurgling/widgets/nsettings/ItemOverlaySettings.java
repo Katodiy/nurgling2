@@ -121,7 +121,7 @@ public class ItemOverlaySettings extends Panel {
     private HSlider studyTimeRatioSlider;
     private Label studyTimeRatioLabel;
     private Dropbox<ItemQualityOverlaySettings.TimeFormat> studyTimeFormatSelector;
-    
+
     // Progress UI Controls
     private CheckBox progressHiddenCheckbox;
     private Dropbox<Corner> progressCornerSelector;
@@ -798,7 +798,7 @@ public class ItemOverlaySettings extends Panel {
             }
         }, UI.scale(margin, y));
         y += 22;
-        
+
         // Corner position selector
         parent.add(new Label(L10n.get("overlay.corner")), UI.scale(margin, y));
         studyCornerSelector = parent.add(new Dropbox<Corner>(UI.scale(100), Corner.values().length, UI.scale(16)) {
@@ -1338,7 +1338,7 @@ public class ItemOverlaySettings extends Panel {
         studyOutlineWidthSlider.visible = currentStudySettings.showOutline;
         studyColorWidget.color = currentStudySettings.defaultColor;
         studyHiddenCheckbox.a = currentStudySettings.hidden;
-        
+
         // Load Progress settings
         ItemQualityOverlaySettings progressSettings = (ItemQualityOverlaySettings) NConfig.get(NConfig.Key.progressOverlay);
         if (progressSettings == null) {

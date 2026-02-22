@@ -375,8 +375,11 @@ public abstract class ItemInfo implements Comparable<ItemInfo> {
 	l.add(new Tip(info.get(0).owner) {
 		@Override
 		public BufferedImage tipimg() {
-			return Text.render((((GItem) info.get(0).owner).res.toString())).img;
+			String resPath = ((GItem) info.get(0).owner).res.toString();
+			return RichText.render(String.format("$col[128,128,128]{$size[9]{%s}}", resPath), 0).img;
 		}
+		@Override
+		public int order() { return 10000; } // Render at the bottom
 	});
 	if(l.tips.size() < 1)
 	    return(null);

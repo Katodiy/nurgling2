@@ -6,12 +6,14 @@ import static haven.CharWnd.iconfilter;
 import static haven.PUtils.convolvedown;
 import haven.resutil.*;
 import nurgling.*;
+import nurgling.styles.TooltipStyle;
 import nurgling.tools.NSearchItem;
 import nurgling.widgets.*;
 
 import java.awt.*;
 import java.awt.image.*;
 import java.util.*;
+import java.util.List;
 
 public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSearchable
 {
@@ -39,6 +41,178 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     HashMap<String, Double> searchImage = new HashMap<>();
 
     double energy;
+
+    // Cached foundries for Open Sans tooltip rendering
+    private static Text.Foundry labelFoundry = null;
+    private static Text.Foundry valueFoundry = null;
+
+    private static Text.Foundry getLabelFoundry() {
+        if (labelFoundry == null) {
+            labelFoundry = TooltipStyle.createFoundry(false, TooltipStyle.FONT_SIZE_BODY, Color.WHITE);
+        }
+        return labelFoundry;
+    }
+
+    private static Text.Foundry getValueFoundry() {
+        if (valueFoundry == null) {
+            valueFoundry = TooltipStyle.createFoundry(true, TooltipStyle.FONT_SIZE_BODY, Color.WHITE);
+        }
+        return valueFoundry;
+    }
+
+    /** Render label text (Open Sans Regular, white) */
+    private static BufferedImage label(String text) {
+        return getLabelFoundry().render(text, Color.WHITE).img;
+    }
+
+    /** Render label text with custom color (Open Sans Regular, colored) */
+    private static BufferedImage labelColored(String text, Color color) {
+        return getLabelFoundry().render(text, color).img;
+    }
+
+    /** Render value text (Open Sans Semibold, colored) */
+    private static BufferedImage value(String text, Color color) {
+        return getValueFoundry().render(text, color).img;
+    }
+
+    /**
+     * Result of composing elements - contains image and text positioning info.
+     */
+    private static class IconLineResult {
+        final BufferedImage image;
+        final int textTopOffset;     // Pixels from image top to text top
+        final int textBottomOffset;  // Pixels from text bottom to image bottom
+
+        IconLineResult(BufferedImage image, int textTopOffset, int textBottomOffset) {
+            this.image = image;
+            this.textTopOffset = textTopOffset;
+            this.textBottomOffset = textBottomOffset;
+        }
+    }
+
+    /**
+     * Element for composing lines with mixed text and icons.
+     */
+    private static class LineElement {
+        final BufferedImage image;
+        final boolean isIcon;
+
+        LineElement(BufferedImage image, boolean isIcon) {
+            this.image = image;
+            this.isIcon = isIcon;
+        }
+
+        static LineElement text(BufferedImage img) {
+            return new LineElement(img, false);
+        }
+
+        static LineElement icon(BufferedImage img) {
+            return new LineElement(img, true);
+        }
+    }
+
+    /**
+     * Compose multiple elements (text and icons) horizontally.
+     * TEXT elements define the line height - icons are centered vertically.
+     * Returns the composed image and text top offset for spacing calculations.
+     */
+    private static IconLineResult composeElements(int gap, List<LineElement> elements) {
+        if (elements.isEmpty()) {
+            return new IconLineResult(TexI.mkbuf(new Coord(1, 1)), 0, 0);
+        }
+
+        // Get font descent - text images include descent below baseline
+        // We need to account for this when centering to align visual text center with icon center
+        int descent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
+
+        // First pass: find max text height (only from non-icon elements)
+        int maxTextHeight = 0;
+        for (LineElement elem : elements) {
+            if (!elem.isIcon) {
+                maxTextHeight = Math.max(maxTextHeight, elem.image.getHeight());
+            }
+        }
+
+        // If no text elements, fall back to max of all heights
+        if (maxTextHeight == 0) {
+            for (LineElement elem : elements) {
+                maxTextHeight = Math.max(maxTextHeight, elem.image.getHeight());
+            }
+        }
+
+        // Find max icon height to determine total line height
+        int maxIconHeight = 0;
+        for (LineElement elem : elements) {
+            if (elem.isIcon) {
+                maxIconHeight = Math.max(maxIconHeight, elem.image.getHeight());
+            }
+        }
+
+        // Total height: text height + any icon extension above/below
+        int iconExtension = Math.max(0, (maxIconHeight - maxTextHeight) / 2);
+        int totalHeight = maxTextHeight + iconExtension * 2;
+
+        // Calculate actual text Y position (accounting for descent shift for visual alignment)
+        // Text is centered then shifted down by descent/2
+        int textTopOffset = (totalHeight - maxTextHeight) / 2 + descent / 2;
+        // Text bottom offset is NOT the same due to descent shift
+        int textBottomOffset = totalHeight - textTopOffset - maxTextHeight;
+
+        // Calculate total width
+        int totalWidth = 0;
+        for (int i = 0; i < elements.size(); i++) {
+            totalWidth += elements.get(i).image.getWidth();
+            if (i > 0) totalWidth += gap;
+        }
+
+        // Create result image
+        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, totalHeight));
+        Graphics g = result.getGraphics();
+
+        int x = 0;
+        for (int i = 0; i < elements.size(); i++) {
+            LineElement elem = elements.get(i);
+            int y;
+            if (elem.isIcon) {
+                // Center icon vertically
+                y = (totalHeight - elem.image.getHeight()) / 2;
+            } else {
+                // Center text, but adjust for descent so visual text center aligns with icon center
+                // Text visual center is at (height - descent) / 2 from top, not height / 2
+                // So we shift text DOWN by descent / 2 to compensate
+                y = (totalHeight - elem.image.getHeight()) / 2 + descent / 2;
+            }
+
+            g.drawImage(elem.image, x, y, null);
+            x += elem.image.getWidth();
+            if (i < elements.size() - 1) x += gap;
+        }
+
+        g.dispose();
+
+        return new IconLineResult(result, textTopOffset, textBottomOffset);
+    }
+
+    /**
+     * Compose a single icon with a text line.
+     * Convenience wrapper for composeElements with just icon + text.
+     */
+    private static IconLineResult composeIconLine(BufferedImage icon, BufferedImage textLine) {
+        List<LineElement> elements = new ArrayList<>();
+        elements.add(LineElement.icon(icon));
+        elements.add(LineElement.text(textLine));
+        return composeElements(UI.scale(2), elements);
+    }
+
+
+    /**
+     * Scale an icon to the standard tooltip icon size (75% of 16px = 12px).
+     */
+    private static BufferedImage scaleIcon(BufferedImage icon) {
+        if (icon == null) return null;
+        return convolvedown(icon, UI.scale(new Coord(TooltipStyle.ICON_SIZE, TooltipStyle.ICON_SIZE)), iconfilter);
+    }
+
     public NFoodInfo(Owner owner, double end, double glut, double sev, double cons, Event[] evs, Effect[] efs, int[] types)
     {
         super(owner, end, glut, sev, cons, evs, efs, types);
@@ -289,24 +463,18 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
     }
     @Override
     public void layout(Layout l) {
-
-        if (owner instanceof GItem && NUtils.getGameUI()!=null)
-        {
+        if (owner instanceof GItem && NUtils.getGameUI() != null) {
             name = ((NGItem) owner).name();
             if (name == null)
                 return;
 
             NCharacterInfo ci = NUtils.getGameUI().getCharInfo();
-            if (ci != null)
-            {
+            if (ci != null) {
                 isVarity = !ci.varity.contains(name);
             }
-            if (NUtils.getGameUI().chrwdg != null)
-            {
-
-                for (int type : types)
-                {
-                    if(NUtils.getGameUI().chrwdg.battr.cons.els.size()>type) {
+            if (NUtils.getGameUI().chrwdg != null) {
+                for (int type : types) {
+                    if (NUtils.getGameUI().chrwdg.battr.cons.els.size() > type) {
                         BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(type);
                         if (c != null) {
                             efficiency = c.a * 100;
@@ -317,84 +485,217 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             calcData();
         }
 
+        // Get font descent for baseline-relative spacing (like NCuriosity)
+        int descent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);
+        int groupSpacing = UI.scale(TooltipStyle.SECTION_SPACING) - descent;  // 10px between groups
+        int lineSpacing = UI.scale(TooltipStyle.INTERNAL_SPACING) - descent;  // 7px within groups
 
-        String head = String.format("Energy: $col[128,128,255]{%s%%}, Hunger: $col[255,192,128]{%s\u2030}", Utils.odformat2(end * 100, 2), Utils.odformat2(glut * 1000, 2));
-        if(cons != 0)
-            head += String.format(", Satiation: $col[192,192,128]{%s%%}", Utils.odformat2(cons * 100, 2));
-        l.cmp.add(RichText.render(head, 0).img, Coord.of(0, l.cmp.sz.y));
-        l.cmp.add(RichText.render(String.format("FEP Sum: $col[128,255,0]{%s}, FEP/Hunger: $col[128,255,128]{%s}", Utils.odformat2(fepSum, 2), Utils.odformat2(fepSum / (100 * glut), 2)), 0).img,Coord.of(0, l.cmp.sz.y));
+        // ===== GROUP 1: Energy + FEP Sum =====
+        // Line 1: Energy + Hunger
+        BufferedImage energyLine = TooltipStyle.cropTopOnly(catimgsh(0,
+            label("Energy: "), value(Utils.odformat2(end * 100, 2) + "%", TooltipStyle.COLOR_FOOD_ENERGY),
+            label("  Hunger: "), value(Utils.odformat2(glut * 100, 2) + "%", TooltipStyle.COLOR_FOOD_HUNGER)));
 
-        for(int i = 0; i < evs.length; i++) {
+        // If there's already content in the layout (e.g., curio info), add section spacing before food info
+        int yPos = l.cmp.sz.y;
+        if (yPos > 0) {
+            yPos += groupSpacing;  // Add 10px section spacing between curio and food info
+        }
+        l.cmp.add(energyLine, Coord.of(0, yPos));
+
+        // Line 2: FEP Sum + FEP/Hunger (7px after energy line)
+        BufferedImage fepLine = TooltipStyle.cropTopOnly(catimgsh(0,
+            label("FEP Sum: "), value(Utils.odformat2(fepSum, 2), TooltipStyle.COLOR_FOOD_FEP_SUM),
+            label("  FEP/Hunger: "), value(Utils.odformat2(fepSum / (100 * glut), 2), TooltipStyle.COLOR_FOOD_FEP_HUNGER)));
+        l.cmp.add(fepLine, Coord.of(0, l.cmp.sz.y + lineSpacing));
+
+        // ===== GROUP 2: Stats (10px gap before, 7px between each stat) =====
+        // Track previous line's text bottom offset for proper spacing
+        int prevTextBottomOffset = 0;  // For text-only lines, this is 0
+
+        // First pass: calculate column widths for tabular alignment
+        int maxNameWidth = 0;
+        int maxValueWidth = 0;
+        int columnGap = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
+
+        for (int i = 0; i < evs.length; i++) {
+            BufferedImage nameImg = label(evs[i].ev.nm);
+            BufferedImage valueImg = value(Utils.odformat2(evs[i].a, 2), Color.WHITE);
+            maxNameWidth = Math.max(maxNameWidth, nameImg.getWidth());
+            maxValueWidth = Math.max(maxValueWidth, valueImg.getWidth());
+        }
+
+        // Second pass: render stats with aligned columns
+        boolean firstStat = true;
+        for (int i = 0; i < evs.length; i++) {
             Color col = Utils.blendcol(evs[i].ev.col, Color.WHITE, 0.5);
-            l.cmp.add(catimgsh(5, evs[i].img, RichText.render(String.format("%s: %s{%s} (%s%%)", evs[i].ev.nm, RichText.Parser.col2a(col), Utils.odformat2(evs[i].a, 2), Utils.odformat2(evs[i].a/fepSum*100, 0)), 0).img),
-                    Coord.of(UI.scale(5), l.cmp.sz.y));
+
+            // Render each part separately
+            BufferedImage nameImg = label(evs[i].ev.nm);
+            BufferedImage valueImg = value(Utils.odformat2(evs[i].a, 2), col);
+            BufferedImage pctImg = labelColored("(" + Utils.odformat2(evs[i].a / fepSum * 100, 0) + "%)", TooltipStyle.COLOR_PERCENTAGE);
+
+            // Calculate positions for tabular layout
+            // Name is left-aligned, value is right-aligned within its column, percentage follows
+            int nameColWidth = maxNameWidth;
+            int valueColWidth = maxValueWidth;
+
+            int totalWidth = nameColWidth + columnGap + valueColWidth + columnGap + pctImg.getWidth();
+            int maxHeight = Math.max(Math.max(nameImg.getHeight(), valueImg.getHeight()), pctImg.getHeight());
+
+            BufferedImage textPart = TexI.mkbuf(new Coord(totalWidth, maxHeight));
+            Graphics g = textPart.getGraphics();
+
+            // Draw name (left-aligned in column)
+            int x = 0;
+            g.drawImage(nameImg, x, (maxHeight - nameImg.getHeight()) / 2, null);
+
+            // Draw value (right-aligned in column)
+            x = nameColWidth + columnGap + (valueColWidth - valueImg.getWidth());
+            g.drawImage(valueImg, x, (maxHeight - valueImg.getHeight()) / 2, null);
+
+            // Draw percentage (after value column)
+            x = nameColWidth + columnGap + valueColWidth + columnGap;
+            g.drawImage(pctImg, x, (maxHeight - pctImg.getHeight()) / 2, null);
+
+            g.dispose();
+
+            textPart = TooltipStyle.cropTopOnly(textPart);
+
+            // Scale stat icon and compose with text
+            BufferedImage scaledIcon = scaleIcon(evs[i].img);
+            IconLineResult result = composeIconLine(scaledIcon, textPart);
+
+            // Adjust spacing: subtract current line's textTopOffset and previous line's textBottomOffset
+            int baseSpacing = firstStat ? groupSpacing : lineSpacing;
+            int adjustedSpacing = baseSpacing - result.textTopOffset - prevTextBottomOffset;
+
+            l.cmp.add(result.image, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
+
+            // Use text bottom offset for next iteration (not same as top due to descent shift)
+            prevTextBottomOffset = result.textBottomOffset;
+            firstStat = false;
         }
-        if(sev > 0)
-            l.cmp.add(RichText.render(String.format("Total: $col[128,192,255]{%s} ($col[128,192,255]{%s}/\u2030 hunger)", Utils.odformat2(sev, 2), Utils.odformat2(sev / (1000 * glut), 2)), 0).img,
-                    Coord.of(UI.scale(5), l.cmp.sz.y));
-        for(int i = 0; i < efs.length; i++) {
+
+        // Effects (continue in stats group) - these are text-only lines
+        for (int i = 0; i < efs.length; i++) {
             BufferedImage efi = ItemInfo.longtip(efs[i].info);
-            if(efs[i].p != 1)
-                efi = catimgsh(5, efi, RichText.render(String.format("$i{($col[192,192,255]{%d%%} chance)}", (int)Math.round(efs[i].p * 100)), 0).img);
-            l.cmp.add(efi, Coord.of(UI.scale(5), l.cmp.sz.y));
+            if (efi == null) continue;
+            if (efs[i].p != 1) {
+                efi = catimgsh(0, efi, label(" "), labelColored("(" + (int) Math.round(efs[i].p * 100) + "% chance)", TooltipStyle.COLOR_PERCENTAGE));
+            }
+            efi = TooltipStyle.cropTopOnly(efi);
+            int baseSpacing = firstStat ? groupSpacing : lineSpacing;
+            // Adjust for previous icon line's text bottom offset
+            int adjustedSpacing = baseSpacing - prevTextBottomOffset;
+            l.cmp.add(efi, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
+            prevTextBottomOffset = 0;  // Text-only line has no offset
+            firstStat = false;
         }
 
-
-        l.cmp.add(RichText.render(String.format("$col[205,125,255]{%s}:", "Calculation"), 0).img,Coord.of(0, l.cmp.sz.y));
-
-
+        // ===== GROUP 3: Expected FEP + Expected total (10px gap before, 7px between) =====
         double error = expeted_fep * 0.005;
-        if (delta < 0)
-            l.cmp.add(RichText.render(String.format("Expected FEP: $col[128,255,0]{%.2f} $col[0,196,255]{(%.2f \u00B1 %.2f)}", expeted_fep, delta, error), 0).img,Coord.of(UI.scale(5), l.cmp.sz.y));
-        else
-            l.cmp.add(RichText.render(String.format("Expected FEP: $col[128,255,0]{%.2f} $col[255,0,0]{(+%.2f \u00B1 %.2f)} ", expeted_fep, delta, error), 0).img,Coord.of(UI.scale(5), l.cmp.sz.y));
-        double cur_fep = 0;
-        if(NUtils.getGameUI().chrwdg.battr!=null) {
+        String deltaStr = (delta >= 0 ? "+" : "") + String.format("%.2f", delta) + " \u00B1 " + String.format("%.2f", error);
+        BufferedImage expectedLine = TooltipStyle.cropTopOnly(catimgsh(0,
+            label("Expected FEP: "), value(String.format("%.2f", expeted_fep), TooltipStyle.COLOR_FOOD_FEP_HUNGER),
+            label(" "), labelColored("(" + deltaStr + ")", TooltipStyle.COLOR_PERCENTAGE)));
+        // Adjust for previous icon line's text bottom offset
+        int expectedSpacing = groupSpacing - prevTextBottomOffset;
+        l.cmp.add(expectedLine, Coord.of(0, l.cmp.sz.y + expectedSpacing));
+        prevTextBottomOffset = 0;  // Reset for text-only line
+
+        // Expected total (7px after expected FEP)
+        if (NUtils.getGameUI() != null && NUtils.getGameUI().chrwdg != null && NUtils.getGameUI().chrwdg.battr != null) {
+            double cur_fep = 0;
             for (BAttrWnd.FoodMeter.El el : NUtils.getGameUI().chrwdg.battr.feps.els) {
                 cur_fep += el.a;
             }
-            l.cmp.add(RichText.render(String.format("Expected total: $col[128,255,0]{%.2f}", expeted_fep + cur_fep), 0).img, Coord.of(UI.scale(5), l.cmp.sz.y));
+            BufferedImage totalLine = TooltipStyle.cropTopOnly(catimgsh(0,
+                label("Expected total: "), value(String.format("%.2f", expeted_fep + cur_fep), TooltipStyle.COLOR_FOOD_FEP_SUM)));
+            l.cmp.add(totalLine, Coord.of(0, l.cmp.sz.y + lineSpacing));
+            // prevTextBottomOffset stays 0 for text-only line
+        }
 
-            if (NUtils.getUI().dataTables.data_food != null && NUtils.getUI().dataTables.data_food.containsKey(name)) {
-                drinkImg = drinkImg();
-                if (drinkImg != null && !drinkImg.isEmpty()) {
-                    l.cmp.add(RichText.render(String.format("$col[175,175,255]{%s}:", "Drink info"), 0).img, Coord.of(0, l.cmp.sz.y));
+        // ===== GROUP 4: Food types with icons (10px gap before, 7px between each type) =====
+        // Find FoodTypes ItemInfo and extract types using reflection
+        if (owner instanceof GItem && NUtils.getUI() != null) {
 
-                    for (BufferedImage cand : drinkImg) {
-                        l.cmp.add(cand, Coord.of(UI.scale(5), l.cmp.sz.y));
+            Resource[] foodTypeResources = null;
+
+            // Find FoodTypes in item info list and extract types via reflection
+            try {
+                List<ItemInfo> infos = ((GItem) owner).info();
+                for (ItemInfo info : infos) {
+                    if (info.getClass().getName().contains("FoodTypes")) {
+                        // types field is Resource[] not int[]
+                        java.lang.reflect.Field typesField = info.getClass().getDeclaredField("types");
+                        typesField.setAccessible(true);
+                        foodTypeResources = (Resource[]) typesField.get(info);
+                        break;
                     }
+                }
+            } catch (Exception ignored) {}
+
+            if (foodTypeResources != null && foodTypeResources.length > 0) {
+                boolean firstFoodType = true;
+                for (Resource typeRes : foodTypeResources) {
+                    if (typeRes == null) continue;
+
+                    // Get food type name from resource tooltip
+                    String foodTypeName = null;
+                    Resource.Tooltip tt = typeRes.layer(Resource.tooltip);
+                    if (tt != null) {
+                        foodTypeName = tt.t;
+                    }
+                    if (foodTypeName == null) continue;
+
+                    // Get food type icon from resource image (scaled to 80%)
+                    BufferedImage typeIcon = null;
+                    Resource.Image img = typeRes.layer(Resource.imgc);
+                    if (img != null) {
+                        typeIcon = convolvedown(img.img, UI.scale(new Coord(TooltipStyle.ICON_SIZE, TooltipStyle.ICON_SIZE)), tflt);
+                    }
+
+                    // Build elements list with proper icon/text marking
+                    List<LineElement> elements = new ArrayList<>();
+
+                    // Add food type icon
+                    if (typeIcon != null) {
+                        elements.add(LineElement.icon(typeIcon));
+                    }
+
+                    // Add food type name (text, cropped)
+                    elements.add(LineElement.text(TooltipStyle.cropTopOnly(value(foodTypeName, TooltipStyle.COLOR_FOOD_TYPE))));
+
+                    // Add drinks with vessel icons (if dataTables available)
+                    if (NUtils.getUI().dataTables != null) {
+                        List<String> drinks = NUtils.getUI().dataTables.data_drinks.get(foodTypeName);
+                        if (drinks != null && !drinks.isEmpty()) {
+                            for (String drink : drinks) {
+                                String vessel = NUtils.getUI().dataTables.data_vessel.getOrDefault(drink, "");
+                                if (vessel == null) vessel = "Any";
+                                String vesselRes = NUtils.getUI().dataTables.vessel_res.get(vessel);
+                                if (vesselRes != null) {
+                                    BufferedImage vesselIcon = convolvedown(Resource.loadsimg(vesselRes), UI.scale(new Coord(TooltipStyle.ICON_SIZE, TooltipStyle.ICON_SIZE)), iconfilter);
+                                    elements.add(LineElement.icon(vesselIcon));
+                                }
+                                elements.add(LineElement.text(TooltipStyle.cropTopOnly(value(drink, TooltipStyle.COLOR_FOOD_VESSEL))));
+                            }
+                        }
+                    }
+
+                    // Compose all elements - TEXT defines height, icons centered
+                    IconLineResult result = composeElements(UI.scale(2), elements);
+
+                    int baseSpacing = firstFoodType ? groupSpacing : lineSpacing;
+                    int adjustedSpacing = baseSpacing - result.textTopOffset - prevTextBottomOffset;
+                    l.cmp.add(result.image, Coord.of(0, l.cmp.sz.y + adjustedSpacing));
+                    prevTextBottomOffset = result.textBottomOffset;
+
+                    firstFoodType = false;
                 }
             }
         }
-    }
-
-    ArrayList<BufferedImage> drinkImg = null;
-
-    private ArrayList<BufferedImage> drinkImg()
-    {
-        if (drinkImg == null && NUtils.getUI().dataTables.data_food.get(name) != null)
-        {
-            drinkImg = new ArrayList<>();
-            for (String type : NUtils.getUI().dataTables.data_food.get(name))
-            {
-                if (NUtils.getUI().dataTables.data_drinks.get(type) != null)
-                {
-                    Iterator<String> iter = NUtils.getUI().dataTables.data_drinks.get(type).iterator();
-                    BufferedImage img = null;
-                    while (iter.hasNext())
-                    {
-                        String drink = iter.next();
-                        String vessel = (NUtils.getUI().dataTables.data_vessel.getOrDefault(drink, ""));
-                        if (vessel == null) vessel = "Any";
-                        img = RichText.render(String.format("%s$col[192,255,192]{%s}:", "\t", type), 0).img;
-                        img = catimgsh(5, img, RichText.render(String.format("$col[255,255,128]{%s} (%s)", drink, vessel), 0).img);
-                        img = catimgsh(5, img, convolvedown(Resource.loadsimg(NUtils.getUI().dataTables.vessel_res.get(vessel)), UI.scale(new Coord(16, 16)), iconfilter));
-                        drinkImg.add(img);
-                    }
-                }
-            }
-        }
-        return drinkImg;
     }
 
     public static Tex var_img = Resource.loadtex("nurgling/hud/items/overlays/varity");
