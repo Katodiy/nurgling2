@@ -219,7 +219,7 @@ public class NRecipeTooltip {
             }
 
             // Compose all parts horizontally with gap
-            return composeHorizontalWithGap(parts, gap);
+            return TooltipStyle.composeHorizontalWithGap(parts, gap);
         } catch (Exception e) {
             return null;
         }
@@ -366,61 +366,6 @@ public class NRecipeTooltip {
         return result;
     }
 
-    /**
-     * Compose multiple images horizontally with no gap.
-     */
-    private static BufferedImage composeHorizontal(BufferedImage... imgs) {
-        int totalWidth = 0;
-        int maxHeight = 0;
-        for (BufferedImage img : imgs) {
-            if (img != null) {
-                totalWidth += img.getWidth();
-                maxHeight = Math.max(maxHeight, img.getHeight());
-            }
-        }
-        if (totalWidth == 0) return null;
-
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
-        Graphics g = result.getGraphics();
-        int x = 0;
-        for (BufferedImage img : imgs) {
-            if (img != null) {
-                g.drawImage(img, x, (maxHeight - img.getHeight()) / 2, null);
-                x += img.getWidth();
-            }
-        }
-        g.dispose();
-        return result;
-    }
-
-    /**
-     * Compose list of images horizontally with specified gap.
-     */
-    private static BufferedImage composeHorizontalWithGap(List<BufferedImage> imgs, int gap) {
-        if (imgs.isEmpty()) return null;
-
-        int totalWidth = 0;
-        int maxHeight = 0;
-        for (BufferedImage img : imgs) {
-            totalWidth += img.getWidth();
-            maxHeight = Math.max(maxHeight, img.getHeight());
-        }
-        totalWidth += gap * (imgs.size() - 1);
-
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
-        Graphics g = result.getGraphics();
-        int x = 0;
-        for (int i = 0; i < imgs.size(); i++) {
-            BufferedImage img = imgs.get(i);
-            g.drawImage(img, x, (maxHeight - img.getHeight()) / 2, null);
-            x += img.getWidth();
-            if (i < imgs.size() - 1) {
-                x += gap;
-            }
-        }
-        g.dispose();
-        return result;
-    }
 
     /**
      * Render text with word wrapping at specified max width.

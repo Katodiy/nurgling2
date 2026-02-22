@@ -106,82 +106,8 @@ public class NTooltip {
         return false;
     }
 
-    /**
-     * Data extracted from ISlots (or slots_alt.ISlots) via reflection.
-     */
-    private static class ISlotsData {
-        final int left;           // Remaining gilding slots
-        final int uses;           // Total gilding slots
-        final int used;           // Used gilding slots
-        final double pmin, pmax;  // Gilding chance range
-        final Resource[] attrs;   // Attribute icons
-        final java.util.List<SItemData> items;  // Gilded items
 
-        ISlotsData(int left, int uses, int used, double pmin, double pmax, Resource[] attrs, java.util.List<SItemData> items) {
-            this.left = left;
-            this.uses = uses;
-            this.used = used;
-            this.pmin = pmin;
-            this.pmax = pmax;
-            this.attrs = attrs;
-            this.items = items;
-        }
-    }
 
-    /**
-     * Data extracted from an SItem within ISlots.
-     */
-    private static class SItemData {
-        final String name;
-        final Resource res;
-        final GSprite spr;
-        final List<ItemInfo> info;
-
-        SItemData(String name, Resource res, GSprite spr, List<ItemInfo> info) {
-            this.name = name;
-            this.res = res;
-            this.spr = spr;
-            this.info = info;
-        }
-    }
-
-    /**
-     * Extract ISlots data via reflection (works for both slots.ISlots and slots_alt.ISlots).
-     * slots_alt.ISlots uses: uses (total), used (count used), pmin, pmax, attrs, s
-     */
-    @SuppressWarnings("unchecked")
-    private static ISlotsData extractISlotsData(Object islotsObj) {
-        if (islotsObj == null) return null;
-
-        try {
-            Class<?> clazz = islotsObj.getClass();
-
-            // slots_alt.ISlots has: uses (total), used (count), pmin, pmax, attrs, s
-            int uses = getIntField(clazz, islotsObj, "uses");
-            int used = getIntField(clazz, islotsObj, "used");
-            int left = uses - used;  // Calculate remaining slots
-
-            double pmin = getDoubleField(clazz, islotsObj, "pmin");
-            double pmax = getDoubleField(clazz, islotsObj, "pmax");
-            Resource[] attrs = (Resource[]) getObjectField(clazz, islotsObj, "attrs");
-            java.util.Collection<?> sCollection = (java.util.Collection<?>) getObjectField(clazz, islotsObj, "s");
-
-            // Extract SItem data
-            java.util.List<SItemData> items = new java.util.ArrayList<>();
-            if (sCollection != null) {
-                for (Object sitem : sCollection) {
-                    SItemData itemData = extractSItemData(sitem);
-                    if (itemData != null) {
-                        items.add(itemData);
-                    }
-                }
-            }
-
-            return new ISlotsData(left, uses, used, pmin, pmax, attrs, items);
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     private static int getIntField(Class<?> clazz, Object obj, String... names) {
         for (String name : names) {
@@ -216,36 +142,6 @@ public class NTooltip {
         return null;
     }
 
-    /**
-     * Extract SItem data via reflection.
-     */
-    @SuppressWarnings("unchecked")
-    private static SItemData extractSItemData(Object sitemObj) {
-        if (sitemObj == null) return null;
-
-        try {
-            Class<?> clazz = sitemObj.getClass();
-
-            Field nameField = clazz.getField("name");
-            String name = (String) nameField.get(sitemObj);
-
-            Field resField = clazz.getField("res");
-            Resource res = (Resource) resField.get(sitemObj);
-
-            GSprite spr = null;
-            try {
-                Field sprField = clazz.getField("spr");
-                spr = (GSprite) sprField.get(sitemObj);
-            } catch (NoSuchFieldException ignored) {}
-
-            Field infoField = clazz.getField("info");
-            List<ItemInfo> info = (List<ItemInfo>) infoField.get(sitemObj);
-
-            return new SItemData(name, res, spr, info);
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     /**
      * Data extracted from an AttrMod Entry.
@@ -345,6 +241,106 @@ public class NTooltip {
         }
         // Default to percentage if unknown (safer for display)
         return true;
+    }
+
+    /**
+     * UNIFIED STAT EXTRACTION: Extract stats from a single AttrMod object.
+     * This is the core logic used by all stat extraction scenarios (gilding, base, tool).
+     *
+     * @param attrModObj An AttrMod instance
+     * @return List of GildingStatData with icon, name, and formatted value
+     */
+    private static java.util.List<GildingStatData> extractStatsFromAttrMod(Object attrModObj) {
+        java.util.List<GildingStatData> stats = new java.util.ArrayList<>();
+        if (attrModObj == null) return stats;
+
+        try {
+            // Get the 'tab' field (Collection of Entry)
+            Field tabField = attrModObj.getClass().getDeclaredField("tab");
+            tabField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.Collection<?> tabCollection = (java.util.Collection<?>) tabField.get(attrModObj);
+
+            if (tabCollection == null) return stats;
+
+            for (Object entry : tabCollection) {
+                try {
+                    // Get the 'attr' field from Entry
+                    Field attrField = entry.getClass().getField("attr");
+                    Object attr = attrField.get(entry);
+
+                    // Call attr.name()
+                    java.lang.reflect.Method nameMethod = attr.getClass().getMethod("name");
+                    String name = (String) nameMethod.invoke(attr);
+
+                    // Call attr.icon()
+                    java.lang.reflect.Method iconMethod = attr.getClass().getMethod("icon");
+                    BufferedImage icon = (BufferedImage) iconMethod.invoke(attr);
+
+                    // Check if it's a Mod entry (has 'mod' field) or Transfer entry
+                    String formattedValue = "";
+                    String entryClassName = entry.getClass().getSimpleName();
+
+                    if (entryClassName.equals("Mod") || entry.getClass().getName().contains("Mod")) {
+                        // It's a Mod entry - get mod value
+                        try {
+                            Field modField = entry.getClass().getField("mod");
+                            double modValue = modField.getDouble(entry);
+
+                            // Check if it's percentage or integer type
+                            boolean isPercent = isPercentageAttribute(attr.getClass());
+                            String sign = modValue >= 0 ? "+" : "";
+                            if (isPercent) {
+                                double percent = modValue * 100;
+                                if (percent == Math.floor(percent)) {
+                                    formattedValue = String.format("%s%.0f%%", sign, percent);
+                                } else {
+                                    formattedValue = String.format("%s%.1f%%", sign, percent);
+                                }
+                            } else {
+                                formattedValue = String.format("%s%d", sign, (int) modValue);
+                            }
+                        } catch (NoSuchFieldException e) {
+                            // Not a Mod with numeric value
+                        }
+                    } else if (entryClassName.equals("Transfer") || entry.getClass().getName().contains("Transfer")) {
+                        // It's a Transfer entry - use fmtvalue()
+                        try {
+                            java.lang.reflect.Method fmtMethod = entry.getClass().getMethod("fmtvalue");
+                            String richText = (String) fmtMethod.invoke(entry);
+                            formattedValue = parseRichTextValue(richText);
+                        } catch (Exception ignored) {}
+                    }
+
+                    if (icon != null && name != null && !formattedValue.isEmpty()) {
+                        stats.add(new GildingStatData(icon, name, formattedValue));
+                    }
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
+
+        return stats;
+    }
+
+    /**
+     * UNIFIED STAT EXTRACTION: Extract stats from a list of ItemInfo objects.
+     * Finds all AttrMod instances and extracts their stats.
+     *
+     * @param infoList List of ItemInfo objects to search
+     * @return List of GildingStatData with icon, name, and formatted value
+     */
+    private static java.util.List<GildingStatData> extractAttrModStats(java.util.List<ItemInfo> infoList) {
+        java.util.List<GildingStatData> stats = new java.util.ArrayList<>();
+        if (infoList == null) return stats;
+
+        for (ItemInfo info : infoList) {
+            if (!info.getClass().getSimpleName().equals("AttrMod")) {
+                continue;
+            }
+            stats.addAll(extractStatsFromAttrMod(info));
+        }
+
+        return stats;
     }
 
     /**
@@ -608,20 +604,38 @@ public class NTooltip {
             } catch (Exception ignored) {}
         }
 
-        // Extract ISlotsData from alternative ISlots if standard ISlots not found
-        ISlotsData islotsData = null;
+        // Extract gilding data (works for both ISlots and alternative ISlots via reflection)
+        Integer gildingLeft = null;
+        Integer gildingTotal = null;
+        double gildingPmin = 0;
+        double gildingPmax = 0;
+        Resource[] gildingAttrs = null;
+        java.util.Collection<?> gildingItems = null;
+
         if (islots != null) {
-            // Convert standard ISlots to ISlotsData for uniform handling
-            java.util.List<SItemData> items = new java.util.ArrayList<>();
-            for (ISlots.SItem si : islots.s) {
-                items.add(new SItemData(si.name, si.res, si.spr, si.info));
-            }
-            int used = items.size();
-            int uses = islots.left + used;  // total = remaining + used
-            islotsData = new ISlotsData(islots.left, uses, used, islots.pmin, islots.pmax, islots.attrs, items);
+            // Standard ISlots path
+            gildingLeft = islots.left;
+            int used = islots.s.size();
+            gildingTotal = islots.left + used;  // total = remaining + used
+            gildingPmin = islots.pmin;
+            gildingPmax = islots.pmax;
+            gildingAttrs = islots.attrs;
+            gildingItems = islots.s;
         } else if (islotsObj != null) {
-            // Extract from alternative ISlots via reflection
-            islotsData = extractISlotsData(islotsObj);
+            // Alternative ISlots via reflection
+            try {
+                Class<?> clazz = islotsObj.getClass();
+                int uses = getIntField(clazz, islotsObj, "uses");
+                int used = getIntField(clazz, islotsObj, "used");
+                gildingLeft = uses - used;
+                gildingTotal = uses;
+                gildingPmin = getDoubleField(clazz, islotsObj, "pmin");
+                gildingPmax = getDoubleField(clazz, islotsObj, "pmax");
+                gildingAttrs = (Resource[]) getObjectField(clazz, islotsObj, "attrs");
+                gildingItems = (java.util.Collection<?>) getObjectField(clazz, islotsObj, "s");
+            } catch (Exception e) {
+                // Ignore extraction errors
+            }
         }
 
         // Get remaining time for curios
@@ -657,7 +671,7 @@ public class NTooltip {
         BufferedImage nameLine = null;
         int nameTextBottomOffset = 0;
         if (nameText != null) {
-            nameLineResult = renderNameLine(nameText, qbuff, wearPercent, remainingTime, starred, islotsData);
+            nameLineResult = renderNameLine(nameText, qbuff, wearPercent, remainingTime, starred, gildingLeft, gildingTotal);
             nameLine = nameLineResult.image;  // Don't crop - we need accurate text position
             nameTextBottomOffset = nameLineResult.textBottomOffset;
         }
@@ -722,22 +736,48 @@ public class NTooltip {
         // Render base stats section (non-gilding stats from AttrMod at item level)
         LineResult baseStatsResult = null;
         if (baseAttrMod != null) {
-            java.util.List<GildingStatData> baseStats = extractBaseStats(baseAttrMod);
+            java.util.List<GildingStatData> baseStats = extractStatsFromAttrMod(baseAttrMod);
             if (!baseStats.isEmpty()) {
                 baseStatsResult = renderBaseStatsSection(baseStats);
             }
         }
 
-        // Render gilding chance line from ISlotsData (single line: "Gilding chance X% to Y%")
+        // Render gilding chance line (single line: "Gilding chance X% to Y%")
         LineResult gildingChanceLineResult = null;
-        if (islotsData != null) {
-            gildingChanceLineResult = renderGildingChanceLineFromData(islotsData);
+        if (gildingLeft != null && gildingTotal != null) {
+            gildingChanceLineResult = renderGildingChanceLine(gildingPmin, gildingPmax, gildingAttrs);
         }
 
-        // Render gilding sections from ISlotsData (hierarchical: header + indented stats)
+        // Render gilding sections (hierarchical: header + indented stats)
         LineResult gildingSectionsResult = null;
-        if (islotsData != null && !islotsData.items.isEmpty()) {
-            gildingSectionsResult = renderGildingSectionsFromData(islotsData);
+        if (gildingItems != null && !gildingItems.isEmpty()) {
+            // For ISlots.SItem, extract fields directly
+            // For reflection-based access, use reflection extractors
+            if (islots != null) {
+                // ISlots.SItem path - cast to known type
+                @SuppressWarnings("unchecked")
+                java.util.Collection<ISlots.SItem> typedItems = (java.util.Collection<ISlots.SItem>) gildingItems;
+                gildingSectionsResult = renderGildingSections(
+                    typedItems,
+                    item -> item.name,
+                    item -> item.res,
+                    item -> item.spr,
+                    item -> item.info
+                );
+            } else {
+                // Reflection-based path
+                gildingSectionsResult = renderGildingSections(
+                    gildingItems,
+                    item -> (String) getObjectField(item.getClass(), item, "name"),
+                    item -> (Resource) getObjectField(item.getClass(), item, "res"),
+                    item -> (GSprite) getObjectField(item.getClass(), item, "spr"),
+                    item -> {
+                        @SuppressWarnings("unchecked")
+                        List<ItemInfo> itemInfo = (List<ItemInfo>) getObjectField(item.getClass(), item, "info");
+                        return itemInfo;
+                    }
+                );
+            }
         }
 
         // Render other tips (excluding Name, QBuff, Contents, Wear, Gast which we've handled)
@@ -961,7 +1001,7 @@ public class NTooltip {
      * Render the name line: [Star Icon] + Name + Quality Icon + Quality Value + Wear% + Optional Remaining Time + Gilding Count
      * Returns LineResult with text position info for proper spacing.
      */
-    private static LineResult renderNameLine(String nameText, QBuff qbuff, Integer wearPercent, String remainingTime, boolean starred, ISlotsData islotsData) {
+    private static LineResult renderNameLine(String nameText, QBuff qbuff, Integer wearPercent, String remainingTime, boolean starred, Integer gildingLeft, Integer gildingTotal) {
         BufferedImage nameImg = getNameFoundry().render(nameText, Color.WHITE).img;
         int hSpacing = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
         int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
@@ -1004,8 +1044,8 @@ public class NTooltip {
 
         // Gilding count (remaining/total) in cyan - shown after quality
         BufferedImage gildingCountImg = null;
-        if (islotsData != null && islotsData.uses > 0) {
-            String gildingText = "(" + islotsData.left + "/" + islotsData.uses + ")";
+        if (gildingLeft != null && gildingTotal != null && gildingTotal > 0) {
+            String gildingText = "(" + gildingLeft + "/" + gildingTotal + ")";
             gildingCountImg = getNameFoundry().render(gildingText, TooltipStyle.COLOR_LPH).img;  // Cyan
             totalWidth += hSpacing + gildingCountImg.getWidth();
         }
@@ -1213,7 +1253,7 @@ public class NTooltip {
         BufferedImage labelImg = getBodyRegularFoundry().render("Wear: ", Color.WHITE).img;
         String valueText = String.format("%,d/%,d", wear.d, wear.m);
         BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_FOOD_ENERGY).img;
-        return composePair(labelImg, valueImg);
+        return TooltipStyle.composePair(labelImg, valueImg);
     }
 
     /**
@@ -1223,7 +1263,7 @@ public class NTooltip {
         BufferedImage labelImg = getBodyRegularFoundry().render("Armor class: ", Color.WHITE).img;
         String valueText = String.format("%d/%d", hard, soft);
         BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_MENTAL_WEIGHT).img;
-        return composePair(labelImg, valueImg);
+        return TooltipStyle.composePair(labelImg, valueImg);
     }
 
     /**
@@ -1233,7 +1273,7 @@ public class NTooltip {
         BufferedImage labelImg = getBodyRegularFoundry().render("Hunger reduction: ", Color.WHITE).img;
         String valueText = Utils.odformat2(100 * glut, 1) + "%";
         BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_FOOD_HUNGER).img;
-        return composePair(labelImg, valueImg);
+        return TooltipStyle.composePair(labelImg, valueImg);
     }
 
     /**
@@ -1243,7 +1283,7 @@ public class NTooltip {
         BufferedImage labelImg = getBodyRegularFoundry().render("Food event bonus: ", Color.WHITE).img;
         String valueText = Utils.odformat2(100 * fev, 1) + "%";
         BufferedImage valueImg = getContentFoundry().render(valueText, TooltipStyle.COLOR_LP).img;
-        return composePair(labelImg, valueImg);
+        return TooltipStyle.composePair(labelImg, valueImg);
     }
 
     /**
@@ -1256,13 +1296,13 @@ public class NTooltip {
         if (damageValue != null) {
             BufferedImage labelImg = getBodyRegularFoundry().render("Damage: ", Color.WHITE).img;
             BufferedImage valueImg = getContentFoundry().render(damageValue, TooltipStyle.COLOR_LP).img;  // #D2B2FF
-            parts.add(composePair(labelImg, valueImg));
+            parts.add(TooltipStyle.composePair(labelImg, valueImg));
         }
 
         if (rangeValue != null) {
             BufferedImage labelImg = getBodyRegularFoundry().render("Range: ", Color.WHITE).img;
             BufferedImage valueImg = getContentFoundry().render(rangeValue, TooltipStyle.COLOR_FOOD_ENERGY).img;  // #00EEFF
-            parts.add(composePair(labelImg, valueImg));
+            parts.add(TooltipStyle.composePair(labelImg, valueImg));
         }
 
         if (parts.isEmpty()) {
@@ -1299,7 +1339,7 @@ public class NTooltip {
     private static BufferedImage renderGrievousLine(String value) {
         BufferedImage labelImg = getBodyRegularFoundry().render("Grievous damage: ", Color.WHITE).img;
         BufferedImage valueImg = getContentFoundry().render(value, TooltipStyle.COLOR_FOOD_HUNGER).img;  // #FFFF82
-        return composePair(labelImg, valueImg);
+        return TooltipStyle.composePair(labelImg, valueImg);
     }
 
     /**
@@ -1308,7 +1348,7 @@ public class NTooltip {
     private static BufferedImage renderArmorPenLine(String value) {
         BufferedImage labelImg = getBodyRegularFoundry().render("Armor penetration: ", Color.WHITE).img;
         BufferedImage valueImg = getContentFoundry().render(value, TooltipStyle.COLOR_MENTAL_WEIGHT).img;  // #FF94E8
-        return composePair(labelImg, valueImg);
+        return TooltipStyle.composePair(labelImg, valueImg);
     }
 
     /**
@@ -1317,7 +1357,7 @@ public class NTooltip {
     private static BufferedImage renderCoolmodLine(String value) {
         BufferedImage labelImg = getBodyRegularFoundry().render("Attack cooldown: ", Color.WHITE).img;
         BufferedImage valueImg = getContentFoundry().render(value, TooltipStyle.COLOR_FOOD_ENERGY).img;  // #00EEFF
-        return composePair(labelImg, valueImg);
+        return TooltipStyle.composePair(labelImg, valueImg);
     }
 
     /**
@@ -1571,19 +1611,16 @@ public class NTooltip {
      * Render the gilding names line: comma-separated gilding names
      */
     /**
-     * Render the gilding chance line: "Gilding chance X% to Y%" with attribute icons
+     * Render the gilding chance line: "Gilding chance X% to Y%" with attribute icons.
+     * UNIFIED METHOD: Accepts primitives to work with both ISlots and reflection-based extraction.
      * Returns LineResult with text position info for proper spacing.
      */
-    private static LineResult renderGildingChanceLine(ISlots islots) {
-        if (islots == null) {
-            return null;
-        }
-
+    private static LineResult renderGildingChanceLine(double pmin, double pmax, Resource[] attrs) {
         int hSpacing = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
 
         // Build the text: "Gilding chance X% to Y%"
-        int pminPercent = (int) Math.round(100 * islots.pmin);
-        int pmaxPercent = (int) Math.round(100 * islots.pmax);
+        int pminPercent = (int) Math.round(100 * pmin);
+        int pmaxPercent = (int) Math.round(100 * pmax);
 
         // Render parts
         BufferedImage labelImg = getBodyRegularFoundry().render("Gilding chance ", Color.WHITE).img;
@@ -1605,9 +1642,9 @@ public class NTooltip {
 
         // Add attribute icons at the end
         java.util.List<BufferedImage> scaledIcons = new java.util.ArrayList<>();
-        if (islots.attrs != null && islots.attrs.length > 0) {
+        if (attrs != null && attrs.length > 0) {
             totalWidth += hSpacing;
-            for (Resource attr : islots.attrs) {
+            for (Resource attr : attrs) {
                 try {
                     BufferedImage icon = attr.layer(Resource.imgc).img;
                     BufferedImage scaledIcon = PUtils.convolvedown(icon, new Coord(textHeight, textHeight), CharWnd.iconfilter);
@@ -1646,76 +1683,6 @@ public class NTooltip {
     }
 
     /**
-     * Render the gilding chance line from ISlotsData: "Gilding chance X% to Y%" with attribute icons
-     */
-    private static LineResult renderGildingChanceLineFromData(ISlotsData data) {
-        if (data == null) {
-            return null;
-        }
-
-        int hSpacing = UI.scale(TooltipStyle.HORIZONTAL_SPACING);
-
-        // Build the text: "Gilding chance X% to Y%"
-        int pminPercent = (int) Math.round(100 * data.pmin);
-        int pmaxPercent = (int) Math.round(100 * data.pmax);
-
-        // Render parts
-        BufferedImage labelImg = getBodyRegularFoundry().render("Gilding chance ", Color.WHITE).img;
-        BufferedImage pminImg = getContentFoundry().render(pminPercent + "%", new Color(192, 192, 255)).img;
-        BufferedImage toImg = getBodyRegularFoundry().render(" to ", Color.WHITE).img;
-        BufferedImage pmaxImg = getContentFoundry().render(pmaxPercent + "%", new Color(192, 192, 255)).img;
-
-        // Crop text images
-        BufferedImage croppedLabel = TooltipStyle.cropTopOnly(labelImg);
-        BufferedImage croppedPmin = TooltipStyle.cropTopOnly(pminImg);
-        BufferedImage croppedTo = TooltipStyle.cropTopOnly(toImg);
-        BufferedImage croppedPmax = TooltipStyle.cropTopOnly(pmaxImg);
-
-        int textHeight = Math.max(Math.max(croppedLabel.getHeight(), croppedPmin.getHeight()),
-                                  Math.max(croppedTo.getHeight(), croppedPmax.getHeight()));
-
-        int totalWidth = croppedLabel.getWidth() + croppedPmin.getWidth() + croppedTo.getWidth() + croppedPmax.getWidth();
-
-        // Add attribute icons at the end
-        java.util.List<BufferedImage> scaledIcons = new java.util.ArrayList<>();
-        if (data.attrs != null && data.attrs.length > 0) {
-            totalWidth += hSpacing;
-            for (Resource attr : data.attrs) {
-                try {
-                    BufferedImage icon = attr.layer(Resource.imgc).img;
-                    BufferedImage scaledIcon = PUtils.convolvedown(icon, new Coord(textHeight, textHeight), CharWnd.iconfilter);
-                    scaledIcons.add(scaledIcon);
-                    totalWidth += scaledIcon.getWidth() + UI.scale(2);
-                } catch (Exception ignored) {}
-            }
-        }
-
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, textHeight));
-        Graphics g = result.getGraphics();
-
-        int x = 0;
-        g.drawImage(croppedLabel, x, (textHeight - croppedLabel.getHeight()) / 2, null);
-        x += croppedLabel.getWidth();
-        g.drawImage(croppedPmin, x, (textHeight - croppedPmin.getHeight()) / 2, null);
-        x += croppedPmin.getWidth();
-        g.drawImage(croppedTo, x, (textHeight - croppedTo.getHeight()) / 2, null);
-        x += croppedTo.getWidth();
-        g.drawImage(croppedPmax, x, (textHeight - croppedPmax.getHeight()) / 2, null);
-        x += croppedPmax.getWidth();
-
-        if (!scaledIcons.isEmpty()) {
-            x += hSpacing;
-            for (BufferedImage icon : scaledIcons) {
-                g.drawImage(icon, x, (textHeight - icon.getHeight()) / 2, null);
-                x += icon.getWidth() + UI.scale(2);
-            }
-        }
-
-        g.dispose();
-        return new LineResult(result, 0, 0);
-    }
-
-    /**
      * Data for a single stat within a gilding item.
      */
     private static class GildingStatData {
@@ -1731,93 +1698,18 @@ public class NTooltip {
     }
 
     /**
-     * Extract stats from a gilding SItem's info list.
-     * Returns list of GildingStatData with icon, name, and formatted value.
-     */
-    private static java.util.List<GildingStatData> extractGildingStats(ISlots.SItem sitem) {
-        java.util.List<GildingStatData> stats = new java.util.ArrayList<>();
-
-        for (ItemInfo info : sitem.info) {
-            if (!info.getClass().getSimpleName().equals("AttrMod")) {
-                continue;
-            }
-
-            try {
-                // Get the 'tab' field (Collection of Entry)
-                Field tabField = info.getClass().getDeclaredField("tab");
-                tabField.setAccessible(true);
-                @SuppressWarnings("unchecked")
-                java.util.Collection<?> tabCollection = (java.util.Collection<?>) tabField.get(info);
-
-                if (tabCollection == null) continue;
-
-                for (Object entry : tabCollection) {
-                    try {
-                        // Get the 'attr' field from Entry
-                        Field attrField = entry.getClass().getField("attr");
-                        Object attr = attrField.get(entry);
-
-                        // Call attr.name()
-                        java.lang.reflect.Method nameMethod = attr.getClass().getMethod("name");
-                        String name = (String) nameMethod.invoke(attr);
-
-                        // Call attr.icon()
-                        java.lang.reflect.Method iconMethod = attr.getClass().getMethod("icon");
-                        BufferedImage icon = (BufferedImage) iconMethod.invoke(attr);
-
-                        // Check if it's a Mod entry (has 'mod' field) or Transfer entry
-                        String formattedValue = "";
-                        String entryClassName = entry.getClass().getSimpleName();
-
-                        if (entryClassName.equals("Mod") || entry.getClass().getName().contains("Mod")) {
-                            // It's a Mod entry - get mod value
-                            try {
-                                Field modField = entry.getClass().getField("mod");
-                                double modValue = modField.getDouble(entry);
-
-                                // Check if it's percentage or integer type
-                                boolean isPercent = isPercentageAttribute(attr.getClass());
-                                String sign = modValue >= 0 ? "+" : "";
-                                if (isPercent) {
-                                    double percent = modValue * 100;
-                                    if (percent == Math.floor(percent)) {
-                                        formattedValue = String.format("%s%.0f%%", sign, percent);
-                                    } else {
-                                        formattedValue = String.format("%s%.1f%%", sign, percent);
-                                    }
-                                } else {
-                                    formattedValue = String.format("%s%d", sign, (int) modValue);
-                                }
-                            } catch (NoSuchFieldException e) {
-                                // Not a Mod with numeric value
-                            }
-                        } else if (entryClassName.equals("Transfer") || entry.getClass().getName().contains("Transfer")) {
-                            // It's a Transfer entry - use fmtvalue()
-                            try {
-                                java.lang.reflect.Method fmtMethod = entry.getClass().getMethod("fmtvalue");
-                                String richText = (String) fmtMethod.invoke(entry);
-                                formattedValue = parseRichTextValue(richText);
-                            } catch (Exception ignored) {}
-                        }
-
-                        if (icon != null && name != null && !formattedValue.isEmpty()) {
-                            stats.add(new GildingStatData(icon, name, formattedValue));
-                        }
-                    } catch (Exception ignored) {}
-                }
-            } catch (Exception ignored) {}
-        }
-
-        return stats;
-    }
-
-    /**
      * Render the gilding sections: hierarchical display of gilding items and their stats.
+     * UNIFIED METHOD: Uses Function extractors to work with both ISlots.SItem and reflection-based access.
      * Each gilding item has a header (icon + name) followed by indented stat lines.
      * Returns LineResult with text position info for proper spacing.
      */
-    private static LineResult renderGildingSections(ISlots islots) {
-        if (islots == null || islots.s.isEmpty()) {
+    private static <T> LineResult renderGildingSections(
+            java.util.Collection<T> items,
+            java.util.function.Function<T, String> nameExtractor,
+            java.util.function.Function<T, Resource> resExtractor,
+            java.util.function.Function<T, GSprite> sprExtractor,
+            java.util.function.Function<T, java.util.List<ItemInfo>> infoExtractor) {
+        if (items == null || items.isEmpty()) {
             return null;
         }
 
@@ -1834,8 +1726,8 @@ public class NTooltip {
         int textHeight = 0;
 
         java.util.List<java.util.List<GildingStatData>> allGildingStats = new java.util.ArrayList<>();
-        for (ISlots.SItem si : islots.s) {
-            java.util.List<GildingStatData> stats = extractGildingStats(si);
+        for (T item : items) {
+            java.util.List<GildingStatData> stats = extractAttrModStats(infoExtractor.apply(item));
             allGildingStats.add(stats);
 
             for (GildingStatData stat : stats) {
@@ -1862,21 +1754,25 @@ public class NTooltip {
         java.util.List<LineResult> sectionResults = new java.util.ArrayList<>();
 
         int sectionIndex = 0;
-        for (ISlots.SItem si : islots.s) {
+        for (T item : items) {
+            String name = nameExtractor.apply(item);
+            Resource res = resExtractor.apply(item);
+            GSprite spr = sprExtractor.apply(item);
+
             java.util.List<GildingStatData> stats = allGildingStats.get(sectionIndex);
             java.util.List<LineResult> sectionLines = new java.util.ArrayList<>();
 
             // Render header line: icon + name
             BufferedImage headerIcon = null;
             try {
-                if (si.spr instanceof GSprite.ImageSprite) {
-                    headerIcon = ((GSprite.ImageSprite) si.spr).image();
-                } else {
-                    headerIcon = si.res.layer(Resource.imgc).img;
+                if (spr instanceof GSprite.ImageSprite) {
+                    headerIcon = ((GSprite.ImageSprite) spr).image();
+                } else if (res != null) {
+                    headerIcon = res.layer(Resource.imgc).img;
                 }
             } catch (Exception ignored) {}
 
-            BufferedImage headerNameImg = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render(si.name, Color.WHITE).img);
+            BufferedImage headerNameImg = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render(name, Color.WHITE).img);
             int headerHeight = Math.max(headerNameImg.getHeight(), iconSize);
 
             BufferedImage scaledHeaderIcon = null;
@@ -2000,142 +1896,6 @@ public class NTooltip {
     }
 
     /**
-     * Extract gilding stats from SItemData (via reflection-based extraction).
-     */
-    private static java.util.List<GildingStatData> extractGildingStatsFromData(SItemData sitem) {
-        java.util.List<GildingStatData> stats = new java.util.ArrayList<>();
-        if (sitem == null || sitem.info == null) return stats;
-
-        for (ItemInfo info : sitem.info) {
-            if (!info.getClass().getSimpleName().equals("AttrMod")) {
-                continue;
-            }
-
-            try {
-                Field tabField = info.getClass().getDeclaredField("tab");
-                tabField.setAccessible(true);
-                @SuppressWarnings("unchecked")
-                java.util.Collection<?> tabCollection = (java.util.Collection<?>) tabField.get(info);
-
-                if (tabCollection == null) continue;
-
-                for (Object entry : tabCollection) {
-                    try {
-                        Field attrField = entry.getClass().getField("attr");
-                        Object attr = attrField.get(entry);
-
-                        java.lang.reflect.Method nameMethod = attr.getClass().getMethod("name");
-                        String name = (String) nameMethod.invoke(attr);
-
-                        java.lang.reflect.Method iconMethod = attr.getClass().getMethod("icon");
-                        BufferedImage icon = (BufferedImage) iconMethod.invoke(attr);
-
-                        String formattedValue = "";
-                        String entryClassName = entry.getClass().getSimpleName();
-
-                        if (entryClassName.equals("Mod") || entry.getClass().getName().contains("Mod")) {
-                            try {
-                                Field modField = entry.getClass().getField("mod");
-                                double modValue = modField.getDouble(entry);
-
-                                boolean isPercent = isPercentageAttribute(attr.getClass());
-                                String sign = modValue >= 0 ? "+" : "";
-                                if (isPercent) {
-                                    double percent = modValue * 100;
-                                    if (percent == Math.floor(percent)) {
-                                        formattedValue = String.format("%s%.0f%%", sign, percent);
-                                    } else {
-                                        formattedValue = String.format("%s%.1f%%", sign, percent);
-                                    }
-                                } else {
-                                    formattedValue = String.format("%s%d", sign, (int) modValue);
-                                }
-                            } catch (NoSuchFieldException e) {}
-                        } else if (entryClassName.equals("Transfer") || entry.getClass().getName().contains("Transfer")) {
-                            try {
-                                java.lang.reflect.Method fmtMethod = entry.getClass().getMethod("fmtvalue");
-                                String richText = (String) fmtMethod.invoke(entry);
-                                formattedValue = parseRichTextValue(richText);
-                            } catch (Exception ignored) {}
-                        }
-
-                        if (icon != null && name != null && !formattedValue.isEmpty()) {
-                            stats.add(new GildingStatData(icon, name, formattedValue));
-                        }
-                    } catch (Exception ignored) {}
-                }
-            } catch (Exception ignored) {}
-        }
-
-        return stats;
-    }
-
-    /**
-     * Extract base stats from an AttrMod object (non-gilding stats inherent to the item).
-     */
-    private static java.util.List<GildingStatData> extractBaseStats(Object attrModObj) {
-        java.util.List<GildingStatData> stats = new java.util.ArrayList<>();
-        if (attrModObj == null) return stats;
-
-        try {
-            Field tabField = attrModObj.getClass().getDeclaredField("tab");
-            tabField.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            java.util.Collection<?> tabCollection = (java.util.Collection<?>) tabField.get(attrModObj);
-
-            if (tabCollection == null) return stats;
-
-            for (Object entry : tabCollection) {
-                try {
-                    Field attrField = entry.getClass().getField("attr");
-                    Object attr = attrField.get(entry);
-
-                    java.lang.reflect.Method nameMethod = attr.getClass().getMethod("name");
-                    String name = (String) nameMethod.invoke(attr);
-
-                    java.lang.reflect.Method iconMethod = attr.getClass().getMethod("icon");
-                    BufferedImage icon = (BufferedImage) iconMethod.invoke(attr);
-
-                    String formattedValue = "";
-                    String entryClassName = entry.getClass().getSimpleName();
-
-                    if (entryClassName.equals("Mod") || entry.getClass().getName().contains("Mod")) {
-                        try {
-                            Field modField = entry.getClass().getField("mod");
-                            double modValue = modField.getDouble(entry);
-
-                            boolean isPercent = isPercentageAttribute(attr.getClass());
-                            String sign = modValue >= 0 ? "+" : "";
-                            if (isPercent) {
-                                double percent = modValue * 100;
-                                if (percent == Math.floor(percent)) {
-                                    formattedValue = String.format("%s%.0f%%", sign, percent);
-                                } else {
-                                    formattedValue = String.format("%s%.1f%%", sign, percent);
-                                }
-                            } else {
-                                formattedValue = String.format("%s%d", sign, (int) modValue);
-                            }
-                        } catch (NoSuchFieldException e) {}
-                    } else if (entryClassName.equals("Transfer") || entry.getClass().getName().contains("Transfer")) {
-                        try {
-                            java.lang.reflect.Method fmtMethod = entry.getClass().getMethod("fmtvalue");
-                            String richText = (String) fmtMethod.invoke(entry);
-                            formattedValue = parseRichTextValue(richText);
-                        } catch (Exception ignored) {}
-                    }
-
-                    if (icon != null && name != null && !formattedValue.isEmpty()) {
-                        stats.add(new GildingStatData(icon, name, formattedValue));
-                    }
-                } catch (Exception ignored) {}
-            }
-        } catch (Exception ignored) {}
-
-        return stats;
-    }
-
-    /**
      * Render base stats section (non-gilding stats): icon + name + right-aligned value.
      */
     private static LineResult renderBaseStatsSection(java.util.List<GildingStatData> stats) {
@@ -2205,201 +1965,7 @@ public class NTooltip {
         return new LineResult(combined, 0, bodyDescentVal);
     }
 
-    /**
-     * Render the gilding sections from ISlotsData: hierarchical display of gilding items and their stats.
-     */
-    private static LineResult renderGildingSectionsFromData(ISlotsData data) {
-        if (data == null || data.items.isEmpty()) {
-            return null;
-        }
 
-        int iconToTextSpacing = UI.scale(TooltipStyle.ICON_TO_TEXT_SPACING);
-        int scaledSectionSpacing = UI.scale(TooltipStyle.SECTION_SPACING);
-        int scaledInternalSpacing = UI.scale(TooltipStyle.GILDING_INTERNAL_SPACING);  // 6px between stat lines
-        int bodyDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);  // 11px descent
-        int statNameDescentVal = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_RESOURCE);  // 9px descent for stat names
-        int indent = UI.scale(20);
-
-        // First pass: calculate max widths
-        int maxStatNameWidth = 0;
-        int maxStatValueWidth = 0;
-        int textHeight = 0;
-
-        java.util.List<java.util.List<GildingStatData>> allGildingStats = new java.util.ArrayList<>();
-        for (SItemData si : data.items) {
-            java.util.List<GildingStatData> stats = extractGildingStatsFromData(si);
-            allGildingStats.add(stats);
-
-            for (GildingStatData stat : stats) {
-                BufferedImage nameImg = TooltipStyle.cropTopOnly(getGildingStatNameFoundry().render(stat.name, Color.WHITE).img);  // 9px for stat names
-                BufferedImage valueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, TooltipStyle.COLOR_STUDY_TIME).img);  // 11px semibold
-                maxStatNameWidth = Math.max(maxStatNameWidth, nameImg.getWidth());
-                maxStatValueWidth = Math.max(maxStatValueWidth, valueImg.getWidth());
-                textHeight = Math.max(textHeight, Math.max(nameImg.getHeight(), valueImg.getHeight()));
-            }
-        }
-
-        BufferedImage testHeader = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render("Test", Color.WHITE).img);  // 11px for header
-        int headerTextHeight = testHeader.getHeight();
-        int iconSize = textHeight > 0 ? textHeight : headerTextHeight;
-
-        int gapBetweenNameAndValue = UI.scale(7);
-        int statLineWidth = indent + iconSize + iconToTextSpacing + maxStatNameWidth + gapBetweenNameAndValue + maxStatValueWidth;
-
-        // Second pass: render each gilding section
-        java.util.List<LineResult> sectionResults = new java.util.ArrayList<>();
-
-        int sectionIndex = 0;
-        for (SItemData si : data.items) {
-            java.util.List<GildingStatData> stats = allGildingStats.get(sectionIndex);
-            java.util.List<LineResult> sectionLines = new java.util.ArrayList<>();
-
-            // Render header line: icon + name
-            BufferedImage headerIcon = null;
-            try {
-                if (si.spr instanceof GSprite.ImageSprite) {
-                    headerIcon = ((GSprite.ImageSprite) si.spr).image();
-                } else if (si.res != null) {
-                    headerIcon = si.res.layer(Resource.imgc).img;
-                }
-            } catch (Exception ignored) {}
-
-            BufferedImage headerNameImg = TooltipStyle.cropTopOnly(getBodyRegularFoundry().render(si.name, Color.WHITE).img);
-            int headerHeight = Math.max(headerNameImg.getHeight(), iconSize);
-
-            BufferedImage scaledHeaderIcon = null;
-            if (headerIcon != null) {
-                scaledHeaderIcon = PUtils.convolvedown(headerIcon, new Coord(iconSize, iconSize), CharWnd.iconfilter);
-            }
-
-            int headerWidth = (scaledHeaderIcon != null ? scaledHeaderIcon.getWidth() + iconToTextSpacing : 0) + headerNameImg.getWidth();
-            headerWidth = Math.max(headerWidth, statLineWidth);
-
-            // Calculate header text position (vertically centered)
-            int headerTextY = (headerHeight - headerNameImg.getHeight()) / 2;
-            int headerTextTopOffset = headerTextY;
-            int headerTextBottomOffset = headerHeight - headerTextY - headerNameImg.getHeight();
-
-            BufferedImage headerLine = TexI.mkbuf(new Coord(headerWidth, headerHeight));
-            Graphics hg = headerLine.getGraphics();
-            int hx = 0;
-            if (scaledHeaderIcon != null) {
-                hg.drawImage(scaledHeaderIcon, hx, (headerHeight - scaledHeaderIcon.getHeight()) / 2, null);
-                hx += scaledHeaderIcon.getWidth() + iconToTextSpacing;
-            }
-            hg.drawImage(headerNameImg, hx, headerTextY, null);
-            hg.dispose();
-
-            sectionLines.add(new LineResult(headerLine, headerTextTopOffset, headerTextBottomOffset));
-
-            // Render stat lines (indented): 9px for stat name, 11px semibold for value
-            // Use proper text offset tracking like tool stats does
-            for (GildingStatData stat : stats) {
-                BufferedImage statIcon = stat.icon;
-                BufferedImage statNameImg = TooltipStyle.cropTopOnly(getGildingStatNameFoundry().render(stat.name, Color.WHITE).img);  // 9px
-                // Use red for negative values, green for positive
-                Color statValueColor = stat.formattedValue.startsWith("-") ? TooltipStyle.COLOR_NEGATIVE_STAT : TooltipStyle.COLOR_STUDY_TIME;
-                BufferedImage statValueImg = TooltipStyle.cropTopOnly(getContentFoundry().render(stat.formattedValue, statValueColor).img);  // 11px semibold
-
-                // Text height is max of name and value
-                int statTextHeight = Math.max(statNameImg.getHeight(), statValueImg.getHeight());
-
-                // Scale icon to match text height
-                BufferedImage scaledStatIcon = PUtils.convolvedown(statIcon, new Coord(statTextHeight, statTextHeight), CharWnd.iconfilter);
-
-                // Calculate visual text center (excluding descent) for icon positioning
-                int statDescent = TooltipStyle.getFontDescent(TooltipStyle.FONT_SIZE_BODY);  // Use 11px descent since value is 11px
-                int visualTextHeight = statTextHeight - statDescent;
-                int visualTextCenter = visualTextHeight / 2;
-
-                // Center icon on visual text center
-                int iconYRelative = visualTextCenter - scaledStatIcon.getHeight() / 2;
-
-                // Calculate canvas dimensions
-                int canvasHeight = statTextHeight;
-                int textY = 0;
-                int iconY = iconYRelative;
-
-                // If icon extends above text, expand canvas
-                if (iconYRelative < 0) {
-                    canvasHeight = statTextHeight - iconYRelative;
-                    textY = -iconYRelative;
-                    iconY = 0;
-                }
-                // If icon extends below text, expand canvas
-                int iconBottom = iconY + scaledStatIcon.getHeight();
-                if (iconBottom > canvasHeight) {
-                    canvasHeight = iconBottom;
-                }
-
-                BufferedImage statLine = TexI.mkbuf(new Coord(statLineWidth, canvasHeight));
-                Graphics sg = statLine.getGraphics();
-
-                int sx = indent;
-                sg.drawImage(scaledStatIcon, sx, iconY, null);
-                sx += scaledStatIcon.getWidth() + iconToTextSpacing;
-
-                // Draw text at textY, vertically centered within text area
-                sg.drawImage(statNameImg, sx, textY + (statTextHeight - statNameImg.getHeight()) / 2, null);
-
-                int valueX = statLineWidth - statValueImg.getWidth();
-                sg.drawImage(statValueImg, valueX, textY + (statTextHeight - statValueImg.getHeight()) / 2, null);
-
-                sg.dispose();
-
-                // Track text offsets for baseline-relative spacing
-                int textTopOffset = textY;
-                int textBottomOffset = canvasHeight - textY - statTextHeight;
-                sectionLines.add(new LineResult(statLine, textTopOffset, textBottomOffset));
-            }
-
-            // Combine section lines with 7px internal spacing (baseline to text top)
-            BufferedImage sectionImage = sectionLines.get(0).image;
-            int prevBottomOffset = sectionLines.get(0).textBottomOffset;
-            for (int i = 1; i < sectionLines.size(); i++) {
-                LineResult current = sectionLines.get(i);
-                int spacing = scaledInternalSpacing - bodyDescentVal - prevBottomOffset - current.textTopOffset;
-                sectionImage = ItemInfo.catimgs(spacing, sectionImage, current.image);
-                prevBottomOffset = current.textBottomOffset;
-            }
-
-            sectionResults.add(new LineResult(sectionImage, sectionLines.get(0).textTopOffset, prevBottomOffset));
-            sectionIndex++;
-        }
-
-        if (sectionResults.isEmpty()) {
-            return null;
-        }
-
-        BufferedImage result = sectionResults.get(0).image;
-        int firstTextTop = sectionResults.get(0).textTopOffset;
-        int lastTextBottom = sectionResults.get(0).textBottomOffset;
-
-        for (int i = 1; i < sectionResults.size(); i++) {
-            LineResult current = sectionResults.get(i);
-            // Account for previous section's bottom offset and current section's top offset
-            int spacing = scaledSectionSpacing - bodyDescentVal - lastTextBottom - current.textTopOffset;
-            result = ItemInfo.catimgs(spacing, result, current.image);
-            lastTextBottom = current.textBottomOffset;
-        }
-
-        return new LineResult(result, firstTextTop, lastTextBottom);
-    }
-
-    /**
-     * Helper to compose a label + value pair
-     */
-    private static BufferedImage composePair(BufferedImage labelImg, BufferedImage valueImg) {
-        int totalWidth = labelImg.getWidth() + valueImg.getWidth();
-        int maxHeight = Math.max(labelImg.getHeight(), valueImg.getHeight());
-
-        BufferedImage result = TexI.mkbuf(new Coord(totalWidth, maxHeight));
-        Graphics g = result.getGraphics();
-        g.drawImage(labelImg, 0, (maxHeight - labelImg.getHeight()) / 2, null);
-        g.drawImage(valueImg, labelImg.getWidth(), (maxHeight - valueImg.getHeight()) / 2, null);
-        g.dispose();
-        return result;
-    }
 
     /**
      * Render other tips (excluding Name, QBuff.Table, Contents, Wear, Gast, ISlots, weapon stats which we handle ourselves)

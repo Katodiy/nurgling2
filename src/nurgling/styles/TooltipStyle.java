@@ -213,4 +213,52 @@ public final class TooltipStyle {
 
     /** Icon size for tooltips (80% of standard 16px) */
     public static final int ICON_SIZE = 13;
+
+    // ============ IMAGE COMPOSITION UTILITIES ============
+
+    /**
+     * Compose two images horizontally without gap.
+     * Both images are vertically centered.
+     */
+    public static BufferedImage composePair(BufferedImage labelImg, BufferedImage valueImg) {
+        int totalWidth = labelImg.getWidth() + valueImg.getWidth();
+        int maxHeight = Math.max(labelImg.getHeight(), valueImg.getHeight());
+
+        BufferedImage result = haven.TexI.mkbuf(new haven.Coord(totalWidth, maxHeight));
+        java.awt.Graphics g = result.getGraphics();
+        g.drawImage(labelImg, 0, (maxHeight - labelImg.getHeight()) / 2, null);
+        g.drawImage(valueImg, labelImg.getWidth(), (maxHeight - valueImg.getHeight()) / 2, null);
+        g.dispose();
+        return result;
+    }
+
+    /**
+     * Compose list of images horizontally with specified gap between each image.
+     * All images are vertically centered.
+     */
+    public static BufferedImage composeHorizontalWithGap(java.util.List<BufferedImage> imgs, int gap) {
+        if (imgs.isEmpty()) return null;
+
+        int totalWidth = 0;
+        int maxHeight = 0;
+        for (BufferedImage img : imgs) {
+            totalWidth += img.getWidth();
+            maxHeight = Math.max(maxHeight, img.getHeight());
+        }
+        totalWidth += gap * (imgs.size() - 1);
+
+        BufferedImage result = haven.TexI.mkbuf(new haven.Coord(totalWidth, maxHeight));
+        java.awt.Graphics g = result.getGraphics();
+        int x = 0;
+        for (int i = 0; i < imgs.size(); i++) {
+            BufferedImage img = imgs.get(i);
+            g.drawImage(img, x, (maxHeight - img.getHeight()) / 2, null);
+            x += img.getWidth();
+            if (i < imgs.size() - 1) {
+                x += gap;
+            }
+        }
+        g.dispose();
+        return result;
+    }
 }
