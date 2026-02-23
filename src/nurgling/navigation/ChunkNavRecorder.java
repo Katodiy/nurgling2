@@ -29,6 +29,12 @@ public class ChunkNavRecorder {
             "gfx/tiles/odeep"
     ));
 
+    // Walkable cave tiles (exceptions to the cave blocking pattern)
+    // These are cave FLOORS (walkable ground inside caves), not cave WALLS
+    private static final Set<String> WALKABLE_CAVE_TILES = new HashSet<>(Arrays.asList(
+            "gfx/tiles/deepcave"  // Cave floor - players can walk on this
+    ));
+
     /**
      * Snapshot of gob data for lock-free processing.
      * Captures only the fields needed for walkability and layer detection.
@@ -317,6 +323,14 @@ public class ChunkNavRecorder {
             String tileName = mcache.tilesetname(mcache.gettile(tileCoord));
             if (tileName == null) return true;  // Unknown tile = blocked (safer default)
 
+            // Check whitelist first - explicitly walkable tiles
+            for (String walkable : WALKABLE_CAVE_TILES) {
+                if (tileName.startsWith(walkable) || tileName.equals(walkable)) {
+                    return false;  // Explicitly walkable
+                }
+            }
+
+            // Then check blacklist - blocked tiles
             for (String blocked : BLOCKED_TILES) {
                 if (tileName.startsWith(blocked) || tileName.equals(blocked)) {
                     return true;
