@@ -668,26 +668,12 @@ public class SortInventory implements Action {
      */
     private void takeItemFromSlot(Coord pos, float quality) throws InterruptedException {
         WItem slotItem = findSlotItemAtPos(pos);
-        if (slotItem == null) {
-            System.out.println("[StackSort] takeItemFromSlot: NO ITEM at pos=" + pos);
-            return;
-        }
+        if (slotItem == null) return;
 
         if (slotItem.item.contents instanceof ItemStack) {
             ItemStack stack = (ItemStack) slotItem.item.contents;
             int originalSize = stack.wmap.size();
 
-            // Log all qualities in the stack
-            List<Float> stackQuals = new ArrayList<>();
-            for (GItem gi : stack.order) {
-                if (gi instanceof NGItem) {
-                    stackQuals.add(((NGItem) gi).quality);
-                }
-            }
-            System.out.println("[StackSort] takeItemFromSlot: pos=" + pos + " STACK size=" + originalSize
-                    + " qualities=" + stackQuals + " looking for q=" + quality);
-
-            // Find the specific item by quality
             WItem target = null;
             for (GItem gi : stack.order) {
                 if (gi instanceof NGItem) {
@@ -698,15 +684,10 @@ public class SortInventory implements Action {
                     }
                 }
             }
-            if (target == null) {
-                System.out.println("[StackSort] takeItemFromSlot: QUALITY NOT FOUND q=" + quality
-                        + " in stack at " + pos);
-                return;
-            }
+            if (target == null) return;
 
             NUtils.takeItemToHand(target);
 
-            // Wait for stack update
             if (originalSize <= 2) {
                 if (stack.parent != null) {
                     NUtils.addTask(new ISRemovedLoftar(
@@ -717,10 +698,6 @@ public class SortInventory implements Action {
                 NUtils.addTask(new StackSizeChanged(stack, originalSize));
             }
         } else {
-            // Single item — taking it frees the slot
-            Float itemQ = (slotItem.item instanceof NGItem) ? ((NGItem) slotItem.item).quality : null;
-            System.out.println("[StackSort] takeItemFromSlot: pos=" + pos + " SINGLE q=" + itemQ
-                    + " looking for q=" + quality);
             int wdgid = slotItem.item.wdgid();
             NUtils.takeItemToHand(slotItem);
             NUtils.addTask(new ISRemoved(wdgid));
@@ -732,31 +709,20 @@ public class SortInventory implements Action {
      * (creates a stack), and existing stacks (grows the stack).
      */
     private void addItemToSlot(Coord pos) throws InterruptedException {
-        if (NUtils.getGameUI().vhand == null) {
-            System.out.println("[StackSort] addItemToSlot: NO HAND ITEM to add at pos=" + pos);
-            return;
-        }
+        if (NUtils.getGameUI().vhand == null) return;
 
-        Float handQ = (NUtils.getGameUI().vhand.item instanceof NGItem)
-                ? ((NGItem) NUtils.getGameUI().vhand.item).quality : null;
         WItem slotItem = findSlotItemAtPos(pos);
 
         if (slotItem == null) {
-            System.out.println("[StackSort] addItemToSlot: pos=" + pos + " EMPTY slot, dropping hand q=" + handQ);
             inventory.wdgmsg("drop", pos);
             NUtils.addTask(new WaitFreeHand());
         } else if (slotItem.item.contents instanceof ItemStack) {
             ItemStack stack = (ItemStack) slotItem.item.contents;
             int oldSize = stack.wmap.size();
-            System.out.println("[StackSort] addItemToSlot: pos=" + pos + " STACK size=" + oldSize
-                    + ", adding hand q=" + handQ);
             NUtils.itemact(slotItem);
             NUtils.addTask(new WaitFreeHand());
             NUtils.addTask(new StackSizeChanged(stack, oldSize));
         } else {
-            Float slotQ = (slotItem.item instanceof NGItem) ? ((NGItem) slotItem.item).quality : null;
-            System.out.println("[StackSort] addItemToSlot: pos=" + pos + " SINGLE q=" + slotQ
-                    + ", stacking hand q=" + handQ);
             NUtils.itemact(slotItem);
             NUtils.addTask(new WaitFreeHand());
             NUtils.getUI().core.addTask(new WaitTicks(2));
