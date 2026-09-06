@@ -302,6 +302,8 @@ public class NGameUI extends GameUI
     }
 
     public int getMaxBase(){
+        if(chrwdg == null || chrwdg.battr == null || chrwdg.battr.attrs.isEmpty())
+            return 0;
         return chrwdg.battr.attrs.stream().max(new Comparator<BAttrWnd.Attr>() {
                     @Override
                     public int compare(BAttrWnd.Attr o1, BAttrWnd.Attr o2) {
