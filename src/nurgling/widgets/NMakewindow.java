@@ -551,35 +551,40 @@ public class NMakewindow extends Widget {
                 qmx = x;
                 int count = 0;
                 double product = 1.0;
+                CharWnd chr = (ui != null && ui.gui != null) ? ui.gui.chrwdg : null;
                 for(Indir<Resource> qm : qmod) {
                     try {
                         Tex t = buildQTex(qm);
                         g.image(t, new Coord(x, qmy));
                         x += t.sz().x + UI.scale(1);
 
-                        for(BAttrWnd.Attr attr: ui.gui.chrwdg.battr.attrs)
-                        {
-                            if(attr.attr.nm.equals(qm.get().basename()))
+                        if(chr != null && chr.battr != null) {
+                            for(BAttrWnd.Attr attr: chr.battr.attrs)
                             {
-                                count++;
-                                product = product * attr.attr.comp;
+                                if(attr.attr.nm.equals(qm.get().basename()))
+                                {
+                                    count++;
+                                    product = product * attr.attr.comp;
 
-                                BufferedImage texVal = fnd2.render(String.valueOf(attr.attr.comp)).img;
-                                g.image(texVal,new Coord(x, qmy + UI.scale(1)));
-                                x += texVal.getWidth() + UI.scale(1);
-                                break;
+                                    BufferedImage texVal = fnd2.render(String.valueOf(attr.attr.comp)).img;
+                                    g.image(texVal,new Coord(x, qmy + UI.scale(1)));
+                                    x += texVal.getWidth() + UI.scale(1);
+                                    break;
+                                }
                             }
                         }
-                        for(SAttrWnd.SAttr attr: ui.gui.chrwdg.sattr.attrs)
-                        {
-                            if(attr.attr.nm.equals(qm.get().basename()))
+                        if(chr != null && chr.sattr != null) {
+                            for(SAttrWnd.SAttr attr: chr.sattr.attrs)
                             {
-                                count++;
-                                product = product * attr.attr.comp;
-                                BufferedImage texVal = fnd2.render(String.valueOf(attr.attr.comp)).img;
-                                g.image(texVal,new Coord(x, qmy + UI.scale(1)));
-                                x += texVal.getWidth() + UI.scale(1);
-                                break;
+                                if(attr.attr.nm.equals(qm.get().basename()))
+                                {
+                                    count++;
+                                    product = product * attr.attr.comp;
+                                    BufferedImage texVal = fnd2.render(String.valueOf(attr.attr.comp)).img;
+                                    g.image(texVal,new Coord(x, qmy + UI.scale(1)));
+                                    x += texVal.getWidth() + UI.scale(1);
+                                    break;
+                                }
                             }
                         }
                     } catch(Loading l) {

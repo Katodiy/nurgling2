@@ -450,19 +450,6 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
         return extentTitle;
     }
 
-    HashMap<Integer, BufferedImage> consImgs = new HashMap<>();
-
-    BufferedImage getConsImg(int value)
-    {
-        if (consImgs.get(value) == null)
-        {
-            BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(value);
-            if (c != null)
-                consImgs.put(value, convolvedown(new ItemSpec(OwnerContext.uictx.curry(NUtils.getUI()), c.t, null).image(), new Coord(UI.scale(16), UI.scale(16)), tflt));
-        }
-        return consImgs.get(value);
-    }
-
     void calcData()
     {
         if (name != null)
@@ -483,7 +470,7 @@ public class NFoodInfo extends FoodInfo  implements GItem.OverlayInfo<Tex>, NSea
             if (ci != null) {
                 isVarity = !ci.varity.contains(name);
             }
-            if (NUtils.getGameUI().chrwdg != null) {
+            if (NUtils.getGameUI().chrwdg != null && NUtils.getGameUI().chrwdg.battr != null) {
                 for (int type : types) {
                     if (NUtils.getGameUI().chrwdg.battr.cons.els.size() > type) {
                         BAttrWnd.Constipations.El c = NUtils.getGameUI().chrwdg.battr.cons.els.get(type);
