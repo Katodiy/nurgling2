@@ -63,6 +63,13 @@ public class CheckBox extends ACheckBox {
 	this(lbl, false);
     }
 
+    /* The label is rendered once at construction and never changes, so handing out the
+     * string it was built from is safe. The settings search index reads it to find
+     * checkboxes by name. */
+    public String label() {
+	return((lbl == null) ? null : lbl.text);
+    }
+
     public void draw(GOut g) {
 	if(lbl != null)
 	    g.image(lbl.tex(), loff.add(box.sz().x, (sz.y - lbl.sz().y) / 2));

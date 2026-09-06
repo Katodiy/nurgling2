@@ -1035,5 +1035,15 @@ public class OptWnd extends Window {
 
 			pack();
 		}
+
+		@Override
+		public void show() {
+			super.show();
+			/* The panel is only ever shown by chpanel, so this is the moment the settings
+			 * page is opened: put the caret in the search field so it can be typed into
+			 * straight away. */
+			if(settingsWindow != null)
+				settingsWindow.focusSearch();
+		}
 	}
 }

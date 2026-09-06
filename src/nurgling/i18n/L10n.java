@@ -25,6 +25,7 @@ public final class L10n {
     private static final String BUNDLE_NAME = "messages";
     
     private static Properties messages = new Properties();
+    private static Map<String, List<String>> reverse = null;
     private static Properties fallback = new Properties();
     private static Locale currentLocale = Locale.ENGLISH;
     private static Path langDir;
@@ -94,6 +95,7 @@ public final class L10n {
      */
     public static void setLocale(Locale locale) {
         currentLocale = locale;
+        reverse = null;
         messages = new Properties();
         messages.putAll(fallback); // Start with fallback
         
@@ -221,6 +223,39 @@ public final class L10n {
     }
     
     /**
+     * Find the key(s) a translated string came from.
+     *
+     * <p>Used by the settings search to fold the untranslated key into a setting's keywords, so
+     * English terms keep working when the client is running in another language. A value can be
+     * shared by several keys, so all of them are returned. The map is built on first use and
+     * dropped whenever translations change.
+     *
+     * @param value A translated string, as rendered into the UI
+     * @return The matching keys, or an empty list
+     */
+    public static List<String> keysFor(String value) {
+        if (value == null || value.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, List<String>> rev = reverse;
+        if (rev == null) {
+            rev = new HashMap<>();
+            for (String key : messages.stringPropertyNames()) {
+                String v = messages.getProperty(key);
+                if (v == null || v.isEmpty()) {
+                    continue;
+                }
+                rev.computeIfAbsent(v.toLowerCase(), k -> new ArrayList<>()).add(key);
+            }
+            reverse = rev;
+        }
+
+        List<String> keys = rev.get(value.toLowerCase());
+        return (keys == null) ? Collections.emptyList() : keys;
+    }
+
+    /**
      * Check if a translation exists for the given key.
      */
     public static boolean hasKey(String key) {
@@ -246,6 +281,7 @@ public final class L10n {
      * Call this if user has modified translation files.
      */
     public static void reload() {
+        reverse = null;
         messages = new Properties();
         messages.putAll(fallback);
         loadFromFile(messages, currentLocale);
