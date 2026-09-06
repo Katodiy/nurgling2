@@ -285,6 +285,23 @@ public class ItemOverlaySettings extends Panel {
         load();
     }
     
+    /**
+     * Five of the six tabs are hidden at any time, so without this the search index would cover
+     * only whichever tab happens to be open. Registering them lets every overlay setting be found,
+     * and picking one switches to its tab on the way.
+     */
+    @Override
+    public java.util.Map<Widget, Runnable> searchReveal() {
+        java.util.Map<Widget, Runnable> reveal = new java.util.IdentityHashMap<>();
+        reveal.put(itemQualityTab, () -> switchTab(0));
+        reveal.put(stackQualityTab, () -> switchTab(1));
+        reveal.put(amountTab, () -> switchTab(2));
+        reveal.put(studyInfoTab, () -> switchTab(3));
+        reveal.put(progressTab, () -> switchTab(4));
+        reveal.put(volumeTab, () -> switchTab(5));
+        return reveal;
+    }
+
     private void switchTab(int tab) {
         activeTab = tab;
         itemQualityTab.visible = (tab == 0);
