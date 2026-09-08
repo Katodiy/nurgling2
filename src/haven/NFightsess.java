@@ -159,6 +159,8 @@ public class NFightsess extends Fightsess {
 
     /* Weapon loadout, refreshed on a timer because players swap weapons mid-fight. */
     private double loadoutChecked = 0;
+    private String loadoutIssue = null;
+    private String loadoutReported = null;
     private NCombatData.Loadout loadout = NCombatData.Loadout.UNKNOWN;
 
     public NFightsess(int nact) {
@@ -236,9 +238,31 @@ public class NFightsess extends Fightsess {
         loadoutChecked = now;
         /* A null read means "not determinable right now", not "unarmed" - keep the last
          * known weapon rather than briefly zeroing every damage estimate. */
-        NCombatData.Loadout read = NCombatData.readLoadout(ui);
-        if(read != null)
+        StringBuilder why = new StringBuilder();
+        NCombatData.Loadout read = NCombatData.readLoadout(ui, why);
+        if(read != null) {
             loadout = read;
+            loadoutIssue = null;
+            /* Announced when it first resolves and whenever the weapon changes. The fight log's
+             * own banner is written on the first tick of a fight, before this has had a chance
+             * to run, so without this the only record of the weapon is a stale "not read yet". */
+            String now2 = (read.basedmg > 0)
+                    ? String.format("%s base %d ql %.0f str %.0f",
+                                    (read.weaponName == null) ? "weapon" : read.weaponName,
+                                    read.basedmg, read.weaponQl, read.strength)
+                    : "unarmed";
+            if(!now2.equals(loadoutReported)) {
+                loadoutReported = now2;
+                System.out.println("[loadout] " + now2);
+            }
+        } else {
+            /* Said once per distinct reason, not once per tick. */
+            String issue = why.toString();
+            if(!issue.equals(loadoutIssue)) {
+                loadoutIssue = issue;
+                System.out.println("[loadout] cannot read equipment: " + issue);
+            }
+        }
     }
 
     /** This session's opening percentages against the current target. */

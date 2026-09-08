@@ -161,6 +161,8 @@ public class NCombatData {
         public final int basedmg;
         public final double weaponQl;
         public final double strength;
+        /** Display name of the held weapon, or null. Lets callers tell an axe from a spear. */
+        public final String weaponName;
         /**
          * False before the equipment has ever been read successfully. Distinguishing this
          * from "no weapon" matters: for the first second of a session the equipment window
@@ -169,18 +171,23 @@ public class NCombatData {
         public final boolean known;
 
         public Loadout(int basedmg, double weaponQl, double strength) {
-            this(basedmg, weaponQl, strength, true);
+            this(basedmg, weaponQl, strength, true, null);
         }
 
         public Loadout(int basedmg, double weaponQl, double strength, boolean known) {
+            this(basedmg, weaponQl, strength, known, null);
+        }
+
+        public Loadout(int basedmg, double weaponQl, double strength, boolean known, String weaponName) {
             this.basedmg = basedmg;
             this.weaponQl = weaponQl;
             this.strength = strength;
             this.known = known;
+            this.weaponName = weaponName;
         }
 
         /** Placeholder used until the equipment has been read for the first time. */
-        public static final Loadout UNKNOWN = new Loadout(0, 10, 1, false);
+        public static final Loadout UNKNOWN = new Loadout(0, 10, 1, false, null);
     }
 
     /**
@@ -189,6 +196,16 @@ public class NCombatData {
      * this session's numbers.
      */
     public static Loadout readLoadout(UI ui) {
+        return(readLoadout(ui, null));
+    }
+
+    /**
+     * @param why when non-null, receives the reason a null is being returned. A loadout that
+     *            never resolves silently zeroes every damage estimate, and the symptom - a
+     *            fighter that ranks its moves oddly - looks nothing like the cause, so the
+     *            cause is worth being able to ask for.
+     */
+    public static Loadout readLoadout(UI ui, StringBuilder why) {
         double strength = 1;
         try {
             Glob.CAttr str = ui.sess.glob.getcattr("str");
@@ -197,8 +214,15 @@ public class NCombatData {
         } catch(Loading ignored) {
         }
         NEquipory eq = equipory(ui);
-        if(eq == null)
+        if(eq == null) {
+            if(why != null) {
+                why.append((ui == null) ? "no ui"
+                        : (ui.gui == null) ? "no gui"
+                        : (ui.gui.equwnd == null) ? "equipment window not created yet"
+                        : "equipment window has no Equipory child");
+            }
             return(null);
+        }
         try {
             for(NEquipory.Slots slot : new NEquipory.Slots[]{NEquipory.Slots.HAND_LEFT, NEquipory.Slots.HAND_RIGHT}) {
                 WItem wi = eq.quickslots[slot.idx];
@@ -210,11 +234,14 @@ public class NCombatData {
                 double ql = 10;
                 if((wi.item instanceof NGItem) && (((NGItem)wi.item).quality != null))
                     ql = Math.max(1, ((NGItem)wi.item).quality);
-                return(new Loadout((int)Math.ceil(dmg / Math.sqrt(ql / 10)), ql, strength));
+                String nm = (wi.item instanceof NGItem) ? ((NGItem)wi.item).name() : null;
+                return(new Loadout((int)Math.ceil(dmg / Math.sqrt(ql / 10)), ql, strength, true, nm));
             }
         } catch(Loading l) {
             /* Item info still streaming. Reporting "unarmed" here would silently zero every
              * weapon damage estimate, so report "unknown" and let the caller keep what it had. */
+            if(why != null)
+                why.append("item info still loading (").append(l.getMessage()).append(")");
             return(null);
         }
         return(new Loadout(0, 10, strength));
