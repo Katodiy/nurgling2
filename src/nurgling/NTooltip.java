@@ -9,6 +9,8 @@ import haven.res.ui.tt.slots.ISlots;
 import haven.res.ui.tt.slot.Slotted;
 import haven.res.ui.tt.ingred.Ingredient;
 import nurgling.iteminfo.NCuriosity;
+import nurgling.iteminfo.NKilnInfo;
+import nurgling.iteminfo.NSmelterInfo;
 import nurgling.styles.TooltipStyle;
 
 import java.awt.*;
@@ -540,6 +542,8 @@ public class NTooltip {
         java.util.List<Object> smokeItems = new java.util.ArrayList<>();  // "Smoked with..." items (dynamically loaded)
         Integer presenceCurrent = null;  // Presence current value (x in "Presence: x/y")
         Integer presenceMax = null;      // Presence max value (y in "Presence: x/y")
+        NKilnInfo kilnInfo = null;
+        NSmelterInfo smelterInfo = null;
         for (ItemInfo ii : info) {
             String className = ii.getClass().getSimpleName();
             String fullName = ii.getClass().getName();
@@ -588,6 +592,12 @@ public class NTooltip {
             }
             if (ii instanceof NCuriosity) {
                 curiosity = (NCuriosity) ii;
+            }
+            if (ii instanceof NKilnInfo) {
+                kilnInfo = (NKilnInfo) ii;
+            }
+            if (ii instanceof NSmelterInfo) {
+                smelterInfo = (NSmelterInfo) ii;
             }
             if (ii instanceof ItemInfo.Contents) {
                 contentsList.add((ItemInfo.Contents) ii);
@@ -1378,17 +1388,32 @@ public class NTooltip {
 
         // Then combine nameLine with presenceAndBelow (or contentAndBelow if no presence) using 10px section spacing
         // Note: Outer padding is handled by NWItem.PaddedTip
+        BufferedImage result = null;
         if (nameLine != null && presenceAndBelow != null) {
             // Account for text position within presence/content canvas to achieve baseline-relative spacing
             int nameToPresenceSpacing = scaledSectionSpacing - nameDescentVal - nameTextBottomOffset - presenceAndBelowTopOffset;
-            return ItemInfo.catimgs(nameToPresenceSpacing, nameLine, presenceAndBelow);
+            result = ItemInfo.catimgs(nameToPresenceSpacing, nameLine, presenceAndBelow);
         } else if (nameLine != null) {
-            return nameLine;
+            result = nameLine;
         } else if (presenceAndBelow != null) {
-            return presenceAndBelow;
+            result = presenceAndBelow;
         }
+        result = appendFiringTip(result, kilnInfo, scaledSectionSpacing, bodyDescentVal);
+        return appendFiringTip(result, smelterInfo, scaledSectionSpacing, bodyDescentVal);
+    }
 
-        return null;
+    /** Appends the kiln/smelter meter bar and remaining time below the rest of the tooltip. */
+    private static BufferedImage appendFiringTip(BufferedImage result, ItemInfo.Tip tip,
+                                                 int scaledSectionSpacing, int bodyDescentVal) {
+        if (tip == null)
+            return result;
+        BufferedImage tipImg = tip.tipimg();
+        if (tipImg == null)
+            return result;
+        tipImg = TooltipStyle.cropTopOnly(tipImg);
+        if (result == null)
+            return tipImg;
+        return ItemInfo.catimgs(scaledSectionSpacing - bodyDescentVal, result, tipImg);
     }
 
     /**
@@ -2858,6 +2883,10 @@ public class NTooltip {
                 // Skip NSearchingHighlight and NQuestItem - nurgling classes (overlay only, no tooltip)
                 if (tip.getClass().getSimpleName().equals("NSearchingHighlight") ||
                     tip.getClass().getSimpleName().equals("NQuestItem")) {
+                    continue;
+                }
+                // Skip NKilnInfo / NSmelterInfo - appended below the resource path instead
+                if (tip instanceof NKilnInfo || tip instanceof NSmelterInfo) {
                     continue;
                 }
                 // Skip Tool class - it renders "When used:" header and resource path
